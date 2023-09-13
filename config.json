@@ -1,0 +1,104 @@
+{
+  "ailiyunid": "d5d9c1a3d4bb828c57796901c3ae6505d009be59e65ec3e9b50091fbbeef231b",
+  "captcha": {
+    "img-height": 80,
+    "img-width": 240,
+    "key-long": 4,
+    "open-captcha": 1,
+    "open-captcha-timeout": 3600,
+    "type": 1
+  },
+  "mysql": {
+    "config": "charset=utf8mb4\u0026parseTime=True\u0026loc=Local",
+    "dbname": "KY",
+    "engine": "",
+    "logmode": "error",
+    "logzap": true,
+    "maxidleconns": 10,
+    "maxopenconns": 100,
+    "password": "root",
+    "path": "127.0.0.1",
+    "port": "3306",
+    "prefix": "",
+    "singular": false,
+    "username": "root"
+  },
+  "port": 18888,
+  "zap": {
+    "director": "log",
+    "encode-level": "LowercaseColorLevelEncoder",
+    "format": "console",
+    "level": "info",
+    "log-in-console": "true",
+    "max-age": 0,
+    "show-line": true,
+    "stacktrace-key": "stacktrace"
+  },
+  "在线支付": {
+    "小叮当app_id": "17088",
+    "小叮当单次最大金额": 500,
+    "小叮当开关": true,
+    "小叮当接口密钥": "721e49a0cfb643aab15cd78e6c59c984",
+    "小叮当支付开关": true,
+    "小叮当支付显示名称": "小订单支付宝",
+    "小叮当支付类型": 43,
+    "微信支付appid": "wxeb886f382a7a71be",
+    "微信支付单次最大金额": 500,
+    "微信支付商户id": "1613740956",
+    "微信支付商户v3密钥": "956e3cdff6b41da1acd79bb33f07e3e1",
+    "微信支付商户证书串": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC5+PitXbsxLN7n\noT0jFCAv0FXBKuo0yoCNNYkYy9vAHP0mOfJ7BXtzRAyOi8ixV9qJZ+SBkByWQzWX\no7WhAsjr0hPDMbW+sFahGYYwxr0DS9z0lq7llfNVBl8cpKRwp2x3SrddSKMM1Dse\nJDMvyFG0UjZuGafN0XggPdsk5zW0VDhmjSQMtfwGphK/GNcZ/LjvHSbS6FP+72fF\nSVH/+FwgPF0R6nCHZIrsOsCG2pXquWguEcZVGfnwtSdljNTT+VM5DFnFlrfeF9HI\nvQuhQAuXkRre+cifxMPSb4QT6BuWylZEI5qYmpabIZ48mdSPE5iGVxDNRuBAM4EP\nlTUKQwf7AgMBAAECggEALiqFKRxklM+Lwjp/n86mMthoAVzy6QoAIY3Rq8snkShh\nG3U1IZ75x2J0L4q51nR1triIvDUXM6IZkrw8IW08jXYIG+OiN2U1DCb27fLYBxJ1\nFm61mh7AWjILuGOSwrh9L5vnqwuWFmA1EMVxw4HZ7oaeJnTN+ETwqihQ13diGJKG\nzFzmLwTKKkeWPP6eDa9CdRrjg2/hGKP6GZtfWMK4Kw62y6YZt4PyrHOMEyNbTtQs\nemjz3QhR0ts1rmNwVdVT/k5ahWqFI66lBWuVr95MFfBRu4Y0X4ZcOF1B0ogmLTwz\n2C5giSn/GUn83gozgcfMoj0FZ4mUYUuGD9AozgLsiQKBgQDxorUBUIeizULR7F0h\nFTKCpE1pBzF9nhY9BXuNbUbFlOK9aSibY8pvKEk/NnDCGCMstmo41fOPK+SpmCFX\n5rtAsWeqSfwxKLQXnpnGGbaC+WukNiCe+fUq/ykWnWT1qErX6EGNyanJtyxbR7mI\nPV0Xd+3HwEJ/1KZyHHxrSYf4VwKBgQDFBypQNjnA+40iAQd5961l8vyL1KFJhasI\n5KIONnuh4JtKPdIY5uZgDQv6x+7dFn5TSBxmXOQgOis6snKKtOo0hjCvvPvXWXtx\n+CcH2udldgfCme6cmXJyd3OFvv1+8OZKwZ/7OS2RB0BVOZd/UWzC5I93FX+uUAP3\nLwufoFn2/QKBgQCpU3Bt5GW38wjBHFZCiZ0kqUhJsi2/Llm9Fyt2dr4iVOvy+U7o\nXSyNanixoE+x48I6YfXbsCoGCScqpR2wgFJ1yhuv3DqqpDBXYN+3T2tzKp+AqiF/\n5f8kyzuayl7mOrF/zRSq7EdbwE2IBaIA06d5e6QX1yWCeJzO2CFj+Vob7wKBgAo9\nWxecGdhLuoP/5bGTC7H2tOVXgaJejgsCRuHSNw6sq6VqHRcqOOLZCrxX07QtzRbq\n8n7naPu7yi9cwtMun9Vm+/TGL5h7kAzWRsEDwW7meXTFpz8AQpBsYNacnHQSdQWB\nlpzp1dJpvBAx1AvL4Yknc8VOmromcm5QRZxgKwzJAoGBAJqRz+dvvb1kSHTUiRnW\nZ4x7+B5UVHqBHskHZ4XBJ7MKoWFjEDf7VPH/5FDd4T+mFD6r9yChb/NmN+5MD02J\nQpcb8zgpOGwGg9tFDSBRlrAolgWUH2evo6qBAGHS1/9uviH3QGcGhEeXl6XxIGVW\nbbgVXx8G+JZlCjJzsywIdiIr\n-----END PRIVATE KEY-----\n",
+    "微信支付商户证书序列号": "4B675ADA80203C54967EF4AAD7EC33E9EA8A4A46",
+    "微信支付开关": true,
+    "微信支付异步回调url": "https://bsphp2.9w99.cn",
+    "微信支付显示名称": "微信支付扫码",
+    "支付宝公钥": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAka3p6we1LVNHKPg4PXgspAs+i0/dq20rlAl6/V3Kx8PzAm80Qm7P5BQqZd8pZZq4nrA7D+oAMNRR2H3itBnDJFe6tnM1NaDgkv3lXL0nnfkHJq6X39gJNnYEEjMqJElvglNd0pf15dlSr1yGumu/i0DTmElGhqwau4cOd/B2tHTA4l15sulF+cLi8VgsTSifKSiFmxy2+BkhHHPLcyu39LaUnbxwpXafHAQ+HzTZGx1HZM60c67Nar1OqJU9uQRF6h6R8yFJBKOHMCNMbTxPGd3PswqtaqqKzZI4AIXQXbaKwFZgfr4BzCYAjrGe3DuDenXk+QE3bnb4Hzpdvri1GwIDAQAB",
+    "支付宝单次最大金额": 2000,
+    "支付宝同步回调url": "https://www.baidu.com/s?wd=%E5%85%85%E5%80%BC%E6%88%90%E5%8A%9F%E6%9B%B4%E6%96%B0%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF%E6%9F%A5%E7%9C%8B",
+    "支付宝商户id": "2021001159688744",
+    "支付宝商户公钥": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkgtvukKZ1fXj2P0CCuj2pw4O3T6Bi4+C27ja6Vo+90y7M4oPYe4WfbHbQrXMNYSlM1b7MJmAInLPExOGjrqXw+NxMi23L40QJURD2Vi8dT218qF6lPD+CP/a8z4Ko3jdG6dZ1FvOsA51RIac5pT0FTwNWWQ95UMPwEB/lD5qUklu+UX5hIG3CBqW2fXpFBgI+SqEtYnjV9h6aBtm73lmBzA83DMFoqEyV1v1ucWOQPK/py6uHiPupbpEz8EMfxDG34ZFg03BAOp4uuShbz0pEy7hJ90o8ZfDFZvrATxTaezTMOzFpY82j7FR7FBPXSrHgEoHI+IKDLIxF8ygL9KV+wIDAQAB",
+    "支付宝商户私钥": "MIIEowIBAAKCAQEAkgtvukKZ1fXj2P0CCuj2pw4O3T6Bi4+C27ja6Vo+90y7M4oPYe4WfbHbQrXMNYSlM1b7MJmAInLPExOGjrqXw+NxMi23L40QJURD2Vi8dT218qF6lPD+CP/a8z4Ko3jdG6dZ1FvOsA51RIac5pT0FTwNWWQ95UMPwEB/lD5qUklu+UX5hIG3CBqW2fXpFBgI+SqEtYnjV9h6aBtm73lmBzA83DMFoqEyV1v1ucWOQPK/py6uHiPupbpEz8EMfxDG34ZFg03BAOp4uuShbz0pEy7hJ90o8ZfDFZvrATxTaezTMOzFpY82j7FR7FBPXSrHgEoHI+IKDLIxF8ygL9KV+wIDAQABAoIBADtb1JyC513UZDhUlVjz2RSLHTWFa0fbG5fMqYVA/eir0kafbaMjDxcli/WwSIDUGgUk7FGTgkX+HfYl8IHgi0C+F8sKU7NLBW3wMheL/oU0gNhOE7GnxcjInShSZiaNQGk1+sfaTMa4CafBgtIhZpee4docaR/ewu8kB/ar67DntGJRaw+x1M5T4EX/pRdVw+jJ/5XrWmeaRCCmLXxrmXOgd+W3OYeyVAVmAxDNcdb7WJVPqNgRaeSeOV972Z/RWWtJE061UG+4cSiyRswZOLCGdZNHUFNAsiipZ1Hv06e8NkU++KocHylrpXLHJSCH9vXPDNakxUGVrTV3hHvqeHkCgYEAzo3Ik4BUDYMjCeDZ/xMNdDOdClRkJbaQGGPJfj9drXgPFjbKnGpvoHom6RYmsF/tY9OuPLdy96tgzo2Z6f02mE1OsPeqfqk9oA1/zFHKD9wJUkHdShZwkDgm2ovWOIsEQ1MHh6AORq9eTNAZFUVFUsz12nI6wkJqWoC9bdE4YTUCgYEAtQF55/sKJVePPXSWhsOmTQNP1Nr2qhn8kRTMotxJrjTKLcQQlg3cIilhmZ7DJBJGIRuvcBFf6wz+OkzUBT7xYT4DWZ1h+OqdPWLtEaO64f6sQEagX3X9o1rSx0AsZYzOOodvdFmW89ccB2JFn+mBLstk1VN7ZiMmvbJu6PzcsG8CgYApW1YnwnAR7Inddnnvip8M/zCYWuFac71SRNiZQJK/IuTSa9IRk3YaSZr03IyOkAZ2EHI4kfqhAF13vf5tTVfbEs+Iu24VwkkmfM1z2YR9vG7ZW3q1VNzg431UEN+pnpwR5tQBIdj56i8Vbi03hxEkTQmE3Y5KSwYEbPaAwH1raQKBgGCfMRwMfhYA7422tsOpnRRvOCY/3Hxg8tnfaH1nak18EJDtoIz5SRFTVa5TeYe/2X/C75u7KqCmhu9II8XJG8D1AYTM5oehdd5W+IX6CMCq2fhVuzY6HfMdgHasYwaya0QDGBPb3yC7K1MlulTqqPL50BGwRqb3DK8mmN32XTgxAoGBAIWeaXrB7ZH/SkvHJmCJ1OleULDhDRhMXRffpEtXfwltnhjh73xeq69/j0GtrnR84EZDER72wBg5OQb+SbXsz3eWCkhKawIOQdFggsR3q9KqO+RWYoBlxa9N16QXZxECoYawpTDaZWCivf2g31U0yH0jfc1azVZw3afQc/jYt88H",
+    "支付宝开关": true,
+    "支付宝当面付公钥": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAka3p6we1LVNHKPg4PXgspAs+i0/dq20rlAl6/V3Kx8PzAm80Qm7P5BQqZd8pZZq4nrA7D+oAMNRR2H3itBnDJFe6tnM1NaDgkv3lXL0nnfkHJq6X39gJNnYEEjMqJElvglNd0pf15dlSr1yGumu/i0DTmElGhqwau4cOd/B2tHTA4l15sulF+cLi8VgsTSifKSiFmxy2+BkhHHPLcyu39LaUnbxwpXafHAQ+HzTZGx1HZM60c67Nar1OqJU9uQRF6h6R8yFJBKOHMCNMbTxPGd3PswqtaqqKzZI4AIXQXbaKwFZgfr4BzCYAjrGe3DuDenXk+QE3bnb4Hzpdvri1GwIDAQAB",
+    "支付宝当面付单次最大金额": 2000,
+    "支付宝当面付同步回调url": "https://www.baidu.com/s?wd=%E5%85%85%E5%80%BC%E6%88%90%E5%8A%9F%E6%9B%B4%E6%96%B0%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF%E6%9F%A5%E7%9C%8B",
+    "支付宝当面付商户id": "2021001159669772",
+    "支付宝当面付商户公钥": "",
+    "支付宝当面付商户私钥": "MIIEowIBAAKCAQEAkgtvukKZ1fXj2P0CCuj2pw4O3T6Bi4+C27ja6Vo+90y7M4oPYe4WfbHbQrXMNYSlM1b7MJmAInLPExOGjrqXw+NxMi23L40QJURD2Vi8dT218qF6lPD+CP/a8z4Ko3jdG6dZ1FvOsA51RIac5pT0FTwNWWQ95UMPwEB/lD5qUklu+UX5hIG3CBqW2fXpFBgI+SqEtYnjV9h6aBtm73lmBzA83DMFoqEyV1v1ucWOQPK/py6uHiPupbpEz8EMfxDG34ZFg03BAOp4uuShbz0pEy7hJ90o8ZfDFZvrATxTaezTMOzFpY82j7FR7FBPXSrHgEoHI+IKDLIxF8ygL9KV+wIDAQABAoIBADtb1JyC513UZDhUlVjz2RSLHTWFa0fbG5fMqYVA/eir0kafbaMjDxcli/WwSIDUGgUk7FGTgkX+HfYl8IHgi0C+F8sKU7NLBW3wMheL/oU0gNhOE7GnxcjInShSZiaNQGk1+sfaTMa4CafBgtIhZpee4docaR/ewu8kB/ar67DntGJRaw+x1M5T4EX/pRdVw+jJ/5XrWmeaRCCmLXxrmXOgd+W3OYeyVAVmAxDNcdb7WJVPqNgRaeSeOV972Z/RWWtJE061UG+4cSiyRswZOLCGdZNHUFNAsiipZ1Hv06e8NkU++KocHylrpXLHJSCH9vXPDNakxUGVrTV3hHvqeHkCgYEAzo3Ik4BUDYMjCeDZ/xMNdDOdClRkJbaQGGPJfj9drXgPFjbKnGpvoHom6RYmsF/tY9OuPLdy96tgzo2Z6f02mE1OsPeqfqk9oA1/zFHKD9wJUkHdShZwkDgm2ovWOIsEQ1MHh6AORq9eTNAZFUVFUsz12nI6wkJqWoC9bdE4YTUCgYEAtQF55/sKJVePPXSWhsOmTQNP1Nr2qhn8kRTMotxJrjTKLcQQlg3cIilhmZ7DJBJGIRuvcBFf6wz+OkzUBT7xYT4DWZ1h+OqdPWLtEaO64f6sQEagX3X9o1rSx0AsZYzOOodvdFmW89ccB2JFn+mBLstk1VN7ZiMmvbJu6PzcsG8CgYApW1YnwnAR7Inddnnvip8M/zCYWuFac71SRNiZQJK/IuTSa9IRk3YaSZr03IyOkAZ2EHI4kfqhAF13vf5tTVfbEs+Iu24VwkkmfM1z2YR9vG7ZW3q1VNzg431UEN+pnpwR5tQBIdj56i8Vbi03hxEkTQmE3Y5KSwYEbPaAwH1raQKBgGCfMRwMfhYA7422tsOpnRRvOCY/3Hxg8tnfaH1nak18EJDtoIz5SRFTVa5TeYe/2X/C75u7KqCmhu9II8XJG8D1AYTM5oehdd5W+IX6CMCq2fhVuzY6HfMdgHasYwaya0QDGBPb3yC7K1MlulTqqPL50BGwRqb3DK8mmN32XTgxAoGBAIWeaXrB7ZH/SkvHJmCJ1OleULDhDRhMXRffpEtXfwltnhjh73xeq69/j0GtrnR84EZDER72wBg5OQb+SbXsz3eWCkhKawIOQdFggsR3q9KqO+RWYoBlxa9N16QXZxECoYawpTDaZWCivf2g31U0yH0jfc1azVZw3afQc/jYt88H",
+    "支付宝当面付开关": true,
+    "支付宝当面付显示名称": "支付宝扫码",
+    "支付宝显示名称": "支付宝PC网页",
+    "禁止退款": false
+  },
+  "快验token": "G4TJQAJU8CTJBO6RHRKGCCRSAQXSI09E",
+  "短信平台配置": {
+    "tx云sms": {
+      "secret_id": "AKIDLdfdLp54ndJiphOktlcDYcPwwgEkj3nG",
+      "secret_key": "Nc4GQO6XieT4TpvTpcBwSjlW2IH1dz4J",
+      "正文模板id": "1791647",
+      "短信应用id": "1400306105",
+      "短信签名": "雪小果"
+    }
+  },
+  "系统设置": {
+    "webapihost": "",
+    "y用户api加密盐": "",
+    "代理中心关闭提示": "代理中心已关闭,请联系管理员",
+    "代理中心开关": true,
+    "代理后台host": "",
+    "备案号": "辽ICP备15007240号-4",
+    "用户api加密盐": "",
+    "用户中心开关": false,
+    "管理员后台host": "",
+    "系统关闭提示": "系统已经关闭使用",
+    "系统名称": "飞鸟快验测试",
+    "系统地址": "http://anyueyinluo.w1.luyouxia.net",
+    "系统开关": true,
+    "系统模式": 1056795985
+  },
+  "行为验证码平台配置": {
+    "极验行为验证4": {
+      "验证_id": "ea872eea9e20dce9de4e5da4297ee704",
+      "验证_key": "87452c6acd45bf7ab596f93d3857ef2f"
+    }
+  }
+}
