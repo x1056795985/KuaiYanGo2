@@ -288,7 +288,7 @@ func 插入公共js例子() {
     返回对象 = $api_网页访问_GET(局_url, 15, "")
     //返回对象 = $api_网页访问_POST(局_url, "api=123", 15, "")
     //{"StatusCode":200,"Headers":"Date: Sun, 21 May 2023 10:26:32 GMT\r\nContent-Length: 0\r\nContent-Type: application/x-www-form-urlencoded,\r\n","Cookies":"","Body":""}
-    return 返回对象
+    return 返回对象.Body //只返回响应信息
 }`,
 		Type:  1,
 		IsVip: 0,
@@ -330,6 +330,8 @@ func 插入公共js例子() {
     //return $用户在线信息.Uid
 
     var 局_用户信息 = $api_用户Id取详情($用户在线信息) //{"Id":21,"User":"aaaaaa","PassWord":"af15d5fdacd5fdfea300e88a8e253e82","Phone":"13109812593","Email":"1056795985@qq.com","Qq":"1059795985","SuperPassWord":"af15d5fdacd5fdfea300e88a8e253e82","Status":1,"Rmb":91.39,"Note":"","RealNameAttestation":"","Role":0,"UPAgentId":0,"AgentDiscount":0,"LoginAppid":10000,"LoginIp":"","LoginTime":1519454315,"RegisterIp":"113.235.144.55","RegisterTime":1519454315}
+    //var 局_卡号信息 = $api_卡号Id取详情($用户在线信息)
+	var 局_软件用户信息 = $api_取软件用户详情($用户在线信息) 
 
     $api_置动态标记($用户在线信息, $用户在线信息.Tab + "追加文本")
 
@@ -406,6 +408,7 @@ func 插入公共js例子() {
 
     $用户在线信息.Uid = 局_形参对象.Uid //下边这个传对象,所以先赋值Uid 到对象内
     局_结果 = $api_用户Id取详情($用户在线信息)
+
 
     return 局_结果 
 }`,

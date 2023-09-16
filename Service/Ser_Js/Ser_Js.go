@@ -10,6 +10,7 @@ import (
 	E "github.com/duolabmeng6/goefun/eTool"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
+	"server/Service/Ser_Ka"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_PublicData"
@@ -38,6 +39,9 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("console", console)
 
 	_ = vm.Set("$api_用户Id取详情", jS_用户Id取详情)
+	_ = vm.Set("$api_卡号Id取详情", jS_卡号Id取详情)
+	_ = vm.Set("$api_取软件用户详情", jS_取软件用户详情)
+
 	_ = vm.Set("$api_用户Id余额增减", jS_用户Id增减余额)
 	_ = vm.Set("$api_用户Id增减积分", jS_用户Id增减积分)
 	_ = vm.Set("$api_用户Id增减时间点数", jS_用户Id增减时间点数)
@@ -57,7 +61,7 @@ func JS引擎初始化_Hook处理(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_Li
 	if err != nil {
 		return "", 局_任务状态, err
 	}
-	
+
 	vm := JS引擎初始化_用户(AppInfo, 在线信息)
 	_ = vm.Set("$拦截原因", "")
 	_ = vm.Set("$任务状态", 局_任务状态)
@@ -103,7 +107,22 @@ func jS_用户Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_User {
 	}
 	return 局_用户详情
 }
-
+func jS_卡号Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_Ka {
+	var 局_卡详情 DB.DB_Ka
+	局_卡详情, err := Ser_Ka.Id取详情(局_在线信息.Uid)
+	if err != nil {
+		return 局_卡详情
+	}
+	return 局_卡详情
+}
+func jS_取软件用户详情(局_在线信息 DB.DB_LinksToken) DB.DB_AppUser {
+	var 局_详情 DB.DB_AppUser
+	局_详情, ok := Ser_AppUser.Uid取详情(局_在线信息.LoginAppid, 局_在线信息.Uid)
+	if ok {
+		return 局_详情
+	}
+	return 局_详情
+}
 func jS_用户Id增减余额(局_在线信息 DB.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
 
