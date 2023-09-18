@@ -223,8 +223,8 @@ func Id积分增减(AppId, Id int, 增减值 float64, is增加 bool) error {
 		return errors.New("积分减少失败查看服务器日志检查原因")
 	}
 	var 局_积分 float64
-	//db.Table("db_AppUser_?", AppId).Select("VipNumber").Where("Id = ?", Id).First(&局_积分) // //这种方式会有警告没有模型
-	db.Raw(fmt.Sprintf(`SELECT VipNumber FROM db_AppUser_%d WHERE Id = %d  LIMIT 1`, AppId, Id)).Scan(&局_积分)
+	var sql = fmt.Sprintf(`SELECT VipNumber FROM db_AppUser_%d WHERE Id = %d  LIMIT 1`, AppId, Id)
+	db.Raw(sql).Scan(&局_积分)
 
 	//读取新的数值
 	if 局_积分 < 0 {

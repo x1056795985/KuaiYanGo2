@@ -8,6 +8,7 @@ import (
 	"github.com/dop251/goja"
 	. "github.com/duolabmeng6/efun/efun"
 	E "github.com/duolabmeng6/goefun/eTool"
+	"github.com/gin-gonic/gin"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
@@ -15,6 +16,7 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_PublicData"
 	"server/Service/Ser_PublicJs"
+	"server/Service/Ser_TaskPool"
 	"server/Service/Ser_User"
 	"server/global"
 	DB "server/structs/db"
@@ -38,11 +40,12 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = console.Set("log", jS_log)
 	_ = vm.Set("console", console)
 
+	_ = vm.Set("$程序_延时", jS_程序_延时)
 	_ = vm.Set("$api_用户Id取详情", jS_用户Id取详情)
 	_ = vm.Set("$api_卡号Id取详情", jS_卡号Id取详情)
 	_ = vm.Set("$api_取软件用户详情", jS_取软件用户详情)
 
-	_ = vm.Set("$api_用户Id余额增减", jS_用户Id增减余额)
+	_ = vm.Set("$api_用户Id增减余额", jS_用户Id增减余额)
 	_ = vm.Set("$api_用户Id增减积分", jS_用户Id增减积分)
 	_ = vm.Set("$api_用户Id增减时间点数", jS_用户Id增减时间点数)
 	_ = vm.Set("$api_读公共变量", jS_读公共变量)
@@ -52,6 +55,8 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_置动态标记", jS_置在线动态标签)
 	_ = vm.Set("$api_执行SQL查询", jS_执行SQL查询)
 	_ = vm.Set("$api_执行SQL功能", jS_执行SQL功能)
+	_ = vm.Set("$api_任务池_任务创建", jS_任务池_任务创建)
+	_ = vm.Set("$api_任务池_任务查询", jS_任务池_任务查询)
 
 	return vm
 
@@ -107,6 +112,10 @@ func jS_用户Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_User {
 	}
 	return 局_用户详情
 }
+func jS_程序_延时(毫秒数 int64) bool {
+	time.Sleep(time.Duration(毫秒数) * time.Millisecond)
+	return true
+}
 func jS_卡号Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_Ka {
 	var 局_卡详情 DB.DB_Ka
 	局_卡详情, err := Ser_Ka.Id取详情(局_在线信息.Uid)
@@ -135,19 +144,21 @@ func jS_用户Id增减余额(局_在线信息 DB.DB_LinksToken, 增减值 float6
 
 	return js对象_通用返回{IsOk: true, Err: ""}
 }
-func jS_用户Id增减积分(AppId int, 局_在线信息 DB.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
+func jS_用户Id增减积分(局_在线信息 DB.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
 
-	err := Ser_AppUser.Id积分增减(AppId, 局_在线信息.Uid, utils.Float64取绝对值(增减值), is增加)
+	局_AppUserId := Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
+	err := Ser_AppUser.Id积分增减(局_在线信息.LoginAppid, 局_AppUserId, utils.Float64取绝对值(增减值), is增加)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
-	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, 局_在线信息.Ip, 原因, 增减值, AppId, 1)
+	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, 局_在线信息.Ip, 原因, 增减值, 局_在线信息.LoginAppid, 1)
 	return js对象_通用返回{IsOk: true, Err: ""}
 }
 func jS_用户Id增减时间点数(AppId int, 局_在线信息 DB.DB_LinksToken, 增减值 int, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
-	err := Ser_AppUser.Id点数增减(AppId, 局_在线信息.Uid, int64(增减值), is增加)
+	局_AppUserId := Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
+	err := Ser_AppUser.Id点数增减(AppId, 局_AppUserId, int64(增减值), is增加)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
@@ -161,8 +172,9 @@ func jS_用户Id增减时间点数(AppId int, 局_在线信息 DB.DB_LinksToken,
 }
 
 type js对象_通用返回 struct {
-	IsOk bool   `json:"IsOk"`
-	Err  string `json:"Err"`
+	IsOk bool                   `json:"IsOk"`
+	Err  string                 `json:"Err"`
+	Data map[string]interface{} `json:"Data"`
 }
 
 func jS_读公共变量(变量名 string) string {
@@ -284,4 +296,58 @@ func jS_执行SQL功能(SQL string) js对象_通用返回 {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
 	return js对象_通用返回{IsOk: true, Err: strconv.FormatInt(局_执行结果.RowsAffected, 10)}
+}
+
+func jS_任务池_任务创建(局_在线信息 DB.DB_LinksToken, 任务类型ID int, 任务数据 string) js对象_通用返回 {
+	//{"Api":"TaskPoolNew","TaskTypeId":1,"Parameter":"{'a':1}","Time":1684752350,"Status":28986}
+
+	局_任务类型, err := Ser_TaskPool.Task类型读取(任务类型ID)
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: "任务类型ID不存在"}
+	}
+
+	if 局_任务类型.Status != 1 {
+		return js对象_通用返回{IsOk: false, Err: "任务类型ID维护中"}
+	}
+
+	局_任务数据 := 任务数据 //Parameter
+	AppInfo := Ser_AppInfo.App取App详情(局_在线信息.LoginAppid)
+	if 局_任务类型.HookSubmitDataStart != "" {
+
+		局_任务数据, _, err = JS引擎初始化_Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
+		if err != nil {
+			return js对象_通用返回{IsOk: false, Err: err.Error()}
+		}
+	}
+
+	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据)
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: "Task数据创建加入队列失败"}
+	}
+
+	if 局_任务类型.HookSubmitDataEnd != "" {
+		局_任务数据, _, err = JS引擎初始化_Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
+		if err != nil {
+			return js对象_通用返回{IsOk: false, Err: err.Error()}
+		}
+	}
+	return js对象_通用返回{IsOk: true, Err: "", Data: gin.H{"TaskUuid": 任务Id}}
+
+}
+
+func jS_任务池_任务查询(任务Uuid string) js对象_通用返回 {
+
+	局_uuid := 任务Uuid
+	if len(局_uuid) != 36 { //提前筛选,优化
+		return js对象_通用返回{IsOk: false, Err: "任务Uuid错误"}
+	}
+	局_任务数据, err := Ser_TaskPool.Task数据读取_单条(局_uuid)
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: "任务Uuid错误"}
+	}
+
+	a := gin.H{"Status": 局_任务数据.Status, "ReturnData": 局_任务数据.ReturnData, "TimeStart": 局_任务数据.TimeStart, "TimeEnd": 局_任务数据.TimeEnd}
+
+	return js对象_通用返回{IsOk: true, Err: "", Data: a}
+
 }
