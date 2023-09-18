@@ -1,6 +1,7 @@
 package Ser_Init
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -294,6 +295,49 @@ func 插入公共js例子() {
 		IsVip: 0,
 		Note:  "例程",
 	})
+	Ser_PublicJs.C创建(DB.DB_PublicJs{
+		AppId: 1,
+		Name:  "任务池创建延迟查询结果例子",
+		Value: `function 任务池创建查询例子(形参) {
+    let 任务类型ID = 1
+    let 结果 = $api_任务池_任务创建($用户在线信息, 任务类型ID, JSON形参文本)
+    //{"IsOk":true,"Err":"","Data":{"TaskUuid":"1fb701a9-05c5-442a-8bcc-34bda07050ae"}}
+
+    if (结果.IsOk) {
+        let 局_任务对象 = 结果.Data
+        let 任务结果
+        for (let i = 0; i < 3; i++) {
+            $程序_延时(5000); // 等待1秒
+            任务结果 = $api_任务池_任务查询(局_任务对象.TaskUuid)
+            if (任务结果.Data.Status !== 1 && 任务结果.Data.Status !== 2) { //不是刚创建, 也不是处理中,跳出循环
+                break
+            }
+        }
+        //{"IsOk":true,"Err":"","Data":{"ReturnData":"","Status":1,"TimeEnd":0,"TimeStart":1695016978}}
+        if (任务结果.Data.Status === 3) {
+            // 如果是成功,直接返回
+            return {
+                Code: 1,
+                Msg: "ok",
+                recognition: 任务结果.Data.ReturnData,
+            }
+        }
+    }
+    return {
+        Code: -1,
+        Msg: "失败",
+    }
+}
+
+const js对象_通用返回 = { //api函数返回基本都是这个
+    IsOk: false,
+    Err: "",
+    Data: {}
+};`,
+		Type:  1,
+		IsVip: 0,
+		Note:  "例程",
+	})
 
 	Ser_PublicJs.C创建(DB.DB_PublicJs{
 		AppId: 1,
@@ -310,7 +354,7 @@ func 插入公共js例子() {
             Err: "金额不能大于0"
         }
     } else {
-        局_结果 = $api_用户Id余额增减($用户在线信息, 局_形参对象.a, "测试公共函数扣余额")
+        局_结果 = $api_用户Id增减余额($用户在线信息, 局_形参对象.a, "测试公共函数扣余额")
     }
 
 
@@ -431,7 +475,7 @@ func 插入公共js例子() {
 
     任务JSON格式参数 = 任务JSON格式参数.replace(/'/g, '"') //因为易语言 双引号不方便,所以到js里换成替换单引号成双引号 //注意永远不要相信客户端传参,建议直接在hook函数内固定金额,这里只是测试
    var 局_形参对象 = JSON.parse(任务JSON格式参数); //使用JSON.parse() 将JSON字符串转为JS对象;
-    局_结果 = $api_用户Id余额增减($用户在线信息, -局_形参对象.a, "测试任务池Hook内扣余额") //扣款需要时负数需要前面加 - 负号 直接操作就行, 内部会自动判断不用再js先判断余额是否充足,
+    局_结果 = $api_用户Id增减余额($用户在线信息, -局_形参对象.a, "测试任务池Hook内扣余额") //扣款需要时负数需要前面加 - 负号 直接操作就行, 内部会自动判断不用再js先判断余额是否充足,
     if (!局_结果.IsOk) {
         $拦截原因 = "扣费失败" + 局_结果.Err
     }
@@ -465,4 +509,35 @@ func 数据库兼容旧版本() {
 	}
 	//2023/9/9  把支付方式  微信PC修改成 微信支付
 	_ = db.Model(DB.DB_LogRMBPayOrder{}).Where("Type = ? ", "微信PC").Update("Type", "微信支付").Error
+	//2023/9/16  把appUser 积分 字段类型 修改成  双精度小数型
+	局_已有AppID := Ser_AppInfo.App取map列表String()
+	for 值 := range 局_已有AppID {
+		columnType := ""
+		err := db.Raw("SELECT data_type FROM information_schema.columns WHERE table_name = 'db_AppUser_" + 值 + "' AND column_name = 'VipNumber'").Scan(&columnType).Error
+		if columnType != "" && columnType != "decimal" {
+			err = db.Exec("ALTER TABLE db_AppUser_" + 值 + " MODIFY COLUMN VipNumber DECIMAL(10,2)").Error
+			if err != nil {
+				fmt.Println("兼容就版本,%d成功修改字段类型为 DECIMAL(10, 2)报错:?", 值, err.Error())
+			} else {
+				fmt.Println("兼容就版本,%d成功修改字段类型为 DECIMAL(10, 2)", 值)
+			}
+
+		}
+
+	}
+	//2023/9/17  把任务信息数据库 生成信息和消费信息,字段修改长度为5000
+
+	columnType := ""
+	err := db.Raw("SELECT COLUMN_TYPE FROM information_schema.columns WHERE table_name = 'db_TaskPoolData' AND column_name = 'SubmitData'").Scan(&columnType).Error
+	if columnType != "" && columnType != "varchar(8000)" {
+		err = db.Exec("ALTER TABLE db_TaskPoolData MODIFY COLUMN ReturnData varchar(8000)").Error
+		err = db.Exec("ALTER TABLE db_TaskPoolData MODIFY COLUMN SubmitData varchar(8000)").Error
+		if err != nil {
+			fmt.Println("兼容就版本,成功修改字段类型为 varchar(8000)", err.Error())
+		} else {
+			fmt.Println("兼容就版本,成功修改字段类型为 varchar(8000)")
+		}
+
+	}
+
 }
