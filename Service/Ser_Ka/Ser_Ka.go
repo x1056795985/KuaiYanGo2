@@ -1092,7 +1092,7 @@ func K卡号充值_事务(来源AppId int, 卡号, 充值用户, 推荐人, 来�
 		global.GVA_LOG.Error("充值失败,回滚事务,报错信息:" + err.Error())
 		return errors.New("充值失败,重试"), nil
 	}
-	if !局_is卡号 || 局_卡信息.RMb > 0 {
+	if !局_is卡号 && 局_卡信息.RMb > 0 {
 		err = tx.Model(DB.DB_User{}).Where("Id = ?", 局_App用户.Uid).Update("RMB", gorm.Expr("RMB + ?", 局_卡信息.RMb)).Error
 		if err != nil {
 			tx.Rollback() //失败回滚事务

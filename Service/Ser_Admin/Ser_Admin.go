@@ -93,7 +93,6 @@ func Id余额增减(Id int, 增减值 float64, is增加 bool) (新余额 float64
 		tx.Commit() //操作完成提交事务
 		return 新余额, nil
 	}
-
 }
 func Id取余额(Id int) (余额 float64) {
 	_ = global.GVA_DB.Model(DB.DB_Admin{}).Select("Rmb").Where("Id=?", Id).Take(&余额).Error

@@ -1,5 +1,5 @@
 {
-  "ailiyunid": "d5d9c1a3d4bb828c57796901c3ae6505d009be59e65ec3e9b50091fbbeef231b",
+  "ailiyunid": "46d68a0cd4ab613581ff4c7e109417748e92f8d51cb3df3c0c3bcd7a7a43845a",
   "captcha": {
     "img-height": 80,
     "img-width": 240,
@@ -69,7 +69,7 @@
     "支付宝显示名称": "支付宝PC网页",
     "禁止退款": false
   },
-  "快验token": "G4TJQAJU8CTJBO6RHRKGCCRSAQXSI09E",
+  "快验token": "XCKNMDCKGSE9HVEJEFXNZYQEP2WPQCAA",
   "短信平台配置": {
     "tx云sms": {
       "secret_id": "AKIDLdfdLp54ndJiphOktlcDYcPwwgEkj3nG",
