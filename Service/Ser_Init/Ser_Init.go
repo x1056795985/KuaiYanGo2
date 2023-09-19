@@ -68,6 +68,7 @@ func InitDbTables() {
 		// 系统模块表  数据库结构表
 		DB.DB_PublicData{},
 		DB.DB_PublicJs{},
+		DB.DB_UserConfig{},
 
 		DB.DB_Admin{},
 		DB.DB_User{},

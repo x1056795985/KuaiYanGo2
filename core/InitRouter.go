@@ -256,7 +256,20 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 
 		}
 	}
+	//用户云配置===========================================
+	baseRouter = Router根Admin.Group("/UserConfig")
+	baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
+	{
+		App := Api.Admin.UserConfig                         //实现路由的 具体方法位置
+		baseRouter.POST("GetList", App.GetList)             // 获取列表
+		baseRouter.POST("New", App.New)                     // 新建信息
+		baseRouter.POST("GetInfo", App.GetInfo)             // 获取详细信息
+		baseRouter.POST("SetUserConfig", App.SetUserConfig) // 保存详细信息
 
+		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+			baseRouter.POST("Delete", App.Delete) // 删除信息
+		}
+	}
 	//公共变量===========================================
 	baseRouter = Router根Admin.Group("/PublicData")
 	baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌

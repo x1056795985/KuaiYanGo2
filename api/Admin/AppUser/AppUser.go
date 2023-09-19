@@ -187,12 +187,15 @@ func (a *Api) Del批量删除软件用户(c *gin.Context) {
 		return
 	}
 	var 影响行数 int64
+	var 软件用户Uid = Ser_AppUser.Id取Uid_批量(请求.AppId, 请求.Id)
+
 	var db = global.GVA_DB
 	影响行数 = db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
 		return
 	}
+	_ = db.Model(DB.DB_UserConfig{}).Where("AppId = ? ", 请求.AppId).Where("Uid IN ? ", 软件用户Uid).Delete("").RowsAffected
 
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
 	return

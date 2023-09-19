@@ -25,6 +25,7 @@ import (
 	"server/api/Admin/TaskPool"
 	"server/api/Admin/User"
 	"server/api/Admin/UserClass"
+	"server/api/Admin/UserConfig"
 	"server/api/Admin/base"
 )
 
@@ -43,6 +44,7 @@ type _Admin struct {
 	KaClass           KaClass.Api
 	Ka                Ka.Api
 	PublicData        PublicData.Api
+	UserConfig        UserConfig.Api
 	PublicJs          PublicJs.Api
 	TaskPool          TaskPool.Api
 	SetSystem         SetSystem.Api
