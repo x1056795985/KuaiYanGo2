@@ -45,7 +45,11 @@ func Id取Uid(AppId, id int) int {
 	global.GVA_DB.Raw("SELECT `Uid` FROM `db_AppUser_"+strconv.Itoa(AppId)+"` WHERE `Id` =  ? LIMIT 1", id).Scan(&Uid)
 	return Uid
 }
-
+func Id取Uid_批量(AppId int, id []int) []int {
+	var Uid []int
+	global.GVA_DB.Raw("SELECT `Uid` FROM `db_AppUser_"+strconv.Itoa(AppId)+"` WHERE `Id` IN  ? ", id).Scan(&Uid)
+	return Uid
+}
 func Id取User(AppId int, id int) string {
 	var 用户名 string
 	if Ser_AppInfo.App是否为卡号(AppId) {

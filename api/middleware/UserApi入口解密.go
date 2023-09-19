@@ -82,6 +82,8 @@ var J集_UserAPi路由 = map[string]func(*gin.Context){
 	"TaskPoolGetData":     UserApi.UserApi_任务池_任务查询,
 	"TaskPoolGetTask":     UserApi.UserApi_任务池_任务处理获取,
 	"TaskPoolSetTask":     UserApi.UserApi_任务池_任务处理返回,
+	"GetUserConfig":       UserApi.UserApi_取用户云配置,
+	"SetUserConfig":       UserApi.UserApi_置用户云配置,
 }
 
 var J集_UserAPi路由_加密 = map[string]string{}
