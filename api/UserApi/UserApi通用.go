@@ -25,6 +25,7 @@ import (
 	"server/Service/Ser_TaskPool"
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserClass"
+	"server/Service/Ser_UserConfig"
 	"server/api/UserApi/response"
 	"server/global"
 	DB "server/structs/db"
@@ -551,6 +552,50 @@ func UserApi_取公共变量(c *gin.Context) {
 		} else {
 			response.X响应状态(c, response.Status_未登录)
 		}*/
+	return
+}
+func UserApi_取用户云配置(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	// {"Api":"GetUserConfig","Name":"配置1"}
+	局_配置名 := string(请求json.GetStringBytes("Name"))
+	局_配置值 := Ser_UserConfig.Q取值(局_在线信息.LoginAppid, 局_在线信息.Uid, 局_配置名)
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{局_配置名: 局_配置值})
+	return
+}
+func UserApi_置用户云配置(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	// {"Api":"GetUserConfig","Name":"配置1","Value":"值"}
+
+	局_配置名 := string(请求json.GetStringBytes("Name"))
+	if 局_配置名 == "" {
+		response.X响应状态消息(c, response.Status_操作失败, "云配置名不能为空")
+		return
+	}
+	局_配置值 := string(请求json.GetStringBytes("Value"))
+	if 局_配置值 == "" { //值为空则删
+		global.GVA_DB.Model(DB.DB_UserConfig{}).Delete(DB.DB_UserConfig{
+			AppId: 局_在线信息.LoginAppid,
+			Uid:   局_在线信息.Uid,
+			Name:  局_配置名,
+		})
+	} else {
+		_ = Ser_UserConfig.Z置值(局_在线信息.LoginAppid, 局_在线信息.Uid, 局_配置名, 局_配置值)
+	}
+	response.X响应状态(c, c.GetInt("局_成功Status"))
 	return
 }
 func UserApi_取应用最新版本(c *gin.Context) {
