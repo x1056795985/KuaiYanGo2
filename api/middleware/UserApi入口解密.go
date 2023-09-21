@@ -22,68 +22,74 @@ import (
 	"time"
 )
 
-var J集_UserAPi路由 = map[string]func(*gin.Context){
+var J集_UserAPi路由 = map[string]路由信息{
 	//"GetToken": UserApi.UserApi_GetToken,   //通过中间件单独处理了,不放在路由内,防止重复调用
-	"GetUserIP":           UserApi.UserApi_GetUserIP,
-	"UserLogin":           UserApi.UserApi_用户登录,
-	"UserReduceMoney":     UserApi.UserApi_用户减少余额,
-	"UserReduceVipNumber": UserApi.UserApi_用户减少积分,
-	"UserReduceVipTime":   UserApi.UserApi_用户减少点数,
-	"IsServerLink":        UserApi.UserApi_取服务器连接状态,
-	"IsLogin":             UserApi.UserApi_取登录状态,
-	"GetVipData":          UserApi.UserApi_取Vip数据,
-	"GetAppGongGao":       UserApi.UserApi_取应用公告,
-	"GetAppUpDataJson":    UserApi.UserApi_取新版本下载地址,
-	"GetAppPublicData":    UserApi.UserApi_取应用专属变量,
-	"GetPublicData":       UserApi.UserApi_取公共变量,
-	"GetAppVersion":       UserApi.UserApi_取应用最新版本,
-	"GetAppHomeUrl":       UserApi.UserApi_取应用主页Url,
-	"SetAppUserKey":       UserApi.UserApi_置新绑定信息,
-	"DeleteAppUserKey":    UserApi.UserApi_解除绑定信息,
-	"SetNewUserMsg":       UserApi.UserApi_置新用户消息,
-	"GetCaptcha":          UserApi.UserApi_取验证码信息,
-	"GetSMSCaptcha":       UserApi.UserApi_取短信验证码信息,
-	"GetAppUserKey":       UserApi.UserApi_取用户绑定信息,
-	"GetIsUser":           UserApi.UserApi_取用户是否存在,
-	"GetAppUserInfo":      UserApi.UserApi_取软件用户信息,
-	"GetAppInfo":          UserApi.UserApi_取应用基础信息,
-	"GetUserInfo":         UserApi.UserApi_取用户基础信息,
-	"SetUserQqEmailPhone": UserApi.UserApi_置用户基础信息,
-	"NewUserInfo":         UserApi.UserApi_用户注册,
-	"GetSystemTime":       UserApi.UserApi_取系统时间戳,
-	"GetAppUserVipTime":   UserApi.UserApi_取Vip到期时间戳,
-	"GetAppUserNote":      UserApi.UserApi_取软件用户备注,
-	"LogOut":              UserApi.UserApi_用户登录注销,
-	"RemoteLogOut":        UserApi.UserApi_用户登录远程注销,
-	"HeartBeat":           UserApi.UserApi_心跳,
-	"SetPassWord":         UserApi.UserApi_密码找回或修改,
-	"GetUserRmb":          UserApi.UserApi_取用户余额,
-	"GetAppUserVipNumber": UserApi.UserApi_取用户积分,
-	"GetCaptchaApiList":   UserApi.UserApi_取开启验证码接口,
-	"UseKa":               UserApi.UserApi_卡号充值,
-	"GetTab":              UserApi.UserApi_取动态标签,
-	"SetTab":              UserApi.UserApi_置动态标签,
-	"GetPayOrderStatus":   UserApi.UserApi_订单_取状态,
-	"PayKaUsa":            UserApi.UserApi_订单_购卡直冲,
-	"PayUserMoney":        UserApi.UserApi_订单_余额充值,
-	"PayUserVipNumber":    UserApi.UserApi_订单_积分充值,
-	"PayGetKa":            UserApi.UserApi_订单_支付购卡,
-	"GetAliPayPC":         UserApi.UserApi_订单_余额充值_支付宝PC支付,
-	"GetWXPayPC":          UserApi.UserApi_订单_余额充值_微信支付支付,
-	"GetPayStatus":        UserApi.UserApi_取支付通道状态,
-	"GetPayKaList":        UserApi.UserApi_取可购买卡类列表,
-	"GetPurchasedKaList":  UserApi.UserApi_取已购买充值卡列表,
-	"PayMoneyToVipNumber": UserApi.UserApi_余额购买积分,
-	"PayMoneyToKa":        UserApi.UserApi_余额购买充值卡,
-	"GetUserClassList":    UserApi.UserApi_取用户类型列表,
-	"SetUserClass":        UserApi.UserApi_置用户类型,
-	"RunJS":               UserApi.UserApi_云函数执行,
-	"TaskPoolNewData":     UserApi.UserApi_任务池_任务创建,
-	"TaskPoolGetData":     UserApi.UserApi_任务池_任务查询,
-	"TaskPoolGetTask":     UserApi.UserApi_任务池_任务处理获取,
-	"TaskPoolSetTask":     UserApi.UserApi_任务池_任务处理返回,
-	"GetUserConfig":       UserApi.UserApi_取用户云配置,
-	"SetUserConfig":       UserApi.UserApi_置用户云配置,
+	"NewUserInfo":         {"用户注册", UserApi.UserApi_用户注册},
+	"UserLogin":           {"用户登录", UserApi.UserApi_用户登录},
+	"UseKa":               {"卡号充值", UserApi.UserApi_卡号充值},
+	"UserReduceMoney":     {"用户减少余额", UserApi.UserApi_用户减少余额},
+	"UserReduceVipNumber": {"用户减少积分", UserApi.UserApi_用户减少积分},
+	"UserReduceVipTime":   {"用户减少点数", UserApi.UserApi_用户减少点数},
+	"IsServerLink":        {"取服务器连接状态", UserApi.UserApi_取服务器连接状态},
+	"IsLogin":             {"取登录状态", UserApi.UserApi_取登录状态},
+	"GetVipData":          {"取Vip数据", UserApi.UserApi_取Vip数据},
+	"GetAppGongGao":       {"取应用公告", UserApi.UserApi_取应用公告},
+	"GetAppUpDataJson":    {"取新版本下载地址", UserApi.UserApi_取新版本下载地址},
+	"GetAppPublicData":    {"取应用专属变量", UserApi.UserApi_取应用专属变量},
+	"GetPublicData":       {"取公共变量", UserApi.UserApi_取公共变量},
+	"GetAppVersion":       {"取应用最新版本", UserApi.UserApi_取应用最新版本},
+	"GetAppHomeUrl":       {"取应用主页Url", UserApi.UserApi_取应用主页Url},
+	"SetAppUserKey":       {"置新绑定信息", UserApi.UserApi_置新绑定信息},
+	"DeleteAppUserKey":    {"解除绑定信息", UserApi.UserApi_解除绑定信息},
+	"SetNewUserMsg":       {"置新用户消息", UserApi.UserApi_置新用户消息},
+	"GetCaptcha":          {"取验证码信息", UserApi.UserApi_取验证码信息},
+	"GetSMSCaptcha":       {"取短信验证码信息", UserApi.UserApi_取短信验证码信息},
+	"GetAppUserKey":       {"取用户绑定信息", UserApi.UserApi_取用户绑定信息},
+	"GetIsUser":           {"取用户是否存在", UserApi.UserApi_取用户是否存在},
+	"GetAppUserInfo":      {"取软件用户信息", UserApi.UserApi_取软件用户信息},
+	"GetAppInfo":          {"取应用基础信息", UserApi.UserApi_取应用基础信息},
+	"GetUserInfo":         {"取用户基础信息", UserApi.UserApi_取用户基础信息},
+	"SetUserQqEmailPhone": {"置用户基础信息", UserApi.UserApi_置用户基础信息},
+	"GetUserIP":           {"取用户IP", UserApi.UserApi_GetUserIP},
+	"GetSystemTime":       {"取系统时间戳", UserApi.UserApi_取系统时间戳},
+	"GetAppUserVipTime":   {"取Vip到期时间戳", UserApi.UserApi_取Vip到期时间戳},
+	"GetAppUserNote":      {"取软件用户备注", UserApi.UserApi_取软件用户备注},
+	"LogOut":              {"用户登录注销", UserApi.UserApi_用户登录注销},
+	"RemoteLogOut":        {"用户登录远程注销", UserApi.UserApi_用户登录远程注销},
+	"HeartBeat":           {"心跳", UserApi.UserApi_心跳},
+	"SetPassWord":         {"密码找回或修改", UserApi.UserApi_密码找回或修改},
+	"GetUserRmb":          {"取用户余额", UserApi.UserApi_取用户余额},
+	"GetAppUserVipNumber": {"取用户积分", UserApi.UserApi_取用户积分},
+	"GetCaptchaApiList":   {"取开启验证码接口", UserApi.UserApi_取开启验证码接口},
+
+	"GetTab":              {"取动态标签", UserApi.UserApi_取动态标签},
+	"SetTab":              {"置动态标签", UserApi.UserApi_置动态标签},
+	"GetPayOrderStatus":   {"订单_取状态", UserApi.UserApi_订单_取状态},
+	"PayKaUsa":            {"订单_购卡直冲", UserApi.UserApi_订单_购卡直冲},
+	"PayUserMoney":        {"订单_余额充值", UserApi.UserApi_订单_余额充值},
+	"PayUserVipNumber":    {"订单_积分充值", UserApi.UserApi_订单_积分充值},
+	"PayGetKa":            {"订单_支付购卡", UserApi.UserApi_订单_支付购卡},
+	"GetAliPayPC":         {"订单_余额充值_支付宝PC支付", UserApi.UserApi_订单_余额充值_支付宝PC支付},
+	"GetWXPayPC":          {"订单_余额充值_微信支付支付", UserApi.UserApi_订单_余额充值_微信支付支付},
+	"GetPayStatus":        {"取支付通道状态", UserApi.UserApi_取支付通道状态},
+	"GetPayKaList":        {"取可购买卡类列表", UserApi.UserApi_取可购买卡类列表},
+	"GetPurchasedKaList":  {"取已购买充值卡列表", UserApi.UserApi_取已购买充值卡列表},
+	"PayMoneyToVipNumber": {"余额购买积分", UserApi.UserApi_余额购买积分},
+	"PayMoneyToKa":        {"余额购买充值卡", UserApi.UserApi_余额购买充值卡},
+	"GetUserClassList":    {"取用户类型列表", UserApi.UserApi_取用户类型列表},
+	"SetUserClass":        {"置用户类型", UserApi.UserApi_置用户类型},
+	"RunJS":               {"云函数执行", UserApi.UserApi_云函数执行},
+	"TaskPoolNewData":     {"任务池_任务创建", UserApi.UserApi_任务池_任务创建},
+	"TaskPoolGetData":     {"任务池_任务查询", UserApi.UserApi_任务池_任务查询},
+	"TaskPoolGetTask":     {"任务池_任务处理获取", UserApi.UserApi_任务池_任务处理获取},
+	"TaskPoolSetTask":     {"任务池_任务处理返回", UserApi.UserApi_任务池_任务处理返回},
+	"GetUserConfig":       {"取用户云配置", UserApi.UserApi_取用户云配置},
+	"SetUserConfig":       {"置用户云配置", UserApi.UserApi_置用户云配置},
+}
+
+type 路由信息 struct {
+	Z中文名  string
+	Z指向函数 func(*gin.Context)
 }
 
 var J集_UserAPi路由_加密 = map[string]string{}
@@ -303,15 +309,15 @@ func UserApi解密() gin.HandlerFunc {
 			}
 		}
 
-		var 局_执行函数 func(*gin.Context)
-		局_执行函数, ok = J集_UserAPi路由[局_Api]
+		var 局_路由信息 路由信息
+		局_路由信息, ok = J集_UserAPi路由[局_Api]
 
 		c.Set("RSA强制", 集_UserAPi路由强制RSA[局_Api] == 1)
 
 		if ok { //如果有这个api 就跳转执行, 如果没有就最终走向 返回无Api的函数
 			c.Set("局_json明文", 局_json明文)
 			c.Set("局_成功Status", 局_成功Status)
-			局_执行函数(c)
+			局_路由信息.Z指向函数(c)
 			c.Abort()
 			return
 		}
