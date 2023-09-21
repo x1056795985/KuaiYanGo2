@@ -773,15 +773,9 @@ func RouterWebApi(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter = Router.Group("/WebApi/")
 	baseRouter.Use(middleware.IsTokenWebApi()) ///鉴权中间件 检查 token  单独优先处理
 	{
-		baseRouter.POST("TaskPoolGetTask", WebApi.R任务池_任务处理获取)
-		baseRouter.POST("TaskPoolSetTask", WebApi.R任务池_任务处理返回)
-		baseRouter.GET("GetAppUpDataJson", WebApi.Q取App最新下载地址)
-		baseRouter.POST("GetKaInfo", WebApi.Get卡号详细信息) // WEB查卡
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-			baseRouter.POST("NewKa", Api.Admin.Ka.New) // WEB制卡
-			baseRouter.POST("RunJs", WebApi.RunJs)
+		for 键名, 键值 := range WebApi.J集_UserAPi路由 {
+			baseRouter.POST(键名, 键值.Z指向函数)
 		}
-
 	}
 
 	return baseRouter

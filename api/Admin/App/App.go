@@ -6,6 +6,8 @@ import (
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_PublicData"
+	"server/api/WebApi"
+	"server/api/middleware"
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -337,59 +339,24 @@ func 版本号_检测通配符是否合法(可用版本号 string) error {
 }
 
 func (a *Api) Get全部用户APi(c *gin.Context) {
-	局_path数组 := [...][2]string{
-		{"NewUserInfo", "用户注册"},
-		{"UserLogin", "用户登录"},
-		{"UseKa", "卡号充值"},
-		{"SetPassWord", "密码找回或修改"},
-		{"GetSMSCaptcha", "取短信验证码信息"},
-		{"UserReduceMoney", "用户减少余额"},
-		{"UserReduceVipNumber", "用户减少积分"},
-		{"UserReduceVipTime", "用户减少点数"},
-		{"IsServerLink", "取服务器连接状态"},
-		{"IsLogin", "取登录状态"},
-		{"GetVipData", "取Vip数据"},
-		{"GetAppGongGao", "取应用公告"},
-		{"GetAppUpDataJson", "取新版本下载地址"},
-		{"GetAppPublicData", "取应用专属变量"},
-		{"GetPublicData", "取公共变量"},
-		{"GetAppVersion", "取应用最新版本"},
-		{"GetAppHomeUrl", "取应用主页Url"},
-		{"SetAppUserKey", "置新绑定信息"},
-		{"SetNewUserMsg", "置新用户消息"},
-		{"GetCaptcha", "取验证码信息"},
-		{"GetAppUserKey", "取用户绑定信息"},
-		{"GetIsUser", "取用户是否存在"},
-		{"GetAppUserInfo", "取软件用户信息"},
-		{"GetUserInfo", "取用户基础信息"},
-		{"SetUserQqEmailPhone", "置用户基础信息"},
+	局_path数组 := make([][]string, 0, len(middleware.J集_UserAPi路由))
+	//把下边这些常用接口放在前面
+	局_path数组 = append(局_path数组, []string{"NewUserInfo", "用户注册"})
+	局_path数组 = append(局_path数组, []string{"UserLogin", "用户登录"})
+	局_path数组 = append(局_path数组, []string{"UseKa", "卡号充值"})
+	局_path数组 = append(局_path数组, []string{"SetPassWord", "密码找回或修改"})
+	局_path数组 = append(局_path数组, []string{"GetSMSCaptcha", "取短信验证码信息"})
+	局_path数组 = append(局_path数组, []string{"GetPayOrderStatus", "订单_取状态"})
+	局_path数组 = append(局_path数组, []string{"PayKaUsa", "订单_购卡直冲"})
+	局_path数组 = append(局_path数组, []string{"PayUserMoney", "订单_余额充值"})
+	局_path数组 = append(局_path数组, []string{"PayUserVipNumber", "订单_积分充值"})
+	局_path数组 = append(局_path数组, []string{"PayGetKa", "订单_支付购卡"})
 
-		{"GetSystemTime", "取系统时间戳"},
-		{"GetAppUserVipTime", "取Vip到期时间戳"},
-		{"GetAppUserNote", "取软件用户备注"},
-		{"LogOut", "用户登录注销"},
-		{"RemoteLogOut", "用户登录远程注销"},
-		{"HeartBeat", "心跳"},
-		{"GetUserRmb", "取用户余额"},
-		{"GetAppUserVipNumber", "取用户积分"},
-		{"GetCaptchaApiList", "取开启验证码接口"},
-		{"GetTab", "取动态标签"},
-		{"SetTab", "置动态标签"},
-		{"GetAliPayPC", "余额充值_支付宝PC支付"},
-		{"GetWXPayPC", "余额充值_微信支付支付"},
-		{"GetPayOrderStatus", "余额充值_支付订单状态查询"},
-		{"GetPayStatus", "取支付通道状态"},
-		{"GetPayKaList", "取可购买卡类列表"},
-		{"GetPurchasedKaList", "取已购买充值卡列表"},
-		{"PayMoneyToVipNumber", "余额购买积分"},
-		{"PayMoneyToKa", "余额购买充值卡"},
-		{"GetUserClassList", "取用户类型列表"},
-		{"SetUserClass", "置用户类型"},
-		{"RunJS", "云函数执行"},
-		{"TaskPoolNewData", "任务池_任务创建"},
-		{"TaskPoolGetData", "任务池_任务查询"},
-		{"TaskPoolGetTask", "任务池_任务处理获取"},
-		{"TaskPoolSetTask", "任务池_任务处理返回"},
+	for 键名, 键值 := range middleware.J集_UserAPi路由 {
+		if 键名 == "NewUserInfo" || 键名 == "UserLogin" || 键名 == "UseKa" || 键名 == "SetPassWord" || 键名 == "GetSMSCaptcha" || 键名 == "GetPayOrderStatus" || 键名 == "PayKaUsa" || 键名 == "PayUserMoney" || 键名 == "PayUserVipNumber" || 键名 == "PayGetKa" {
+			continue
+		}
+		局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
 	}
 	response.OkWithDetailed(局_path数组, "获取成功", c)
 	return
@@ -397,13 +364,17 @@ func (a *Api) Get全部用户APi(c *gin.Context) {
 }
 
 func (a *Api) Get全部WebAPi(c *gin.Context) {
-	局_path数组 := [...][2]string{
+	/*	局_path数组 := [...][2]string{
 		{"TaskPoolGetTask", "任务池_任务处理获取"},
 		{"TaskPoolSetTask", "任务池_任务处理返回"},
 		{"RunJs", "运行公共js函数"},
 		{"GetAppUpDataJson", "取App最新下载地址"},
 		{"NewKa", "新制卡号"},
 		{"GetKaInfo", "取卡号详细信息"},
+	}*/
+	局_path数组 := make([][]string, 0, len(middleware.J集_UserAPi路由))
+	for 键名, 键值 := range WebApi.J集_UserAPi路由 {
+		局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
 	}
 	response.OkWithDetailed(局_path数组, "获取成功", c)
 	return

@@ -42,7 +42,7 @@ type 响应_S生成API加密源码SDK struct {
 
 func (a *Api) S生成API加密源码SDK(c *gin.Context) {
 	var 请求 请求_S生成API加密源码SDK
-	response.FailWithMessage("模块更新维护中,请通知管理员修复", c)
+	response.FailWithMessage("模块更新维护中", c)
 	return
 
 	err := c.ShouldBindJSON(&请求)
