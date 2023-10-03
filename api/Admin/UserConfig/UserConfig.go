@@ -75,8 +75,9 @@ func (a *Api) GetList(c *gin.Context) {
 			局_DB.Where("LOCATE( ?, Name)>0 ", 请求.Keywords)
 		case 2: //用户
 			局_DB.Where("LOCATE( ?, User)>0 ", 请求.Keywords)
+		case 3: //Uid
+			局_DB.Where("Uid = ?", 请求.Keywords)
 		}
-
 	}
 
 	var DB_PublicData []结构响应_DB_UserConfig扩展
@@ -102,8 +103,7 @@ func (a *Api) GetList(c *gin.Context) {
 
 type 结构响应_DB_UserConfig扩展 struct {
 	DB.DB_UserConfig
-	AppName  string `json:"AppName"`
-	UserName string `json:"UserName"`
+	AppName string `json:"AppName"`
 }
 
 type 结构响应_GetDB_PublicDataList struct {
@@ -131,7 +131,9 @@ func (a *Api) Delete(c *gin.Context) {
 	}
 
 	var 影响行数 int64
-	var db = global.GVA_DB
+	var db = global.GVA_DB.Debug()
+
+	//AppId,Uid,User 联合主键 根据主键自动删除
 	影响行数 = db.Model(DB.DB_UserConfig{}).Delete(请求.Data).RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)

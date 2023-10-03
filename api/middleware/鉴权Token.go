@@ -96,7 +96,6 @@ func IsTokenAdmin() gin.HandlerFunc {
 func IsAdminHost() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//需要处理 外网->宝塔->Nginx转发->快验,这种情况host会变成127.0.0.1,所以检测  Origin Referer 也没有域名才拦截
-		//Origin:[http://ky.9w99.cn] Pragma:[no-cache] Referer:[http://ky.9w99.cn/Admin/]
 		局_host := global.GVA_CONFIG.X系统设置.G管理员后台Host
 		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
 			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行
@@ -163,7 +162,6 @@ func IsTokenAgent() gin.HandlerFunc {
 func IsAgentHost() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//需要处理 外网->宝塔->Nginx转发->快验,这种情况host会变成127.0.0.1,所以检测  Origin Referer 也没有域名才拦截
-		//Origin:[http://ky.9w99.cn] Pragma:[no-cache] Referer:[http://ky.9w99.cn/Admin/]
 		局_host := global.GVA_CONFIG.X系统设置.D代理后台Host
 		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
 			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行
