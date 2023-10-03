@@ -11,6 +11,7 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserClass"
+	"server/Service/Ser_UserConfig"
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -206,9 +207,15 @@ type 结构请求_ID数组 struct {
 	AppId int   `json:"AppId"`
 }
 
+type 结构请求_DB_AppUser_UserConfig struct {
+	AppId      int                `json:"AppId"` // Appid 必填
+	AppUser    DB.DB_AppUser      `json:"AppUser"`
+	UserConfig []DB.DB_UserConfig `json:"UserConfig"`
+}
+
 // save 保存
 func (a *Api) Save用户信息(c *gin.Context) {
-	var 请求 结构请求_DB_AppUser
+	var 请求 结构请求_DB_AppUser_UserConfig
 	err := c.ShouldBindJSON(&请求)
 	//解析失败
 	if err != nil {
@@ -220,13 +227,13 @@ func (a *Api) Save用户信息(c *gin.Context) {
 		return
 	}
 
-	if 请求.Id <= 0 {
+	if 请求.AppUser.Id <= 0 {
 		response.FailWithMessage("Id错误", c)
 		return
 	}
 
 	var count int64
-	err = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.Id).Count(&count).Error
+	err = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id).Count(&count).Error
 	// 没查到数据
 	if count == 0 {
 		response.FailWithMessage("用户不存在", c)
@@ -234,14 +241,25 @@ func (a *Api) Save用户信息(c *gin.Context) {
 	}
 
 	//直接排除Uid 禁止修改  Select可能0值 或"" 的字段防止不更新
-	var db = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Select("Key", "VipTime", "VipNumber", "Note", "MaxOnline", "UserClassId").Omit("Uid", "app_id").Where("Id = ?", 请求.Id)
-	err = db.Updates(请求).Error
+	var db = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id)
+	err = db.Updates(map[string]interface{}{
+		"Key":         请求.AppUser.Key,
+		"VipTime":     请求.AppUser.VipTime,
+		"VipNumber":   请求.AppUser.VipNumber,
+		"Note":        请求.AppUser.Note,
+		"MaxOnline":   请求.AppUser.MaxOnline,
+		"UserClassId": 请求.AppUser.UserClassId,
+	}).Error
 
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
 		return
 	}
 	response.OkWithMessage("保存成功", c)
+	db = global.GVA_DB.Model(DB.DB_UserConfig{})
+	for _, 值 := range 请求.UserConfig {
+		_ = Ser_UserConfig.Z置值(请求.AppId, 请求.AppUser.Uid, 值.Name, 值.Value)
+	}
 	return
 }
 
