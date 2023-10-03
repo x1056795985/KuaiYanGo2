@@ -169,10 +169,10 @@ func (a *Api) GetKaList(c *gin.Context) {
 }
 
 type 结构响应_GetKaList struct {
-	List      interface{}         `json:"List"`      // 列表
-	Count     int64               `json:"Count"`     // 总数
-	AppType   int                 `json:"AppType"`   //
-	UserClass map[int]string      `json:"UserClass"` //
+	List      interface{}                   `json:"List"`      // 列表
+	Count     int64                         `json:"Count"`     // 总数
+	AppType   int                           `json:"AppType"`   //
+	UserClass map[int]string                `json:"UserClass"` //
 	KaClass   map[int]结构响应_卡类名称价格 `json:"KaClass"`   //
 }
 type 结构响应_卡类名称价格 struct {
@@ -361,6 +361,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 		response.FailWithMessage(局_权限文本, c)
 		return
 	}
+	Ser_Ka.Ka修改状态(请求.Id, 请求.Status)
 
 	err = Ser_Ka.Ka修改状态(请求.Id, 请求.Status)
 
@@ -457,7 +458,7 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 
 type 响应_AppIdNameList struct {
 	Map   map[string]string `json:"Map"`
-	Array []键值对             `json:"Array"`
+	Array []键值对          `json:"Array"`
 }
 
 type 键值对 struct {

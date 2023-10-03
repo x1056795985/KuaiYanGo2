@@ -85,6 +85,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 	}
 
 	global.H缓存.Delete(客户端ip) //重置防暴次数
+
 	var DB_links_user DB.DB_LinksToken
 	DB_links_user.Uid = DB_user.Id
 	DB_links_user.User = DB_user.User

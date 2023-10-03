@@ -126,7 +126,6 @@ func TX云_sms发送短信验证码(模板变量 []string, 接收短信手机号
 		return 系统错误.New(*response.Response.SendStatusSet[0].Code)
 	}
 	return nil
-	//{"SendStatusSet":[{"SerialNo":"","PhoneNumber":"+8613109812593","Fee":0,"SessionContext":"","Code":"FailedOperation.TemplateUnapprovedOrNotExist","Message":"template is not approved or not exist","IsoCode":""}],"RequestId":"2b1b0426-05a1-4f9e-8e65-5e158ce11be8"}
 	/* 当出现以下错误码时，快速解决方案参考
 	 * [FailedOperation.SignatureIncorrectOrUnapproved](https://cloud.tencent.com/document/product/382/9558#.E7.9F.AD.E4.BF.A1.E5.8F.91.E9.80.81.E6.8F.90.E7.A4.BA.EF.BC.9Afailedoperation.signatureincorrectorunapproved-.E5.A6.82.E4.BD.95.E5.A4.84.E7.90.86.EF.BC.9F)
 	 * [FailedOperation.TemplateIncorrectOrUnapproved](https://cloud.tencent.com/document/product/382/9558#.E7.9F.AD.E4.BF.A1.E5.8F.91.E9.80.81.E6.8F.90.E7.A4.BA.EF.BC.9Afailedoperation.templateincorrectorunapproved-.E5.A6.82.E4.BD.95.E5.A4.84.E7.90.86.EF.BC.9F)
