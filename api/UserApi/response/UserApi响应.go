@@ -27,8 +27,8 @@ func 响应加密处理(c *gin.Context, 明文Json string) {
 	}
 
 	AppInfo := 局_临时通用.(DB.DB_AppInfo)
-	if AppInfo.CryptoType <= 1 {
-		c.JSON(http.StatusOK, 明文Json)
+	if AppInfo.CryptoType <= 1 { //明文
+		c.String(http.StatusOK, 明文Json)
 		return
 	}
 

@@ -86,7 +86,12 @@ func Order更新订单状态和第三方订单号(订单号 string, 状态值 in
 	if 订单号 == "" {
 		return false
 	}
-	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 订单号).Update("PayOrder2", 第三方订单号).Update("Status", 状态值).Error
+	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 订单号).Updates(
+		map[string]interface{}{
+			"PayOrder2": 第三方订单号,
+			"Status":    状态值,
+		}).Error
+
 	if err != nil {
 		global.GVA_LOG.Error(订单号 + "Order更新订单状态失败:" + err.Error())
 		return false
@@ -131,7 +136,12 @@ func Order更新订单备注和扩展信息(订单号 string, 备注, 扩展信�
 	if 订单号 == "" {
 		return false
 	}
-	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 订单号).Update("Extra", 扩展信息).Update("Note", 备注).Error
+
+	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 订单号).Updates(
+		map[string]interface{}{
+			"Extra": 扩展信息,
+			"Note":  备注,
+		}).Error
 	if err != nil {
 		global.GVA_LOG.Error(订单号 + "Order更新订单注和扩展失败:" + err.Error())
 		return false
