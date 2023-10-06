@@ -44,10 +44,13 @@ func PayAliNotify(c *gin.Context) {
 
 	noti, err := client.GetTradeNotification(c.Request) //这里就会校验的
 	//fmt.Println(c.Request.PostForm.Encode())
-	//app_id=2021001159688744&auth_app_id=2021001159688744&buyer_id=2088022724614415&buyer_pay_amount=0.01&charset=utf-8&fund_bill_list=%5B%7B%22amount%22%3A%220.01%22%2C%22fundChannel%22%3A%22ALIPAYACCOUNT%22%7D%5D&gmt_create=202
-	//3-05-16+11%3A14%3A37&gmt_payment=2023-05-16+11%3A14%3A48&invoice_amount=0.01&notify_id=2023051601222111448014411420706088&notify_time=2023-05-16+11%3A14%3A48&notify_type=trade_status_sync&out_trade_no=202305161113450001&poin
-	//t_amount=0.00&receipt_amount=0.01&seller_id=2088422339120873&sign=AOGgQPzmHf1aTY695Ey39sxAni7J5EvZybD%2BOvBDfWMUSWRDAJm72Ciy4Rz3cxXYsfZO1t61qKKGVAjNoVDxAZfZdbZrKhk%2BFDRqM7n%2FODPdgI8pelo1NT4Af%2BGcYIF9zkhcmqHcpCJCMeh8yYAPdk
-	//WkcTKWaGRwFAIELI9vd8DusrNegDLYKnPCrrNF1U4MSXAbhDXAnu5%2FONWBbWeedyY6xR5R%2BKWDnyWptcZaT8dJAWz23V3dVsH8vLMcv2Dx7q3SL7mQCiA3gAZuI0zitrIKfd7AybKQZD6Vjl%2FOEeyffnaE6D4kEiWOBSfXxwKr9uxPkcaFucoTw0ctWH3B8g%3D%3D&sign_type=RSA2&subject=%E7%94%A8%E6%88%B7aaaaaa%E5%85%85%E5%80%BC&total_amount=0.01&trade_no=2023051622001414411454464620&trade_status=TRADE_SUCCESS&version=1.0
+	/*
+		app_id=2021001159688744&auth_app_id=2021001159688744&buyer_id=2088022724614415&buyer_pay_amount=0.01&charset=utf-8&fund_bill_list=%5B%7B%22amount%22%3A%220.01%22%2C%22fundChannel%22%3A%22ALIPAYACCOUNT%22%7D%5D&gmt_create=202
+			3-05-16+11%3A14%3A37&gmt_payment=2023-05-16+11%3A14%3A48&invoice_amount=0.01&notify_id=2023051601222111448014411420706088&notify_time=2023-05-16+11%3A14%3A48&notify_type=trade_status_sync&out_trade_no=202305161113450001&poin
+			t_amount=0.00&receipt_amount=0.01&seller_id=2088422339120873&sign=AOGgQPzmHf1aTY695Ey39sxAni7J5EvZybD%2BOvBDfWMUSWRDAJm72Ciy4Rz3cxXYsfZO1t61qKKGVAjNoVDxAZfZdbZrKhk%2BFDRqM7n%2FODPdgI8pelo1NT4Af%2BGcYIF9zkhcmqHcpCJCMeh8yYAPdk
+			WkcTKWaGRwFAIELI9vd8DusrNegDLYKnPCrrNF1U4MSXAbhDXAnu5%2FONWBbWeedyY6xR5R%2BKWDnyWptcZaT8dJAWz23V3dVsH8vLMcv2Dx7q3SL7mQCiA3gAZuI0zitrIKfd7AybKQZD6Vjl%2FOEeyffnaE6D4kEiWOBSfXxwKr9uxPkcaFucoTw0ctWH3B8g%3D%3D&sign_type=RSA2&subject=%E7%94%A8%E6%88%B7aaaaaa%E5%85%85%E5%80%BC&total_amount=0.01&trade_no=2023051622001414411454464620&trade_status=TRADE_SUCCESS&version=1.0
+
+	*/
 	if err != nil {
 		局_boyd := c.Request.PostForm.Encode()
 
@@ -288,14 +291,14 @@ func Z支付成功_后处理(局_订单详细信息 DB.DB_LogRMBPayOrder) {
 		卡类ID := 局_fastjson.GetInt("KaClassId")
 		局_Ip := string(局_fastjson.GetStringBytes("Ip"))
 
-		局_卡信息, err2 := Ser_Ka.Ka单卡创建(卡类ID, "系统自动", "", "", 0)
+		局_卡信息, err2 := Ser_Ka.Ka单卡创建(卡类ID, "系统自动", "支付购卡订单ID:"+局_订单详细信息.PayOrder, "", 0)
 		if err2 != nil {
 			Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+err2.Error())
 			return
 		}
 		局_扩展信息 := fmt.Sprintf(`{"Name":"%s","Id":%d}`, 局_卡信息.Name, 局_卡信息.Id)
 		Ser_RMBPayOrder.Order更新订单备注和扩展信息(局_订单详细信息.PayOrder, 局_订单详细信息.Note+"购卡:"+局_卡信息.Name, 局_扩展信息)
-		局_文本 := fmt.Sprintf("支付购卡订单ID:%s,卡类:%s,消费:%.2f)", 局_订单详细信息.PayOrder, 局_卡信息.KaClassId, 局_订单详细信息.Rmb)
+		局_文本 := fmt.Sprintf("支付购卡订单ID:%s,卡类:%d,消费:%.2f)", 局_订单详细信息.PayOrder, 局_卡信息.KaClassId, 局_订单详细信息.Rmb)
 
 		go Ser_Log.Log_写卡号操作日志("支付购卡", 局_Ip, 局_文本, []string{局_卡信息.Name}, 1, 5)
 	default:
@@ -340,14 +343,14 @@ func PayWx退款Notify(c *gin.Context) {
 		局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(string(局_回调.GetStringBytes("out_trade_no")))
 
 		if ok && 局_订单详细信息.Status == 4 { //有订单且订单信息为退款中
-			Ser_RMBPayOrder.Order更新订单状态(局_订单详细信息.PayOrder, Ser_RMBPayOrder.D订单状态_退款成功)                                                      //修改订单信息为已支付 充值
+			Ser_RMBPayOrder.Order更新订单状态(局_订单详细信息.PayOrder, Ser_RMBPayOrder.D订单状态_退款成功)                                                 //修改订单信息为已支付 充值
 			Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+",已退到:"+string(局_回调.GetStringBytes("user_received_account"))) //修改订单信息为已支付 充值
 		}
 	} else {
 		//这里是退款失败的回调
 		局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(string(局_回调.GetStringBytes("out_trade_no")))
 		if ok && 局_订单详细信息.Status == 4 { //有订单且订单信息为退款中
-			Ser_RMBPayOrder.Order更新订单状态(局_订单详细信息.PayOrder, Ser_RMBPayOrder.D订单状态_退款失败)       //修改订单信息为已支付 充值
+			Ser_RMBPayOrder.Order更新订单状态(局_订单详细信息.PayOrder, Ser_RMBPayOrder.D订单状态_退款失败)   //修改订单信息为已支付 充值
 			Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+局_微信响应.Summary) //修改订单信息为已支付 充值
 		}
 	}
