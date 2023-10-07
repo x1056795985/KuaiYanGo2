@@ -64,6 +64,7 @@ func (a *Api) SaveKa信息(c *gin.Context) {
 		"RMb":         请求.RMb,
 		"VipNumber":   请求.VipNumber,
 		"UserClassId": 请求.UserClassId,
+		"NoUserClass": 请求.NoUserClass,
 	}
 	err = global.GVA_DB.Model(DB.DB_Ka{}).Where("Id= ?", 请求.Id).Updates(&m).Error
 	if err != nil {

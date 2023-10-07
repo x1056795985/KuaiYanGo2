@@ -163,14 +163,14 @@ func UserApi_用户登录(c *gin.Context) {
 
 		//没有这个用户,应该是第一次登录应用,添加进去
 		if AppInfo.AppType == 3 {
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 
 		} else if AppInfo.AppType == 4 {
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		} else {
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0, 0, "")
 		}
 
 		if err != nil {

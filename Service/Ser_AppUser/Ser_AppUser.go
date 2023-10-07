@@ -120,7 +120,7 @@ func Get用户会员和非会员数量(AppId int) (会员, 非会员 int64) {
 }
 
 // New用户信息
-func New用户信息(AppId int, Uid int, 绑定信息 string, 最大在线数量 int, VipTime int64, VipNumber float64) error {
+func New用户信息(AppId int, Uid int, 绑定信息 string, 最大在线数量 int, VipTime int64, VipNumber float64, UserClassId int, Note string) error {
 	var 局_AppUser DB.DB_AppUser
 
 	局_AppUser.Id = 0
@@ -129,9 +129,9 @@ func New用户信息(AppId int, Uid int, 绑定信息 string, 最大在线数量
 	局_AppUser.Key = 绑定信息
 	局_AppUser.VipTime = VipTime
 	局_AppUser.VipNumber = VipNumber
-	局_AppUser.Note = ""
+	局_AppUser.Note = Note
 	局_AppUser.MaxOnline = 最大在线数量
-	局_AppUser.UserClassId = 0
+	局_AppUser.UserClassId = UserClassId
 	局_AppUser.RegisterTime = int(time.Now().Unix())
 
 	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Create(&局_AppUser).Error
