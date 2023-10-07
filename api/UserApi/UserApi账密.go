@@ -477,7 +477,7 @@ func UserApi_用户注册(c *gin.Context) {
 	}
 
 	//没有这个用户,应该是第一次登录应用,添加进去
-	err = Ser_AppUser.New用户信息(AppInfo.AppId, Ser_User.User用户名取id(string(请求json.GetStringBytes("User"))), string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0)
+	err = Ser_AppUser.New用户信息(AppInfo.AppId, Ser_User.User用户名取id(string(请求json.GetStringBytes("User"))), string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0, 0, "")
 	if err != nil {
 		response.X响应状态消息(c, response.Status_SQl错误, "New用户信息内部错误,用户注册成功,注册软件用户失败")
 		return

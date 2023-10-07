@@ -2,7 +2,7 @@ package KaClass
 
 import (
 	"github.com/gin-gonic/gin"
-	App服务 "server/Service/Ser_AppInfo"
+	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_UserClass"
 	"server/global"
 	"server/structs/Http/response"
@@ -94,7 +94,7 @@ func (a *Api) GetKaClassList(c *gin.Context) {
 		return
 	}
 	var AppType int
-	AppType = App服务.App取AppType(请求.AppId)
+	AppType = Ser_AppInfo.App取AppType(请求.AppId)
 	UserClass := Ser_UserClass.UserClass取map列表Int(请求.AppId)
 	response.OkWithDetailed(结构响应_GetKaClassList{DB_KaClass, 总数, UserClass, AppType}, "获取成功", c)
 	return
@@ -152,10 +152,7 @@ func (a *Api) SaveInfo(c *gin.Context) {
 		response.FailWithMessage("Id错误", c)
 		return
 	}
-	if 请求.AppId <= 10000 {
-		response.FailWithMessage("AppId错误", c)
-		return
-	}
+
 	if len(请求.Note) > 400 {
 		response.FailWithMessage(`备注过长,请减少备注长度`, c)
 		return
@@ -189,9 +186,31 @@ func (a *Api) SaveInfo(c *gin.Context) {
 
 	//直接排除Aid 禁止修改  Select可能0值 或"" 的字段防止不更新
 	var db = global.GVA_DB.Model(DB.DB_KaClass{})
-	db = db.Select("KaStringType", "Note", "MaxOnline", "Name", "Prefix", "VipTime", "KaType", "Num", "KaLength", "NoUserClass", "UserClassId", "AgentMoney", "Money", "VipNumber", "RMb", "InviteCount")
-	db = db.Omit("AppId")
-	err = db.Where("Id = ?", 请求.Id).Updates(请求).Error
+
+	var data = map[string]interface{}{
+		"KaStringType": 请求.KaStringType,
+		"Note":         请求.Note,
+		"MaxOnline":    请求.MaxOnline,
+		"Name":         请求.Name,
+		"Prefix":       请求.Prefix,
+		"VipTime":      请求.VipTime,
+		"KaType":       请求.KaType,
+		"Num":          请求.Num,
+		"KaLength":     请求.KaLength,
+		"NoUserClass":  请求.NoUserClass,
+		"UserClassId":  请求.UserClassId,
+		"AgentMoney":   请求.AgentMoney,
+		"Money":        请求.Money,
+		"VipNumber":    请求.VipNumber,
+		"RMb":          请求.RMb,
+		"InviteCount":  请求.InviteCount,
+	}
+
+	if Ser_AppInfo.App是否为卡号(请求.AppId) {
+		data["Num"] = 1 //卡号类型卡只能用一次
+	}
+
+	err = db.Where("Id = ?", 请求.Id).Updates(&data).Error
 
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
@@ -214,7 +233,7 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("添加用户不能有id值", c)
 		return
 	}
-	if 请求.AppId <= 10000 {
+	if 请求.AppId <= 10000 || Ser_AppInfo.AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId错误", c)
 		return
 	}
@@ -229,7 +248,7 @@ func (a *Api) New(c *gin.Context) {
 		return
 	}
 
-	if !App服务.AppId是否存在(请求.AppId) {
+	if !Ser_AppInfo.AppId是否存在(请求.AppId) {
 		response.FailWithMessage(`AppId不存在,
 请先去[ 应用管理 => 应用列表 ],
 添加该应用信息`, c)
@@ -249,6 +268,9 @@ func (a *Api) New(c *gin.Context) {
 	if 请求.Money < -1 || 请求.AgentMoney < -1 {
 		response.FailWithMessage(`售价值不能为小于-1`, c)
 		return
+	}
+	if Ser_AppInfo.App是否为卡号(请求.AppId) {
+		请求.Num = 1 //卡号类型卡只能用一次
 	}
 	//app_id 没有这个字段排除掉
 	err = global.GVA_DB.Model(DB.DB_KaClass{}).Create(&请求).Error
