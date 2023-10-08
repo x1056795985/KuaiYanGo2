@@ -81,6 +81,7 @@ func Id取详情(Appid, Id int) (DB.DB_UserClass, bool) {
 	if Id == 0 {
 		UserClass.Name = "未分类"
 		UserClass.Mark = 0
+		UserClass.Weight = 1
 		return UserClass, true
 	}
 	err := global.GVA_DB.Model(DB.DB_UserClass{}).Where("Appid=?", Appid).Where("Id=?", Id).First(&UserClass).Error
