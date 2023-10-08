@@ -233,7 +233,7 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("添加用户不能有id值", c)
 		return
 	}
-	if 请求.AppId <= 10000 || Ser_AppInfo.AppId是否存在(请求.AppId) {
+	if 请求.AppId <= 10000 || !Ser_AppInfo.AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId错误", c)
 		return
 	}
