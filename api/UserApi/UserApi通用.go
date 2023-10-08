@@ -1153,8 +1153,29 @@ func UserApi_取可购买卡类列表(c *gin.Context) {
 	DB_KaClass = Ser_KaClass.KaClass取可购买卡类列表(AppInfo.AppId)
 
 	var 卡类列表_简化 = make([]gin.H, 0, len(DB_KaClass))
+	var 局_用户类型 = DB.DB_UserClass{}
+	var ok = true
+
 	for 索引, _ := range DB_KaClass {
-		卡类列表_简化 = append(卡类列表_简化, gin.H{"Id": DB_KaClass[索引].Id, "Name": DB_KaClass[索引].Name, "Money": DB_KaClass[索引].Money})
+		局_用户类型, ok = Ser_UserClass.Id取详情(AppInfo.AppId, DB_KaClass[索引].UserClassId)
+
+		if !ok {
+			局_用户类型.Name = ""
+			局_用户类型.Mark = 0
+			局_用户类型.Weight = 1
+		}
+
+		卡类列表_简化 = append(卡类列表_简化, gin.H{
+			"Id":              DB_KaClass[索引].Id,
+			"Name":            DB_KaClass[索引].Name,
+			"Money":           DB_KaClass[索引].Money,
+			"NoUserClass":     DB_KaClass[索引].NoUserClass,
+			"UserClassId":     DB_KaClass[索引].UserClassId,
+			"UserClassName":   局_用户类型.Name,
+			"UserClassMark":   局_用户类型.Mark,
+			"UserClassWeight": 局_用户类型.Weight,
+		})
+
 	}
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 卡类列表_简化)
@@ -1603,24 +1624,22 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 	局_卡号 := Ser_AppInfo.App是否为卡号(AppInfo.AppId)
 	var 局_Uid = 0
 	var 局_Uid类型 = 0
-	var 局_AppUserID = 0
 
 	if 局_卡号 {
 		局_Uid类型 = 2
 		局_Uid = Ser_Ka.Ka卡号取id(AppInfo.AppId, 局_用户名)
-		局_AppUserID = Ser_AppUser.Uid取Id(AppInfo.AppId, 局_Uid)
+
 	} else {
 		局_Uid类型 = 1
 		局_Uid = Ser_User.User用户名取id(局_用户名)
-		局_AppUserID = Ser_AppUser.Uid取Id(AppInfo.AppId, 局_Uid)
 	}
 
 	if 局_Uid == 0 {
 		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
 		return
 	}
-
-	if 局_AppUserID == 0 {
+	局_AppUser, ok := Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid)
+	if !ok {
 		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户未登录过应用,请先操作登录一次")
 		return
 	}
@@ -1634,12 +1653,18 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "非本应用卡类")
 		return
 	}
+
 	if 局_卡类信息.Money <= 0 {
 		response.X响应状态消息(c, response.Status_操作失败, "该卡类用户价格小于0不可购买")
 		return
 	}
 
-	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"AppUserId":%d}`, 局_卡类信息.Id, 局_AppUserID)
+	if 局_AppUser.UserClassId != 0 && 局_卡类信息.NoUserClass == 2 && 局_AppUser.UserClassId != 局_卡类信息.UserClassId {
+		response.X响应状态消息(c, response.Status_操作失败, "禁止购买，充值卡类不相同，请重新选择！")
+		return
+	}
+
+	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"AppUserId":%d}`, 局_卡类信息.Id, 局_AppUser.Id)
 
 	var 响应数据 gin.H
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
