@@ -541,4 +541,12 @@ func 数据库兼容旧版本() {
 
 	}
 
+	//2023/10/9 发现用户云配置联合主键有问题,有的会缺字段,所以增加一个判断
+	var 局_主键信息 []string
+	err = db.Raw(`SHOW INDEX FROM db_UserConfig  WHERE Key_name="PRIMARY"`).Scan(&局_主键信息).Error
+	if len(局_主键信息) != 3 {
+		err = db.Exec("ALTER TABLE db_UserConfig DROP PRIMARY KEY").Error                   //删除旧联合主键
+		err = db.Exec("ALTER TABLE db_UserConfig ADD PRIMARY KEY (AppId, Uid, Name)").Error //设置新联合主键
+	}
+
 }
