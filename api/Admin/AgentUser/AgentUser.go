@@ -221,20 +221,13 @@ func (a *Api) Del批量删除代理(c *gin.Context) {
 		response.FailWithMessage("用户有子级代理,暂不可删除,请先根据代理组织结构图,删除所有子级代理后,再删除该用户", c)
 		return
 	}
-	var 影响行数 int64
-	var db = global.GVA_DB
 
-	影响行数 = db.Model(DB.DB_User{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
-	if db.Error != nil {
-		response.FailWithMessage("删除失败", c)
-		return
-	}
 	err = Ser_Agent.S删除代理(请求.Id)
 	if err != nil {
-		response.FailWithMessage("删除代理关系失败:"+err.Error(), c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
+	response.OkWithMessage("删除成功", c)
 	return
 }
 
