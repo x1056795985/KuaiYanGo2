@@ -245,6 +245,7 @@ func InitDbTable数据() {
 			Ser_User.New用户信息("张飞", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", 局_Uid, 30, 0)
 			Ser_User.New用户信息("诸葛亮", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", 局_Uid, 30, 0)
 		}
+
 		局_Uid = Ser_User.User用户名取id("关羽")
 		if 局_Uid > 0 {
 			Ser_User.New用户信息("关平", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", 局_Uid, 10, 0)
@@ -466,7 +467,7 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 		AppId: 2,
 		Name:  "hook模板_任务创建入库前",
 		Value: `function hook模板_任务创建入库前(任务JSON格式参数) {
-    /*
+    
     return $用户在线信息; // {"Key":"aaaaaa","Status":1,"Tab":"AMD Ryzen 7 6800H with Radeon Graphics         |178BFBFF00A40F41","Uid":21,"User":"aaaaaa"}
     return $应用信息 // {"AppId":10001,"AppName":"演示对接账密限时Rsa交换密匙","Status":3,"VipData":"{\n\"VipData\":\"这里的数据,只有登录成功并且账号会员不过期才会传输出去的数据\",\n\"VipData2\":\"这里的数据,只有登录成功并且账号会员不过期才会传输出去的数据\"\n}
     return $用户在线信息.Uid
@@ -484,7 +485,7 @@ const js对象_通用返回 = { //api函数返回基本都是这个
          if (Math.floor(Math.random() * 10) > 5) {
          $拦截原因 = "如果值不为空,则任务拦截,响应拦截原因"
          }
-         */
+         //   $拦截原因 只要赋值了,就会被拦截,如果没赋值 就正常放行
     return 任务JSON格式参数 //任务JSON格式文本型参数,可以在这里修改内容  然后返回
 }`,
 		Type:  1,

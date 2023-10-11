@@ -1,6 +1,8 @@
 package Ser_Agent
 
 import (
+	"errors"
+	"gorm.io/gorm"
 	"server/Service/Ser_Admin"
 	"server/Service/Ser_User"
 	"server/global"
@@ -42,7 +44,19 @@ func 递归获取上级代理ID(userID int, 数组_代理信息 *[]DB.Db_Agent_L
 }
 
 func S删除代理(UID []int) error {
-	err := global.GVA_DB.Where("Uid IN ? ", UID).Delete(&DB.Db_Agent_Level{}).Error
+	err := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		影响行数 := tx.Model(DB.DB_User{}).Where("Id IN ? ", UID).Delete("").RowsAffected
+		if 影响行数 == 0 {
+			return errors.New("代理用户删除失败")
+		}
+		//代理用户删除了删除代理关系
+		影响行数 = tx.Model(DB.Db_Agent_Level{}).Where("Uid IN ? ", UID).Delete("").RowsAffected
+		if 影响行数 == 0 {
+			return errors.New("代理关系删除失败")
+		}
+		return nil
+	})
+
 	return err
 }
 
@@ -208,6 +222,14 @@ func S是否都为子级代理(上级ID int, 子级代理ID []int) bool {
 	global.GVA_DB.Model(DB.Db_Agent_Level{}).Select("Level").Where("Uid IN ?", 子级代理ID).Where("UPAgentId = ?", 上级ID).Find(&局_临时整数)
 	//查询出来的数量和子级代理ID数量相同,说明,每一个ID,都是子级代理
 	return len(局_临时整数) == len(子级代理ID)
+}
+
+// 也可以用来判断是否为上级代理的子级
+func Q取Id数组中代理数量(代理ID []int) int {
+	var 局_临时整数 []int
+	global.GVA_DB.Model(DB.DB_User{}).Debug().Select("Id").Where("id IN ?", 代理ID).Where("UPAgentId != 0").Find(&局_临时整数)
+	//查询出来的数量=0 则说明 没有代理
+	return len(局_临时整数)
 }
 func Id功能权限检测(代理ID, 权限代号 int) bool {
 	var 临时 int
