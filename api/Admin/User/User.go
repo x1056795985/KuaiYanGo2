@@ -243,9 +243,9 @@ func (a *Api) Del批量删除用户(c *gin.Context) {
 		response.FailWithMessage("Id数组为空", c)
 		return
 	}
-	局_子级代理ID数组 := Ser_Agent.Q取下级代理数组含子级(请求.Id)
-	if len(局_子级代理ID数组) > 0 {
-		response.FailWithMessage("用户有子级代理,暂不可删除,请先根据代理组织结构图,删除所有子级代理后,再删除该用户", c)
+
+	if Ser_Agent.Q取Id数组中代理数量(请求.Id) > 0 {
+		response.FailWithMessage("包含代理级别用户,代理请前往代理管理-代理账号删除", c)
 		return
 	}
 	var 影响行数 int64

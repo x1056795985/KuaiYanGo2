@@ -25,7 +25,7 @@ func User用户名取id(用户名 string) int {
 		return 0
 	}
 
-	var Id int
+	var Id = 0
 	_ = global.GVA_DB.Model(DB.DB_User{}).Select("Id").Where("User=?", 用户名).Take(&Id)
 	return Id
 }
