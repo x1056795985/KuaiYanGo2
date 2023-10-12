@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"fmt"
 	E "github.com/duolabmeng6/goefun/eTool"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
@@ -14,15 +15,34 @@ import (
 
 const WebApi = 3
 
-// Token有效的才放行,否则返回Ttoken失效
-func IsTokenWebApi() gin.HandlerFunc {
+func IsWebApiHost() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if global.GVA_CONFIG.X系统设置.WebApiHost != "" && global.GVA_CONFIG.X系统设置.WebApiHost != c.Request.Host {
-			c.String(404, "")
+		//需要处理 外网->宝塔->Nginx转发->快验,这种情况host会变成127.0.0.1,所以检测  Origin Referer 也没有域名才拦截
+		局_host := global.GVA_CONFIG.X系统设置.WebApiHost
+		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
+			/*			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行  WebApi没有Get 必须带 Referer
+						//如果伪造请求过多,直接连Origin Referer 都禁止,开发者去宝塔配置Nginx转发 让其转发host
+						if c.Request.Method == "GET" && c.Request.Host[:10] == "127.0.0.1:" {
+							c.Next()
+							return
+						}*/
+
+			if global.GVA_CONFIG.X系统设置.W系统模式 == 1056795985 {
+				c.String(404, fmt.Sprintf("%v", c.Request))
+			} else {
+				c.String(404, "") //fmt.Sprintf("%v", c.Request)
+			}
 			c.Abort()
 			return
 		}
+		// 继续处理请求
+		c.Next()
+	}
+}
 
+// Token有效的才放行,否则返回Ttoken失效
+func IsTokenWebApi() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		Token := c.Request.Header.Get("Token")
 		if Token == "" {
 			response.FailTokenErr(gin.H{"reload": true}, "请先登录", c)
