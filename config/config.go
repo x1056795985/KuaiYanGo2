@@ -29,7 +29,7 @@ type X系统设置 struct {
 	Y用户中心开关    bool   `mapstructure:"用户中心开关" json:"用户中心开关" yaml:"用户中心开关"`
 	D代理中心开关    bool   `mapstructure:"代理中心开关" json:"代理中心开关" yaml:"代理中心开关"`
 	D代理中心关闭提示  string `mapstructure:"代理中心关闭提示" json:"代理中心关闭提示" yaml:"代理中心关闭提示"`
-	W系统模式      int    `mapstructure:"系统模式" json:"系统模式" yaml:"系统模式"` // 0  正常用户 1 演示模式     1056795985 系统开发者模式
+	W系统模式      int    `mapstructure:"系统模式" json:"系统模式" yaml:"系统模式"` // 0  正常用户 1 演示模式     1056795985 调试模式
 	B备案号       string `mapstructure:"备案号" json:"备案号" yaml:"备案号"`
 }
 

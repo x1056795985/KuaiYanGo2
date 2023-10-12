@@ -1113,7 +1113,10 @@ func Get代理组织架构图(c *gin.Context, 根代理ID int) []*Node {
 	//局_耗时 := time.Now().Unix()
 	var 局_用户数组 []DB.DB_User
 
-	_ = global.GVA_DB.Model(DB.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Find(&局_用户数组).Error
+	_ = global.GVA_DB.Model(DB.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Where("UPAgentId !=0").Find(&局_用户数组).Error
+	if len(局_用户数组) == 0 { //防止无代理会报错
+		return []*Node{}
+	}
 	nodes := make([]*Node, 0, len(局_用户数组))
 	for 索引, _ := range 局_用户数组 {
 		nodes = append(nodes, &Node{
@@ -1135,6 +1138,7 @@ func Get代理组织架构图(c *gin.Context, 根代理ID int) []*Node {
 		}
 	*/
 	// 构建树形结构
+
 	Data := getTreeIterative(nodes, 根代理ID)
 
 	/*
