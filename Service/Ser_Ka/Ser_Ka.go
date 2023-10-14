@@ -1285,3 +1285,8 @@ func Get卡类已用和未用数量(卡类Id int) (已用, 可用 int64) {
 	global.GVA_DB.Model(DB.DB_Ka{}).Where("KaClassId=?", 卡类Id).Where("Num<NumMax").Count(&可用)
 	return
 }
+func S删除耗尽次数卡号(AppId int) (影响行数 int64, err error) {
+	db := global.GVA_DB.Model(DB.DB_Ka{})
+	影响行数 = db.Where("Num = NumMax ").Where("AppId= ? ", AppId).Delete("").RowsAffected
+	return 影响行数, err
+}
