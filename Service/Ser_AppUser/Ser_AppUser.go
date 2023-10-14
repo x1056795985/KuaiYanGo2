@@ -308,3 +308,8 @@ func Id点数增减_批量(AppId int, Id []int, 增减值 int64, is增加 bool) 
 	return err
 
 }
+func S删除VipTime小于等于X(AppId int, VipTime int64) (影响行数 int64, err error) {
+	db := global.GVA_DB.Model(DB.DB_AppUser{})
+	影响行数 = db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("VipTime <= ? ", VipTime).Delete("").RowsAffected
+	return 影响行数, err
+}

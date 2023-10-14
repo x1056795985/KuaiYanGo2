@@ -201,6 +201,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetBatchAddVipTime", App.Set批量维护_增减时间点数)
 
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+			baseRouter.POST("DeleteBatch", App.Set批量维护_删除用户)
 			baseRouter.POST("Delete", App.Del批量删除软件用户) // 删除信息
 		}
 
@@ -252,7 +253,8 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetAdminNote", App.Set修改管理员备注) // 修改状态
 		baseRouter.POST("Recover", App.Z追回卡号)
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-			baseRouter.POST("Delete", App.Delete) // 删除信息
+			baseRouter.POST("Delete", App.Delete)            // 删除信息
+			baseRouter.POST("DeleteBatch", App.Set批量维护_删除用户) // 删除信息
 
 		}
 	}

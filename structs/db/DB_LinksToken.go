@@ -2,7 +2,7 @@ package DB
 
 type DB_LinksToken struct {
 	Id               int    `json:"Id" gorm:"column:Id;primarykey"`                              // id
-	Uid              int    `json:"Uid" gorm:"column:Uid;;comment:用户唯一id"`                       // uid  user id
+	Uid              int    `json:"Uid" gorm:"column:Uid;index;comment:用户唯一id"`                  // uid  user id
 	User             string `json:"User" gorm:"column:User;index;size:200;comment:用户登录名"`        // 用户登录名
 	Status           int    `json:"Status" gorm:"column:Status;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
 	Token            string `json:"-" gorm:"index;column:Token;size:200;comment:令牌"`

@@ -70,6 +70,9 @@ type 结构请求_GetAppUserList struct {
 	Type     int    `json:"Type"`     // 关键字类型  1 id 2 用户名 3绑定信息 4 动态标签
 	Keywords string `json:"Keywords"` // 关键字
 	Order    int    `json:"Order"`    // 0 倒序 1 正序
+	Sortable int    `json:"Sortable"` //排序字段名id  0id 1=到期时间
+	IsLogin  bool   `json:"IsLogin"`  //仅限登录
+
 }
 
 // GetAppUserList
@@ -93,16 +96,26 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(请求.AppId)
 	局_DB := global.GVA_DB.Table(表名_AppUser).Debug()
 	if Ser_AppInfo.App是否为卡号(请求.AppId) {
-		局_DB = 局_DB.Select(表名_AppUser+".*", "db_Ka.Name").Joins("left join db_Ka on " + 表名_AppUser + ".Uid=db_Ka.Id")
+		局_DB = 局_DB.Select(表名_AppUser+".*", "db_Ka.Name", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid and LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_Ka on " + 表名_AppUser + ".Uid=db_Ka.Id")
 	} else {
 		//mark 现在只是 链接 user表,后期需要处理 链接卡号表 读取用户名
-		局_DB = 局_DB.Select(表名_AppUser+".*", "db_User.User").Joins("left join db_User on " + 表名_AppUser + ".Uid=db_User.Id")
+		局_DB = 局_DB.Select(表名_AppUser+".*", "db_User.User", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid and LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_User on " + 表名_AppUser + ".Uid=db_User.Id")
 	}
+
+	var 排序字段名 = "Id"
+	switch 请求.Sortable {
+	default:
+
+	case 1: // VipTime
+		排序字段名 = "VipTime"
+	}
+
 	if 请求.Order == 1 {
-		局_DB.Order(表名_AppUser + ".Id ASC")
+		局_DB.Order(表名_AppUser + "." + 排序字段名 + " ASC")
 	} else {
-		局_DB.Order(表名_AppUser + ".Id DESC")
+		局_DB.Order(表名_AppUser + "." + 排序字段名 + " DESC")
 	}
+
 	var app信息 DB.DB_AppInfo
 	app信息 = Ser_AppInfo.App取App详情(请求.AppId)
 	//是否vip状态可用  //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
@@ -140,6 +153,9 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 		}
 
 	}
+	if 请求.IsLogin {
+		局_DB.Where("(select count(db_links_Token.id)  FROM db_links_Token WHERE  " + 表名_AppUser + ".Uid=db_links_Token.Uid and LoginAppid=" + strconv.Itoa(请求.AppId) + " )>0 ")
+	}
 
 	//Count(&总数) 必须放在where 后面 不然值会被清0
 	err = 局_DB.Count(&总数).Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Scan(&DB_AppUser).Error
@@ -163,9 +179,10 @@ type 结构响应_GetAppUserList struct {
 
 type DB_AppUser带User信息 struct {
 	DB.DB_AppUser
-	User   string `json:"User" gorm:"column:User;index;comment:用户登录名"`                 // 用户登录名
-	Name   string `json:"Name" gorm:"column:Name;index;comment:卡号"`                    // 用户登录名
-	Status int    `json:"Status" gorm:"column:Status;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
+	User       string `json:"User" gorm:"column:User;index;comment:用户登录名"`                 // 用户登录名
+	Name       string `json:"Name" gorm:"column:Name;index;comment:卡号"`                    // 用户登录名
+	Status     int    `json:"Status" gorm:"column:Status;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
+	LinksCount int    `json:"LinksCount" gorm:"column:LinksCount;index;comment:在线总数"`
 }
 
 // Del批量删除软件用户
@@ -420,5 +437,47 @@ func (a *Api) Set批量维护_增减时间点数(c *gin.Context) {
 		}
 	}
 
+	return
+}
+
+type 结构请求_批量删除用户 struct {
+	AppId int `json:"AppId"` //用户id数组
+	Type  int `json:"Type"`  //1 无点数或已过期
+}
+
+// 批量维护 删除用户
+func (a *Api) Set批量维护_删除用户(c *gin.Context) {
+	var 请求 结构请求_批量删除用户
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if !Ser_AppInfo.AppId是否存在(请求.AppId) {
+		response.FailWithMessage("AppId错误", c)
+		return
+	}
+	var 局_row int64
+	switch 请求.Type {
+	default:
+		response.FailWithMessage("维护类型错误", c)
+		return
+	case 1: //删除已过期,或无点数
+
+		if Ser_AppInfo.App是否为计点(请求.AppId) {
+			局_row, err = Ser_AppUser.S删除VipTime小于等于X(请求.AppId, 0)
+		} else {
+			局_row, err = Ser_AppUser.S删除VipTime小于等于X(请求.AppId, time.Now().Unix())
+		}
+	}
+
+	if err != nil {
+		response.FailWithMessage("操作失败:"+err.Error(), c)
+		global.GVA_LOG.Error("操作失败:" + err.Error())
+		return
+	}
+
+	response.OkWithMessage("操作成功"+strconv.Itoa(int(局_row)), c)
 	return
 }
