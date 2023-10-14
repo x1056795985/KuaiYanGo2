@@ -5,7 +5,7 @@ type DB_AppUser struct {
 	Uid          int     `json:"Uid" gorm:"column:Uid;index;UNIQUE;comment:用户的id关联到user表"`
 	Status       int     `json:"Status" gorm:"column:Status;default:1;comment:本应用用户状态 1正常 2冻结"`
 	Key          string  `json:"Key" gorm:"column:Key;comment:绑定信息"`
-	VipTime      int64   `VipTime:"VipTime"  gorm:"column:VipTime; comment:到期时间或剩余点数"`
+	VipTime      int64   `VipTime:"VipTime"  gorm:"column:VipTime;index; comment:到期时间或剩余点数"`
 	VipNumber    float64 `VipTime:"VipNumber"  gorm:"column:VipNumber;type:decimal(10,2);default:0;comment:积分单独备用"`
 	Note         string  `json:"Note" gorm:"column:Note;size:5000;comment:备注"`
 	MaxOnline    int     `json:"MaxOnline" gorm:"column:MaxOnline;comment:在线最大数量"`

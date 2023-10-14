@@ -433,3 +433,41 @@ type 结构请求_批量修改管理员备注 struct {
 	Id        []int  `json:"Id"`        //用户id数组
 	AdminNote string `json:"AdminNote"` //
 }
+type 结构请求_批量维护 struct {
+	AppId int `json:"AppId"` //用户id数组
+	Type  int `json:"Type"`  //1删除耗尽次数卡号
+}
+
+// 批量维护
+func (a *Api) Set批量维护_删除用户(c *gin.Context) {
+	var 请求 结构请求_批量维护
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if !Ser_AppInfo.AppId是否存在(请求.AppId) {
+		response.FailWithMessage("AppId错误", c)
+		return
+	}
+	var 局_row int64
+	switch 请求.Type {
+	default:
+		response.FailWithMessage("维护类型错误", c)
+		return
+	case 1: //删除耗尽次数
+
+		局_row, err = Ser_Ka.S删除耗尽次数卡号(请求.AppId)
+
+	}
+
+	if err != nil {
+		response.FailWithMessage("操作失败:"+err.Error(), c)
+		global.GVA_LOG.Error("操作失败:" + err.Error())
+		return
+	}
+
+	response.OkWithMessage("操作成功"+strconv.Itoa(int(局_row)), c)
+	return
+}
