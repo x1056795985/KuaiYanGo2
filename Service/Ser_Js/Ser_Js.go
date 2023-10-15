@@ -172,9 +172,9 @@ func jS_用户Id增减时间点数(AppId int, 局_在线信息 DB.DB_LinksToken,
 }
 
 type js对象_通用返回 struct {
-	IsOk bool                   `json:"IsOk"`
-	Err  string                 `json:"Err"`
-	Data map[string]interface{} `json:"Data"`
+	IsOk bool        `json:"IsOk"`
+	Err  string      `json:"Err"`
+	Data interface{} `json:"Data"`
 }
 
 func jS_读公共变量(变量名 string) string {
@@ -287,7 +287,12 @@ func jS_执行SQL查询(SQL string) js对象_通用返回 {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
 	fmt.Println(string(jsonStr))
-	return js对象_通用返回{IsOk: true, Err: string(jsonStr)}
+	if results == nil { //防止返回json Null  应该返回空数组
+		results = make([]map[string]interface{}, 0)
+	}
+
+	return js对象_通用返回{IsOk: true, Err: string(jsonStr), Data: results}
+
 }
 func jS_执行SQL功能(SQL string) js对象_通用返回 {
 	局_执行结果 := global.GVA_DB.Exec(SQL)

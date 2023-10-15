@@ -96,10 +96,10 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(请求.AppId)
 	局_DB := global.GVA_DB.Table(表名_AppUser).Debug()
 	if Ser_AppInfo.App是否为卡号(请求.AppId) {
-		局_DB = 局_DB.Select(表名_AppUser+".*", "db_Ka.Name", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid and LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_Ka on " + 表名_AppUser + ".Uid=db_Ka.Id")
+		局_DB = 局_DB.Select(表名_AppUser+".*", "db_Ka.Name", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_Ka on " + 表名_AppUser + ".Uid=db_Ka.Id")
 	} else {
 		//mark 现在只是 链接 user表,后期需要处理 链接卡号表 读取用户名
-		局_DB = 局_DB.Select(表名_AppUser+".*", "db_User.User", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid and LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_User on " + 表名_AppUser + ".Uid=db_User.Id")
+		局_DB = 局_DB.Select(表名_AppUser+".*", "db_User.User", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_User on " + 表名_AppUser + ".Uid=db_User.Id")
 	}
 
 	var 排序字段名 = "Id"
@@ -154,7 +154,7 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 
 	}
 	if 请求.IsLogin {
-		局_DB.Where("(select count(db_links_Token.id)  FROM db_links_Token WHERE  " + 表名_AppUser + ".Uid=db_links_Token.Uid and LoginAppid=" + strconv.Itoa(请求.AppId) + " )>0 ")
+		局_DB.Where("(select count(db_links_Token.id)  FROM db_links_Token WHERE  " + 表名_AppUser + ".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid=" + strconv.Itoa(请求.AppId) + " )>0 ")
 	}
 
 	//Count(&总数) 必须放在where 后面 不然值会被清0
