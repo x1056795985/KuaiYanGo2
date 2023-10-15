@@ -429,14 +429,14 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 		Name:  "执行SQL查询测试",
 		Value: `function 执行SQL查询测试(JSON形参文本) {
 
-    var 局_结果对象 = $api_执行SQL查询(" SELECT * FROM 'db_public_js'")
-	//这里'db_public_js' 两侧可能是单引号,或键盘TAb上上方的按键
+    var 局_结果对象 = $api_执行SQL查询(" SELECT * FROM db_public_js")  
+
     if (局_结果对象.isOk) {
         //这里说明查询成功了,
         return 局_结果对象.Err
     }
-
-    return 局_结果对象.Err
+    //return 局_结果对象.Err   //这个会把结果返回的文本
+    return 局_结果对象.Data //这个会把结果转换成对象
 
 }`,
 		Type:  1,
