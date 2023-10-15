@@ -26,7 +26,8 @@ type DB_AppInfo struct {
 	ExceedMaxOnlineOut int    `json:"ExceedMaxOnlineOut"  gorm:"column:ExceedMaxOnlineOut;default:1;comment:超过在线最大数量处理方式"` //1踢掉最先登录的账号  2 直接提示
 	AppType            int    `json:"AppType"  gorm:"column:AppType;default:1;comment:软件类型"`                               //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
 	RmbToVipNumber     int    `json:"RmbToVipNumber"  gorm:"column:RmbToVipNumber;default:1;comment:1人民币换多少积分"`
-	Captcha            string `json:"Captcha"  gorm:"column:Captcha;;comment:需要验证码的接口"`
+	Captcha            string `json:"Captcha"  gorm:"column:Captcha;size:1000;comment:需要验证码的接口"`
+	ApiHook            string `json:"ApiHook"  gorm:"column:ApiHook;size:1000;comment:Api接口Hook函数"`
 }
 
 func (DB_AppInfo) TableName() string {

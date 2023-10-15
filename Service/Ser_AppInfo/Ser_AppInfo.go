@@ -148,6 +148,7 @@ func App修改信息(AppInfo DB.DB_AppInfo) error {
 		"RmbToVipNumber",
 		"Captcha",
 		"RegisterGiveKa",
+		"ApiHook",
 	).Omit("AppType", "AppWeb")
 
 	err := db.Where("AppId= ?", AppInfo.AppId).Updates(AppInfo).Error

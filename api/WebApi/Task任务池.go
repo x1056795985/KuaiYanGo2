@@ -55,7 +55,7 @@ func R任务池_任务处理返回(c *gin.Context) {
 	局_任务数据 := string(请求json.GetStringBytes("TaskReturnData"))
 	局_任务状态 := 请求json.GetInt("TaskStatus")
 	if 局_任务类型.HookReturnDataStart != "" {
-		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataStart, 局_任务数据, 局_任务状态)
+		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataStart, 局_任务数据, 局_任务状态)
 		if err != nil {
 			response.FailWithMessage(err.Error(), c)
 			return
@@ -69,7 +69,7 @@ func R任务池_任务处理返回(c *gin.Context) {
 	}
 
 	if 局_任务类型.HookReturnDataEnd != "" {
-		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataEnd, 局_任务数据, 局_任务状态)
+		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataEnd, 局_任务数据, 局_任务状态)
 		if err != nil {
 			response.FailWithMessage(err.Error(), c)
 			return

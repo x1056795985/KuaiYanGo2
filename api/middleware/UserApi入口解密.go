@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"server/Service/Captcha"
 	"server/Service/Ser_AppInfo"
+	"server/Service/Ser_Js"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/api/UserApi"
@@ -198,7 +199,6 @@ func UserApi解密() gin.HandlerFunc {
 		}
 		//先检查签名  签名争取,设置AES密匙  明文的是不用AES密匙的
 		var 局_临时AES密匙 []byte
-
 		if len(结构加密包.B签名) == 32 {
 			//签名都转大写防止误判
 			if strings.ToUpper(结构加密包.B签名) == strings.ToUpper(utils.Md5String(结构加密包.A密文+局_在线信息.CryptoKeyAes)) {
@@ -233,7 +233,7 @@ func UserApi解密() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		//fmt.Printf("用户发送数据明文:%v", 局_json明文)
+
 		局_fastjson, err := fastjson.Parse(局_json明文)
 		if err != nil {
 			response.X响应状态(c, response.Status_参数错误)
@@ -265,7 +265,22 @@ func UserApi解密() gin.HandlerFunc {
 				return
 			}
 		}
+		//fmt.Printf("用户发送数据明文:%v", 局_json明文)
+		//==========================ApiHook之前====================================
+		if utils.W文本_是否包含关键字(AppInfo.ApiHook, `"`+局_Api+`"`) { //先判断Api是否需要Hook
+			//{"UserLogin":{"Before":"hook登录前","After":"hook登录后"}}
+			局_hookBefore := utils.W文本_取出中间文本(AppInfo.ApiHook, `"`+局_Api+`":{"Before":"`, `"`)
 
+			局_json明文, err = Ser_Js.JS引擎初始化_ApiHook处理(&AppInfo, &局_在线信息, 局_hookBefore, 局_json明文, c)
+			if err != nil {
+				response.X响应状态消息(c, response.Status_操作失败, err.Error())
+				c.Abort()
+				return
+			}
+		}
+		//=============================ApiHook结束=================================
+
+		//==========================判断验证码===============================================
 		if utils.W文本_是否包含关键字(AppInfo.Captcha, `"`+局_Api+`"`) { //先判断Api是否需要验证码
 
 			//AppInfo.Captcha内容 {"UserReduceMoney":1,"UserReduceVipNumber":1,"UserLogin":1}
@@ -298,6 +313,7 @@ func UserApi解密() gin.HandlerFunc {
 			return
 		验证码正确:
 		}
+		//==========================验证码结束===============================================
 
 		if 集_UserAPi路由强制RSA[局_Api] == 1 && AppInfo.CryptoType == 3 {
 			//如果API是强制AES通讯的, 但是使用AES加密发过来的,估计是破解者测试包
@@ -315,6 +331,7 @@ func UserApi解密() gin.HandlerFunc {
 		c.Set("RSA强制", 集_UserAPi路由强制RSA[局_Api] == 1)
 
 		if ok { //如果有这个api 就跳转执行, 如果没有就最终走向 返回无Api的函数
+
 			c.Set("局_json明文", 局_json明文)
 			c.Set("局_成功Status", 局_成功Status)
 			局_路由信息.Z指向函数(c)

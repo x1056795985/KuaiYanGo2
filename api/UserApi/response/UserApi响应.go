@@ -106,6 +106,7 @@ func X响应状态带数据(c *gin.Context, 状态码 int, Data interface{}) {
 	var 局_明文结构 = 请求响应_X响应成功带数据{}
 	局_明文结构.请求响应_X响应状态 = 请求响应_X响应状态{time.Now().Unix(), 状态码, Status值键[状态码]}
 	局_明文结构.Data = Data
+
 	if c.GetString("局_CryptoKeyAes") == "" {
 		//没有通讯key直接返回明文
 		c.JSON(http.StatusOK, 局_明文结构)
