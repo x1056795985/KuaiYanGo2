@@ -1399,7 +1399,7 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 
 	局_任务数据 := string(请求json.GetStringBytes("Parameter"))
 	if 局_任务类型.HookSubmitDataStart != "" {
-		局_任务数据, _, err = Ser_Js.JS引擎初始化_Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
+		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
 		if err != nil {
 			response.X响应状态消息(c, response.Status_操作失败, err.Error())
 			return
@@ -1413,7 +1413,7 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 	}
 
 	if 局_任务类型.HookSubmitDataEnd != "" {
-		局_任务数据, _, err = Ser_Js.JS引擎初始化_Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
+		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
 		if err != nil {
 			response.X响应状态消息(c, response.Status_操作失败, err.Error())
 			return
@@ -1528,7 +1528,7 @@ func UserApi_任务池_任务处理返回(c *gin.Context) {
 	局_任务数据 := string(请求json.GetStringBytes("TaskReturnData"))
 	局_任务状态 := 请求json.GetInt("TaskStatus")
 	if 局_任务类型.HookReturnDataStart != "" {
-		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataStart, 局_任务数据, 局_任务状态)
+		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataStart, 局_任务数据, 局_任务状态)
 		if err != nil {
 			response.X响应状态消息(c, response.Status_操作失败, err.Error())
 			return
@@ -1542,7 +1542,7 @@ func UserApi_任务池_任务处理返回(c *gin.Context) {
 	}
 
 	if 局_任务类型.HookReturnDataEnd != "" {
-		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataEnd, 局_任务数据, 局_任务状态)
+		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataEnd, 局_任务数据, 局_任务状态)
 		if err != nil {
 			response.X响应状态消息(c, response.Status_操作失败, err.Error())
 			return
