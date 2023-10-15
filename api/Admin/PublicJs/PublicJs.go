@@ -93,7 +93,8 @@ func (a *Api) GetPublicJsList(c *gin.Context) {
 
 	var AppName = Db服务.App取map列表String()
 	AppName["1"] = "全局"
-	AppName["2"] = "Hook"
+	AppName["2"] = "任务池Hook"
+	AppName["3"] = "ApiHook"
 
 	for 索引 := range DB_PublicJs {
 		//fmt.Printf("Id:%v:%v", strconv.Itoa(DB_PublicJs[索引].AppId), AppName[strconv.Itoa(DB_PublicJs[索引].AppId)])
@@ -183,7 +184,7 @@ func (a *Api) SaveDB_PublicJs信息(c *gin.Context) {
 		response.FailWithMessage("变量名不能为空", c)
 		return
 	}
-	var 局_临时Id = Ser_PublicJs.Name取Id([]int{Ser_PublicJs.Js类型_公共函数, Ser_PublicJs.Js类型_Hook函数}, 请求.Name) //1 全局,2hook函数
+	var 局_临时Id = Ser_PublicJs.Name取Id([]int{Ser_PublicJs.Js类型_公共函数, Ser_PublicJs.Js类型_任务池Hook函数}, 请求.Name) //1 全局,2hook函数
 	if 局_临时Id != 0 && 局_临时Id != 请求.Id {
 		response.FailWithMessage("变量名已存在", c)
 		return
@@ -224,7 +225,7 @@ func (a *Api) New(c *gin.Context) {
 		return
 	}
 
-	var 局_临时Id = Ser_PublicJs.Name取Id([]int{Ser_PublicJs.Js类型_公共函数, Ser_PublicJs.Js类型_Hook函数}, 请求.Name) //1 全局,2hook函数
+	var 局_临时Id = Ser_PublicJs.Name取Id([]int{Ser_PublicJs.Js类型_公共函数, Ser_PublicJs.Js类型_任务池Hook函数, Ser_PublicJs.Js类型_ApiHook函数}, 请求.Name) //1 全局,2hook函数
 	if 局_临时Id != 0 && 局_临时Id != 请求.Id {
 		response.FailWithMessage("变量名已存在", c)
 		return
