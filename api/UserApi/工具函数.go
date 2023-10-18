@@ -9,8 +9,8 @@ import (
 )
 
 type 版本号格式 struct {
-	大版本号   int
-	小版本号   int
+	大版本号  int
+	小版本号  int
 	编译版本号 int
 }
 
@@ -85,7 +85,7 @@ func 版本号_分解(文本 string) (版本号 版本号格式) {
 	return 版本号
 }
 
-func 用户数据信息还原(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken) {
+func Y用户数据信息还原(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken) {
 	局_临时通用, _ := c.Get("AppInfo")
 	*AppInfo = 局_临时通用.(DB.DB_AppInfo)
 	局_临时通用, _ = c.Get("局_在线信息")

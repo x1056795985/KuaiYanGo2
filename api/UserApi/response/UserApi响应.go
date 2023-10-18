@@ -6,7 +6,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/valyala/fastjson"
 	"net/http"
+	"server/Service/Ser_Js"
 	DB "server/structs/db"
 	"server/utils"
 	"strings"
@@ -19,7 +21,14 @@ type 请求响应_加密包 struct {
 	B签名 string `json:"b"`
 }
 
+func 响应不加密处理(c *gin.Context, 明文Json string) {
+	明文Json = apiHook之后(c, 明文Json)
+	c.String(http.StatusOK, 明文Json)
+}
 func 响应加密处理(c *gin.Context, 明文Json string) {
+
+	明文Json = apiHook之后(c, 明文Json)
+
 	局_临时通用, ok := c.Get("AppInfo")
 	if !ok {
 		c.JSON(http.StatusOK, 明文Json)
@@ -72,25 +81,24 @@ func 签名_Aes(base64后明文 string, AesKey string) string {
 }
 
 func X响应状态(c *gin.Context, 状态码 int) {
-	j1 := 请求响应_X响应状态{time.Now().Unix(), 状态码, Status值键[状态码]}
+	局_明文结构 := 请求响应_X响应状态{time.Now().Unix(), 状态码, Status值键[状态码]}
 
+	json明文, _ := json.Marshal(局_明文结构)
 	if c.GetString("局_CryptoKeyAes") == "" {
 		//没有通讯key直接返回明文
-		c.JSON(http.StatusOK, j1)
+		响应不加密处理(c, string(json明文))
 	} else {
-		json明文, _ := json.Marshal(j1)
 		响应加密处理(c, string(json明文))
 	}
 }
 
 func X响应状态消息(c *gin.Context, 状态码 int, Msg string) {
-	j1 := 请求响应_X响应状态{time.Now().Unix(), 状态码, Msg}
-
+	局_明文结构 := 请求响应_X响应状态{time.Now().Unix(), 状态码, Msg}
+	json明文, _ := json.Marshal(局_明文结构)
 	if c.GetString("局_CryptoKeyAes") == "" {
 		//没有通讯key直接返回明文
-		c.JSON(http.StatusOK, j1)
+		响应不加密处理(c, string(json明文))
 	} else {
-		json明文, _ := json.Marshal(j1)
 		响应加密处理(c, string(json明文))
 	}
 }
@@ -107,11 +115,11 @@ func X响应状态带数据(c *gin.Context, 状态码 int, Data interface{}) {
 	局_明文结构.请求响应_X响应状态 = 请求响应_X响应状态{time.Now().Unix(), 状态码, Status值键[状态码]}
 	局_明文结构.Data = Data
 
+	json明文, _ := json.Marshal(局_明文结构)
 	if c.GetString("局_CryptoKeyAes") == "" {
 		//没有通讯key直接返回明文
-		c.JSON(http.StatusOK, 局_明文结构)
+		响应不加密处理(c, string(json明文))
 	} else {
-		json明文, _ := json.Marshal(局_明文结构)
 		响应加密处理(c, string(json明文))
 	}
 }
@@ -120,4 +128,40 @@ func X响应状态带数据(c *gin.Context, 状态码 int, Data interface{}) {
 type 请求响应_X响应成功带数据 struct {
 	Data interface{} `json:"Data"`
 	请求响应_X响应状态
+}
+
+func apiHook之后(c *gin.Context, json明文 string) string {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	var Api = c.GetString("局_Api")
+	局_临时通用, _ := c.Get("AppInfo")
+	AppInfo = 局_临时通用.(DB.DB_AppInfo)
+	局_临时通用, _ = c.Get("局_在线信息")
+	if 局_临时通用 != nil { //接口 GetToken  没有在线信息这个值为空
+		局_在线信息 = 局_临时通用.(DB.DB_LinksToken)
+	}
+
+	//==========================ApiHook之后====================================
+	if utils.W文本_是否包含关键字(AppInfo.ApiHook, `"`+Api+`"`) { //先判断Api是否需要Hook
+		//{"UserLogin":{"Before":"hook登录前","After":"hook登录后"}}
+		JSON, err := fastjson.Parse(AppInfo.ApiHook)
+		if err != nil {
+			return json明文
+		}
+		局_hookAfter := ""
+		局_hookAfter = string(JSON.GetStringBytes(Api, "After"))
+		if len(局_hookAfter) == 0 {
+			return 局_hookAfter
+		}
+
+		json明文, err = Ser_Js.JS引擎初始化_ApiHook处理(&AppInfo, &局_在线信息, 局_hookAfter, json明文, c)
+		if err != nil {
+			局_明文结构 := 请求响应_X响应状态{time.Now().Unix(), Status_操作失败, err.Error()}
+			json明文字节集, _ := json.Marshal(局_明文结构)
+			return string(json明文字节集)
+
+		}
+	}
+	return json明文
+	//=============================ApiHook结束=================================
 }
