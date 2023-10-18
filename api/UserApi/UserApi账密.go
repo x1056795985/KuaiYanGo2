@@ -26,7 +26,7 @@ import (
 func UserApi_取用户基础信息(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}
@@ -66,7 +66,7 @@ func UserApi_取用户基础信息(c *gin.Context) {
 func UserApi_置用户基础信息(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}
@@ -96,7 +96,7 @@ func UserApi_置用户基础信息(c *gin.Context) {
 func UserApi_密码找回或修改(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}
@@ -166,7 +166,7 @@ func UserApi_密码找回或修改(c *gin.Context) {
 func UserApi_取用户余额(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}
@@ -188,7 +188,7 @@ func UserApi_取用户余额(c *gin.Context) {
 func UserApi_订单_余额充值_支付宝PC支付(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}
@@ -217,7 +217,7 @@ func UserApi_订单_余额充值_支付宝PC支付(c *gin.Context) {
 func UserApi_订单_余额充值_微信支付支付(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}
@@ -252,7 +252,7 @@ func UserApi_订单_余额充值_微信支付支付(c *gin.Context) {
 func UserApi_余额购买积分(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}
@@ -305,7 +305,7 @@ func UserApi_余额购买积分(c *gin.Context) {
 func UserApi_余额购买充值卡(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	if !检测_账密模式专用(c, AppInfo) {
 		return
@@ -359,7 +359,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 func UserApi_订单_余额充值(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}
@@ -424,7 +424,7 @@ func UserApi_订单_余额充值(c *gin.Context) {
 func UserApi_取用户是否存在(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}
@@ -449,7 +449,7 @@ func UserApi_取用户是否存在(c *gin.Context) {
 func UserApi_用户注册(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测_账密模式专用(c, AppInfo) {
 		return
 	}

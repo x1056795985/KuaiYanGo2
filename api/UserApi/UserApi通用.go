@@ -71,7 +71,7 @@ type 请求响应_Data_GetToken struct {
 func UserApi_用户登录(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"UserPassLogin","UserOrKa":"aaaaaa","PassWord":"AF15D5FDACD5FDFEA300E88A8E253E82","Key":"677F23CB3FA0055B5FD03916D6AB3C9A","Tab":"AMD Ryzen 7 6800H with Radeon Graphics         |178BFBFF00A40F41","AppVer":"1.0.1","Captcha":{"Id":"","Value":""}}
 	if !版本号_检测可用(string(请求json.GetStringBytes("AppVer")), AppInfo.AppVer) {
@@ -269,7 +269,7 @@ func UserApi_GetUserIP(c *gin.Context) {
 func UserApi_用户减少余额(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"UserReduceMoney","Money":1.01,"Log":"看你长得帅,减些钱","AgentId":10,"AgentMoney":0,"AgentMoneyLog":"代理分成"}
 
@@ -348,7 +348,7 @@ func UserApi_用户减少余额(c *gin.Context) {
 func UserApi_用户减少点数(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"UserReduceMoney","VipTime":1.3,"Log":"看你长得帅,扣点钱"}
 	if AppInfo.AppType != 2 && AppInfo.AppType != 4 { //检查是不是计点模式
@@ -385,7 +385,7 @@ func UserApi_用户减少点数(c *gin.Context) {
 func UserApi_用户减少积分(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"UserReduceMoney","VipNumber":1.3,"Log":"看你长得帅,扣点钱"}
 
@@ -434,7 +434,7 @@ func UserApi_取服务器连接状态(c *gin.Context) {
 func UserApi_取登录状态(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	if 局_在线信息.Status == 1 && 局_在线信息.Uid > 0 {
 		response.X响应状态(c, c.GetInt("局_成功Status"))
@@ -448,7 +448,7 @@ func UserApi_取登录状态(c *gin.Context) {
 func UserApi_取Vip数据(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if 局_在线信息.Uid == 0 || 局_在线信息.Status != 1 {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -484,14 +484,14 @@ func UserApi_取Vip数据(c *gin.Context) {
 func UserApi_取应用公告(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AppGongGao": AppInfo.AppGongGao})
 	return
 }
 func UserApi_取新版本下载地址(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	if strings.Index(AppInfo.UrlDownload, "{{AppVer}}") != -1 && AppInfo.AppVer != "" {
 		局_可用版本 := utils.W文本_分割文本(AppInfo.AppVer, "\n")
@@ -507,7 +507,7 @@ func UserApi_取新版本下载地址(c *gin.Context) {
 func UserApi_取应用专属变量(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"GetPublicData","Name":"会员数据a"}
 	局_变量名 := string(请求json.GetStringBytes("Name"))
@@ -530,7 +530,7 @@ func UserApi_取应用专属变量(c *gin.Context) {
 func UserApi_取公共变量(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"GetPublicData","Name":"会员数据a"}
 	局_变量名 := string(请求json.GetStringBytes("Name"))
@@ -557,7 +557,7 @@ func UserApi_取公共变量(c *gin.Context) {
 func UserApi_取用户云配置(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -572,7 +572,7 @@ func UserApi_取用户云配置(c *gin.Context) {
 func UserApi_置用户云配置(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -601,7 +601,7 @@ func UserApi_置用户云配置(c *gin.Context) {
 func UserApi_取应用最新版本(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"GetAppVersion","Version":"1.3.5","IsVersionAll":true}
 	局_可用版本 := utils.W文本_分割文本(AppInfo.AppVer, "\n")
@@ -650,7 +650,7 @@ func UserApi_取应用最新版本(c *gin.Context) {
 func UserApi_取应用主页Url(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AppHomeUrl": AppInfo.UrlHome})
 	return
 }
@@ -659,7 +659,7 @@ func UserApi_取应用主页Url(c *gin.Context) {
 func UserApi_取应用基础信息(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{
 		"AppId":   AppInfo.AppId,
@@ -672,7 +672,7 @@ func UserApi_取应用基础信息(c *gin.Context) {
 func UserApi_置新绑定信息(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"SetAppUserKey","NewKey":"8987657"}
@@ -753,7 +753,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 func UserApi_解除绑定信息(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"SetAppUserKey"}
@@ -826,7 +826,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 func UserApi_置新用户消息(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"SetUserMsg","MsgType":2,"Note":"内存写入错误错误信息:11191919;2424233"}
 	if !检测用户登录在线正常(&局_在线信息) {
@@ -851,7 +851,7 @@ func UserApi_置新用户消息(c *gin.Context) {
 func UserApi_取验证码信息(c *gin.Context) {
 	/*	var AppInfo DB.DB_AppInfo
 		var 局_在线信息 DB.DB_LinksToken
-		用户数据信息还原(c, &AppInfo, &局_在线信息)*/
+		Y用户数据信息还原(c, &AppInfo, &局_在线信息)*/
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"GetCaptcha","CaptchaType":2}
 
@@ -870,7 +870,7 @@ func UserApi_取验证码信息(c *gin.Context) {
 func UserApi_取短信验证码信息(c *gin.Context) {
 	/*	var AppInfo DB.DB_AppInfo
 		var 局_在线信息 DB.DB_LinksToken
-		用户数据信息还原(c, &AppInfo, &局_在线信息)*/
+		Y用户数据信息还原(c, &AppInfo, &局_在线信息)*/
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"GetPhoneCaptcha","Phone":"13188888888","User":"13188888888"}
 
@@ -912,7 +912,7 @@ func UserApi_取短信验证码信息(c *gin.Context) {
 func UserApi_取用户绑定信息(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -930,14 +930,14 @@ func UserApi_取用户绑定信息(c *gin.Context) {
 func UserApi_取系统时间戳(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Time": time.Now().Unix()})
 	return
 }
 func UserApi_取软件用户信息(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -984,7 +984,7 @@ func UserApi_取软件用户信息(c *gin.Context) {
 func UserApi_取软件用户备注(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1000,7 +1000,7 @@ func UserApi_取软件用户备注(c *gin.Context) {
 func UserApi_取Vip到期时间戳(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1016,7 +1016,7 @@ func UserApi_取Vip到期时间戳(c *gin.Context) {
 func UserApi_用户登录注销(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1032,7 +1032,7 @@ func UserApi_用户登录注销(c *gin.Context) {
 func UserApi_心跳(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1059,7 +1059,7 @@ func UserApi_心跳(c *gin.Context) {
 func UserApi_取用户积分(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	if 局_在线信息.Status != 1 || 局_在线信息.Uid == 0 {
 		response.X响应状态(c, response.Status_未登录)
@@ -1077,7 +1077,7 @@ func UserApi_取用户积分(c *gin.Context) {
 func UserApi_取开启验证码接口(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), AppInfo.Captcha)
 	return
@@ -1085,7 +1085,7 @@ func UserApi_取开启验证码接口(c *gin.Context) {
 func UserApi_用户登录远程注销(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"RemoteLogOut","User":"aaaaaa","PassWord":"ssssss","Time":1684069624,"Status":27417}'
@@ -1122,14 +1122,14 @@ func UserApi_用户登录远程注销(c *gin.Context) {
 func UserApi_取动态标签(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Tab": 局_在线信息.Tab})
 	return
 }
 func UserApi_置动态标签(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	err := Ser_LinkUser.Set动态标签(局_在线信息.Id, string(请求json.GetStringBytes("Tab")))
 	if err != nil {
@@ -1147,7 +1147,7 @@ func UserApi_取支付通道状态(c *gin.Context) {
 func UserApi_取可购买卡类列表(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	var DB_KaClass []DB.DB_KaClass
 	DB_KaClass = Ser_KaClass.KaClass取可购买卡类列表(AppInfo.AppId)
@@ -1184,7 +1184,7 @@ func UserApi_取可购买卡类列表(c *gin.Context) {
 func UserApi_取已购买充值卡列表(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1222,7 +1222,7 @@ func UserApi_取已购买充值卡列表(c *gin.Context) {
 func UserApi_取用户类型列表(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	局_列表 := Ser_UserClass.UserClass取AppId用户类型列表(AppInfo.AppId)
 	var 局_响应 []gin.H
@@ -1238,7 +1238,7 @@ func UserApi_取用户类型列表(c *gin.Context) {
 func UserApi_置用户类型(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1307,7 +1307,7 @@ func UserApi_云函数执行(c *gin.Context) {
 
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) { //强制登录才可以,不用检测ISVip了 必须登录
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1378,7 +1378,7 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 	}()
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) { //强制登录才可以,不用检测ISVip了 必须登录
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1427,7 +1427,7 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 func UserApi_任务池_任务查询(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) { //强制登录才可以,不用检测ISVip了 必须登录
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1453,7 +1453,7 @@ func UserApi_任务池_任务查询(c *gin.Context) {
 func UserApi_任务池_任务处理获取(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) { //强制登录才可以,不用检测ISVip了 必须登录
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1504,7 +1504,7 @@ func UserApi_任务池_任务处理返回(c *gin.Context) {
 	}()
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) { //强制登录才可以,不用检测ISVip了 必须登录
 		response.X响应状态(c, response.Status_未登录)
 		return
@@ -1556,7 +1556,7 @@ func UserApi_任务池_任务处理返回(c *gin.Context) {
 func UserApi_卡号充值(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"UseKa","User":"aaaaaa","Ka":"aaaaaa","InviteUser":"aaaaaa","Time":1684071722,"Status":41016}
@@ -1578,7 +1578,7 @@ func UserApi_卡号充值(c *gin.Context) {
 func UserApi_订单_取状态(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"GetPayOrderStatus","OrderId":"","Time":1684152719,"Status":15959}
@@ -1610,7 +1610,7 @@ func UserApi_订单_取状态(c *gin.Context) {
 func UserApi_订单_购卡直冲(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	if AppInfo.AppId < 10000 {
 		response.X响应状态消息(c, response.Status_操作失败, "应用不存在")
@@ -1700,7 +1700,7 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 func UserApi_订单_积分充值(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	if AppInfo.AppId < 10000 {
 		response.X响应状态消息(c, response.Status_操作失败, "应用不存在")
@@ -1771,7 +1771,7 @@ func UserApi_订单_积分充值(c *gin.Context) {
 func UserApi_订单_支付购卡(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	用户数据信息还原(c, &AppInfo, &局_在线信息)
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	if AppInfo.AppId < 10000 {
 		response.X响应状态消息(c, response.Status_操作失败, "应用不存在")
