@@ -3,9 +3,11 @@ package App
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/valyala/fastjson"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_PublicData"
+	"server/Service/Ser_PublicJs"
 	"server/api/WebApi"
 	"server/api/middleware"
 	"server/global"
@@ -222,14 +224,87 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 		response.FailWithMessage("保存失败", c)
 		return
 	}
-
+	//===========检查专属变量
 	for _, 专属变量 := range 请求.PublicData {
 		Ser_PublicData.P置值2(专属变量)
 	}
 
+	//================检查apihook函数
+	JSON, err := fastjson.Parse(请求.AppData.ApiHook)
+	if err == nil {
+		if object, err2 := JSON.Object(); err2 == nil {
+			object.Visit(func(key []byte, v *fastjson.Value) {
+				// 获取所有键名
+				//{"UserLogin":{"Before":"hook登录前","After":"hook登录后"}}
+				局_hook函数名 := strings.TrimSpace(string(v.GetStringBytes("Before")))
+				if !Ser_PublicJs.Name是否存在(Ser_PublicJs.Js类型_ApiHook函数, 局_hook函数名) {
+					Ser_PublicJs.C创建(DB.DB_PublicJs{
+						AppId: 3,
+						Name:  局_hook函数名,
+						Value: "function " + 局_hook函数名 + Api之前Hook函数模板,
+						Type:  2,
+						IsVip: 0,
+						Note:  请求.AppData.AppName + "(" + strconv.Itoa(请求.AppData.AppId) + ")函数" + string(key) + "函数hook进入前自动创建",
+					})
+				}
+				局_hook函数名 = strings.TrimSpace(string(v.GetStringBytes("After")))
+				if len(局_hook函数名) > 0 && !Ser_PublicJs.Name是否存在(Ser_PublicJs.Js类型_ApiHook函数, 局_hook函数名) {
+					Ser_PublicJs.C创建(DB.DB_PublicJs{
+						AppId: 3,
+						Name:  局_hook函数名,
+						Value: "function " + 局_hook函数名 + Api之后Hook函数模板,
+						Type:  2,
+						IsVip: 0,
+						Note:  请求.AppData.AppName + "(" + strconv.Itoa(请求.AppData.AppId) + ")函数" + string(key) + "函数hook退出后自动创建",
+					})
+				}
+			})
+
+		}
+	}
+
+	//================================
+
 	response.OkWithMessage("保存成功", c)
 	return
 }
+
+const Api之前Hook函数模板 = `(JSON请求明文) {
+    //这里的错误无法拦截,所以,如果js错误,可能会导致,用户返回"Api不存在"
+    //JSON.stringify($Request)  //在 $Request里可以获取到 请求的大部分信息
+    //{"Method":"POST","Url":{"Scheme":"","Opaque":"","User":null,"Host":"","Path":"/Api","RawPath":"","OmitHost":false,"ForceQuery":false,"RawQuery":"AppId=10002","Fragment":"","RawFragment":""},"Header":["Connection: Keep-Alive","Referer: http://127.0.0.1:18888/Api?AppId=10002","Content-Length: 467","Content-Type: application/x-www-form-urlencoded; Charset=UTF-8","Accept: */*","Accept-Language: zh-cn","User-Agent: Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.1)","Token: PNYDKXDHLORTNVGEEY99YYSPQGFLQF7L"],"Host":"127.0.0.1:18888","Body":[]}
+
+    //局_url = "https://www.baidu.com/"
+    //局_返回 = $api_网页访问_GET(局_url, 15, "")
+    //局_返回 = $api_网页访问_POST(局_url, "api=123", 15, "")
+    //{"StatusCode":200,"Headers":"Date: Sun, 21 May 2023 10:26:32 GMT\r\nContent-Length: 0\r\nContent-Type: application/x-www-form-urlencoded,\r\n","Cookies":"","Body":""}
+
+    if (局_返回.Body !== "") {
+        //$拦截原因 = "百度可以访问,所以不能登录." 
+    }
+	//这里可以替换请求明文信息,可以实现很多功能,比如自写算法解密
+    return JSON请求明文
+}`
+
+const Api之后Hook函数模板 = `(JSON响应明文) {
+    //{"Time":1697630688,"Status":200,"Msg":"百度可以访问,所以不能登录."}
+    //{"Data":{"Key":"绑定信息","LoginIp":"127.0.0.1","LoginTime":1697630755,"OutUser":0,"RegisterTime":1696677905,"UserClassMark":2,"UserClassName":"vip2","VipNumber":0,"VipTime":1701300424},"Time":1697630755,"Status":73386,"Msg":""}
+
+/*    let 局_返回信息 = JSON.parse(JSON响应明文) //把响应信息明文转换成对象,好操作
+    if (局_返回信息.Status > 10000) {
+        局_返回信息.Data.Key = "99999999" //返回的绑定信息被我修改了
+    }
+    JSON响应明文 = JSON.stringify(局_返回信息) //再把对象转换回明文字符串
+*/
+
+    //局_url = "https://www.baidu.com/"
+    //局_返回 = $api_网页访问_GET(局_url, 15, "")
+    //局_返回 = $api_网页访问_POST(局_url, "api=123", 15, "")
+    //{"StatusCode":200,"Headers":"Date: Sun, 21 May 2023 10:26:32 GMT\r\nContent-Length: 0\r\nContent-Type: application/x-www-form-urlencoded,\r\n","Cookies":"","Body":""}
+
+    //这里可以替换响应的json信息文本, 如果想拦截直接替换为报错的json就可以了,注意状态码,和时间戳
+    return JSON响应明文
+}`
 
 type 结构响应_AppInfo struct {
 	AppData    DB.DB_AppInfo      `json:"AppData"`    // 列表

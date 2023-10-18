@@ -17,6 +17,7 @@ import (
 	"server/api/UserApi"
 	"server/api/UserApi/response"
 	"server/global"
+	DB "server/structs/db"
 	"server/utils"
 	"strconv"
 	"strings"
@@ -256,6 +257,7 @@ func UserApi解密() gin.HandlerFunc {
 			return
 		}
 		局_Api := strings.TrimSpace(string(局_fastjson.GetStringBytes("Api")))
+
 		ok := false
 		// 如果有加密后的API,就会赋值原始APi到变量,如果失败,不会改变
 		if len(J集_UserAPi路由_加密) > 0 { //如果>0说明启用Api加密了,
@@ -265,18 +267,12 @@ func UserApi解密() gin.HandlerFunc {
 				return
 			}
 		}
+		c.Set("局_Api", 局_Api) //ApiHook后可能会用到
 		//fmt.Printf("用户发送数据明文:%v", 局_json明文)
 		//==========================ApiHook之前====================================
-		if utils.W文本_是否包含关键字(AppInfo.ApiHook, `"`+局_Api+`"`) { //先判断Api是否需要Hook
-			//{"UserLogin":{"Before":"hook登录前","After":"hook登录后"}}
-			局_hookBefore := utils.W文本_取出中间文本(AppInfo.ApiHook, `"`+局_Api+`":{"Before":"`, `"`)
-
-			局_json明文, err = Ser_Js.JS引擎初始化_ApiHook处理(&AppInfo, &局_在线信息, 局_hookBefore, 局_json明文, c)
-			if err != nil {
-				response.X响应状态消息(c, response.Status_操作失败, err.Error())
-				c.Abort()
-				return
-			}
+		err = apiHook之前(c, &AppInfo, &局_在线信息, 局_Api, &局_json明文)
+		if err != nil {
+			return
 		}
 		//=============================ApiHook结束=================================
 
@@ -442,7 +438,7 @@ func UserApi无Token解密() gin.HandlerFunc {
 				return
 			}
 		}
-
+		c.Set("局_Api", 局_Api) //ApiHook后可能会用到
 		if 局_Api != "GetToken" {
 			response.X响应状态(c, response.Status_Token无效)
 			c.Abort()
@@ -487,4 +483,21 @@ func UserApi检查数据库连接() gin.HandlerFunc {
 		}
 		return
 	}
+}
+
+func apiHook之前(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, Api string, json明文 *string) error {
+	//==========================ApiHook之前====================================
+	if utils.W文本_是否包含关键字(AppInfo.ApiHook, `"`+Api+`"`) { //先判断Api是否需要Hook
+		//{"UserLogin":{"Before":"hook登录前","After":"hook登录后"}}
+		局_hookBefore := utils.W文本_取出中间文本(AppInfo.ApiHook, `"`+Api+`":{"Before":"`, `"`)
+		局_json明文, err := Ser_Js.JS引擎初始化_ApiHook处理(AppInfo, 在线信息, 局_hookBefore, *json明文, c)
+		*json明文 = 局_json明文
+		if err != nil {
+			response.X响应状态消息(c, response.Status_操作失败, err.Error())
+			c.Abort()
+			return err
+		}
+	}
+	return nil
+	//=============================ApiHook结束=================================
 }

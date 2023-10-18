@@ -97,10 +97,17 @@ func JS引擎初始化_任务池Hook处理(AppInfo *DB.DB_AppInfo, 在线信息 
 	return 局_return, 局_任务状态, nil
 
 }
-func JS引擎初始化_ApiHook处理(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, Hook函数 string, 明文信息 string, c *gin.Context) (string, error) {
+func JS引擎初始化_ApiHook处理(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, Hook函数 string, 明文信息 string, c *gin.Context) (局_明文信息 string, err error) {
+	defer func() {
+		err2 := recover() // recover()内置函数，可以捕获到异常
+		if err2 != nil {  //说明捕获到错误
+			err = errors.New("js函数错误:" + fmt.Sprintln(err2))
+		}
+	}()
+	局_明文信息 = 明文信息
 	局_PublicJs, err := Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_ApiHook函数, Hook函数)
 	if err != nil {
-		return 明文信息, err
+		return
 	}
 
 	vm := JS引擎初始化_用户(AppInfo, 在线信息)
@@ -115,23 +122,28 @@ func JS引擎初始化_ApiHook处理(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB
 
 	_, err = vm.RunString(局_PublicJs.Value)
 	if 局_详细错误, ok2 := err.(*goja.Exception); ok2 {
-		return "", errors.New("JS代码运行失败:" + 局_详细错误.String())
+		err = errors.New("JS代码运行失败:" + 局_详细错误.String())
+		return
 	}
 	var 局_待执行js函数名 func(string) interface{}
 	ret := vm.Get(局_PublicJs.Name)
 	if ret == nil {
-		return "", errors.New("Js中没有[" + 局_PublicJs.Name + "()]函数")
+		err = errors.New("Js中没有[" + 局_PublicJs.Name + "()]函数")
+		return
 	}
 	err = vm.ExportTo(ret, &局_待执行js函数名)
 	if err != nil {
-		return "", errors.New("js绑定函数到变量失败")
+		err = errors.New("js绑定函数到变量失败")
+		return
+
 	}
 
-	局_明文信息 := 局_待执行js函数名(明文信息).(string)
+	局_明文信息 = 局_待执行js函数名(明文信息).(string)
 	局_拦截原因 := vm.Get("$拦截原因").Export().(string)
 
 	if 局_拦截原因 != "" {
-		return 局_明文信息, errors.New(局_拦截原因)
+		err = errors.New(局_拦截原因)
+		return
 	}
 	return 局_明文信息, nil
 
