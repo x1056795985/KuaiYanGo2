@@ -133,7 +133,7 @@ type 结构响应_DB_LogRMBPayOrder_扩展 struct {
 }
 type 结构请求_批量Delete struct {
 	Id       []int  `json:"Id"`       //用户id数组
-	Type     int    `json:"Type"`     //  1删除用户数组 2删除指定关键字 3清空 4删除7天前 5删除30天前 6删除90天前
+	Type     int    `json:"Type"`     //  1删除用户数组 2删除指定关键字 3清空 4删除7天前 5删除30天前 6删除90天前 7 关键字  8删除过期待支付
 	Keywords string `json:"Keywords"` //
 }
 
@@ -149,13 +149,11 @@ func (a *Api) Delete(c *gin.Context) {
 	var 影响行数 int64
 	var db = global.GVA_DB.Model(DB.DB_LogRMBPayOrder{})
 
-	if 请求.Type <= 0 || 请求.Type > 7 {
-		response.FailWithMessage("Type错误", c)
-		return
-	}
-
 	//1删除用户数组 2删除指定用户 3清空 4删除7天前 5删除30天前 6删除90天前  7 关键字
 	switch 请求.Type {
+	default:
+		response.FailWithMessage("Type错误", c)
+		return
 	case 1:
 		if 请求.Type == 1 && len(请求.Id) == 0 {
 			response.FailWithMessage("Id数组没有要删除的ID", c)
@@ -178,6 +176,12 @@ func (a *Api) Delete(c *gin.Context) {
 			return
 		}
 		影响行数 = db.Where("LOCATE( ?, Note)>0 ", 请求.Keywords).Delete(请求.Id).RowsAffected
+	case 8: //一小时前待支付
+		影响行数 = db.Where("Time <  ?", time.Now().Unix()-3600).Where("Status = 1").Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
+		if db.Error == nil {
+			response.OkWithMessage("删除过期(1小时前)待支付成功,数量"+strconv.FormatInt(影响行数, 10), c)
+			return
+		}
 	}
 
 	if db.Error != nil {

@@ -71,7 +71,18 @@ func Token更新最后活动时间(Token string) {
 	}
 	return
 }
-
+func Token更新在线ip(Token, Ip string) {
+	省市, 运行商, err := Qqwry.Ip查信息(Ip)
+	var IPCity = ""
+	if err == nil && 省市 != "" {
+		IPCity = 省市 + " " + 运行商
+	}
+	err = global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).Updates(map[string]interface{}{"Ip": Ip, "IPCity": IPCity}).Error
+	if err != nil {
+		global.GVA_LOG.Error(fmt.Sprintf("Token更新在线ip:%v,%v", err.Error(), Token))
+	}
+	return
+}
 func Id更新当前版本号(Id int, 新应用版本号 string) {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", Id).Update("AppVer", 新应用版本号).Error
 	if err != nil {
