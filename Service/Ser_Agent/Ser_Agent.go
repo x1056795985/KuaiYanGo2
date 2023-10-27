@@ -45,12 +45,12 @@ func 递归获取上级代理ID(userID int, 数组_代理信息 *[]DB.Db_Agent_L
 
 func S删除代理(UID []int) error {
 	err := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		影响行数 := tx.Model(DB.DB_User{}).Where("Id IN ? ", UID).Delete("").RowsAffected
+		影响行数 := tx.Model(DB.DB_User{}).Where("Id IN ? ", UID).Delete(DB.DB_User{}).RowsAffected
 		if 影响行数 == 0 {
 			return errors.New("代理用户删除失败")
 		}
 		//代理用户删除了删除代理关系
-		影响行数 = tx.Model(DB.Db_Agent_Level{}).Where("Uid IN ? ", UID).Delete("").RowsAffected
+		影响行数 = tx.Model(DB.Db_Agent_Level{}).Where("Uid IN ? ", UID).Delete(DB.Db_Agent_Level{}).RowsAffected
 		if 影响行数 == 0 {
 			return errors.New("代理关系删除失败")
 		}

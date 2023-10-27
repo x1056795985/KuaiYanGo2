@@ -176,6 +176,11 @@ func UserApi解密() gin.HandlerFunc {
 		}
 
 		go Ser_LinkUser.Token更新最后活动时间(Token)
+		if 局_在线信息.Ip != c.ClientIP() {
+			go Ser_LinkUser.Token更新在线ip(Token, c.ClientIP())
+			go Ser_Log.Log_写登录日志(局_在线信息.User, c.ClientIP(), "在线用户更换ip"+局_在线信息.Ip+"->"+c.ClientIP(), 局_在线信息.LoginAppid)
+		}
+
 		c.Set("局_在线信息", 局_在线信息)
 
 		//密文解密成明文
@@ -380,10 +385,6 @@ func UserApi无Token解密() gin.HandlerFunc {
 		var 局_json明文 string
 		var 结构加密包 请求响应_加密包
 		var 局_临时字节集 []byte
-		if AppInfo.CryptoType == 2 {
-			c.Set("局_CryptoKeyAes", AppInfo.CryptoKeyAes)
-		}
-
 		if AppInfo.CryptoType == 2 || AppInfo.CryptoType == 3 {
 			err := c.ShouldBindJSON(&结构加密包)
 			if err != nil {

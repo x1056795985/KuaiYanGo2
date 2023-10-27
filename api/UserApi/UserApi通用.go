@@ -45,8 +45,10 @@ func UserApi_GetToken(c *gin.Context) {
 	局_临时通用, _ := c.Get("AppInfo")
 	AppInfo := 局_临时通用.(DB.DB_AppInfo)
 	var 局_通讯AES密钥 = ""
-	if AppInfo.CryptoType == 3 {
+	if AppInfo.CryptoType == 3 || AppInfo.CryptoType == 2 {
 		局_通讯AES密钥 = c.GetString("局_CryptoKeyAes")
+	} else if AppInfo.CryptoType == 2 {
+		局_通讯AES密钥 = AppInfo.CryptoKeyAes
 	}
 
 	在线信息, err2 := Ser_LinkUser.New(0, 1, AppInfo.AppId, AppInfo.OutTime, "游客", "", "", c.ClientIP(), 局_通讯AES密钥)
@@ -260,6 +262,7 @@ func UserApi_用户登录(c *gin.Context) {
 		"LoginTime":     time.Now().Unix(),
 		"LoginIp":       c.ClientIP(),
 		"RegisterTime":  局_AppUser.RegisterTime,
+		"NewAppUser":    !局_老用户,
 	})
 }
 func UserApi_GetUserIP(c *gin.Context) {
@@ -1308,10 +1311,7 @@ func UserApi_云函数执行(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-	if !检测用户登录在线正常(&局_在线信息) { //强制登录才可以,不用检测ISVip了 必须登录
-		response.X响应状态(c, response.Status_未登录)
-		return
-	}
+
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"RunJS","Parameter":"{'a':1}","JsName":"获取用户相关信息","IsGlobal":false,"Time":1684497856,"Status":30873}
 	var 局_JSid = 0
@@ -1334,7 +1334,10 @@ func UserApi_云函数执行(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "JS公共函数不存在")
 		return
 	}
-
+	if 局_PublicJs.IsVip > 0 && !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
 	if E文件是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
 		局_PublicJs.Value = string(E读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
 	} else {

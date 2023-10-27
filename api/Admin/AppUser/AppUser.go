@@ -464,12 +464,18 @@ func (a *Api) Set批量维护_删除用户(c *gin.Context) {
 		response.FailWithMessage("维护类型错误", c)
 		return
 	case 1: //删除已过期,或无点数
-
 		if Ser_AppInfo.App是否为计点(请求.AppId) {
 			局_row, err = Ser_AppUser.S删除VipTime小于等于X(请求.AppId, 0)
 		} else {
 			局_row, err = Ser_AppUser.S删除VipTime小于等于X(请求.AppId, time.Now().Unix())
 		}
+	case 2: //删除已过期,或无点数 且删除卡号
+		if Ser_AppInfo.App是否为计点(请求.AppId) {
+			局_row, err = Ser_AppUser.S删除VipTime小于等于X且删除卡号(请求.AppId, 0, c.ClientIP())
+		} else {
+			局_row, err = Ser_AppUser.S删除VipTime小于等于X且删除卡号(请求.AppId, time.Now().Unix(), c.ClientIP())
+		}
+
 	}
 
 	if err != nil {

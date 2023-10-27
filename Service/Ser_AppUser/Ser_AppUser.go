@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"server/Service/Ser_AppInfo"
+	"server/Service/Ser_Log"
 	"server/global"
 	DB "server/structs/db"
 	"strconv"
@@ -312,4 +313,43 @@ func S删除VipTime小于等于X(AppId int, VipTime int64) (影响行数 int64, 
 	db := global.GVA_DB.Model(DB.DB_AppUser{})
 	影响行数 = db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("VipTime <= ? ", VipTime).Delete("").RowsAffected
 	return 影响行数, err
+}
+func S删除VipTime小于等于X且删除卡号(AppId int, VipTime int64, Ip string) (id int64, err error) {
+	if !Ser_AppInfo.App是否为卡号(AppId) {
+		return 0, errors.New("仅限卡号类型应用使用")
+	}
+
+	db := global.GVA_DB.Model(DB.DB_AppUser{})
+	var ids []int64
+
+	err = db.Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Uid").Where("VipTime <= ? ", VipTime).Find(&ids).Error
+
+	if err != nil {
+		return
+	}
+	if len(ids) == 0 {
+		return
+	}
+	var KaNames []string
+	err = db.Model(DB.DB_Ka{}).Select("Name").Where("Uid IN ? ", ids).Find(&KaNames).Error
+	id = int64(len(ids))
+	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ?", ids).Delete("").Error
+		if err != nil {
+			return errors.New("删除应用用户失败:" + err.Error())
+		}
+
+		err = tx.Model(DB.DB_Ka{}).Where("AppId = ?", AppId).Where("id IN ?", ids).Delete("").Error
+		if err != nil {
+			return errors.New("删除应用卡号失败:" + err.Error())
+		}
+		return nil
+	})
+
+	if err == nil {
+		局_文本 := fmt.Sprintf("删除VipTime小于等于%d且删除卡号:{{卡号}},同时间批次({{卡号索引}}/%d)", VipTime, id)
+		go Ser_Log.Log_写卡号操作日志("Admin", Ip, 局_文本, KaNames, 4, 4)
+	}
+
+	return
 }

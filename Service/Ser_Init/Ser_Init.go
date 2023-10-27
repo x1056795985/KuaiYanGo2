@@ -497,7 +497,7 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 	Ser_PublicJs.C创建(DB.DB_PublicJs{
 		AppId: 3,
 		Name:  "Hook_ApiHOOk执行前例子",
-		Value: `function Hook_ApiHOOk执行前例子` + App.Api之前Hook函数模板,
+		Value: `function Hook_Api执行前HOOk例子` + App.Api之前Hook函数模板,
 		Type:  2,
 		IsVip: 0,
 		Note:  "ApiHook例子,这个是演示hook登录接口进入前,先判断是否能访问百度,如果不能直接拦截响应失败,",
@@ -505,7 +505,7 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 	Ser_PublicJs.C创建(DB.DB_PublicJs{
 		AppId: 3,
 		Name:  "Hook_ApiHOOk执行后例子",
-		Value: `function Hook_ApiHOOk执行后例子` + App.Api之后Hook函数模板,
+		Value: `function Hook_Api执行后HOOk例子` + App.Api之后Hook函数模板,
 		Type:  2,
 		IsVip: 0,
 		Note:  "ApiHook例子,这个是演示hook登录结束后,修改响应明文的例子,",
