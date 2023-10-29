@@ -146,7 +146,7 @@ func (a *Api) Del批量删除App(c *gin.Context) {
 		return
 	}
 	for _, 局_id := range 请求.Id {
-		if 局_id <= 10000 {
+		if 局_id < 10000 {
 			response.FailWithMessage("appid不能小于10000", c)
 			return
 		}

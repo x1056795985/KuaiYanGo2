@@ -120,7 +120,7 @@ func KaClass创建New(AppId int, Name, 卡前缀 string, VipTime int64, 邀请�
 	if 请求.Id > 0 {
 		return 0, errors.New("添加用户不能有id值")
 	}
-	if 请求.AppId <= 10000 {
+	if 请求.AppId < 10000 {
 		return 0, errors.New("AppId错误")
 	}
 	if 请求.Name == "" {
