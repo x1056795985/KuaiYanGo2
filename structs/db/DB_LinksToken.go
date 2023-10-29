@@ -11,7 +11,7 @@ type DB_LinksToken struct {
 	LoginTime        int64  `json:"LoginTime" gorm:"column:LoginTime;comment:登录时间"`
 	LastTime         int64  `json:"LastTime" gorm:"column:LastTime;comment:最上次活动时间戳"`
 	OutTime          int    `json:"OutTime" gorm:"column:OutTime;comment:上次活动时间+退出时间=退出时间戳"`
-	Key              string `json:"Key" gorm:"column:Key;comment:绑定信息"`
+	Key              string `json:"Key" gorm:"column:Key;comment:绑定信息"` // key是关键字,坑点, 下次重构处理吧
 	Tab              string `json:"Tab" gorm:"column:Tab;size:5000;comment:标记,动态标签软件版本之类的信息"`
 	VerificationCode string `json:"-" gorm:"column:VerificationCode;comment:存储验证码信息"`
 	Ip               string `json:"Ip" gorm:"column:Ip;size:200;comment:ip地址"`
