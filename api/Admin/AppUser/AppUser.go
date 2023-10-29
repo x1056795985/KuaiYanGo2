@@ -147,7 +147,7 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 				局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where LOCATE(?, db_User.User)>0 )", 请求.Keywords))
 			}
 		case 4: //绑定信息
-			局_DB.Where("LOCATE(?, "+表名_AppUser+".Key)>0 ", 请求.Keywords)
+			局_DB.Where("`Key` like ?", "%"+请求.Keywords+"%")
 		case 5: //软件用户备注
 			局_DB.Where("LOCATE( ?, "+表名_AppUser+".Note)>0 ", 请求.Keywords)
 		}

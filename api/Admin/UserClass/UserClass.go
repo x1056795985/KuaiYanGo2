@@ -196,7 +196,7 @@ func (a *Api) NewUserClass信息(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
-	if 请求.AppId <= 10000 {
+	if 请求.AppId < 10000 {
 		response.FailWithMessage("AppId错误", c)
 		return
 	}
@@ -237,7 +237,7 @@ func (a *Api) GetIdNameList(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
-	if 请求.AppId <= 10000 {
+	if 请求.AppId < 10000 {
 		response.FailWithMessage("AppId错误", c)
 		return
 	}
