@@ -45,6 +45,22 @@ func Id取User(Id int) string {
 	return 用户名
 }
 
+// 取用户表的信息_批量,仅限用户表
+func Id取User_批量(Id []int) map[int]string {
+	if len(Id) == 0 {
+		return map[int]string{}
+	}
+	var 用户名 []DB.DB_User
+	global.GVA_DB.Model(DB.DB_User{}).Select("User").Where("Id IN ?", Id).Find(&用户名)
+	var 局_返回 = make(map[int]string, len(用户名))
+
+	for 索引, _ := range 用户名 {
+		局_返回[用户名[索引].Id] = 用户名[索引].User
+	}
+
+	return 局_返回
+}
+
 // 负数会取管理员表的信息
 func Id取状态(Id int) int {
 	if Id == 0 {

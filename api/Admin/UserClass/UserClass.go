@@ -171,7 +171,7 @@ func (a *Api) SaveUserClass信息(c *gin.Context) {
 		return
 	}
 
-	if UserClass服务.IsMark存在数量(请求.AppId, 请求.Mark) > 1 {
+	if UserClass服务.IsMark存在数量(请求.AppId, 请求.Mark) >= 1 {
 		response.FailWithMessage("整数代号已存在", c)
 		return
 	}
