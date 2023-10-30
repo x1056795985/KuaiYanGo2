@@ -1,7 +1,7 @@
 package DB
 
 // 可制卡类权限 和功能权限合并在一起 ,KId负数就是功能id权限,正数为可制卡类
-// 如果增加工功能 全局搜索  Q取全部代理功能ID_MAP  这个函数内也要增加
+// 如果增加工功能 全局搜索  Q取全部代理功能ID_MAP  这个函数内也要增加!!!!!!!!!!!!
 const D代理功能_卡号冻结 = -1
 const D代理功能_卡号解冻 = -2
 const D代理功能_更换卡号 = -3
@@ -9,6 +9,7 @@ const D代理功能_删除卡号 = -4 //附加信息  {}
 const D代理功能_余额充值 = -5
 const D代理功能_发展下级代理 = -6
 const D代理功能_卡号追回 = -7
+const D代理功能_修改用户绑定 = -8
 
 type Db_Agent_卡类授权 struct {
 	ID   int    `json:"Id" gorm:"column:Id;primaryKey;comment:Id"`
