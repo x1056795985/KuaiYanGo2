@@ -3,6 +3,7 @@ package Ser_AppUser
 import (
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_Log"
@@ -314,7 +315,7 @@ func S删除VipTime小于等于X(AppId int, VipTime int64) (影响行数 int64, 
 	影响行数 = db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("VipTime <= ? ", VipTime).Delete("").RowsAffected
 	return 影响行数, err
 }
-func S删除VipTime小于等于X且删除卡号(AppId int, VipTime int64, Ip string) (id int64, err error) {
+func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTime int64, Ip string) (id int64, err error) {
 	if !Ser_AppInfo.App是否为卡号(AppId) {
 		return 0, errors.New("仅限卡号类型应用使用")
 	}
@@ -348,7 +349,7 @@ func S删除VipTime小于等于X且删除卡号(AppId int, VipTime int64, Ip str
 
 	if err == nil {
 		局_文本 := fmt.Sprintf("删除VipTime小于等于%d且删除卡号:{{卡号}},同时间批次({{卡号索引}}/%d)", VipTime, id)
-		go Ser_Log.Log_写卡号操作日志("Admin", Ip, 局_文本, KaNames, 4, 4)
+		go Ser_Log.Log_写卡号操作日志(c.GetString("User"), Ip, 局_文本, KaNames, 4, 4)
 	}
 
 	return

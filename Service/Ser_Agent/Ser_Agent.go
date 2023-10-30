@@ -250,8 +250,10 @@ func Q取全部代理功能ID_MAP() map[int]string {
 	局_map[DB.D代理功能_余额充值] = "余额充值"
 	局_map[DB.D代理功能_发展下级代理] = "发展下级代理"
 	局_map[DB.D代理功能_卡号追回] = "卡号追回"
+	局_map[DB.D代理功能_修改用户绑定] = "修改用户绑定"
 	return 局_map
 }
+
 func Q取全部代理功能名称_MAP() map[string]int {
 	局_map := Q取全部代理功能ID_MAP()
 	局_map2 := make(map[string]int, len(局_map))

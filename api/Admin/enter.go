@@ -11,6 +11,7 @@ import (
 	"server/api/Admin/KuaiYan"
 	"server/api/Admin/LinkUser"
 	"server/api/Admin/LogAgentInventory"
+	"server/api/Admin/LogAgentOtherFunc"
 	"server/api/Admin/LogLogin"
 	"server/api/Admin/LogMoney"
 	"server/api/Admin/LogRMBPayOrder"
@@ -55,6 +56,7 @@ type _Admin struct {
 	LogRegister       LogRegisterKa.Api
 	LogUserMsg        LogUserMsg.Api
 	LogRMBPayOrder    LogRMBPayOrder.Api
+	LogAgentOtherFunc LogAgentOtherFunc.Api
 	Panel             Panel.Api
 	KuaiYan           KuaiYan.Api
 }

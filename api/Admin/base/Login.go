@@ -40,7 +40,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 	// 判断验证码是否开启
 	openCaptcha := global.GVA_CONFIG.Captcha.OpenCaptcha               // 是否开启防暴次数
 	openCaptchaTimeOut := global.GVA_CONFIG.Captcha.OpenCaptchaTimeOut // 缓存超时时间
-	v, ok := global.H缓存.Get(客户端ip)                                     // 获取这个ip已经被请求次数
+	v, ok := global.H缓存.Get(客户端ip)                                // 获取这个ip已经被请求次数
 	if !ok {
 		// 获取这个ip已经被请求次数  如果没请求过, 设置值为1
 		global.H缓存.Set(客户端ip, 1, time.Second*time.Duration(openCaptchaTimeOut))
@@ -52,10 +52,6 @@ func (b *BaseApi) Login(c *gin.Context) {
 	if openCaptcha == 0 || openCaptcha < interfaceToInt(v) {
 		j校验验证码 = true
 	}
-
-	//if Request.Username == "admin" {
-	//	j校验验证码 = false
-	//}
 
 	_ = global.H缓存.Increment(客户端ip, 1) //这个ip防爆次数 + 1
 	// j校验验证码

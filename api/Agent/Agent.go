@@ -8,6 +8,7 @@ import (
 	"server/api/Agent/LogMoney"
 	LogRegisterKa "server/api/Agent/LogRegisterka"
 	"server/api/Agent/Menu"
+	"server/api/Agent/OtherFunc"
 	"server/api/Agent/base"
 )
 
@@ -21,6 +22,7 @@ type _Agent struct {
 	LogMoney          LogMoney.Api
 	LogAgentInventory LogAgentInventory.Api
 	LogRegister       LogRegisterKa.Api
+	OtherFunc         OtherFunc.Api
 	/*LinkUserApi       LinkUser.LinkUserApi
 	User              User.Api
 

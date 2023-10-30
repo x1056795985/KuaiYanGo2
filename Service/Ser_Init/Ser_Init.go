@@ -6,6 +6,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"os"
+	"server/Service/Ser_Admin"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Init/internal"
@@ -89,6 +90,7 @@ func InitDbTables() {
 		DB.DB_LogKa{},
 		DB.DB_LogRiskControl{},
 		DB.DB_LogVipNumber{},
+		DB.DB_LogAgentOtherFunc{},
 		//任务池数据库
 		DB.TaskPool_类型{},
 		DB.TaskPool_队列{},
@@ -114,9 +116,9 @@ func InitDbTable数据() {
 	if db == nil {
 		return
 	}
-	//检查 admin表是否有admin账号============================================开始
+	//检查 admin表是否有账号============================================开始
 	var 局_数量 int64
-	db.Model(DB.DB_Admin{}).Where("User = ?", "admin").Count(&局_数量)
+	db.Model(DB.DB_Admin{}).Count(&局_数量)
 	if 局_数量 == 0 {
 		entities := []DB.DB_Admin{{
 			Id:            1,
@@ -149,8 +151,8 @@ func InitDbTable数据() {
 		Ser_AppUser.New用户信息(10001, 1, "测试绑定", 1, time.Now().Unix(), 11.02, 0, "")
 		卡类ID, _ := Ser_KaClass.KaClass创建New(10001, "天卡", "Y30", 2592000, 2592000, 0.01, 1.01, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 		卡类ID, _ = Ser_KaClass.KaClass创建New(10001, "月卡", "Y30", 2592000, 2592000, 0.01, 1.01, 100, 100, 0, 1, 25, 1, 1, 1, 1)
-		卡信息, _ := Ser_Ka.Ka单卡创建(卡类ID, "admin", "演示创建", "", 0)
-		卡信息, _ = Ser_Ka.Ka单卡创建(卡类ID, "admin", "演示创建可追回卡号", "", 0)
+		卡信息, _ := Ser_Ka.Ka单卡创建(卡类ID, Ser_Admin.Id取User(1), "演示创建", "", 0)
+		卡信息, _ = Ser_Ka.Ka单卡创建(卡类ID, Ser_Admin.Id取User(1), "演示创建可追回卡号", "", 0)
 		Ser_Ka.K卡号充值_事务(10001, 卡信息.Name, "test0001", "", "127.0.0.1")
 		_ = Ser_AppInfo.NewApp信息(10002, 3, "演示对接卡号限时RSA通讯")
 		卡类ID, _ = Ser_KaClass.KaClass创建New(10002, "天卡", "Y01", 86400, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)

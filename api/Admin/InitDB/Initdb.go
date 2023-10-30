@@ -31,9 +31,9 @@ func (i *DBApi) CheckDB(c *gin.Context) {
 		goto 结果
 	}
 
-	global.GVA_DB.Model(DB.DB_Admin{}).Where("User=?", "admin").Count(&局_数量)
+	global.GVA_DB.Model(DB.DB_Admin{}).Count(&局_数量)
 
-	if 局_数量 == 1 { // 判断是否存在数据  如果没存在就返回假
+	if 局_数量 >= 1 { // 判断是否存在数据  如果没存在就返回假
 		message = "数据库无需初始化"
 		needInit = false
 		goto 结果
@@ -61,7 +61,7 @@ func (i *DBApi) InitDB(c *gin.Context) {
 
 	var J_数量 int64
 	if global.GVA_DB != nil {
-		global.GVA_DB.Model(DB.DB_Admin{}).Where("User=?", "admin").Count(&J_数量)
+		global.GVA_DB.Model(DB.DB_Admin{}).Count(&J_数量)
 		if J_数量 != 0 {
 			global.GVA_LOG.Error("已存在数据库配置!")
 			response.FailWithMessage("已存在数据库配置", c)
@@ -105,7 +105,7 @@ func (i *DBApi) InitDB(c *gin.Context) {
 	global.GVA_Viper.Set("Mysql.LogMode", "error")
 	global.GVA_Viper.WriteConfig()
 
-	Ser_Init.InitDbTables()    //自动创建迁移表
+	Ser_Init.InitDbTables()  //自动创建迁移表
 	Ser_Init.InitDbTable数据() //自动创建数据
 
 	global.GVA_Viper.SetConfigFile(global.GVA_CONFIG.Q取运行目录 + "/config.json")
