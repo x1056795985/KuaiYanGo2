@@ -414,7 +414,7 @@ func Get应用用户统计(c *gin.Context) [][]string {
 	Data[0] = []string{"product", "非会员", "会员", "总数"}
 	for 索引 := 0; 索引 < len(局_appId用户数量); 索引++ {
 		局_会员, 局_非会员 := Ser_AppUser.Get用户会员和非会员数量(局_appId用户数量[索引].应用AppId)
-		Data[索引+1] = []string{局_appId列表[局_appId用户数量[索引].应用AppId], strconv.FormatInt(局_会员, 10), strconv.FormatInt(局_非会员, 10), strconv.Itoa(局_appId用户数量[索引].总数)}
+		Data[索引+1] = []string{局_appId列表[局_appId用户数量[索引].应用AppId], strconv.FormatInt(局_非会员, 10), strconv.FormatInt(局_会员, 10), strconv.Itoa(局_appId用户数量[索引].总数)}
 	}
 
 	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
