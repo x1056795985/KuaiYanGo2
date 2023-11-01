@@ -51,7 +51,7 @@ func Id取User_批量(Id []int) map[int]string {
 		return map[int]string{}
 	}
 	var 用户名 []DB.DB_User
-	global.GVA_DB.Model(DB.DB_User{}).Select("User").Where("Id IN ?", Id).Find(&用户名)
+	global.GVA_DB.Model(DB.DB_User{}).Select("Id,User").Where("Id IN ?", Id).Find(&用户名)
 	var 局_返回 = make(map[int]string, len(用户名))
 
 	for 索引, _ := range 用户名 {

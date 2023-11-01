@@ -155,7 +155,7 @@ func Set批量注销Uid数组(UId []int, AppId int) error {
 	return err
 }
 func Set批量注销User数组(User []string) error {
-	db := global.GVA_DB.Debug().Model(DB.DB_LinksToken{}).Where("User IN ? ", User)
+	db := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("User IN ? ", User)
 	err := db.Updates(map[string]interface{}{"OutTime": 0, "Status": 2}).Error
 	return err
 }

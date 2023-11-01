@@ -631,7 +631,6 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	//其他操作===========================================
 	baseRouter = Router根Agent.Group("/OtherFunc")
 	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
 	{
 		App := Agent.Api.OtherFunc                          //实现路由的 具体方法位置
 		baseRouter.POST("SetAppUserKey", App.SetAppUserKey) // 获取列表

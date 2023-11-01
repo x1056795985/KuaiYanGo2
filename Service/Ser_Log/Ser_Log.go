@@ -156,8 +156,6 @@ func Log_写库存转移日志(操作库存ID, 数量, 类型 int, User1 string,
 	return
 }
 
-const C操作日志_修改绑定 = 1
-
 // 写操作日志,主要是代理的操作用户,比如修改用户绑定信息
 func Log_写代理操作日志(AgentUid, AgentType, AppId, AppUserid int, AppUser string, Func int, IP string, Note string) {
 	login := DB.DB_LogAgentOtherFunc{
@@ -173,7 +171,7 @@ func Log_写代理操作日志(AgentUid, AgentType, AppId, AppUserid int, AppUse
 		Time:      time.Now().Unix(),
 	}
 
-	err := global.GVA_DB.Model(DB.DB_LogLogin{}).Create(&login).Error
+	err := global.GVA_DB.Model(DB.DB_LogAgentOtherFunc{}).Create(&login).Error
 	if err != nil {
 		global.GVA_LOG.Error(fmt.Sprintf("Log_写操作失败:%v,%v,%v,%v,%v,%v,%v,%v", err.Error(), AgentUid, AgentType, AppId, AppUserid, Func, IP, Note))
 	}
