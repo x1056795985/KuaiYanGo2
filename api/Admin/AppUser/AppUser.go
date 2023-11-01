@@ -94,7 +94,7 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 	var DB_AppUser []DB_AppUser带User信息
 	var 总数 int64
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(请求.AppId)
-	局_DB := global.GVA_DB.Table(表名_AppUser).Debug()
+	局_DB := global.GVA_DB.Table(表名_AppUser)
 	if Ser_AppInfo.App是否为卡号(请求.AppId) {
 		局_DB = 局_DB.Select(表名_AppUser+".*", "db_Ka.Name", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_Ka on " + 表名_AppUser + ".Uid=db_Ka.Id")
 	} else {

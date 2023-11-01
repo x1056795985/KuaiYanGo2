@@ -2,6 +2,7 @@ package LogAgentOtherFunc
 
 import (
 	"github.com/gin-gonic/gin"
+	"server/Service/Ser_Agent"
 	"server/Service/Ser_User"
 	"server/global"
 	"server/structs/Http/response"
@@ -36,19 +37,17 @@ func (a *Api) GetLogList(c *gin.Context) {
 	}
 
 	局_DB := global.GVA_DB.Model(DB.DB_LogAgentOtherFunc{})
-	if 请求.Order == 1 {
-		局_DB.Order("Id ASC")
-	} else {
-		局_DB.Order("Id DESC")
-	}
-	if 请求.Func > 0 {
+
+	if 请求.Func < 0 {
 		局_DB.Where("Func = ? ", 请求.Func)
 	}
+
 	if 请求.Time != nil && len(请求.Time) == 2 && 请求.Time[0] != "" && 请求.Time[1] != "" {
 		开始时间, _ := strconv.Atoi(请求.Time[0])
 		结束时间, _ := strconv.Atoi(请求.Time[1])
 		局_DB.Where("Time > ?", 开始时间).Where("Time < ?", 结束时间+86400)
 	}
+
 	if 请求.Keywords != "" {
 		switch 请求.Type {
 		case 1: //代理id
@@ -59,12 +58,18 @@ func (a *Api) GetLogList(c *gin.Context) {
 			}
 			局_DB.Where("AgentUid  = ? ", 请求.Keywords)
 		case 2: //用户user
-			局_DB.Where("AppUser like ?", "%"+请求.Keywords+"%")
+
+			局_DB.Where("AppUser like  ?", "%"+请求.Keywords+"%")
 		case 3: //ip
-			局_DB.Where("Ip = ? ", 请求.Keywords)
+			局_DB.Where("Ip like ? ", "%"+请求.Keywords+"%")
 		case 4: //信息
 			局_DB.Where("Note like ?", "%"+请求.Keywords+"%")
 		}
+	}
+	if 请求.Order == 1 {
+		局_DB.Order("Id ASC")
+	} else {
+		局_DB.Order("Id DESC")
 	}
 	var LogAgentOtherFunc []DB.DB_LogAgentOtherFunc
 	var 总数 int64
@@ -86,13 +91,16 @@ func (a *Api) GetLogList(c *gin.Context) {
 		局_AgentIds = append(局_AgentIds, LogAgentOtherFunc[索引].AgentUid)
 	}
 	局_MapUId_User := Ser_User.Id取User_批量(局_AgentIds)
+	局_Map代理ID_功能 := Ser_Agent.Q取全部代理功能ID_MAP()
 	局_DB_LogAgentOtherFunc扩展 := make([]DB_LogAgentOtherFunc扩展, len(LogAgentOtherFunc))
 	for 索引, _ := range LogAgentOtherFunc {
-		局_DB_LogAgentOtherFunc扩展[索引] = DB_LogAgentOtherFunc扩展{LogAgentOtherFunc[索引], 局_MapUId_User[LogAgentOtherFunc[索引].AgentUid]}
-		局_AgentIds = append(局_AgentIds, LogAgentOtherFunc[索引].AgentUid)
+		局_DB_LogAgentOtherFunc扩展[索引] = DB_LogAgentOtherFunc扩展{
+			LogAgentOtherFunc[索引],
+			局_MapUId_User[LogAgentOtherFunc[索引].AgentUid],
+			局_Map代理ID_功能[LogAgentOtherFunc[索引].Func]}
 	}
 
-	response.OkWithDetailed(结构响应_GetDB_DB_LogAgentOtherFuncList{LogAgentOtherFunc, 总数}, "获取成功", c)
+	response.OkWithDetailed(结构响应_GetDB_DB_LogAgentOtherFuncList{局_DB_LogAgentOtherFunc扩展, 总数}, "获取成功", c)
 	return
 }
 
@@ -103,6 +111,7 @@ type 结构响应_GetDB_DB_LogAgentOtherFuncList struct {
 type DB_LogAgentOtherFunc扩展 struct {
 	DB.DB_LogAgentOtherFunc
 	AgentUser string `json:"AgentUser"` // 总数
+	FuncTxt   string `json:"FuncTxt"`   // 中文名称
 }
 
 type 结构请求_批量Delete struct {

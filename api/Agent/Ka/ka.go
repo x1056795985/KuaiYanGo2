@@ -7,6 +7,7 @@ import (
 	"server/Service/Ser_Chare"
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_KaClass"
+	"server/Service/Ser_Log"
 	"server/Service/Ser_UserClass"
 	"server/global"
 	"server/structs/Http/response"
@@ -169,10 +170,10 @@ func (a *Api) GetKaList(c *gin.Context) {
 }
 
 type 结构响应_GetKaList struct {
-	List      interface{}                   `json:"List"`      // 列表
-	Count     int64                         `json:"Count"`     // 总数
-	AppType   int                           `json:"AppType"`   //
-	UserClass map[int]string                `json:"UserClass"` //
+	List      interface{}         `json:"List"`      // 列表
+	Count     int64               `json:"Count"`     // 总数
+	AppType   int                 `json:"AppType"`   //
+	UserClass map[int]string      `json:"UserClass"` //
 	KaClass   map[int]结构响应_卡类名称价格 `json:"KaClass"`   //
 }
 type 结构响应_卡类名称价格 struct {
@@ -219,6 +220,10 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 		response.FailWithMessage("追回失败:"+err.Error(), c)
 		return
 	}
+
+	局_卡号详情, _ := Ser_Ka.Id取详情(请求.Id[0])
+	局_信息 := "操作卡号管理:卡号更换新卡号:" + 局_卡号详情.Name
+	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_卡号详情.Name, DB.D代理功能_卡号追回, c.ClientIP(), 局_信息)
 
 	response.OkWithMessage(提示, c)
 	return
@@ -349,19 +354,21 @@ func (a *Api) Set修改状态(c *gin.Context) {
 	}
 	局_权限 := false
 	局_权限文本 := "卡号状态参数错误"
+	局_代理权限ID := 0
 	switch 请求.Status {
 	case 1:
 		局_权限 = Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_卡号解冻)
 		局_权限文本 = "无卡号解冻权限,请联系上级代理授权"
+		局_代理权限ID = DB.D代理功能_卡号解冻
 	case 2:
 		局_权限 = Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_卡号冻结)
 		局_权限文本 = "无卡号冻结权限,请联系上级代理授权"
+		局_代理权限ID = DB.D代理功能_卡号冻结
 	}
 	if !局_权限 {
 		response.FailWithMessage(局_权限文本, c)
 		return
 	}
-	Ser_Ka.Ka修改状态(请求.Id, 请求.Status)
 
 	err = Ser_Ka.Ka修改状态(请求.Id, 请求.Status)
 
@@ -369,6 +376,20 @@ func (a *Api) Set修改状态(c *gin.Context) {
 		response.FailWithMessage("修改失败", c)
 		global.GVA_LOG.Error("修改失败:" + err.Error())
 		return
+	}
+
+	for _, 值 := range 请求.Id {
+		局_卡号, err2 := Ser_Ka.Id取详情(值)
+		if err2 == nil {
+			局_信息 := "操作卡号管理:"
+			if 局_代理权限ID == DB.D代理功能_卡号冻结 {
+				局_信息 += "卡号冻结"
+			} else {
+				局_信息 += "卡号解冻"
+			}
+			Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 局_卡号.AppId, 局_卡号.Id, 局_卡号.Name, 局_代理权限ID, c.ClientIP(), 局_信息)
+		}
+
 	}
 
 	response.OkWithMessage("修改成功", c)
@@ -388,14 +409,18 @@ func (a *Api) G更换卡号(c *gin.Context) {
 		response.FailWithMessage("无卡号更换功能权限,请联系上级授权", c)
 		return
 	}
-
+	局_旧卡号详情, _ := Ser_Ka.Id取详情(请求.Id)
 	err = Ser_Ka.Ka更换卡号(请求.Id, c.GetInt("Uid"), c.ClientIP())
 
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+
 	局_卡号详情, _ := Ser_Ka.Id取详情(请求.Id)
+	局_信息 := "操作卡号管理:卡号更换新卡号:" + 局_卡号详情.Name
+	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_旧卡号详情.Name, DB.D代理功能_更换卡号, c.ClientIP(), 局_信息)
+
 	response.OkWithDetailed(局_卡号详情, "更换成功", c)
 	return
 }
@@ -458,7 +483,7 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 
 type 响应_AppIdNameList struct {
 	Map   map[string]string `json:"Map"`
-	Array []键值对          `json:"Array"`
+	Array []键值对             `json:"Array"`
 }
 
 type 键值对 struct {
