@@ -60,8 +60,9 @@ func (a *Api) SetAppUserKey(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	局_信息 := "修改绑定信息:" + 局_用户详情.Key + "  ->  " + 请求.Key
-	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 请求.AppId, AppUserid, Ser_AppUser.Id取User(请求.AppId, AppUserid), Ser_Log.C操作日志_修改绑定, c.ClientIP(), 局_信息)
+	局_信息 := "修改绑定信息 '" + 局_用户详情.Key + "'  ->  '" + 请求.Key + "'"
+
+	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 请求.AppId, AppUserid, Ser_AppUser.Id取User(请求.AppId, AppUserid), DB.D代理功能_修改用户绑定, c.ClientIP(), 局_信息)
 	response.OkWithMessage("操作成功", c)
 	return
 }

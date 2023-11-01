@@ -227,7 +227,7 @@ func S是否都为子级代理(上级ID int, 子级代理ID []int) bool {
 // 也可以用来判断是否为上级代理的子级
 func Q取Id数组中代理数量(代理ID []int) int {
 	var 局_临时整数 []int
-	global.GVA_DB.Model(DB.DB_User{}).Debug().Select("Id").Where("id IN ?", 代理ID).Where("UPAgentId != 0").Find(&局_临时整数)
+	global.GVA_DB.Model(DB.DB_User{}).Select("Id").Where("id IN ?", 代理ID).Where("UPAgentId != 0").Find(&局_临时整数)
 	//查询出来的数量=0 则说明 没有代理
 	return len(局_临时整数)
 }

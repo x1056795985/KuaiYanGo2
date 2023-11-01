@@ -145,7 +145,7 @@ func B绑定信息是否存在(AppId int, 绑定信息 string) bool {
 		return true
 	}
 	var Count int64
-	_ = global.GVA_DB.Debug().Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("1").Where("`Key` = ?", 绑定信息).Take(&Count)
+	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("1").Where("`Key` = ?", 绑定信息).Take(&Count)
 	return Count != 0
 }
 func Set绑定信息(AppId, 用户Uid int, 绑定信息 string) error {

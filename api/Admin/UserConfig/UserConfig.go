@@ -131,7 +131,7 @@ func (a *Api) Delete(c *gin.Context) {
 	}
 
 	var 影响行数 int64
-	var db = global.GVA_DB.Debug()
+	var db = global.GVA_DB
 
 	//AppId,Uid,User 联合主键 根据主键自动删除
 	影响行数 = db.Model(DB.DB_UserConfig{}).Delete(请求.Data).RowsAffected
