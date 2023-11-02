@@ -54,6 +54,11 @@ func (a *Api) SaveKa信息(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
+	局_旧卡号信息, err2 := Ser_Ka.Id取详情(请求.Id)
+	if err2 != nil {
+		response.FailWithMessage("卡号不存在", c)
+		return
+	}
 
 	m := map[string]interface{}{
 		"Status":      请求.Status,
@@ -71,10 +76,6 @@ func (a *Api) SaveKa信息(c *gin.Context) {
 	//卡号模式 冻结状态关联,所以需要事务保证
 	//开启事务执行
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		局_旧卡号信息, err2 := Ser_Ka.Id取详情(请求.Id)
-		if err2 != nil {
-			return err2
-		}
 
 		err = tx.Model(DB.DB_Ka{}).Where("Id= ?", 局_旧卡号信息.Id).Updates(&m).Error
 		if err != nil {
@@ -86,6 +87,10 @@ func (a *Api) SaveKa信息(c *gin.Context) {
 		return err //出错就返回并回滚
 	})
 
+	//如果是冻结同时注销在线的uid
+	if 请求.Status == 2 {
+		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧卡号信息.Id}, 请求.AppId)
+	}
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
 		return
@@ -406,7 +411,6 @@ func (a *Api) Set修改状态(c *gin.Context) {
 	}
 
 	err = Ser_Ka.Ka修改状态_同步卡号模式软件用户(请求.Id, 请求.Status)
-
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		global.GVA_LOG.Error("修改失败:" + err.Error())
