@@ -179,8 +179,8 @@ type 结构响应_GetAppUserList struct {
 
 type DB_AppUser带User信息 struct {
 	DB.DB_AppUser
-	User       string `json:"User" gorm:"column:User;index;comment:用户登录名"`                 // 用户登录名
-	Name       string `json:"Name" gorm:"column:Name;index;comment:卡号"`                    // 用户登录名
+	User       string `json:"User" gorm:"column:User;index;comment:用户登录名"`                     // 用户登录名
+	Name       string `json:"Name" gorm:"column:Name;index;comment:卡号"`                           // 用户登录名
 	Status     int    `json:"Status" gorm:"column:Status;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
 	LinksCount int    `json:"LinksCount" gorm:"column:LinksCount;index;comment:在线总数"`
 }
@@ -282,6 +282,11 @@ func (a *Api) Save用户信息(c *gin.Context) {
 		}
 		return err //出错就返回并回滚
 	})
+
+	//如果是冻结同时注销在线的uid
+	if 请求.AppUser.Status == 2 {
+		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧用户信息.Uid}, 请求.AppId)
+	}
 
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
