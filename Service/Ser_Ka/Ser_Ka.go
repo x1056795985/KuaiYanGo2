@@ -10,6 +10,7 @@ import (
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_KaClass"
+	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserClass"
@@ -473,7 +474,7 @@ func Ka修改状态(id []int, status int) error {
 	return global.GVA_DB.Model(DB.DB_Ka{}).Where("Id IN ? ", id).Update("Status", status).Error
 }
 
-// 卡号模式关联 软件用户,同时冻结解冻,用户模式不关联
+// 卡号模式关联 软件用户,同时冻结解冻,用户模式不关联  冻结会注销在线
 func Ka修改状态_同步卡号模式软件用户(id []int, status int) error {
 	局_db := global.GVA_DB
 	//获取所有卡号id对应的应用id
@@ -541,6 +542,12 @@ SELECT DISTINCT AppId  FROM db_App_Info  WHERE AppId IN (SELECT DISTINCT AppId  
 					return err //出错就返回并回滚
 				}
 			}
+
+			//如果是冻结同时注销在线的uid
+			if status == 2 {
+				_ = Ser_LinkUser.Set批量注销Uid数组(局_map[AppId], AppId)
+			}
+
 		}
 		return nil //处理完毕 返回
 	})
