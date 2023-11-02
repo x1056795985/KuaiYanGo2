@@ -354,3 +354,23 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 
 	return
 }
+
+func Z置状态_同步卡号修改(AppId int, id []int, Status int) error {
+	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(AppId)
+	if !Ser_AppInfo.App是否为卡号(AppId) {
+		return global.GVA_DB.Table(表名_AppUser).Where("Id IN ? ", id).Update("Status", Status).Error
+	}
+	// 卡号模式的   处理同步ka冻结
+	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		//先修改软件用户
+		err := tx.Table(表名_AppUser).Where("Id IN ? ", id).Update("Status", Status).Error
+		if err != nil {
+			return err
+		}
+		// 子查询获取所有软件用户的Uid 在修改卡号
+		err = tx.Debug().Model(&DB.DB_Ka{}).Where("Id IN (?)", tx.Table(表名_AppUser).Select("Uid").Where("Id IN (?)", id)).Update("Status", Status).Error
+
+		//err = tx.Debug().Model(DB.DB_Ka{}).Where("Id IN ? ", tx.Exec("SELECT Uid  FROM ?  WHERE Id IN ?", 表名_AppUser, id)).Update("Status", Status).Error
+		return err
+	})
+}

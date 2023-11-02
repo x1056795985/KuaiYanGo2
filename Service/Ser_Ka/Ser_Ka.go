@@ -473,6 +473,80 @@ func Ka修改状态(id []int, status int) error {
 	return global.GVA_DB.Model(DB.DB_Ka{}).Where("Id IN ? ", id).Update("Status", status).Error
 }
 
+// 卡号模式关联 软件用户,同时冻结解冻,用户模式不关联
+func Ka修改状态_同步卡号模式软件用户(id []int, status int) error {
+	局_db := global.GVA_DB
+	//获取所有卡号id对应的应用id
+	局_sql := `
+SELECT DISTINCT AppId  FROM db_App_Info  WHERE AppId IN (SELECT DISTINCT AppId  FROM db_Ka  WHERE Id IN ?) AND AppType IN (3,4)
+`
+	var 局数组_卡号Appid []int
+	局_db = 局_db.Raw(局_sql, id).Scan(&局数组_卡号Appid)
+	//如果卡号id数组内没有卡号类型应用id,直接执行就可以,
+	if len(局数组_卡号Appid) == 0 {
+		return global.GVA_DB.Model(DB.DB_Ka{}).Where("Id IN ? ", id).Update("Status", status).Error
+	}
+	//开启事务执行
+	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		//先获取所有卡号的AppId
+		局_ka := make([]DB.DB_Ka, 0, len(id))
+		err := tx.Model(DB.DB_Ka{}).Select("Id,AppId").Where("Id IN ?", id).Scan(&局_ka).Error
+		if err != nil {
+			return err
+		}
+
+		//先处理用户类型AppId的卡号
+		局_map := make(map[int][]int, len(id)+1) //给非卡号模式的id分配一个Appid位置
+		for _, 值 := range 局_ka {
+			局_最终AppId := 值.AppId
+			//不是卡号模式的 卡Id 直接赋值AppId 1   一会一起处理
+			if !utils.S数组_整数是否存在(局数组_卡号Appid, 局_最终AppId) {
+				局_最终AppId = 1
+			}
+
+			//判断是否存在键,不存在创建内存空间
+			if _, ok := 局_map[局_最终AppId]; ok {
+				局_map[局_最终AppId] = make([]int, len(id))
+			}
+			//把 卡id追加到 appid的键值内
+			局_map[局_最终AppId] = append(局_map[局_最终AppId], 值.Id)
+		}
+
+		for _, 值 := range 局_ka {
+			局_最终AppId := 值.AppId
+			//不是卡号模式的 卡Id 直接赋值AppId 1   一会一起处理
+			if !utils.S数组_整数是否存在(局数组_卡号Appid, 局_最终AppId) {
+				局_最终AppId = 1
+			}
+
+			//判断是否存在键,不存在创建内存空间
+			if _, ok := 局_map[局_最终AppId]; ok {
+				局_map[局_最终AppId] = make([]int, len(id))
+			}
+			//把 卡id追加到 appid的键值内
+			局_map[局_最终AppId] = append(局_map[局_最终AppId], 值.Id)
+		}
+		// 通appid 的卡id 合并完毕,开始冻结解冻
+
+		for AppId := range 局_map {
+			err = tx.Model(DB.DB_Ka{}).Where("Id IN ? ", 局_map[AppId]).Update("Status", status).Error
+			if err != nil {
+				return err //出错就返回并回滚
+			}
+
+			//同步冻结软件用户AppId  用户模式的卡号ID不用冻结
+			if AppId >= 10000 {
+				err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", 局_map[AppId]).Update("Status", status).Error
+				if err != nil {
+					return err //出错就返回并回滚
+				}
+			}
+		}
+		return nil //处理完毕 返回
+	})
+
+}
+
 // 代理权限不在这里校验,在api接口校验
 func Ka更换卡号(id, 代理Id int, ip string) error {
 	局_卡号详情, err := Id取详情(id)

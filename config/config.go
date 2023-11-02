@@ -73,15 +73,26 @@ type Z在线支付 struct {
 }
 
 type D短信平台配置 struct {
+	D当前选择    int      `mapstructure:"当前选择" json:"当前选择" `
 	TX云短信Sms TX云短信Sms `mapstructure:"TX云Sms" json:"TX云Sms" `
+	Sms短信宝   Sms短信宝   `mapstructure:"Sms短信宝" json:"Sms短信宝" `
 }
 
+//id:1
 type TX云短信Sms struct {
 	SECRET_ID  string `mapstructure:"SECRET_ID" json:"SECRET_ID" `
 	SECRET_KEY string `mapstructure:"SECRET_KEY" json:"SECRET_KEY" `
 	D短信应用ID    string `mapstructure:"短信应用ID" json:"短信应用ID" `
 	D短信签名      string `mapstructure:"短信签名" json:"短信签名"`
 	Z正文模板ID    string `mapstructure:"正文模板ID" json:"正文模板ID" `
+}
+
+// Id:2
+type Sms短信宝 struct {
+	User   string `mapstructure:"User" json:"User" `
+	ApiKey string `mapstructure:"ApiKey" json:"ApiKey" `
+	C产品Id  string `mapstructure:"ProductId" json:"ProductId" `
+	F发送内容  string `mapstructure:"SendValue" json:"SendValue" `
 }
 
 type X行为验证码平台配置 struct {
