@@ -370,7 +370,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 		return
 	}
 
-	err = Ser_Ka.Ka修改状态(请求.Id, 请求.Status)
+	err = Ser_Ka.Ka修改状态_同步卡号模式软件用户(请求.Id, 请求.Status)
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)

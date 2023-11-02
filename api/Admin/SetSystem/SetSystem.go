@@ -234,11 +234,18 @@ func (a *Api) Save短信平台设置(c *gin.Context) {
 		return
 	}
 
+	global.GVA_Viper.Set("短信平台配置.当前选择", 请求.D当前选择)
+
 	global.GVA_Viper.Set("短信平台配置.TX云Sms.SECRET_ID", 请求.TX云短信Sms.SECRET_ID)
 	global.GVA_Viper.Set("短信平台配置.TX云Sms.SECRET_KEY", 请求.TX云短信Sms.SECRET_KEY)
 	global.GVA_Viper.Set("短信平台配置.TX云Sms.短信应用ID", 请求.TX云短信Sms.D短信应用ID)
 	global.GVA_Viper.Set("短信平台配置.TX云Sms.短信签名", 请求.TX云短信Sms.D短信签名)
 	global.GVA_Viper.Set("短信平台配置.TX云Sms.正文模板ID", 请求.TX云短信Sms.Z正文模板ID)
+
+	global.GVA_Viper.Set("短信平台配置.Sms短信宝.User", 请求.Sms短信宝.User)
+	global.GVA_Viper.Set("短信平台配置.Sms短信宝.ApiKey", 请求.Sms短信宝.ApiKey)
+	global.GVA_Viper.Set("短信平台配置.Sms短信宝.ProductId", 请求.Sms短信宝.C产品Id)
+	global.GVA_Viper.Set("短信平台配置.Sms短信宝.SendValue", 请求.Sms短信宝.F发送内容)
 
 	global.GVA_Viper.SetConfigFile(global.GVA_CONFIG.Q取运行目录 + "/config.json")
 	global.GVA_Viper.SetConfigType("json")

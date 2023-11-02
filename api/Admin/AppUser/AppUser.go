@@ -249,31 +249,47 @@ func (a *Api) Save用户信息(c *gin.Context) {
 		return
 	}
 
-	var count int64
-	err = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id).Count(&count).Error
+	var 局_旧用户信息 DB.DB_AppUser
+	err = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id).Take(&局_旧用户信息).Error
 	// 没查到数据
-	if count == 0 {
+	if err != nil {
 		response.FailWithMessage("用户不存在", c)
 		return
 	}
 
-	//直接排除Uid 禁止修改  Select可能0值 或"" 的字段防止不更新
-	var db = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id)
-	err = db.Updates(map[string]interface{}{
-		"Key":         请求.AppUser.Key,
-		"VipTime":     请求.AppUser.VipTime,
-		"VipNumber":   请求.AppUser.VipNumber,
-		"Note":        请求.AppUser.Note,
-		"MaxOnline":   请求.AppUser.MaxOnline,
-		"UserClassId": 请求.AppUser.UserClassId,
-	}).Error
+	//卡号模式 软件用户和卡状态冻结解冻 关联,所以需要事务保证
+	//开启事务执行
+	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		var db = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id)
+		err = db.Updates(map[string]interface{}{
+			"Status":      请求.AppUser.Status,
+			"Key":         请求.AppUser.Key,
+			"VipTime":     请求.AppUser.VipTime,
+			"VipNumber":   请求.AppUser.VipNumber,
+			"Note":        请求.AppUser.Note,
+			"MaxOnline":   请求.AppUser.MaxOnline,
+			"UserClassId": 请求.AppUser.UserClassId,
+		}).Error
+		if err != nil {
+			return err
+		}
+
+		if Ser_AppInfo.App是否为卡号(请求.AppId) {
+			err = tx.Model(DB.DB_Ka{}).Where("Id = ? ", 请求.AppUser.Id).Update("Status", 请求.AppUser.Status).Error
+			if err != nil {
+				return err //出错就返回并回滚
+			}
+		}
+		return err //出错就返回并回滚
+	})
 
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
 		return
 	}
+
 	response.OkWithMessage("保存成功", c)
-	db = global.GVA_DB.Model(DB.DB_UserConfig{})
+	//保存用户配置
 	for _, 值 := range 请求.UserConfig {
 		_ = Ser_UserConfig.Z置值(请求.AppId, 请求.AppUser.Uid, 值.Name, 值.Value)
 	}
@@ -372,16 +388,15 @@ func (a *Api) Set修改状态(c *gin.Context) {
 		response.FailWithMessage("修改失败:Status状态代码错误", c)
 		return
 	}
-	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(请求.AppId)
 
-	err = global.GVA_DB.Table(表名_AppUser).Where("Id IN ? ", 请求.Id).Update("Status", 请求.Status).Error
-
+	err = Ser_AppUser.Z置状态_同步卡号修改(请求.AppId, 请求.Id, 请求.Status)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		global.GVA_LOG.Error("修改失败:" + err.Error())
 		return
 	}
 
+	//如果是冻结同时注销在线的uid
 	if 请求.Status == 2 {
 		局_uid数组 := make([]int, 0, len(请求.Id))
 		for _, 值 := range 请求.Id {

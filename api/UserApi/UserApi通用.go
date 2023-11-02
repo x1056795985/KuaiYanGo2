@@ -901,7 +901,7 @@ func UserApi_取短信验证码信息(c *gin.Context) {
 	局_验证码 := utils.W文本_取随机字符串_数字(6)
 	局_验证码ID := "Note" + utils.Md5String(局_手机号)[:16] + utils.W文本_取随机字符串(15)
 
-	err := Captcha.TX云_sms发送短信验证码([]string{局_验证码}, 局_手机号)
+	err := Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, 局_手机号)
 	if err != nil {
 		global.GVA_LOG.Error(fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 局_手机号, err.Error()))
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())

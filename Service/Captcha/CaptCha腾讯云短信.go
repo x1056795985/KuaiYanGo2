@@ -4,12 +4,26 @@ import (
 	"encoding/json"
 	系统错误 "errors"
 	"fmt"
+	"github.com/imroc/req/v3"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	sms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111" // 引入sms
+	"net/url"
 	"server/global"
+	"strings"
 )
+
+func Sms_当前选择发送短信验证码(模板变量 []string, 接收短信手机号 string) error {
+	switch global.GVA_CONFIG.D短信平台配置.D当前选择 {
+	case 0, 1:
+		return TX云_sms发送短信验证码(模板变量, 接收短信手机号)
+	case 2:
+		return D短信宝_sms发送短信验证码(模板变量, 接收短信手机号)
+	default:
+		return 系统错误.New("短信平台配置.当前选择配置无效")
+	}
+}
 
 func TX云_sms发送短信验证码(模板变量 []string, 接收短信手机号 string) error {
 	SecretId := global.GVA_CONFIG.D短信平台配置.TX云短信Sms.SECRET_ID
@@ -133,4 +147,61 @@ func TX云_sms发送短信验证码(模板变量 []string, 接收短信手机号
 	 * [UnsupportedOperation.ContainDomesticAndInternationalPhoneNumber](https://cloud.tencent.com/document/product/382/9558#.E7.9F.AD.E4.BF.A1.E5.8F.91.E9.80.81.E6.8F.90.E7.A4.BA.EF.BC.9Aunsupportedoperation.containdomesticandinternationalphonenumber-.E5.A6.82.E4.BD.95.E5.A4.84.E7.90.86.EF.BC.9F)
 	 * 更多错误，可咨询[腾讯云助手](https://tccc.qcloud.com/web/im/index.html#/chat?webAppId=8fa15978f85cb41f7e2ea36920cb3ae1&title=Sms)
 	 */
+}
+
+// 本命令由自动生成，请配合[ go get -u gitee.com/anyueyinluo/Efunc ]库使用。
+func D短信宝_sms发送短信验证码(模板变量 []string, 接收短信手机号 string) error {
+	局_短信宝 := global.GVA_CONFIG.D短信平台配置.Sms短信宝
+
+	if 局_短信宝.User == "" {
+		return 系统错误.New("Sms短信宝用户名配置无效")
+	}
+	if 局_短信宝.ApiKey == "" {
+		return 系统错误.New("Sms短信宝ApiKey配置无效")
+	}
+	if 局_短信宝.F发送内容 == "" || strings.Index(局_短信宝.F发送内容, "{Code}") == -1 {
+		return 系统错误.New("Sms短信宝F发送内容必须包含验证码占位符 {Code}")
+	}
+	for _, 值 := range 模板变量 {
+		局_短信宝.F发送内容 = strings.Replace(局_短信宝.F发送内容, "{Code}", 值, 1)
+	}
+
+	局_网址 := `https://api.smsbao.com/sms`
+	Http请求 := req.R()
+	局_网址 += `?u={u}&p={p}&g={g}&m={m}&c={c}`
+	Http请求.SetPathParam(`u`, 局_短信宝.User)
+	Http请求.SetPathParam(`p`, 局_短信宝.ApiKey)
+	Http请求.SetPathParam(`g`, 局_短信宝.C产品Id)
+	Http请求.SetPathParam(`m`, 接收短信手机号)
+	Http请求.SetPathParam(`c`, url.QueryEscape(局_短信宝.F发送内容))
+
+	var 局_请求结果 *req.Response
+	var err error
+	for i := 0; i < 3; i++ { // 重试三次防止意外
+		局_请求结果, err = Http请求.Get(局_网址)
+		if len(局_请求结果.Bytes()) > 0 || err != nil {
+			break
+		}
+	}
+	var 局_返回 string
+	局_返回 = 局_请求结果.String()
+
+	switch 局_返回 {
+	case "0":
+		return nil
+	case "30":
+		return 系统错误.New("短信宝Api错误")
+	case "40":
+		return 系统错误.New("短信宝账号不存在")
+	case "41":
+		return 系统错误.New("短信宝余额不足")
+	case "43":
+		return 系统错误.New("短信宝IP地址限制")
+	case "50":
+		return 系统错误.New("短信宝内容含有敏感词")
+	case "51":
+		return 系统错误.New("短信宝手机号码不正确")
+	}
+
+	return 系统错误.New("未知错误:" + 局_返回)
 }
