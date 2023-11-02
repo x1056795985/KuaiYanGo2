@@ -3,6 +3,7 @@ package Ka
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_KaClass"
@@ -66,7 +67,25 @@ func (a *Api) SaveKa信息(c *gin.Context) {
 		"UserClassId": 请求.UserClassId,
 		"NoUserClass": 请求.NoUserClass,
 	}
-	err = global.GVA_DB.Model(DB.DB_Ka{}).Where("Id= ?", 请求.Id).Updates(&m).Error
+
+	//卡号模式 冻结状态关联,所以需要事务保证
+	//开启事务执行
+	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		局_旧卡号信息, err2 := Ser_Ka.Id取详情(请求.Id)
+		if err2 != nil {
+			return err2
+		}
+
+		err = tx.Model(DB.DB_Ka{}).Where("Id= ?", 局_旧卡号信息.Id).Updates(&m).Error
+		if err != nil {
+			return err
+		}
+		if Ser_AppInfo.App是否为卡号(局_旧卡号信息.AppId) {
+			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_旧卡号信息.AppId)).Where("Id = ?", 局_旧卡号信息.Id).Update("Status", 请求.Status).Error
+		}
+		return err //出错就返回并回滚
+	})
+
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
 		return
@@ -386,7 +405,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 		return
 	}
 
-	err = Ser_Ka.Ka修改状态(请求.Id, 请求.Status)
+	err = Ser_Ka.Ka修改状态_同步卡号模式软件用户(请求.Id, 请求.Status)
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
