@@ -4,8 +4,10 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
+	"server/Service/Ser_Admin"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
+	"server/Service/Ser_Log"
 	"server/Service/Ser_PublicData"
 	"server/Service/Ser_PublicJs"
 	"server/api/WebApi"
@@ -218,12 +220,18 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 		return
 	}
 
+	局_旧AppInfo := Ser_AppInfo.App取App详情(请求.AppData.AppId)
 	err = Ser_AppInfo.App修改信息(请求.AppData)
 
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
 		return
 	}
+	//私钥被改变 写入到用户消息,方便误操作找回,因为私钥丢失无法恢复,必须记录一下,不然客户全部需要换公钥
+	if 局_旧AppInfo.CryptoKeyPrivate != 请求.AppData.CryptoKeyPrivate {
+		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_其他, Ser_Admin.Id取User(1), 请求.AppData.AppName, 请求.AppData.AppVer, "防误操作应用更换私钥旧私钥:"+局_旧AppInfo.CryptoKeyPrivate, c.ClientIP())
+	}
+
 	//===========检查专属变量
 	for _, 专属变量 := range 请求.PublicData {
 		Ser_PublicData.P置值2(专属变量)
@@ -431,7 +439,9 @@ func (a *Api) Get全部用户APi(c *gin.Context) {
 		if 键名 == "NewUserInfo" || 键名 == "UserLogin" || 键名 == "UseKa" || 键名 == "SetPassWord" || 键名 == "GetSMSCaptcha" || 键名 == "GetPayOrderStatus" || 键名 == "PayKaUsa" || 键名 == "PayUserMoney" || 键名 == "PayUserVipNumber" || 键名 == "PayGetKa" {
 			continue
 		}
-		局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
+		if 键值.X显示 {
+			局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
+		}
 	}
 	response.OkWithDetailed(局_path数组, "获取成功", c)
 	return
@@ -447,7 +457,7 @@ func (a *Api) Get全部WebAPi(c *gin.Context) {
 		{"NewKa", "新制卡号"},
 		{"GetKaInfo", "取卡号详细信息"},
 	}*/
-	局_path数组 := make([][]string, 0, len(middleware.J集_UserAPi路由))
+	局_path数组 := make([][]string, 0, len(WebApi.J集_UserAPi路由))
 	for 键名, 键值 := range WebApi.J集_UserAPi路由 {
 		局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
 	}

@@ -76,6 +76,7 @@ type D短信平台配置 struct {
 	D当前选择    int      `mapstructure:"当前选择" json:"当前选择" `
 	TX云短信Sms TX云短信Sms `mapstructure:"TX云Sms" json:"TX云Sms" `
 	Sms短信宝   Sms短信宝   `mapstructure:"Sms短信宝" json:"Sms短信宝" `
+	Sms七牛云   Sms七牛云   `mapstructure:"Sms七牛云" json:"Sms七牛云" `
 }
 
 //id:1
@@ -95,7 +96,16 @@ type Sms短信宝 struct {
 	F发送内容  string `mapstructure:"SendValue" json:"SendValue" `
 }
 
+// Id:3
+type Sms七牛云 struct {
+	AccessKey   string `json:"AccessKey" `
+	SecretKey   string `json:"SecretKey" `
+	SignatureID string `json:"SignatureID" ` //签名id
+	TemplateID  string `json:"TemplateID" `  //模板id
+}
+
 type X行为验证码平台配置 struct {
+	D当前选择    int     `mapstructure:"当前选择" json:"当前选择" `
 	J极验行为验证4 极验行为验证4 `mapstructure:"极验行为验证4" json:"极验行为验证4" `
 }
 
