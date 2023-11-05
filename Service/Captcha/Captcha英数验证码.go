@@ -11,7 +11,7 @@ const CAPTCHA = "captcha:"
 type H缓存验证码 struct {
 }
 
-// 置验证码缓存
+// 置验证码缓存  有效5分钟
 func (r H缓存验证码) Set(id string, value string) {
 	key := CAPTCHA + id
 	global.H缓存.Set(key, value, time.Minute*5)
