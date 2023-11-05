@@ -3,8 +3,10 @@ package SetSystem
 import (
 	_ "embed"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"server/Service/Captcha"
 	"server/api/middleware"
 	"server/config"
 	"server/global"
@@ -247,6 +249,11 @@ func (a *Api) Save短信平台设置(c *gin.Context) {
 	global.GVA_Viper.Set("短信平台配置.Sms短信宝.ProductId", 请求.Sms短信宝.C产品Id)
 	global.GVA_Viper.Set("短信平台配置.Sms短信宝.SendValue", 请求.Sms短信宝.F发送内容)
 
+	global.GVA_Viper.Set("短信平台配置.Sms七牛云.SecretKey", 请求.Sms七牛云.SecretKey)
+	global.GVA_Viper.Set("短信平台配置.Sms七牛云.AccessKey", 请求.Sms七牛云.AccessKey)
+	global.GVA_Viper.Set("短信平台配置.Sms七牛云.SignatureID", 请求.Sms七牛云.SignatureID)
+	global.GVA_Viper.Set("短信平台配置.Sms七牛云.TemplateID", 请求.Sms七牛云.TemplateID)
+
 	global.GVA_Viper.SetConfigFile(global.GVA_CONFIG.Q取运行目录 + "/config.json")
 	global.GVA_Viper.SetConfigType("json")
 	err = global.GVA_Viper.WriteConfig()
@@ -259,6 +266,35 @@ func (a *Api) Save短信平台设置(c *gin.Context) {
 		fmt.Println("配置文件反序列化失败2:", err)
 	}
 	response.OkWithMessage("保存成功", c)
+	return
+}
+
+type Save短信平台测试 struct {
+	Id    int    `json:"Id"`
+	Phone string `json:"Phone"`
+}
+
+func (a *Api) F发送短信平台测试(c *gin.Context) {
+	var 请求 Save短信平台测试
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	switch 请求.Id {
+	case 0, 1:
+		err = Captcha.TX云_sms发送短信验证码([]string{utils.W文本_取随机字符串_数字(6)}, 请求.Phone)
+	case 2:
+		err = Captcha.D短信宝_sms发送短信验证码([]string{utils.W文本_取随机字符串_数字(6)}, 请求.Phone)
+	case 3:
+		err = Captcha.Q七牛云_sms发送短信验证码([]string{utils.W文本_取随机字符串_数字(6)}, 请求.Phone)
+	case 4:
+		err = Captcha.K快验_sms发送短信验证码([]string{utils.W文本_取随机字符串_数字(6)}, 请求.Phone)
+	default:
+		err = errors.New("短信平台配置.当前选择配置无效")
+	}
+	if err == nil {
+		response.OkWithMessage("测试验证码短信发送成功", c)
+	} else {
+		response.FailWithMessage(err.Error(), c)
+	}
 	return
 }
 
