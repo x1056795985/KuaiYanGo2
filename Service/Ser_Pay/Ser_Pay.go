@@ -80,21 +80,21 @@ const D订单_处理类型_支付购卡 = 3
 // 0 余额充值 1 购卡直冲 2 积分充值  3 支付购卡
 func Pay_支付宝Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip string, 处理类型 int, 处理类型额外信息 string) (error, gin.H) {
 	if !global.GVA_CONFIG.Z在线支付.Z支付宝开关 {
-		return errors.New("支付宝PC支付方式已关闭"), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝显示名称 + "支付方式已关闭"), gin.H{}
 	}
 
 	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
 	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝商户ID, privateKey, true)
 	if err != nil {
-		return errors.New("支付宝PC支付商户私钥载入失败:" + err.Error()), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝显示名称 + "商户私钥载入失败:" + err.Error()), gin.H{}
 	}
 
 	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝公钥) // 加载支付宝公钥证书
 	if err != nil {
-		return errors.New("支付宝PC公钥载入失败:" + err.Error()), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝显示名称 + "公钥载入失败:" + err.Error()), gin.H{}
 	}
 	if 支付金额 <= 0 || 支付金额 > float64(global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额) {
-		return errors.New("支付金额必须大于0且小于" + fmt.Sprintf("%.2f", global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额)), gin.H{}
+		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额)), gin.H{}
 	}
 
 	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "支付宝PC", "", ip, 处理类型, 处理类型额外信息)
@@ -112,7 +112,7 @@ func Pay_支付宝Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip s
 	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
 	url2, err := client.TradePagePay(p)
 	if err != nil {
-		return errors.New("支付宝PC支付Url获取失败:" + err.Error()), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝显示名称 + "支付Url获取失败:" + err.Error()), gin.H{}
 	}
 	var payURL = url2.String()
 
@@ -123,25 +123,25 @@ func Pay_支付宝Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip s
 // 0 余额充值 1 购卡直冲 2 应用积分充值
 func Pay_支付宝当面付_订单创建(Uid, Uid类型 int, 支付金额 float64, ip string, 处理类型 int, 处理类型额外信息 string) (error, gin.H) {
 	if !global.GVA_CONFIG.Z在线支付.Z支付宝当面付开关 {
-		return errors.New("支付宝当面付支付方式已关闭"), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付显示名称 + "支付方式已关闭"), gin.H{}
 	}
 
 	if global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户私钥 == "" || global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户ID == "" || global.GVA_CONFIG.Z在线支付.Z支付宝当面付公钥 == "" {
-		return errors.New("在线支付支付宝当面付服务端未配置参数"), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付显示名称 + "服务端未配置参数"), gin.H{}
 	}
 
 	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
 	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户ID, privateKey, true)
 	if err != nil {
-		return errors.New("当面付支付商户私钥载入失败:" + err.Error()), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付显示名称 + "支付商户私钥载入失败:" + err.Error()), gin.H{}
 	}
 
 	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝当面付公钥) // 加载支付宝公钥证书
 	if err != nil {
-		return errors.New("当面付公钥载入失败:" + err.Error()), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付显示名称 + "公钥载入失败:" + err.Error()), gin.H{}
 	}
 	if 支付金额 <= 0 || 支付金额 > float64(global.GVA_CONFIG.Z在线支付.Z支付宝当面付单次最大金额) {
-		return errors.New("支付金额必须大于0且小于" + fmt.Sprintf("%.2f", global.GVA_CONFIG.Z在线支付.Z支付宝当面付单次最大金额)), gin.H{}
+		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(global.GVA_CONFIG.Z在线支付.Z支付宝当面付单次最大金额)), gin.H{}
 	}
 
 	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "支付宝当面付", "", ip, 处理类型, 处理类型额外信息)
@@ -161,10 +161,10 @@ func Pay_支付宝当面付_订单创建(Uid, Uid类型 int, 支付金额 float6
 
 	rsp, err := client.TradePreCreate(p)
 	if err != nil {
-		return errors.New("支付宝当面付支付Url获取失败:" + err.Error()), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付显示名称 + "当面付支付Url获取失败:" + err.Error()), gin.H{}
 	}
 	if rsp.Content.Code != alipay.CodeSuccess {
-		return errors.New("支付宝当面付支付Url获取失败:" + rsp.Content.Msg + "|" + rsp.Content.SubMsg), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付显示名称 + "支付Url获取失败:" + rsp.Content.Msg + "|" + rsp.Content.SubMsg), gin.H{}
 	}
 
 	var QRCode = rsp.Content.QRCode
@@ -207,10 +207,10 @@ func 生成二维码并转base64(内容 string) string {
 // 0 余额充值 1 购卡直冲 2 应用积分充值
 func Pay_微信Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip string, 处理类型 int, 处理类型额外信息 string) (error, gin.H) {
 	if !global.GVA_CONFIG.Z在线支付.W微信支付开关 {
-		return errors.New("微信支付支付方式已关闭"), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.W微信支付显示名称 + "支付方式已关闭"), gin.H{}
 	}
 	if 支付金额 <= 0 || 支付金额 > float64(global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额) {
-		return errors.New("支付金额必须大于0且小于" + fmt.Sprintf("%.2f", global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额)), gin.H{}
+		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(global.GVA_CONFIG.Z在线支付.W微信支付单次最大金额)), gin.H{}
 	}
 	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "微信支付", "", ip, 处理类型, 处理类型额外信息)
 	局_用户提示信息, err2 := 取提示信息(局_订单信息, Uid, Uid类型)
@@ -218,16 +218,16 @@ func Pay_微信Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip stri
 		return err2, gin.H{}
 	}
 	var (
-		mchID                      string = global.GVA_CONFIG.Z在线支付.W微信支付商户ID         // 商户号
+		mchID                      string = global.GVA_CONFIG.Z在线支付.W微信支付商户ID    // 商户号
 		mchCertificateSerialNumber string = global.GVA_CONFIG.Z在线支付.W微信支付商户证书序列号 // 商户证书序列号
-		mchAPIv3Key                string = global.GVA_CONFIG.Z在线支付.W微信支付商户v3密钥     // 商户APIv3密钥
+		mchAPIv3Key                string = global.GVA_CONFIG.Z在线支付.W微信支付商户v3密钥  // 商户APIv3密钥
 	)
 
 	// 使用 utils 提供的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
 
 	mchPrivateKey, err := WXutils.LoadPrivateKey(global.GVA_CONFIG.Z在线支付.W微信支付商户证书串)
 	if err != nil {
-		return errors.New("微信支付支付Url微信支付商户证书串加载失败"), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.W微信支付显示名称 + "Url微信支付商户证书串加载失败"), gin.H{}
 	}
 
 	ctx := context.Background()
@@ -237,7 +237,7 @@ func Pay_微信Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip stri
 	}
 	client, err := core.NewClient(ctx, opts...)
 	if err != nil {
-		return errors.New("创建微信支付错误失败请重试"), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.W微信支付显示名称 + "创建错误失败请重试"), gin.H{}
 	}
 
 	svc := native.NativeApiService{Client: client}
@@ -276,7 +276,7 @@ func Pay_微信Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip stri
 
 	if err != nil {
 		// 处理错误
-		return errors.New("微信支付支付Url获取失败:" + err.(*core.APIError).Body), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.W微信支付显示名称 + "支付Url获取失败:" + err.(*core.APIError).Body), gin.H{}
 	}
 	// 处理返回结果
 
@@ -288,10 +288,10 @@ func Pay_微信Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip stri
 // 0 余额充值 1 购卡直冲 2 应用积分充值
 func Pay_小叮当_订单创建(Uid, Uid类型 int, 支付金额 float64, ip string, 处理类型 int, 处理类型额外信息 string) (error, gin.H) {
 	if !global.GVA_CONFIG.Z在线支付.X小叮当支付开关 {
-		return errors.New("小叮当支付方式已关闭"), gin.H{}
+		return errors.New(global.GVA_CONFIG.Z在线支付.X小叮当支付显示名称 + "支付方式已关闭"), gin.H{}
 	}
 	if 支付金额 <= 0 || 支付金额 > float64(global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额) {
-		return errors.New("支付金额必须大于0且小于" + fmt.Sprintf("%.2f", global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额)), gin.H{}
+		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(global.GVA_CONFIG.Z在线支付.X小叮当单次最大金额)), gin.H{}
 	}
 
 	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "小叮当", "", ip, 处理类型, 处理类型额外信息)
@@ -345,7 +345,7 @@ func Pay_小叮当_订单创建(Uid, Uid类型 int, 支付金额 float64, ip str
 	jsonStr := strings.Replace(utils.W文本_取出中间文本(局_请求结果.String(), `Object moved to <a href="`, `"`), "&amp;", "&", -1)
 
 	if jsonStr == "" {
-		return errors.New("小叮当支付地址获取失败:" + err.Error()), gin.H{}
+		return errors.New("支付地址获取失败:" + err.Error()), gin.H{}
 	}
 
 	// 处理返回结果
