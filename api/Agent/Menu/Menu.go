@@ -2,7 +2,6 @@ package Menu
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Agent"
 	"server/Service/Ser_LinkUser"
@@ -36,7 +35,7 @@ func (a *Api) GetAgentInfo(c *gin.Context) {
 	response.OkWithDetailed(结构响应_GetAdminInfo{
 		AgentInfo:     DB_user,
 		UserMsgNoRead: 0,
-		G功能权限:     功能权限,
+		G功能权限:         功能权限,
 	}, "获取成功", c)
 	return
 }
@@ -44,7 +43,7 @@ func (a *Api) GetAgentInfo(c *gin.Context) {
 type 结构响应_GetAdminInfo struct {
 	AgentInfo     DB.DB_User `json:"AgentInfo"`
 	UserMsgNoRead int64      `json:"UserMsgNoRead"`
-	G功能权限     []int      `json:"功能权限"`
+	G功能权限         []int      `json:"功能权限"`
 }
 
 type 结构请求_单str struct {
@@ -90,9 +89,9 @@ func (a *Api) OutLogin(c *gin.Context) {
 }
 
 type 结构请求_余额充值 struct {
-	Type      string  `json:"Type"` //支付方式
+	Type  string  `json:"Type"` //支付方式
 	C充值金额 float64 `json:"RMB"`
-	D订单ID   string  `json:"OrderId"`
+	D订单ID string  `json:"OrderId"`
 }
 
 func (a *Api) Q取支付通道状态(c *gin.Context) {
@@ -130,7 +129,7 @@ func (a *Api) Y余额充值(c *gin.Context) {
 	局_额外数据 := ""
 	//修改支付显示别名为原名称
 	局_支付方式 = Ser_Pay.Pay_显示名称转原名(局_支付方式)
-	fmt.Printf(局_支付方式)
+	//fmt.Printf(局_支付方式)
 	var 响应数据 gin.H
 
 	switch strings.TrimSpace(局_支付方式) {
@@ -143,11 +142,11 @@ func (a *Api) Y余额充值(c *gin.Context) {
 	case "小叮当":
 		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
 	default:
-		err = errors.New("充值方式[" + 局_支付方式 + "]不存在")
+		err = errors.New("充值方式 [" + 请求.Type + "] 不存在")
 	}
 
 	if err != nil {
-		response.FailWithMessage("充值方式["+局_支付方式+"]"+err.Error(), c)
+		response.FailWithMessage("充值方式 ["+请求.Type+"] "+err.Error(), c)
 		return
 	}
 	response.OkWithDetailed(响应数据, "获取成功", c)
