@@ -254,7 +254,7 @@ func UserApi解密() gin.HandlerFunc {
 
 		c.Set("局_CryptoKeyAes", 局_在线信息.CryptoKeyAes) //不管用不用到都放里
 		局_Time := 局_fastjson.GetInt("Time")
-		if int(time.Now().Unix())-局_Time > AppInfo.OutTime {
+		if AppInfo.PackTimeOut != 0 && int(time.Now().Unix())-局_Time > AppInfo.PackTimeOut {
 			response.X响应状态(c, response.Status_封包超时)
 			c.Abort()
 			return
@@ -460,7 +460,7 @@ func UserApi无Token解密() gin.HandlerFunc {
 		}
 
 		局_Time := 局_fastjson.GetInt("Time")
-		if int(time.Now().Unix())-局_Time > AppInfo.OutTime {
+		if AppInfo.PackTimeOut != 0 && int(time.Now().Unix())-局_Time > AppInfo.PackTimeOut {
 			response.X响应状态(c, response.Status_封包超时)
 			c.Abort()
 			return

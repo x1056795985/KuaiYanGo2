@@ -13,7 +13,8 @@ type DB_AppInfo struct {
 	IsUserKeySame int `json:"IsUserKeySame"  gorm:"column:IsUserKeySame;default:1;comment:绑定信息不同用户可否相同"` //1 不同用户可以相同 2 不同用户不可相同
 	UpKeyData     int `json:"UpKeyData"  gorm:"column:UpKeyData;comment:修改绑定key增减值"`
 
-	OutTime            int    `json:"OutTime"  gorm:"column:OutTime;default:1800;comment:心跳超时"`
+	OutTime            int    `json:"OutTime"  gorm:"column:OutTime;default:1800;comment:心跳超时,超时自动注销"`
+	PackTimeOut        int    `json:"PackTimeOut"  gorm:"column:PackTimeOut;default:900;comment:封包超时,0不校验"`
 	UrlHome            string `json:"UrlHome"  gorm:"column:UrlHome;default:https://www.baidu.com/;comment:首页Url"`
 	UrlDownload        string `json:"UrlDownload"  gorm:"column:UrlDownload;size:5000;comment:下载地址json"`
 	AppGongGao         string `json:"AppGongGao"  gorm:"column:AppGongGao;size:1000;comment:公告"`

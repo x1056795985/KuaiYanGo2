@@ -134,6 +134,7 @@ func App修改信息(AppInfo DB.DB_AppInfo) error {
 		"VerifyKey",
 		"IsUserKeySame",
 		"UpKeyData",
+		"PackTimeOut",
 		"OutTime",
 		"UrlHome",
 		"UrlDownload",
