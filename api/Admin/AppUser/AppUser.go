@@ -179,8 +179,8 @@ type 结构响应_GetAppUserList struct {
 
 type DB_AppUser带User信息 struct {
 	DB.DB_AppUser
-	User       string `json:"User" gorm:"column:User;index;comment:用户登录名"`                     // 用户登录名
-	Name       string `json:"Name" gorm:"column:Name;index;comment:卡号"`                           // 用户登录名
+	User       string `json:"User" gorm:"column:User;index;comment:用户登录名"`                 // 用户登录名
+	Name       string `json:"Name" gorm:"column:Name;index;comment:卡号"`                    // 用户登录名
 	Status     int    `json:"Status" gorm:"column:Status;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
 	LinksCount int    `json:"LinksCount" gorm:"column:LinksCount;index;comment:在线总数"`
 }
@@ -505,5 +505,64 @@ func (a *Api) Set批量维护_删除用户(c *gin.Context) {
 	}
 
 	response.OkWithMessage("操作成功"+strconv.Itoa(int(局_row)), c)
+	return
+}
+
+type 结构请求_全部用户增减时间点数 struct {
+	AppId             int    `json:"AppId"`
+	AddType           int    `json:"AddType"`           //操作类型  1减少时间或点数  2 增加时间或点数  3指定到期时间或点数
+	Number            int64  `json:"Number"`            //如果为增减时间为增减数值   执行时间或电视,为到期时间戳或点数
+	UserVipTimeStatus int    `json:"UserVipTimeStatus"` //账号到期状态 1 全部 2已到期 2未到期
+	UserPrefix        string `json:"UserPrefix"`        //用户或卡号前缀,空为不限制
+	OneLoginTimeStart int    `json:"OneLoginTimeStart"` //首次登录区时间戳开始 0为不限制
+	OneLoginTimeEnd   int    `json:"OneLoginTimeEnd"`   //首次登录区时间戳结束 0为不限制
+}
+
+// Del批量维护_全部用户增减时间点数
+func (a *Api) P批量_全部用户增减时间点数(c *gin.Context) {
+	var 请求 结构请求_全部用户增减时间点数
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+
+	if 请求.AppId < 10000 || !Ser_AppInfo.AppId是否存在(请求.AppId) {
+		response.FailWithMessage("AppId不存在", c)
+		return
+	}
+	if 请求.Number <= 0 {
+		response.FailWithMessage("修改值必须大于0", c)
+		return
+	}
+
+	switch 请求.AddType {
+	default:
+		response.OkWithMessage("操作类型错误", c)
+		return
+	case 1:
+		影响数量, err2 := Ser_AppUser.P批量_全部用户增减时间或点数(请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd)
+		if err2 != nil {
+			response.FailWithMessage(err2.Error(), c)
+		} else {
+			response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
+		}
+
+	case 2:
+		影响数量, err2 := Ser_AppUser.P批量_全部用户增减时间或点数(请求.AppId, -请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd)
+		if err2 != nil {
+			response.FailWithMessage(err2.Error(), c)
+		} else {
+			response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
+		}
+	case 3:
+		影响数量, err2 := Ser_AppUser.P批量_全部用户修改为指定时间或点数(请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd)
+		if err2 != nil {
+			response.FailWithMessage(err2.Error(), c)
+		} else {
+			response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
+		}
+	}
 	return
 }

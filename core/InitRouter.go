@@ -43,7 +43,7 @@ func InitRouters() *gin.Engine {
 
 	// 跨域，如需跨域可以打开下面的注释
 	Router.Use(middleware.Cors()) // 直接放行全部跨域请求
-	Router.Use(统一恐慌恢复())    // 直接放行全部跨域请求
+	Router.Use(统一恐慌恢复())          // 直接放行全部跨域请求
 
 	//公共路由器 无需鉴权
 	PublicGroup := Router.Group("")
@@ -130,15 +130,15 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.POST("GetLinkUserList", LinkUser.GetLinkUserList) // 获取在线列表
 	baseRouter.POST("NewWebApiToken", LinkUser.NewWebApiToken)   // 获取在线列表
 	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-		baseRouter.POST("logout", LinkUser.Del批量注销)             // 批量注销在线
+		baseRouter.POST("logout", LinkUser.Del批量注销)          // 批量注销在线
 		baseRouter.POST("DeleteLogout", LinkUser.Del批量删除已注销) // 批量删除已注销
 	}
 	//用户账号===========================================
-	baseRouter.POST("GetUserList", User.GetUserList)       // 获取用户列表
-	baseRouter.POST("GetUserInfo", User.GetUserInfo)       // 获取用户详细信息
-	baseRouter.POST("SaveUser", User.Save用户信息)         // 保存用户详细信息
-	baseRouter.POST("NewUser", User.New用户信息)           // 保存用户详细信息
-	baseRouter.POST("SetUserStatus", User.Set修改状态)     // 保存用户详细信息
+	baseRouter.POST("GetUserList", User.GetUserList) // 获取用户列表
+	baseRouter.POST("GetUserInfo", User.GetUserInfo) // 获取用户详细信息
+	baseRouter.POST("SaveUser", User.Save用户信息)       // 保存用户详细信息
+	baseRouter.POST("NewUser", User.New用户信息)         // 保存用户详细信息
+	baseRouter.POST("SetUserStatus", User.Set修改状态)   // 保存用户详细信息
 	baseRouter.POST("SetBatchAddRMB", User.P批量_增减余额) // 保存用户详细信息
 	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
 		baseRouter.POST("DeleteUser", User.Del批量删除用户) // 获取用户详细信息
@@ -150,9 +150,9 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	AgentApp := Api.Admin.AgentUser                                                //实现路由的 具体方法位置
 	baseRouter.POST("GetAgentUserList", AgentApp.GetAgentUserList)                 // 获取用户列表
 	baseRouter.POST("GetAgentUserInfo", AgentApp.GetAgentUserInfo)                 // 获取用户详细信息
-	baseRouter.POST("SaveAgentUser", AgentApp.Save代理信息)                        // 保存用户详细信息
-	baseRouter.POST("NewAgentUser", AgentApp.New代理信息)                          // 保存用户详细信息
-	baseRouter.POST("SetAgentUserStatus", AgentApp.Set修改状态)                    // 保存用户详细信息
+	baseRouter.POST("SaveAgentUser", AgentApp.Save代理信息)                            // 保存用户详细信息
+	baseRouter.POST("NewAgentUser", AgentApp.New代理信息)                              // 保存用户详细信息
+	baseRouter.POST("SetAgentUserStatus", AgentApp.Set修改状态)                        // 保存用户详细信息
 	baseRouter.POST("GetAgentKaClassAuthority", AgentApp.GetAgentKaClassAuthority) //取全部可制卡类和已授权卡类
 	baseRouter.POST("SetAgentKaClassAuthority", AgentApp.SetAgentKaClassAuthority) //设置代理可制卡类ID
 	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
@@ -162,12 +162,12 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter = Router根Admin.Group("/AgentInventory")
 	baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
-	AgentInventory := Api.Admin.AgentInventory                                                        //实现路由的 具体方法位置
-	baseRouter.POST("GetList", AgentInventory.GetAgentInventoryList)                                  // 获取列表
+	AgentInventory := Api.Admin.AgentInventory                                        //实现路由的 具体方法位置
+	baseRouter.POST("GetList", AgentInventory.GetAgentInventoryList)                  // 获取列表
 	baseRouter.POST("GetAgentTreeAndKaClassTree", AgentInventory.Get取下级代理列表和可创建库存包列表) // 获取列表
-	baseRouter.POST("GetInfo", AgentInventory.GetAgentInventoryInfo)                                  // 获取详细信息
-	baseRouter.POST("New", AgentInventory.New库存报信息)                                              // 创建库存包
-	baseRouter.POST("Withdraw", AgentInventory.K库存撤回)                                             // 撤回转出的库存
+	baseRouter.POST("GetInfo", AgentInventory.GetAgentInventoryInfo)                  // 获取详细信息
+	baseRouter.POST("New", AgentInventory.New库存报信息)                                   // 创建库存包
+	baseRouter.POST("Withdraw", AgentInventory.K库存撤回)                                 // 撤回转出的库存
 	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
 		baseRouter.POST("Delete", AgentInventory.Del批量删除库存)
 	}
@@ -178,15 +178,15 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	{
 		App := Api.Admin.App                                     //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetAppList)               // 获取列表
-		baseRouter.POST("New", App.NewApp信息)                   // 新建信息
+		baseRouter.POST("New", App.NewApp信息)                     // 新建信息
 		baseRouter.POST("GetInfo", App.GetAppInfo)               // 获取详细信息
 		baseRouter.GET("GetAppIdNameList", App.GetAppIdNameList) // 取appid和名字数组
-		baseRouter.GET("GetAllUserApi", App.Get全部用户APi)      // Get全部用户APi
-		baseRouter.GET("GetAllWebApi", App.Get全部WebAPi)        // Get全部用户APi
+		baseRouter.GET("GetAllUserApi", App.Get全部用户APi)          // Get全部用户APi
+		baseRouter.GET("GetAllWebApi", App.Get全部WebAPi)          // Get全部用户APi
 		baseRouter.GET("GetAppIdMax", App.GetAppIdMax)           // 取AppId最大值
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-			baseRouter.POST("Delete", App.Del批量删除App) // 删除信息
-			baseRouter.POST("SaveInfo", App.SaveApp信息)  // 保存详细信息
+			baseRouter.POST("Delete", App.Del批量删除App)  // 删除信息
+			baseRouter.POST("SaveInfo", App.SaveApp信息) // 保存详细信息
 		}
 	}
 	//软件用户===========================================
@@ -197,11 +197,12 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		App := Api.Admin.AppUser //实现路由的 具体方法位置
 
 		baseRouter.POST("GetList", App.GetAppUserList) // 获取列表
-		baseRouter.POST("New", App.New用户信息)        // 新建信息
+		baseRouter.POST("New", App.New用户信息)            // 新建信息
 		baseRouter.POST("GetInfo", App.GetAppUserInfo) // 获取详细信息
-		baseRouter.POST("SaveInfo", App.Save用户信息)  // 保存详细信息
-		baseRouter.POST("SetStatus", App.Set修改状态)  // 修改状态
+		baseRouter.POST("SaveInfo", App.Save用户信息)      // 保存详细信息
+		baseRouter.POST("SetStatus", App.Set修改状态)      // 修改状态
 		baseRouter.POST("SetBatchAddVipTime", App.Set批量维护_增减时间点数)
+		baseRouter.POST("SetBatchAllUserVipTime", App.P批量_全部用户增减时间点数)
 
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
 			baseRouter.POST("DeleteBatch", App.Set批量维护_删除用户)
@@ -216,9 +217,9 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	{
 		App := Api.Admin.UserClass                         //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetUserClassList)   // 获取列表
-		baseRouter.POST("New", App.NewUserClass信息)       // 新建信息
+		baseRouter.POST("New", App.NewUserClass信息)         // 新建信息
 		baseRouter.POST("GetInfo", App.GetUserClassInfo)   // 获取详细信息
-		baseRouter.POST("SaveInfo", App.SaveUserClass信息) // 保存详细信息
+		baseRouter.POST("SaveInfo", App.SaveUserClass信息)   // 保存详细信息
 		baseRouter.GET("GetIdNameList", App.GetIdNameList) // 取id和名字数组
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
 			baseRouter.POST("Delete", App.Del批量删除用户类型) // 删除信息
@@ -250,13 +251,13 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("New", App.New)                       // 新制卡号
 		baseRouter.POST("batchKaNameNew", App.BatchKaNameNew) // 新制卡号,指定卡号
 		baseRouter.POST("GetInfo", App.GetInfo)               // 获取详细信息
-		baseRouter.POST("SaveInfo", App.SaveKa信息)           // 保存详细信息
+		baseRouter.POST("SaveInfo", App.SaveKa信息)             // 保存详细信息
 
-		baseRouter.POST("SetStatus", App.Set修改状态)          // 修改状态
+		baseRouter.POST("SetStatus", App.Set修改状态)       // 修改状态
 		baseRouter.POST("SetAdminNote", App.Set修改管理员备注) // 修改状态
 		baseRouter.POST("Recover", App.Z追回卡号)
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-			baseRouter.POST("Delete", App.Delete)                    // 删除信息
+			baseRouter.POST("Delete", App.Delete)            // 删除信息
 			baseRouter.POST("DeleteBatch", App.Set批量维护_删除用户) // 删除信息
 
 		}
@@ -280,10 +281,10 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
 	{
-		App := Api.Admin.PublicData                            //实现路由的 具体方法位置
-		baseRouter.POST("GetList", App.GetPublicDataList)      // 获取列表
-		baseRouter.POST("New", App.New)                        // 新建信息
-		baseRouter.POST("GetInfo", App.GetInfo)                // 获取详细信息
+		App := Api.Admin.PublicData                          //实现路由的 具体方法位置
+		baseRouter.POST("GetList", App.GetPublicDataList)    // 获取列表
+		baseRouter.POST("New", App.New)                      // 新建信息
+		baseRouter.POST("GetInfo", App.GetInfo)              // 获取详细信息
 		baseRouter.POST("SaveInfo", App.SaveDB_PublicData信息) // 保存详细信息
 
 		baseRouter.POST("SetIsVip", App.Set修改vip限制)
@@ -299,11 +300,11 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		App := Api.Admin.PublicJs                       //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetPublicJsList) // 获取列表
 		baseRouter.POST("GetInfo", App.GetInfo)         // 获取详细信息
-		baseRouter.POST("SetIsVip", App.Set修改vip限制) // 删除信息
+		baseRouter.POST("SetIsVip", App.Set修改vip限制)     // 删除信息
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-			baseRouter.POST("New", App.New)                      // 新建信息
+			baseRouter.POST("New", App.New)                    // 新建信息
 			baseRouter.POST("SaveInfo", App.SaveDB_PublicJs信息) // 保存详细信息
-			baseRouter.POST("Delete", App.Delete)                // 删除信息
+			baseRouter.POST("Delete", App.Delete)              // 删除信息
 		}
 	}
 	//任务池===========================================
@@ -311,11 +312,11 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
 	{
-		App := Api.Admin.TaskPool                            //实现路由的 具体方法位置
-		baseRouter.POST("GetList", App.GetList2)             // 获取列表
-		baseRouter.POST("New", App.New)                      // 新建信息
-		baseRouter.POST("GetInfo", App.GetInfo)              // 获取详细信息
-		baseRouter.POST("SaveInfo", App.Save)                // 保存详细信息
+		App := Api.Admin.TaskPool                        //实现路由的 具体方法位置
+		baseRouter.POST("GetList", App.GetList2)         // 获取列表
+		baseRouter.POST("New", App.New)                  // 新建信息
+		baseRouter.POST("GetInfo", App.GetInfo)          // 获取详细信息
+		baseRouter.POST("SaveInfo", App.Save)            // 保存详细信息
 		baseRouter.POST("SetStatus", App.Set修改状态)        // 保存详细信息
 		baseRouter.POST("DeleteTaskQueueTid", App.Q清空队列) // 保存详细信息
 
@@ -433,7 +434,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetInfo", App.GetInfo)    // 获取详细信息
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
 			baseRouter.POST("SetIsRead", App.Set修改IsRead) // 设置已读状态
-			baseRouter.POST("Delete", App.Delete)           // 删除信息
+			baseRouter.POST("Delete", App.Delete)         // 删除信息
 		}
 	}
 	//余额充值订单===========================================
@@ -448,7 +449,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetPayOrderNote", App.Set修改备注)
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
-			baseRouter.POST("Out", App.Out退款)   // 退款
+			baseRouter.POST("Out", App.Out退款)     // 退款
 		}
 	}
 	//控制面板===========================================
@@ -485,7 +486,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 
 	baseRouter.Use(middleware.IsToken飞鸟快验())
 	{
-		App := Api.Admin.KuaiYan                                        //实现路由的 具体方法位置
+		App := Api.Admin.KuaiYan                              //实现路由的 具体方法位置
 		baseRouter.POST("GetCaptchaApiList", App.Q取开启验证码接口列表) // 获取列表
 		baseRouter.POST("GetCaptcha", App.Q取英数验证码)
 		baseRouter.POST("GetUserInfo", App.Q快验个人信息更新)
@@ -555,12 +556,12 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
 	{
-		App := Agent.Api.Ka                                  //实现路由的 具体方法位置
-		baseRouter.POST("GetList", App.GetKaList)            // 获取列表
-		baseRouter.POST("New", App.New)                      // 新制卡号
-		baseRouter.POST("InventoryNewKa", App.K库存制卡)     // 新制卡号
-		baseRouter.POST("GetInfo", App.GetInfo)              // 获取详细信息
-		baseRouter.POST("SetStatus", App.Set修改状态)        // 修改状态
+		App := Agent.Api.Ka                            //实现路由的 具体方法位置
+		baseRouter.POST("GetList", App.GetKaList)      // 获取列表
+		baseRouter.POST("New", App.New)                // 新制卡号
+		baseRouter.POST("InventoryNewKa", App.K库存制卡)   // 新制卡号
+		baseRouter.POST("GetInfo", App.GetInfo)        // 获取详细信息
+		baseRouter.POST("SetStatus", App.Set修改状态)      // 修改状态
 		baseRouter.POST("SetAgentNote", App.Set修改代理备注) // 修改状态
 		baseRouter.POST("Recover", App.Z追回卡号)
 		baseRouter.POST("UseKa", App.K卡号充值)
@@ -583,9 +584,9 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	AgentApp := Agent.Api.AgentUser                                                //实现路由的 具体方法位置
 	baseRouter.POST("GetAgentUserList", AgentApp.GetAgentUserList)                 // 获取用户列表
 	baseRouter.POST("GetAgentUserInfo", AgentApp.GetAgentUserInfo)                 // 获取用户详细信息
-	baseRouter.POST("SaveAgentUser", AgentApp.Save代理信息)                        // 保存用户详细信息
-	baseRouter.POST("NewAgentUser", AgentApp.New代理信息)                          // 保存用户详细信息
-	baseRouter.POST("SetAgentUserStatus", AgentApp.Set修改状态)                    // 保存用户详细信息
+	baseRouter.POST("SaveAgentUser", AgentApp.Save代理信息)                            // 保存用户详细信息
+	baseRouter.POST("NewAgentUser", AgentApp.New代理信息)                              // 保存用户详细信息
+	baseRouter.POST("SetAgentUserStatus", AgentApp.Set修改状态)                        // 保存用户详细信息
 	baseRouter.POST("GetAgentKaClassAuthority", AgentApp.GetAgentKaClassAuthority) //取全部可制卡类和已授权卡类
 	baseRouter.POST("SetAgentKaClassAuthority", AgentApp.SetAgentKaClassAuthority) //设置代理可制卡类ID
 	baseRouter.POST("ChartAgentLevel", AgentApp.Get代理组织架构图)
@@ -594,14 +595,14 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter = Router根Agent.Group("/AgentInventory")
 	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
-	AgentInventory := Agent.Api.AgentInventory                                 //实现路由的 具体方法位置
-	baseRouter.POST("GetList", AgentInventory.GetAgentInventoryList)           // 获取列表
+	AgentInventory := Agent.Api.AgentInventory                        //实现路由的 具体方法位置
+	baseRouter.POST("GetList", AgentInventory.GetAgentInventoryList)  // 获取列表
 	baseRouter.POST("GetKaClassTree", AgentInventory.Get取可创建库存包列表)    // 获取列表
-	baseRouter.POST("GetInfo", AgentInventory.GetAgentInventoryInfo)           // 获取详细信息
-	baseRouter.POST("NewBuy", AgentInventory.New库存购买)                      // 创建库存包
-	baseRouter.POST("Send", AgentInventory.K库存发送)                          // 创建库存包
+	baseRouter.POST("GetInfo", AgentInventory.GetAgentInventoryInfo)  // 获取详细信息
+	baseRouter.POST("NewBuy", AgentInventory.New库存购买)                 // 创建库存包
+	baseRouter.POST("Send", AgentInventory.K库存发送)                     // 创建库存包
 	baseRouter.POST("GetSubordinateAgent", AgentInventory.Q可发送库存下级代理) // 创建库存包
-	baseRouter.POST("Withdraw", AgentInventory.K库存撤回)                      // 撤回转出的库存
+	baseRouter.POST("Withdraw", AgentInventory.K库存撤回)                 // 撤回转出的库存
 	baseRouter.POST("SetEndTime", AgentInventory.K库存延期)
 	baseRouter.POST("SetNote", AgentInventory.K库存修改备注)
 	//余额日志===========================================
@@ -772,9 +773,9 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 func RouterUserApi(Router *gin.RouterGroup) *gin.RouterGroup {
 
 	baseRouter := Router.Group("/Api")
-	baseRouter.Use(middleware.UserApi检查数据库连接()) //检查数据库是否连接,连接后才可以使用用户Api,不然大量报错
-	baseRouter.Use(middleware.UserApi无Token解密())    ///鉴权中间件 检查 token  单独优先处理
-	baseRouter.Use(middleware.UserApi解密())           ///鉴权中间件 检查 token
+	baseRouter.Use(middleware.UserApi检查数据库连接())  //检查数据库是否连接,连接后才可以使用用户Api,不然大量报错
+	baseRouter.Use(middleware.UserApi无Token解密()) ///鉴权中间件 检查 token  单独优先处理
+	baseRouter.Use(middleware.UserApi解密())       ///鉴权中间件 检查 token
 	{
 		baseRouter.POST("", UserApi.UserApi_Api不存在)
 		//其余的都在中间件内分配
