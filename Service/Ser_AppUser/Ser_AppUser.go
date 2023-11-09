@@ -374,3 +374,120 @@ func Z置状态_同步卡号修改(AppId int, id []int, Status int) error {
 		return err
 	})
 }
+func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int) (影响行数 int64, err error) {
+
+	if AppId < 10000 || !Ser_AppInfo.AppId是否存在(AppId) {
+		return 0, errors.New("AppId不存在")
+	}
+
+	db := global.GVA_DB.Debug().Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+
+	局_is计点 := Ser_AppInfo.App是否为计点(AppId)
+	局_is卡号 := Ser_AppInfo.App是否为卡号(AppId)
+	if 用户或卡号前缀 != "" {
+		if 局_is卡号 {
+			db = db.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
+		} else {
+			db = db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(DB.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
+		}
+	}
+
+	switch 账号状态 {
+	default:
+		return 0, errors.New("账号状态错误")
+	case 1: //全部
+
+	case 2: //已过期 点数为0
+		if 局_is计点 {
+			db = db.Where("ai.VipTime = 0 ")
+		} else {
+			db = db.Where("ai.VipTime < ? ", time.Now().Unix())
+		}
+
+	case 3: //未过期
+		if 局_is计点 {
+			db = db.Where("ai.VipTime >0 ")
+		} else {
+			db = db.Where("ai.VipTime > ? ", time.Now().Unix())
+		}
+	}
+	if 注册时间开始 > 0 {
+		db = db.Where("ai.RegisterTime > ?", 注册时间开始)
+	}
+	if 注册时间结束 > 0 {
+		db = db.Where("ai.RegisterTime < ?", 注册时间结束)
+	}
+
+	var 局_id数组 []int
+	db.Find(&局_id数组)
+	if len(局_id数组) > 0 {
+		影响行数 = global.GVA_DB.Debug().Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", gorm.Expr("VipTime + ?", Number)).RowsAffected
+		var 局_id数组文本 string
+		for _, num := range 局_id数组 {
+			局_id数组文本 += strconv.Itoa(num) + ","
+		}
+		局_id数组文本 = fmt.Sprintf("管理员进行了批量维护时间点数,AppId:%d,软件用户ID[%s],操作类型增减指定值,修改值:%d", AppId, 局_id数组文本, Number)
+		global.GVA_LOG.Log(1, 局_id数组文本)
+	}
+
+	return 影响行数, err
+}
+
+func P批量_全部用户修改为指定时间或点数(AppId int, Number int64, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int) (影响行数 int64, err error) {
+
+	if AppId < 10000 || !Ser_AppInfo.AppId是否存在(AppId) {
+		return 0, errors.New("AppId不存在")
+	}
+
+	db := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+
+	局_is计点 := Ser_AppInfo.App是否为计点(AppId)
+	局_is卡号 := Ser_AppInfo.App是否为卡号(AppId)
+	if 用户或卡号前缀 != "" {
+		if 局_is卡号 {
+			db = db.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
+		} else {
+			db = db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(DB.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
+		}
+	}
+
+	switch 账号状态 {
+	default:
+		return 0, errors.New("账号状态错误")
+	case 1: //全部
+
+	case 2: //已过期 点数为0
+		if 局_is计点 {
+			db = db.Where("ai.VipTime = 0 ")
+		} else {
+			db = db.Where("ai.VipTime < ? ", time.Now().Unix())
+		}
+
+	case 3: //未过期
+		if 局_is计点 {
+			db = db.Where("ai.VipTime >0 ")
+		} else {
+			db = db.Where("ai.VipTime > ? ", time.Now().Unix())
+		}
+	}
+	if 注册时间开始 > 0 {
+		db = db.Where("ai.RegisterTime > ?", 注册时间开始)
+	}
+	if 注册时间结束 > 0 {
+		db = db.Where("ai.RegisterTime < ?", 注册时间结束)
+	}
+
+	var 局_id数组 []int
+	db.Find(&局_id数组)
+	if len(局_id数组) > 0 {
+		影响行数 = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", Number).RowsAffected
+		var 局_id数组文本 string
+		for _, num := range 局_id数组 {
+			局_id数组文本 += strconv.Itoa(num) + ","
+		}
+		局_id数组文本 = fmt.Sprintf("管理员进行了批量维护时间点数,AppId:%d,软件用户ID[%s],操作类型修改指定值,修改值:%d", AppId, 局_id数组文本, Number)
+		global.GVA_LOG.Log(1, 局_id数组文本)
+	}
+
+	return 影响行数, err
+}
