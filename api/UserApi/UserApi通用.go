@@ -165,17 +165,20 @@ func UserApi_用户登录(c *gin.Context) {
 		}
 
 		//没有这个用户,应该是第一次登录应用,添加进去
-		if AppInfo.AppType == 3 {
+		switch AppInfo.AppType {
+		case 1:
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0, 0, "")
+		case 2: //账号限时
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "")
+		case 3:
 			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
-
-		} else if AppInfo.AppType == 4 {
+		case 4:
 			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
-		} else if AppInfo.AppType == 2 { //账号限时
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "")
-		} else {
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0, 0, "")
+		default:
+			//???应该不会到这里
+			response.X响应状态消息(c, response.Status_SQl错误, "AppInfo.AppType错误")
 		}
 
 		if err != nil {
