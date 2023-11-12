@@ -172,6 +172,8 @@ func UserApi_用户登录(c *gin.Context) {
 		} else if AppInfo.AppType == 4 {
 			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
+		} else if AppInfo.AppType == 2 { //账号限时
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "")
 		} else {
 			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0, 0, "")
 		}
@@ -207,7 +209,7 @@ func UserApi_用户登录(c *gin.Context) {
 				response.X响应状态(c, response.Status_Vip已到期)
 				return
 			}
-		} else {                                         //计时模式
+		} else { //计时模式
 			if 局_AppUser.VipTime <= time.Now().Unix() { // 相等也限制登录, 防止刚注册 时间和过期正好相当
 				go Ser_Log.Log_写登录日志(局_卡号或用户名, c.ClientIP(), "Vip已过期", 局_在线信息.LoginAppid)
 				response.X响应状态(c, response.Status_Vip已到期)
@@ -254,6 +256,7 @@ func UserApi_用户登录(c *gin.Context) {
 
 	//这里吧成功的状态
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{
+		"User":          局_卡号或用户名,
 		"VipTime":       局_AppUser.VipTime,
 		"Key":           局_AppUser.Key,
 		"OutUser":       局_要踢掉的数量,
@@ -540,7 +543,7 @@ func UserApi_取公共变量(c *gin.Context) {
 	局_变量名 := string(请求json.GetStringBytes("Name"))
 
 	局_云变量数据, err := Ser_PublicData.P取值2(1, 局_变量名) //1>所以有软件公共读
-	if err != nil || 局_云变量数据.Type > 3 {                 //只允许变量  不允许读取云函数
+	if err != nil || 局_云变量数据.Type > 3 {           //只允许变量  不允许读取云函数
 		response.X响应状态消息(c, response.Status_操作失败, "变量不存在,请到后台应用编辑,添加专属变量")
 		return
 	}
@@ -694,7 +697,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 			response.X响应状态(c, response.Status_未登录)
 			return
 		} else {
-			局_在线信息.User = 局_账号                        //如果出错,写日志时会用到
+			局_在线信息.User = 局_账号                                //如果出错,写日志时会用到
 			if AppInfo.AppType == 3 || AppInfo.AppType == 4 { //是卡号
 				局_Uid = Ser_Ka.Ka卡号取id(AppInfo.AppId, 局_账号)
 				if 局_Uid == 0 {
@@ -774,7 +777,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 			response.X响应状态(c, response.Status_未登录)
 			return
 		} else {
-			局_在线信息.User = 局_账号                        //如果出错,写日志时会用到
+			局_在线信息.User = 局_账号                                //如果出错,写日志时会用到
 			if AppInfo.AppType == 3 || AppInfo.AppType == 4 { //是卡号
 				局_Uid = Ser_Ka.Ka卡号取id(AppInfo.AppId, 局_账号)
 				if 局_Uid == 0 {
@@ -1278,9 +1281,9 @@ func UserApi_置用户类型(c *gin.Context) {
 				//已经过期了直接赋值新类型 现行时间+新时间就可以了
 				局_App用户.VipTime = 局_现行时间戳
 			} else {
-				局_App用户.VipTime = 局_App用户.VipTime - 局_现行时间戳                             //先计算还剩多长时间
+				局_App用户.VipTime = 局_App用户.VipTime - 局_现行时间戳                   //先计算还剩多长时间
 				局_增减时间点数 := 局_App用户.VipTime * 局_旧用户类型.Weight / 局_新用户类型.Weight //剩余时间 权重转换转换结果值
-				局_App用户.VipTime = 局_现行时间戳 + 局_增减时间点数                                // 现在时间 + 旧权重转换后的新权重时间+卡增减时间
+				局_App用户.VipTime = 局_现行时间戳 + 局_增减时间点数                          // 现在时间 + 旧权重转换后的新权重时间+卡增减时间
 			}
 		}
 		局_App用户.UserClassId = 局_新用户类型.Id //最后更换类型,防止前面用到卡类id,计算权重转换类型错误
