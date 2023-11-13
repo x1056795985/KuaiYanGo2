@@ -219,7 +219,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetList", App.GetUserClassList)   // 获取列表
 		baseRouter.POST("New", App.NewUserClass信息)         // 新建信息
 		baseRouter.POST("GetInfo", App.GetUserClassInfo)   // 获取详细信息
-		baseRouter.POST("SaveInfo", App.SaveUserClass信息)   // 保存详细信息
+		baseRouter.POST("SaveInfo", App.SetUserClass信息)    // 保存详细信息
 		baseRouter.GET("GetIdNameList", App.GetIdNameList) // 取id和名字数组
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
 			baseRouter.POST("Delete", App.Del批量删除用户类型) // 删除信息

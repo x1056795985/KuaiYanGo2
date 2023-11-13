@@ -144,8 +144,8 @@ type 结构请求_ID数组 struct {
 	AppId int   `json:"AppId"` // Appid 必填
 }
 
-// save 保存
-func (a *Api) SaveUserClass信息(c *gin.Context) {
+// set 保存
+func (a *Api) SetUserClass信息(c *gin.Context) {
 	var 请求 DB.DB_UserClass
 	err := c.ShouldBindJSON(&请求)
 	//解析失败
@@ -171,7 +171,7 @@ func (a *Api) SaveUserClass信息(c *gin.Context) {
 		return
 	}
 
-	if UserClass服务.IsMark存在数量(请求.AppId, 请求.Mark) >= 1 {
+	if UserClass服务.IsMark存在数量(请求.AppId, 请求.Mark, []int{请求.Id}) >= 1 {
 		response.FailWithMessage("整数代号已存在", c)
 		return
 	}
