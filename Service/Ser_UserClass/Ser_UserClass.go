@@ -62,9 +62,9 @@ func UserClass取AppId用户类型列表(Appid int) []DB.DB_UserClass {
 }
 
 // 整数代号是否存在
-func IsMark存在数量(Appid, NewMark int) int64 {
+func IsMark存在数量(Appid, NewMark int, 排除ID []int) int64 {
 	var Count int64
-	global.GVA_DB.Model(DB.DB_UserClass{}).Where("Appid=?", Appid).Where("Mark=?", NewMark).Count(&Count)
+	global.GVA_DB.Model(DB.DB_UserClass{}).Where("Appid=?", Appid).Where("Id Not IN ?", 排除ID).Where("Mark=?", NewMark).Count(&Count)
 	return Count
 }
 
