@@ -89,7 +89,7 @@ func Aes解密_cbc192(加密数据 []byte, key string) string {
 	return Aes解密_cbc192字节集(加密数据, []byte(key))
 }
 func Aes解密_cbc192字节集(加密数据 []byte, key []byte) string {
-	if len(key) != 24 {
+	if len(key) != 24 || len(加密数据) < 16 {
 		return ""
 	}
 	k := key[:24]
@@ -109,7 +109,7 @@ func Aes解密_cbc192字节集(加密数据 []byte, key []byte) string {
 	return string(orig)
 }
 func Aes解密_cbc192字节集2(加密数据 []byte, key []byte) []byte {
-	if len(key) != 24 {
+	if len(key) != 24 || len(加密数据) < 16 {
 		return []byte{}
 	}
 	k := key[:24]
