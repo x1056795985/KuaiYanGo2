@@ -345,7 +345,7 @@ func Pay_小叮当_订单创建(Uid, Uid类型 int, 支付金额 float64, ip str
 	jsonStr := strings.Replace(utils.W文本_取出中间文本(局_请求结果.String(), `Object moved to <a href="`, `"`), "&amp;", "&", -1)
 
 	if jsonStr == "" {
-		return errors.New("支付地址获取失败:" + err.Error()), gin.H{}
+		return errors.New("支付地址获取失败:" + 局_请求结果.String()), gin.H{}
 	}
 
 	// 处理返回结果
