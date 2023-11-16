@@ -98,12 +98,12 @@ func Token风控分增减(Token string, 增减值 int) {
 	}
 	return
 }
-func Set在线登录信息(Id, Uid int, 用户名, 绑定信息, 动态标签, 软件版本 string) {
+func Set在线登录信息(Id, Uid int, 用户名, 绑定信息, 动态标签, 软件版本 string) error {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", Id).Updates(map[string]interface{}{"Uid": Uid, "User": 用户名, "Key": 绑定信息, "Tab": 动态标签, "AppVer": 软件版本}).Error
 	if err != nil {
 		global.GVA_LOG.Error(fmt.Sprintf("Set在线登录信息:%v,%v,%v,%v", err.Error(), Id, 用户名, 绑定信息, 动态标签))
 	}
-	return
+	return err
 }
 
 func Get取在线数量(AppId, Uid int) []int {
