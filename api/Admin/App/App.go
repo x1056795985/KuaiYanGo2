@@ -241,11 +241,12 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 	JSON, err := fastjson.Parse(请求.AppData.ApiHook)
 	if err == nil {
 		if object, err2 := JSON.Object(); err2 == nil {
+			//JSON取全部成员
 			object.Visit(func(key []byte, v *fastjson.Value) {
 				// 获取所有键名
 				//{"UserLogin":{"Before":"hook登录前","After":"hook登录后"}}
 				局_hook函数名 := strings.TrimSpace(string(v.GetStringBytes("Before")))
-				if !Ser_PublicJs.Name是否存在(Ser_PublicJs.Js类型_ApiHook函数, 局_hook函数名) {
+				if len(局_hook函数名) > 0 && !Ser_PublicJs.Name是否存在(Ser_PublicJs.Js类型_ApiHook函数, 局_hook函数名) {
 					Ser_PublicJs.C创建(DB.DB_PublicJs{
 						AppId: 3,
 						Name:  局_hook函数名,
