@@ -10,7 +10,6 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	sms_tx "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111" // 引入sms
-	"net/url"
 	"server/global"
 	"server/utils"
 	"strings"
@@ -269,7 +268,7 @@ func D短信宝_sms发送短信验证码(模板变量 []string, 接收短信手�
 	Http请求.SetPathParam(`p`, 局_短信宝.ApiKey)
 	Http请求.SetPathParam(`g`, 局_短信宝.C产品Id)
 	Http请求.SetPathParam(`m`, 接收短信手机号)
-	Http请求.SetPathParam(`c`, url.QueryEscape(局_短信宝.F发送内容))
+	Http请求.SetPathParam(`c`, 局_短信宝.F发送内容)
 
 	var 局_请求结果 *req.Response
 	var err error
