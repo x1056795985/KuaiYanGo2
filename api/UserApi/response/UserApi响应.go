@@ -2,7 +2,6 @@
 package response
 
 import (
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -55,9 +54,11 @@ func 响应加密处理(c *gin.Context, 明文Json string) {
 
 		if c.GetBool("RSA强制") {
 			//这种情况 随机AES密钥然后加密   签名结果就是Aes的密钥的RSA加密 因为Rsa无法加密长数据所以只加密密匙
-			//AesKey = utils.W文本_取随机字符串(24)
-			局_AES随机密匙字节集 := make([]byte, 24)
-			_, _ = rand.Read(局_AES随机密匙字节集)
+
+			/*		局_AES随机密匙字节集 := make([]byte, 24)
+					_, _ = rand.Read(局_AES随机密匙字节集)*/
+			局_AES随机密匙字节集 := []byte(utils.W文本_取随机字符串(24)) // 因为js暂时无法公钥解密出字节数组的密钥,所以暂时改为文本字符串,方便更多语言对接
+
 			临时 := utils.Aes加密_cbc192密匙字节数组(明文Json, 局_AES随机密匙字节集)
 			局_加密编码后 = base64.StdEncoding.EncodeToString(临时)
 			签名结果 = utils.RSA私钥加密([]byte(AppInfo.CryptoKeyPrivate), 局_AES随机密匙字节集) //RSa加密的是AES密钥
