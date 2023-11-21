@@ -118,6 +118,52 @@ func PayAliNotify_当面付(c *gin.Context) {
 	return
 }
 
+// 支付宝H5支付异步回调 Notify - 支付成功后会回调这里;我们可以用来修改订单状态等等
+func PayAliNotify_H5(c *gin.Context) {
+	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝H5商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝H5商户ID, privateKey, true)
+	if err != nil {
+		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统PayAliNotifyH5", "系统内部", global.X系统信息.B版本号当前, "PayAliNotifyH5回调商户私钥载入失败:"+err.Error(), c.ClientIP())
+		// 开始时间
+		c.JSON(http.StatusNotFound, gin.H{})
+		return
+	}
+
+	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝H5公钥) // 加载支付宝H5公钥证书
+	if err != nil {
+		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统PayAliNotifyH5", "系统内部", global.X系统信息.B版本号当前, "PayAliNotifyH5回调商户公钥载入失败:"+err.Error(), c.ClientIP())
+		// 开始时间
+		c.JSON(http.StatusNotFound, gin.H{})
+		return
+	}
+
+	noti, err := client.GetTradeNotification(c.Request) //这里就会校验的
+	//fmt.Println(c.Request.PostForm.Encode())
+	//app_id=2021001159688744&auth_app_id=2021001159688744&buyer_id=2088022724614415&buyer_pay_amount=0.01&charset=utf-8&fund_bill_list=%5B%7B%22amount%22%3A%220.01%22%2C%22fundChannel%22%3A%22ALIPAYACCOUNT%22%7D%5D&gmt_create=202
+	//3-05-16+11%3A14%3A37&gmt_payment=2023-05-16+11%3A14%3A48&invoice_amount=0.01&notify_id=2023051601222111448014411420706088&notify_time=2023-05-16+11%3A14%3A48&notify_type=trade_status_sync&out_trade_no=202305161113450001&poin
+	//t_amount=0.00&receipt_amount=0.01&seller_id=2088422339120873&sign=AOGgQPzmHf1aTY695Ey39sxAni7J5EvZybD%2BOvBDfWMUSWRDAJm72Ciy4Rz3cxXYsfZO1t61qKKGVAjNoVDxAZfZdbZrKhk%2BFDRqM7n%2FODPdgI8pelo1NT4Af%2BGcYIF9zkhcmqHcpCJCMeh8yYAPdk
+	//WkcTKWaGRwFAIELI9vd8DusrNegDLYKnPCrrNF1U4MSXAbhDXAnu5%2FONWBbWeedyY6xR5R%2BKWDnyWptcZaT8dJAWz23V3dVsH8vLMcv2Dx7q3SL7mQCiA3gAZuI0zitrIKfd7AybKQZD6Vjl%2FOEeyffnaE6D4kEiWOBSfXxwKr9uxPkcaFucoTw0ctWH3B8g%3D%3D&sign_type=RSA2&subject=%E7%94%A8%E6%88%B7aaaaaa%E5%85%85%E5%80%BC&total_amount=0.01&trade_no=2023051622001414411454464620&trade_status=TRADE_SUCCESS&version=1.0
+	if err != nil {
+		局_boyd := c.Request.PostForm.Encode()
+
+		Ser_Log.Log_写风控日志(0, Ser_Log.Log风控类型_Api异常调用, "WebApi", c.ClientIP(), "支付宝H5异步回调被异常调用:"+c.Request.RequestURI+"|"+局_boyd)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Printf("订单号:%s;状态:%s\n,%v", noti.OutTradeNo, noti.TradeStatus, noti)
+	if noti.TradeStatus == "TRADE_SUCCESS" {
+		局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(noti.OutTradeNo)
+		if ok && 局_订单详细信息.Status == 1 { //有订单且订单信息为未支付
+			局_订单详细信息.PayOrder2 = noti.TradeNo
+			Z支付成功_后处理(局_订单详细信息)
+		}
+	}
+
+	c.String(http.StatusOK, "success")
+	return
+}
+
 type 微信回调响应 struct {
 	ID           string    `json:"id"`
 	CreateTime   time.Time `json:"create_time"`

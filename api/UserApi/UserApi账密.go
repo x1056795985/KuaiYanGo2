@@ -404,6 +404,8 @@ func UserApi_订单_余额充值(c *gin.Context) {
 	switch strings.TrimSpace(局_支付方式) {
 	case "支付宝PC":
 		err, 响应数据 = Ser_Pay.Pay_支付宝Pc_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
+	case "支付宝H5":
+		err, 响应数据 = Ser_Pay.Pay_支付宝H5_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
 	case "支付宝当面付":
 		err, 响应数据 = Ser_Pay.Pay_支付宝当面付_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
 	case "微信支付":
