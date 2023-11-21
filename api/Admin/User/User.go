@@ -3,9 +3,10 @@ package User
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"server/Service/Ser_Admin"
 	"server/Service/Ser_Agent"
-	Db服务 "server/Service/Ser_AppInfo"
+	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
@@ -197,7 +198,7 @@ func (a *Api) GetUserList(c *gin.Context) {
 		return
 	}
 
-	var AppName = Db服务.App取map列表String()
+	var AppName = Ser_AppInfo.App取map列表String()
 
 	for 索引 := range DB_User_简化实例 {
 		DB_User_简化实例[索引].LoginAppName = AppName[DB_User_简化实例[索引].LoginAppid]
@@ -250,9 +251,30 @@ func (a *Api) Del批量删除用户(c *gin.Context) {
 	}
 	var 影响行数 int64
 	var db = global.GVA_DB
-	影响行数 = db.Model(DB.DB_User{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
-	if db.Error != nil {
-		response.FailWithMessage("删除失败", c)
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		var 局_UserId = 请求.Id //待删用户id
+		影响行数 = tx.Model(DB.DB_User{}).Where("Id IN ? ", 局_UserId).Delete("").RowsAffected
+
+		//获取全部用户登录,的应用AppIdid,
+		var 局数组_AppId []int
+		err2 := tx.Model(DB.DB_AppInfo{}).Select("AppId").Where("AppType IN ? ", []int{1, 2}).Scan(&局数组_AppId).Error
+		if err2 != nil {
+			return err2
+		}
+		//删除每个应用的该应用用户uid
+		for _, 局_appid := range 局数组_AppId {
+			err2 = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_appid)).Where("Uid IN ? ", 局_UserId).Delete("").Error
+			if err2 != nil {
+				return err2
+			}
+		}
+
+		return err2
+	})
+
+	if err != nil {
+		response.FailWithMessage("删除失败:"+err.Error(), c)
 		return
 	}
 

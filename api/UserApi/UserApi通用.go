@@ -1699,6 +1699,8 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 	switch strings.TrimSpace(局_支付方式) {
 	case "支付宝PC":
 		err, 响应数据 = Ser_Pay.Pay_支付宝Pc_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
+	case "支付宝H5":
+		err, 响应数据 = Ser_Pay.Pay_支付宝H5_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
 	case "支付宝当面付":
 		err, 响应数据 = Ser_Pay.Pay_支付宝当面付_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
 	case "微信支付":
@@ -1771,6 +1773,8 @@ func UserApi_订单_积分充值(c *gin.Context) {
 	switch strings.TrimSpace(局_支付方式) {
 	case "支付宝PC":
 		err, 响应数据 = Ser_Pay.Pay_支付宝Pc_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
+	case "支付宝H5":
+		err, 响应数据 = Ser_Pay.Pay_支付宝H5_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
 	case "支付宝当面付":
 		err, 响应数据 = Ser_Pay.Pay_支付宝当面付_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
 	case "微信支付":
@@ -1837,6 +1841,8 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 	switch strings.TrimSpace(局_支付方式) {
 	case "支付宝PC":
 		err, 响应数据 = Ser_Pay.Pay_支付宝Pc_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
+	case "支付宝H5":
+		err, 响应数据 = Ser_Pay.Pay_支付宝H5_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
 	case "支付宝当面付":
 		err, 响应数据 = Ser_Pay.Pay_支付宝当面付_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
 	case "微信支付":

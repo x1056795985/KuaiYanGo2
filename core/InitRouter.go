@@ -791,6 +791,7 @@ func RouterWebApi(Router *gin.RouterGroup) *gin.RouterGroup {
 	{
 		baseRouter.POST("/PayAliNotify", WebApi.PayAliNotify)
 		baseRouter.POST("/PayAliNotifyDangMianFu", WebApi.PayAliNotify_当面付)
+		baseRouter.POST("/PayAliNotifyH5", WebApi.PayAliNotify_H5)
 		baseRouter.POST("/PayWxNotify", WebApi.PayWxNotify)
 		baseRouter.POST("/PayXiaoDingDangNotify", WebApi.Pay小叮当Notify)
 		baseRouter.POST("/PayWxRefundsNotify", WebApi.PayWx退款Notify)
