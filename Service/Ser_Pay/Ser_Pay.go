@@ -39,6 +39,11 @@ func Pay_取支付通道状态() gin.H {
 	} else {
 		局map["支付宝当面付"] = global.GVA_CONFIG.Z在线支付.Z支付宝当面付开关
 	}
+	if global.GVA_CONFIG.Z在线支付.Z支付宝H5显示名称 != "" {
+		局map[global.GVA_CONFIG.Z在线支付.Z支付宝H5显示名称] = global.GVA_CONFIG.Z在线支付.Z支付宝H5开关
+	} else {
+		局map["支付宝H5"] = global.GVA_CONFIG.Z在线支付.Z支付宝H5开关
+	}
 
 	if global.GVA_CONFIG.Z在线支付.W微信支付显示名称 != "" {
 		局map[global.GVA_CONFIG.Z在线支付.W微信支付显示名称] = global.GVA_CONFIG.Z在线支付.W微信支付开关
@@ -60,6 +65,8 @@ func Pay_显示名称转原名(显示名称 string) string {
 	switch 显示名称 {
 	case global.GVA_CONFIG.Z在线支付.Z支付宝显示名称:
 		return "支付宝PC"
+	case global.GVA_CONFIG.Z在线支付.Z支付宝H5显示名称:
+		return "支付宝H5"
 	case global.GVA_CONFIG.Z在线支付.Z支付宝当面付显示名称:
 		return "支付宝当面付"
 	case global.GVA_CONFIG.Z在线支付.W微信支付显示名称:
@@ -113,6 +120,50 @@ func Pay_支付宝Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip s
 	url2, err := client.TradePagePay(p)
 	if err != nil {
 		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝显示名称 + "支付Url获取失败:" + err.Error()), gin.H{}
+	}
+	var payURL = url2.String()
+
+	return nil, gin.H{"PayURL": payURL, "OrderId": 局_订单信息.PayOrder}
+}
+
+// Uid类型 1账号 2卡号
+// 0 余额充值 1 购卡直冲 2 积分充值  3 支付购卡
+func Pay_支付宝H5_订单创建(Uid, Uid类型 int, 支付金额 float64, ip string, 处理类型 int, 处理类型额外信息 string) (error, gin.H) {
+	if !global.GVA_CONFIG.Z在线支付.Z支付宝H5开关 {
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝H5显示名称 + "支付方式已关闭"), gin.H{}
+	}
+
+	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝H5商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝H5商户ID, privateKey, true)
+	if err != nil {
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝H5显示名称 + "商户私钥载入失败:" + err.Error()), gin.H{}
+	}
+
+	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝H5公钥) // 加载支付宝手机网站公钥证书
+	if err != nil {
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝H5显示名称 + "公钥载入失败:" + err.Error()), gin.H{}
+	}
+	if 支付金额 <= 0 || 支付金额 > float64(global.GVA_CONFIG.Z在线支付.Z支付宝H5单次最大金额) {
+		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(global.GVA_CONFIG.Z在线支付.Z支付宝H5单次最大金额)), gin.H{}
+	}
+
+	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "支付宝H5", "", ip, 处理类型, 处理类型额外信息)
+	局_用户提示信息, err2 := 取提示信息(局_订单信息, Uid, Uid类型)
+	if err2 != nil {
+		return err2, gin.H{}
+	}
+
+	var p = alipay.TradeWapPay{}
+	p.NotifyURL = global.GVA_CONFIG.X系统设置.X系统地址 + "/WebApi/PayAliNotifyH5"
+	p.ReturnURL = global.GVA_CONFIG.Z在线支付.Z支付宝H5同步回调url
+	p.Subject = 局_用户提示信息
+	p.OutTradeNo = 局_订单信息.PayOrder
+	p.TotalAmount = fmt.Sprintf("%.2f", 局_订单信息.Rmb)
+	p.ProductCode = "QUICK_WAP_WAY"
+
+	url2, err := client.TradeWapPay(p)
+	if err != nil {
+		return errors.New(global.GVA_CONFIG.Z在线支付.Z支付宝H5显示名称 + "支付Url获取失败:" + err.Error()), gin.H{}
 	}
 	var payURL = url2.String()
 

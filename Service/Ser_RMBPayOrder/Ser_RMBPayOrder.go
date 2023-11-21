@@ -261,6 +261,41 @@ func Order_退款_支付宝PC(订单信息 DB.DB_LogRMBPayOrder) error {
 	}
 	return errors.New(rsp.Content.SubMsg)
 }
+
+func Order_退款_支付宝H5(订单信息 DB.DB_LogRMBPayOrder) error {
+	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝H5商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝H5商户ID, privateKey, true)
+	if err != nil {
+		return errors.New("支付宝H5退款商户私钥载入失败")
+	}
+
+	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝H5公钥) // 加载支付宝H5公钥证书
+	if err != nil {
+		if err != nil {
+			return errors.New("支付宝H5退款支付宝H5公钥载入失败")
+		}
+	}
+	var p = alipay.TradeRefund{}
+
+	p.RefundAmount = fmt.Sprintf("%.2f", 订单信息.Rmb)
+	p.OutTradeNo = 订单信息.PayOrder
+	p.OutRequestNo = strconv.FormatInt(time.Now().Unix(), 10)
+	rsp, err := client.TradeRefund(p)
+	if err != nil {
+		fmt.Printf("%v", err.Error())
+		return err
+	}
+	fmt.Printf("%v", rsp.Content)
+	//{40004 Business Failed ACQ.TRADE_HAS_CLOSE 交易已经关闭      0.00  [] 0.00  []}
+	//{40004 Business Failed ACQ.TRADE_NOT_EXIST 交易不存在      0.00  [] 0.00  []}
+	//{40004 Business Failed ACQ.REASON_TRADE_REFUND_FEE_ERR 退款金额无效  202305161100260001    0.00  [] 0.00  []}
+	//{10000 Success   2023051622001414411454629611 202305161100260001 156******66 2088022724614415 Y 0.01  [] 0.00  []}
+
+	if rsp.Content.Code == "10000" {
+		return nil
+	}
+	return errors.New(rsp.Content.SubMsg)
+}
 func Order_退款_支付宝当面付(订单信息 DB.DB_LogRMBPayOrder) error {
 	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
 	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户ID, privateKey, true)

@@ -287,6 +287,8 @@ func (a *Api) Out退款(c *gin.Context) {
 	switch 局_订单信息.Type {
 	case "支付宝PC":
 		err = Ser_RMBPayOrder.Order_退款_支付宝PC(局_订单信息)
+	case "支付宝H5":
+		err = Ser_RMBPayOrder.Order_退款_支付宝H5(局_订单信息)
 	case "支付宝当面付":
 		err = Ser_RMBPayOrder.Order_退款_支付宝当面付(局_订单信息)
 	case "微信支付":

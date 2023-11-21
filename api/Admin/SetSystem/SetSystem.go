@@ -185,6 +185,15 @@ func (a *Api) Save信息在线支付(c *gin.Context) {
 	global.GVA_Viper.Set("在线支付.支付宝当面付同步回调url", 请求.Z支付宝当面付同步回调url)
 	global.GVA_Viper.Set("在线支付.支付宝当面付单次最大金额", 请求.Z支付宝当面付单次最大金额)
 
+	global.GVA_Viper.Set("在线支付.支付宝H5开关", 请求.Z支付宝H5开关)
+	global.GVA_Viper.Set("在线支付.支付宝H5显示名称", 请求.Z支付宝H5显示名称)
+	global.GVA_Viper.Set("在线支付.支付宝H5商户ID", 请求.Z支付宝H5商户ID)
+	global.GVA_Viper.Set("在线支付.支付宝H5商户私钥", 请求.Z支付宝H5商户私钥)
+	global.GVA_Viper.Set("在线支付.支付宝H5商户公钥", 请求.Z支付宝H5商户公钥)
+	global.GVA_Viper.Set("在线支付.支付宝H5公钥", 请求.Z支付宝H5公钥)
+	global.GVA_Viper.Set("在线支付.支付宝H5同步回调url", 请求.Z支付宝H5同步回调url)
+	global.GVA_Viper.Set("在线支付.支付宝H5单次最大金额", 请求.Z支付宝H5单次最大金额)
+
 	global.GVA_Viper.Set("在线支付.微信支付开关", 请求.W微信支付开关)
 	global.GVA_Viper.Set("在线支付.微信支付显示名称", 请求.W微信支付显示名称)
 	global.GVA_Viper.Set("在线支付.微信支付商户ID", 请求.W微信支付商户ID)
