@@ -241,7 +241,6 @@ func UserApi_用户登录(c *gin.Context) {
 	}
 
 	//登录成功吧数据写入在线信息内
-	go Ser_User.Id置最后登录AppId(局_Uid, AppInfo.AppId, c.ClientIP())
 	err = Ser_LinkUser.Set在线登录信息(局_在线信息.Id, 局_Uid, 局_卡号或用户名, 局_AppUser.Key, string(请求json.GetStringBytes("Tab")), string(请求json.GetStringBytes("AppVer")))
 	if err != nil {
 		//mark 一个新奇的bug, Tab是ansi编码的中文, go字符串,类型为utf8 获取字节数组string转文本就会导致是乱码,导致修改数据库失败,看来得加参数校验了
@@ -254,6 +253,11 @@ func UserApi_用户登录(c *gin.Context) {
 		go Ser_Log.Log_写登录日志(局_卡号或用户名, c.ClientIP(), "用户登录", 局_在线信息.LoginAppid)
 	} else {
 		go Ser_Log.Log_写登录日志(局_卡号或用户名, c.ClientIP(), "新用户登录注册", 局_在线信息.LoginAppid)
+	}
+
+	//账号模式登录成功把登录信息写到账号表
+	if AppInfo.AppType == 1 || AppInfo.AppType == 2 {
+		go Ser_User.Id置最后登录AppId(局_Uid, AppInfo.AppId, c.ClientIP())
 	}
 
 	var 局_用户类型 DB.DB_UserClass
