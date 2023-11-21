@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"encoding/base64"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_User"
@@ -68,7 +67,7 @@ func IsTokenAdmin() gin.HandlerFunc {
 			return
 		}
 
-		if strings.Index(c.Request.RequestURI, "KuaiYan") == -1 && strings.Index(c.Request.RequestURI, "GetAdminInfo") == -1 && global.X系统信息.D到期时间 < time.Now().Unix() {
+		/*if strings.Index(c.Request.RequestURI, "KuaiYan") == -1 && strings.Index(c.Request.RequestURI, "GetAdminInfo") == -1 && global.X系统信息.D到期时间 < time.Now().Unix() {
 			局_计数 := 0
 			局_计数缓存, ok := global.H缓存.Get("在线数量")
 			//在个人中心那里获取就可以了,如果超过100 写入缓存,这样不影响速度
@@ -86,7 +85,7 @@ func IsTokenAdmin() gin.HandlerFunc {
 				return
 			}
 
-		}
+		}*/
 
 		// 继续处理请求
 		c.Next()
