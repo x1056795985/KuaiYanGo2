@@ -803,6 +803,7 @@ func RouterWebApi(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.Use(middleware.IsTokenWebApi()) ///鉴权中间件 检查 token  单独优先处理
 	{
 		for 键名, 键值 := range WebApi.J集_UserAPi路由 {
+			baseRouter.GET(键名, 键值.Z指向函数)
 			baseRouter.POST(键名, 键值.Z指向函数)
 		}
 	}

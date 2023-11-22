@@ -25,6 +25,14 @@ import (
 	"time"
 )
 
+func 支付订单回调关键字转换(回调信息 string, 局_订单信息 DB.DB_LogRMBPayOrder) string {
+	ReturnURL := strings.Replace(回调信息, "{OrderId}", 局_订单信息.PayOrder, -1)
+	ReturnURL = strings.Replace(ReturnURL, "{OrderId2}", 局_订单信息.PayOrder2, -1)
+	ReturnURL = strings.Replace(ReturnURL, "{User}", 局_订单信息.User, -1)
+	ReturnURL = strings.Replace(ReturnURL, "{Type}", 局_订单信息.Type, -1)
+	return ReturnURL
+}
+
 func Pay_取支付通道状态() gin.H {
 	局map := gin.H{}
 
@@ -112,7 +120,7 @@ func Pay_支付宝Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip s
 
 	var p = alipay.TradePagePay{}
 	p.NotifyURL = global.GVA_CONFIG.X系统设置.X系统地址 + "/WebApi/PayAliNotify"
-	p.ReturnURL = global.GVA_CONFIG.Z在线支付.Z支付宝同步回调url
+	p.ReturnURL = 支付订单回调关键字转换(global.GVA_CONFIG.Z在线支付.Z支付宝同步回调url, 局_订单信息)
 	p.Subject = 局_用户提示信息
 	p.OutTradeNo = 局_订单信息.PayOrder
 	p.TotalAmount = fmt.Sprintf("%.2f", 局_订单信息.Rmb)
@@ -155,7 +163,8 @@ func Pay_支付宝H5_订单创建(Uid, Uid类型 int, 支付金额 float64, ip s
 
 	var p = alipay.TradeWapPay{}
 	p.NotifyURL = global.GVA_CONFIG.X系统设置.X系统地址 + "/WebApi/PayAliNotifyH5"
-	p.ReturnURL = global.GVA_CONFIG.Z在线支付.Z支付宝H5同步回调url
+
+	p.ReturnURL = 支付订单回调关键字转换(global.GVA_CONFIG.Z在线支付.Z支付宝H5同步回调url, 局_订单信息)
 	p.Subject = 局_用户提示信息
 	p.OutTradeNo = 局_订单信息.PayOrder
 	p.TotalAmount = fmt.Sprintf("%.2f", 局_订单信息.Rmb)
@@ -204,7 +213,7 @@ func Pay_支付宝当面付_订单创建(Uid, Uid类型 int, 支付金额 float6
 
 	var p = alipay.TradePreCreate{}
 	p.NotifyURL = global.GVA_CONFIG.X系统设置.X系统地址 + "/WebApi/PayAliNotifyDangMianFu"
-	p.ReturnURL = global.GVA_CONFIG.Z在线支付.Z支付宝当面付同步回调url
+	p.ReturnURL = 支付订单回调关键字转换(global.GVA_CONFIG.Z在线支付.Z支付宝当面付同步回调url, 局_订单信息)
 	p.Subject = 局_用户提示信息
 	p.OutTradeNo = 局_订单信息.PayOrder
 	p.TotalAmount = fmt.Sprintf("%.2f", 局_订单信息.Rmb)
