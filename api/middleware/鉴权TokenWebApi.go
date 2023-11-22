@@ -43,7 +43,11 @@ func IsWebApiHost() gin.HandlerFunc {
 // Token有效的才放行,否则返回Ttoken失效
 func IsTokenWebApi() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		Token := c.Request.Header.Get("Token")
+		Token := c.Request.Header.Get("Token") //优先协议头的,Token
+		if Token == "" {                       //如果协议头没有,再读取,url内的
+			Token = c.Request.FormValue("Token")
+		}
+
 		if Token == "" {
 			response.FailTokenErr(gin.H{"reload": true}, "请先登录", c)
 			c.Abort()

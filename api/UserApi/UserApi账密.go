@@ -93,7 +93,45 @@ func UserApi_置用户基础信息(c *gin.Context) {
 	return
 }
 
-func UserApi_密码找回或修改(c *gin.Context) {
+func UserApi_密码找回或修改_验证旧密码(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测_账密模式专用(c, AppInfo) {
+		return
+	}
+
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	//'{"Api":"OldPassWordSetPassWord","User":"aaaaaa","OldPassWord":"aaaaaa","NewPassWord":"aaaaaa","Time":1684042764,"Status":27954}'
+	局_用户Id := Ser_User.User用户名取id(string(请求json.GetStringBytes("User")))
+	if 局_用户Id == 0 {
+		response.X响应状态消息(c, response.Status_操作失败, "用户不存在")
+		return
+	}
+
+	msg := ""
+	局_新密码 := string(请求json.GetStringBytes("NewPassWord"))
+	if !utils.Z正则_校验密码(局_新密码, &msg) {
+		response.X响应状态消息(c, response.Status_操作失败, "密码"+msg)
+		return
+	}
+
+	局_user, _ := Ser_User.Id取详情(局_用户Id)
+	if !utils.BcryptCheck(string(请求json.GetStringBytes("OldPassWord")), 局_user.PassWord) {
+		response.X响应状态消息(c, response.Status_操作失败, "旧密码错误.")
+		return
+	}
+
+	if err := Ser_User.Id置新密码(局_用户Id, 局_新密码); err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, "修改失败")
+	} else {
+		_ = Ser_LinkUser.Set批量注销Uid(局_用户Id)
+		response.X响应状态消息(c, c.GetInt("局_成功Status"), "修改成功")
+	}
+	return
+
+}
+func UserApi_密码找回或修改_超级密码(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
@@ -124,30 +162,8 @@ func UserApi_密码找回或修改(c *gin.Context) {
 			return
 		}
 	case 2:
-		局_短信验证码Id := string(请求json.GetStringBytes("PhoneCaptchaId"))
-		局_短信验证码值 := string(请求json.GetStringBytes("PhoneCaptchaValue"))
-
-		局_User, ok := Ser_User.User取详情(string(请求json.GetStringBytes("User")))
-		if !ok {
-			response.X响应状态消息(c, response.Status_操作失败, "用户不存在")
-			return
-		}
-
-		if strings.Index(局_短信验证码Id, "Note") != 0 {
-			go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, string(请求json.GetStringBytes("User")), c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非短信验证码Id进行提交,可能是异常用户")
-			response.X响应状态消息(c, response.Status_操作失败, "验证码错误.")
-			return
-		}
-
-		if 局_User.Phone == "" || strings.Index(局_短信验证码Id, "Note"+utils.Md5String(局_User.Phone)[:16]) == -1 {
-			go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, string(请求json.GetStringBytes("User")), c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非账号绑定的验证码进行提交,可能是异常用户")
-			response.X响应状态消息(c, response.Status_操作失败, "验证码错误.")
-			return
-		}
-		if !Captcha.H缓存验证码校验实例.Verify(局_短信验证码Id, 局_短信验证码值, false) {
-			response.X响应状态消息(c, response.Status_操作失败, "短信验证码错误.")
-			return
-		}
+		UserApi_密码找回或修改_密保手机(c) //兼容旧版本 1.0.148 版本之后,接口转成两种接口名称
+		return
 	default:
 		response.X响应状态消息(c, response.Status_操作失败, "密码找回或修改方式参数错误")
 		return
@@ -161,6 +177,66 @@ func UserApi_密码找回或修改(c *gin.Context) {
 	}
 	return
 
+}
+
+func UserApi_密码找回或修改_密保手机(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测_账密模式专用(c, AppInfo) {
+		return
+	}
+
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	//'{"Api":"SmsCodeSetPassWord","User":"aaaaaa","SuperPassWord":"aaaaaa","NewPassWord":"aaaaaa","Time":1684042764,"Status":27954}'
+	局_用户Id := Ser_User.User用户名取id(string(请求json.GetStringBytes("User")))
+	if 局_用户Id == 0 {
+		response.X响应状态消息(c, response.Status_操作失败, "用户不存在")
+		return
+	}
+
+	msg := ""
+	局_新密码 := string(请求json.GetStringBytes("NewPassWord"))
+	if !utils.Z正则_校验密码(局_新密码, &msg) {
+		response.X响应状态消息(c, response.Status_操作失败, "密码"+msg)
+		return
+	}
+
+	局_短信验证码Id := string(请求json.GetStringBytes("PhoneCaptchaId"))
+	局_短信验证码值 := string(请求json.GetStringBytes("PhoneCaptchaValue"))
+	if 局_短信验证码Id == "" || 局_短信验证码值 == "" {
+		response.X响应状态消息(c, response.Status_操作失败, "验证码错误.")
+		return
+	}
+
+	if strings.Index(局_短信验证码Id, "Note") != 0 {
+		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, string(请求json.GetStringBytes("User")), c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非短信验证码Id进行提交,可能是异常用户")
+		response.X响应状态消息(c, response.Status_操作失败, "验证码错误.")
+		return
+	}
+
+	局_User, ok := Ser_User.User取详情(string(请求json.GetStringBytes("User")))
+	if !ok {
+		response.X响应状态消息(c, response.Status_操作失败, "用户不存在")
+		return
+	}
+	if 局_User.Phone == "" || strings.Index(局_短信验证码Id, "Note"+utils.Md5String(局_User.Phone)[:16]) == -1 {
+		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, string(请求json.GetStringBytes("User")), c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非账号绑定的验证码进行提交,可能是异常用户")
+		response.X响应状态消息(c, response.Status_操作失败, "验证码错误.")
+		return
+	}
+	if !Captcha.H缓存验证码校验实例.Verify(局_短信验证码Id, 局_短信验证码值, false) {
+		response.X响应状态消息(c, response.Status_操作失败, "短信验证码错误.")
+		return
+	}
+
+	if err := Ser_User.Id置新密码(局_用户Id, 局_新密码); err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, "修改失败")
+	} else {
+		_ = Ser_LinkUser.Set批量注销Uid(局_用户Id)
+		response.X响应状态消息(c, c.GetInt("局_成功Status"), "修改成功")
+	}
+	return
 }
 
 func UserApi_取用户余额(c *gin.Context) {
