@@ -253,8 +253,10 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetInfo", App.GetInfo)               // 获取详细信息
 		baseRouter.POST("SaveInfo", App.SaveKa信息)             // 保存详细信息
 
-		baseRouter.POST("SetStatus", App.Set修改状态)       // 修改状态
-		baseRouter.POST("SetAdminNote", App.Set修改管理员备注) // 修改状态
+		baseRouter.POST("SetStatus", App.Set修改状态) // 修改状态
+		baseRouter.POST("SetAdminNote", App.Set修改管理员备注)
+		baseRouter.POST("GetKaTemplate", App.Q取卡号生成模板)
+		baseRouter.POST("SetKaTemplate", App.Set修改卡号生成模板)
 		baseRouter.POST("Recover", App.Z追回卡号)
 		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
 			baseRouter.POST("Delete", App.Delete)            // 删除信息
@@ -567,6 +569,8 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("UseKa", App.K卡号充值)
 		baseRouter.POST("ReplaceKaName", App.G更换卡号)
 		baseRouter.POST("ChartKaRegister", App.Get卡号列表统计制卡)
+		baseRouter.POST("GetKaTemplate", App.Q取卡号生成模板)
+		baseRouter.POST("SetKaTemplate", App.Set修改卡号生成模板)
 
 	}
 

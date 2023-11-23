@@ -500,6 +500,10 @@ func apiHook之前(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_L
 	if utils.W文本_是否包含关键字(AppInfo.ApiHook, `"`+Api+`"`) { //先判断Api是否需要Hook
 		//{"UserLogin":{"Before":"hook登录前","After":"hook登录后"}}
 		局_hookBefore := utils.W文本_取出中间文本(AppInfo.ApiHook, `"`+Api+`":{"Before":"`, `"`)
+		if 局_hookBefore == "" { //判断是否执行前hook
+			return nil
+		}
+
 		局_json明文, err := Ser_Js.JS引擎初始化_ApiHook处理(AppInfo, 在线信息, 局_hookBefore, *json明文, c)
 		*json明文 = 局_json明文
 		if err != nil {
