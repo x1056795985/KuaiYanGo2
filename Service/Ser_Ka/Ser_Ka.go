@@ -1131,39 +1131,43 @@ func K卡号充值_事务(来源AppId int, 卡号, 充值用户, 推荐人, 来�
 	//处理新信息
 	客户expr := map[string]interface{}{}
 	客户expr["VipNumber"] = gorm.Expr("VipNumber + ?", 局_卡信息.VipNumber) //积分不会变直接增加即可
-	客户expr["MaxOnline"] = 局_卡信息.MaxOnline                             //最大在线数直接赋值处理即可
+
+	if 局_卡信息.MaxOnline > 0 {
+		客户expr["MaxOnline"] = 局_卡信息.MaxOnline //最大在线数直接赋值处理即可  0不改变
+	}
 
 	局_现行时间戳 := time.Now().Unix()
-
-	if 局_App用户.UserClassId == 局_卡信息.UserClassId {
-		//分类相同,正常处理时间或点数
-		if Ser_AppInfo.App是否为计点(局_卡信息.AppId) || 局_App用户.VipTime > 局_现行时间戳 {
-			//如果为计点 或 时间大于现在时间直接加就行了
-			客户expr["VipTime"] = gorm.Expr("VipTime + ?", 局_卡信息.VipTime)
-		} else {
-			//如果为计时 已经过期很久了,直接现行时间戳加卡时间
-			客户expr["VipTime"] = 局_现行时间戳 + 局_卡信息.VipTime
-		}
-
-	} else {
-		//用户类型不同, 根据权重处理
-		局_旧用户类型权重 := Ser_UserClass.Get权重(局_App用户.UserClassId)
-		局_新用户类型权重 := Ser_UserClass.Get权重(局_卡信息.UserClassId)
-
-		if Ser_AppInfo.App是否为计点(局_卡信息.AppId) {
-			//转换结果值,转后再增加新类型 值
-			客户expr["VipTime"] = gorm.Expr("VipTime * ? / ? +?", 局_旧用户类型权重, 局_新用户类型权重, 局_卡信息.VipTime)
-		} else {
-			if 局_App用户.VipTime < 局_现行时间戳 {
-				//已经过期了直接赋值新类型 现行时间+新时间就可以了
-				客户expr["VipTime"] = 局_现行时间戳 + 局_卡信息.VipTime
+	if 局_卡信息.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
+		if 局_App用户.UserClassId == 局_卡信息.UserClassId {
+			//分类相同,正常处理时间或点数
+			if Ser_AppInfo.App是否为计点(局_卡信息.AppId) || 局_App用户.VipTime > 局_现行时间戳 {
+				//如果为计点 或 时间大于现在时间直接加就行了
+				客户expr["VipTime"] = gorm.Expr("VipTime + ?", 局_卡信息.VipTime)
 			} else {
-				//先计算还剩多长时间,剩余时间权重转换转换结果值,+现在时间+卡增减时间
-				客户expr["VipTime"] = gorm.Expr("(VipTime-?) * ? / ? +?", 局_现行时间戳, 局_旧用户类型权重, 局_新用户类型权重, 局_现行时间戳+局_卡信息.VipTime)
+				//如果为计时 已经过期很久了,直接现行时间戳加卡时间
+				客户expr["VipTime"] = 局_现行时间戳 + 局_卡信息.VipTime
 			}
+
+		} else {
+			//用户类型不同, 根据权重处理
+			局_旧用户类型权重 := Ser_UserClass.Get权重(局_App用户.UserClassId)
+			局_新用户类型权重 := Ser_UserClass.Get权重(局_卡信息.UserClassId)
+
+			if Ser_AppInfo.App是否为计点(局_卡信息.AppId) {
+				//转换结果值,转后再增加新类型 值
+				客户expr["VipTime"] = gorm.Expr("VipTime * ? / ? +?", 局_旧用户类型权重, 局_新用户类型权重, 局_卡信息.VipTime)
+			} else {
+				if 局_App用户.VipTime < 局_现行时间戳 {
+					//已经过期了直接赋值新类型 现行时间+新时间就可以了
+					客户expr["VipTime"] = 局_现行时间戳 + 局_卡信息.VipTime
+				} else {
+					//先计算还剩多长时间,剩余时间权重转换转换结果值,+现在时间+卡增减时间
+					客户expr["VipTime"] = gorm.Expr("(VipTime-?) * ? / ? +?", 局_现行时间戳, 局_旧用户类型权重, 局_新用户类型权重, 局_现行时间戳+局_卡信息.VipTime)
+				}
+			}
+			//最后更换类型,防止前面用到卡类id,计算权重转换类型错误
+			客户expr["UserClassId"] = 局_卡信息.UserClassId
 		}
-		//最后更换类型,防止前面用到卡类id,计算权重转换类型错误
-		客户expr["UserClassId"] = 局_卡信息.UserClassId
 	}
 
 	err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_卡信息.AppId)).Where("Id = ?", 局_App用户.Id).Updates(&客户expr).Error
@@ -1282,39 +1286,42 @@ func K卡类直冲_事务(卡类ID, 软件用户id int, 来源IP string) error {
 	//处理新信息
 	客户expr := map[string]interface{}{}
 	客户expr["VipNumber"] = gorm.Expr("VipNumber + ?", 局_卡信息.VipNumber) //积分不会变直接增加即可
-	客户expr["MaxOnline"] = 局_卡信息.MaxOnline                             //最大在线数直接赋值处理即可
+	if 局_卡信息.MaxOnline > 0 {
+		客户expr["MaxOnline"] = 局_卡信息.MaxOnline //最大在线数直接赋值处理即可
+	}
 
 	局_现行时间戳 := time.Now().Unix()
-
-	if 局_App用户.UserClassId == 局_卡信息.UserClassId {
-		//分类相同,正常处理时间或点数
-		if Ser_AppInfo.App是否为计点(局_卡信息.AppId) || 局_App用户.VipTime > 局_现行时间戳 {
-			//如果为计点 或 时间大于现在时间直接加就行了
-			客户expr["VipTime"] = gorm.Expr("VipTime + ?", 局_卡信息.VipTime)
-		} else {
-			//如果为计时 已经过期很久了,直接现行时间戳加卡时间
-			客户expr["VipTime"] = 局_现行时间戳 + 局_卡信息.VipTime
-		}
-
-	} else {
-		//用户类型不同, 根据权重处理
-		局_旧用户类型权重 := Ser_UserClass.Get权重(局_App用户.UserClassId)
-		局_新用户类型权重 := Ser_UserClass.Get权重(局_卡信息.UserClassId)
-
-		if Ser_AppInfo.App是否为计点(局_卡信息.AppId) {
-			//转换结果值,转后再增加新类型 值
-			客户expr["VipTime"] = gorm.Expr("VipTime * ? / ? +?", 局_旧用户类型权重, 局_新用户类型权重, 局_卡信息.VipTime)
-		} else {
-			if 局_App用户.VipTime < 局_现行时间戳 {
-				//已经过期了直接赋值新类型 现行时间+新时间就可以了
-				客户expr["VipTime"] = 局_现行时间戳 + 局_卡信息.VipTime
+	if 局_卡信息.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
+		if 局_App用户.UserClassId == 局_卡信息.UserClassId {
+			//分类相同,正常处理时间或点数
+			if Ser_AppInfo.App是否为计点(局_卡信息.AppId) || 局_App用户.VipTime > 局_现行时间戳 {
+				//如果为计点 或 时间大于现在时间直接加就行了
+				客户expr["VipTime"] = gorm.Expr("VipTime + ?", 局_卡信息.VipTime)
 			} else {
-				//先计算还剩多长时间,剩余时间权重转换转换结果值,+现在时间+卡增减时间
-				客户expr["VipTime"] = gorm.Expr("(VipTime-?) * ? / ? +?", 局_现行时间戳, 局_旧用户类型权重, 局_新用户类型权重, 局_现行时间戳+局_卡信息.VipTime)
+				//如果为计时 已经过期很久了,直接现行时间戳加卡时间
+				客户expr["VipTime"] = 局_现行时间戳 + 局_卡信息.VipTime
 			}
+
+		} else {
+			//用户类型不同, 根据权重处理
+			局_旧用户类型权重 := Ser_UserClass.Get权重(局_App用户.UserClassId)
+			局_新用户类型权重 := Ser_UserClass.Get权重(局_卡信息.UserClassId)
+
+			if Ser_AppInfo.App是否为计点(局_卡信息.AppId) {
+				//转换结果值,转后再增加新类型 值
+				客户expr["VipTime"] = gorm.Expr("VipTime * ? / ? +?", 局_旧用户类型权重, 局_新用户类型权重, 局_卡信息.VipTime)
+			} else {
+				if 局_App用户.VipTime < 局_现行时间戳 {
+					//已经过期了直接赋值新类型 现行时间+新时间就可以了
+					客户expr["VipTime"] = 局_现行时间戳 + 局_卡信息.VipTime
+				} else {
+					//先计算还剩多长时间,剩余时间权重转换转换结果值,+现在时间+卡增减时间
+					客户expr["VipTime"] = gorm.Expr("(VipTime-?) * ? / ? +?", 局_现行时间戳, 局_旧用户类型权重, 局_新用户类型权重, 局_现行时间戳+局_卡信息.VipTime)
+				}
+			}
+			//最后更换类型,防止前面用到卡类id,计算权重转换类型错误
+			客户expr["UserClassId"] = 局_卡信息.UserClassId
 		}
-		//最后更换类型,防止前面用到卡类id,计算权重转换类型错误
-		客户expr["UserClassId"] = 局_卡信息.UserClassId
 	}
 
 	err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_卡信息.AppId)).Where("Id = ?", 局_App用户.Id).Updates(&客户expr).Error

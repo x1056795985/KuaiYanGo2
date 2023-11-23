@@ -9,6 +9,7 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_UserClass"
+	"server/Service/Ser_UserConfig"
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -275,6 +276,11 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("读取缓存在线信息失败", c)
 		return
 	}
+	局_卡类信息, err := Ser_KaClass.KaClass取详细信息(请求.Id)
+	if err != nil {
+		response.FailWithMessage("卡类id不存在", c)
+		return
+	}
 	局_在线信息 := 局_接口.(DB.DB_LinksToken)
 	err = Ser_Ka.Ka代理批量购买(数组_卡[:], 请求.Id, 局_在线信息.Uid, 请求.AdminNote, 0, c.ClientIP())
 
@@ -282,7 +288,11 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
 		return
 	}
-
+	局_用户类型名称 := ""
+	局_用户类型, ok := Ser_UserClass.Id取详情(局_卡类信息.AppId, 局_卡类信息.UserClassId)
+	if ok {
+		局_用户类型名称 = 局_用户类型.Name
+	}
 	数组_卡_精简 := make([]DB_Ka_精简, 请求.Number) //make初始化,有3个元素的切片, len和cap都为3
 	for 索引 := range 数组_卡_精简 {
 		数组_卡_精简[索引].Name = 数组_卡[索引].Name
@@ -290,6 +300,11 @@ func (a *Api) New(c *gin.Context) {
 		数组_卡_精简[索引].RMb = 数组_卡[索引].RMb
 		数组_卡_精简[索引].VipTime = 数组_卡[索引].VipTime
 		数组_卡_精简[索引].VipNumber = 数组_卡[索引].VipNumber
+		数组_卡_精简[索引].UserClassId = 数组_卡[索引].UserClassId
+		数组_卡_精简[索引].UserClassName = 局_用户类型名称
+		数组_卡_精简[索引].Num = 数组_卡[索引].Num
+		数组_卡_精简[索引].MaxOnline = 数组_卡[索引].MaxOnline
+		数组_卡_精简[索引].RegisterTime = 数组_卡[索引].RegisterTime
 	}
 
 	response.OkWithDetailed(数组_卡_精简, "制卡成功", c)
@@ -297,11 +312,16 @@ func (a *Api) New(c *gin.Context) {
 }
 
 type DB_Ka_精简 struct {
-	Id        int     `json:"Id" gorm:"column:Id;primarykey"`
-	Name      string  `json:"Name" gorm:"column:Name;comment:卡号"`
-	VipTime   int64   `json:"VipTime" gorm:"column:VipTime;comment:增减时间秒数或点数"`
-	RMb       float64 `json:"RMb" gorm:"column:RMb;type:decimal(10,2);default:0;comment:余额增减"`
-	VipNumber float64 `json:"VipNumber" gorm:"column:VipNumber;type:decimal(10,2);default:0;comment:积分增减"`
+	Id            int     `json:"Id" gorm:"column:Id;primarykey"`
+	Name          string  `json:"Name" gorm:"column:Name;comment:卡号"`
+	VipTime       int64   `json:"VipTime" gorm:"column:VipTime;comment:增减时间秒数或点数"`
+	RMb           float64 `json:"RMb" gorm:"column:RMb;type:decimal(10,2);default:0;comment:余额增减"`
+	VipNumber     float64 `json:"VipNumber" gorm:"column:VipNumber;type:decimal(10,2);default:0;comment:积分增减"`
+	UserClassId   int     `json:"UserClassId" gorm:"column:UserClassId;comment:用户分类id"`
+	UserClassName string  `json:"UserClassName"`
+	Num           int     `json:"Num" gorm:"column:Num;comment:可以充值次数"`
+	MaxOnline     int     `json:"MaxOnline" gorm:"column:MaxOnline;comment:最大在线数"` //修改可以修改App最大在线数量
+	RegisterTime  int     `json:"RegisterTime" `                                   //制卡时间
 }
 
 type 结构请求_库存制卡 struct {
@@ -319,6 +339,11 @@ func (a *Api) K库存制卡(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
+	局_卡类信息, err := Ser_KaClass.KaClass取详细信息(请求.Id)
+	if err != nil {
+		response.FailWithMessage("卡类id不存在", c)
+		return
+	}
 
 	数组_卡 := make([]DB.DB_Ka, 请求.Number) //make初始化,有3个元素的切片, len和cap都为3
 	err = Ser_Ka.Ka代理批量库存购买(数组_卡[:], 请求.Id, 请求.Number, c.GetInt("Uid"), 请求.AgentNote, c.ClientIP())
@@ -327,6 +352,11 @@ func (a *Api) K库存制卡(c *gin.Context) {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
 		return
 	}
+	局_用户类型名称 := ""
+	局_用户类型, ok := Ser_UserClass.Id取详情(局_卡类信息.AppId, 局_卡类信息.UserClassId)
+	if ok {
+		局_用户类型名称 = 局_用户类型.Name
+	}
 	数组_卡_精简 := make([]DB_Ka_精简, 请求.Number) //make初始化,有3个元素的切片, len和cap都为3
 	for 索引 := range 数组_卡_精简 {
 		数组_卡_精简[索引].Name = 数组_卡[索引].Name
@@ -334,7 +364,13 @@ func (a *Api) K库存制卡(c *gin.Context) {
 		数组_卡_精简[索引].RMb = 数组_卡[索引].RMb
 		数组_卡_精简[索引].VipTime = 数组_卡[索引].VipTime
 		数组_卡_精简[索引].VipNumber = 数组_卡[索引].VipNumber
+		数组_卡_精简[索引].UserClassId = 数组_卡[索引].UserClassId
+		数组_卡_精简[索引].UserClassName = 局_用户类型名称
+		数组_卡_精简[索引].Num = 数组_卡[索引].Num
+		数组_卡_精简[索引].MaxOnline = 数组_卡[索引].MaxOnline
+		数组_卡_精简[索引].RegisterTime = 数组_卡[索引].RegisterTime
 	}
+
 	response.OkWithDetailed(数组_卡_精简, "制卡成功", c)
 	return
 }
@@ -514,4 +550,48 @@ func (a *Api) K卡号充值(c *gin.Context) {
 }
 func (s *Api) Get卡号列表统计制卡(c *gin.Context) {
 	response.OkWithDetailed(Ser_Chare.Get卡号列表统计制卡_代理(c), "获取成功", c)
+}
+
+type 结构请求_Set修改卡号生成模板 struct {
+	AppId      int    `json:"AppId"`
+	KaTemplate string `json:"KaTemplate"`
+}
+
+func (a *Api) Set修改卡号生成模板(c *gin.Context) {
+	var 请求 结构请求_Set修改卡号生成模板
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	err = Ser_UserConfig.Z置值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId), 请求.KaTemplate)
+	if err != nil {
+		response.FailWithMessage("修改失败", c)
+		global.GVA_LOG.Error("修改失败:" + err.Error())
+		return
+	}
+	response.OkWithMessage("修改成功", c)
+	return
+}
+func (a *Api) Q取卡号生成模板(c *gin.Context) {
+	var 请求 结构请求_Set修改卡号生成模板
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	模板 := Ser_UserConfig.Q取值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId))
+	if 模板 == "" {
+		模板 = "卡号:{Name} "
+		if Ser_AppInfo.App是否为计点(请求.AppId) {
+			模板 += "点数"
+		} else {
+			模板 += "卡号"
+		}
+		模板 += ":{VipTime} 积分:{VipTime} 软件:{AppName} 余额:{RMb} 积分:{VipNumber}"
+	}
+	response.OkWithData(模板, c)
+	return
 }
