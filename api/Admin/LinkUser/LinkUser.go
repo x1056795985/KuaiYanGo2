@@ -123,6 +123,33 @@ func (a *LinkUserApi) NewWebApiToken(c *gin.Context) {
 	return
 }
 
+type 结构响应_NewWebApiToken struct {
+	Id      []int `json:"Id"`
+	OutTime int   `json:"OutTime"`
+}
+
+// 修改令牌自动注销时间
+func (a *LinkUserApi) SetTokenOutTime(c *gin.Context) {
+	var 请求 结构响应_NewWebApiToken
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if len(请求.Id) == 0 {
+		response.FailWithMessage("id数量不能为0", c)
+		return
+	}
+	err = Ser_LinkUser.Set自动注销超时时间(请求.OutTime, 请求.Id)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.Ok(c)
+	return
+}
+
 // Del批量注销
 func (a *LinkUserApi) Del批量注销(c *gin.Context) {
 	var 请求 结构请求_ID数组

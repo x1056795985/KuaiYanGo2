@@ -64,6 +64,10 @@ func NewWebApiToken(OutTIme int, Key, Tab string) (DB.DB_LinksToken, error) {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Create(&DB_links_user).Error
 	return DB_links_user, err
 }
+func Set自动注销超时时间(OutTIme int, id []int) error {
+	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("id IN ?", id).Update("OutTIme", OutTIme).Error
+	return err
+}
 func Token更新最后活动时间(Token string) {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).Update("LastTime", int(time.Now().Unix())).Error
 	if err != nil {

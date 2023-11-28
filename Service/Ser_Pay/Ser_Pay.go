@@ -30,6 +30,8 @@ func 支付订单回调关键字转换(回调信息 string, 局_订单信息 DB.
 	ReturnURL = strings.Replace(ReturnURL, "{OrderId2}", 局_订单信息.PayOrder2, -1)
 	ReturnURL = strings.Replace(ReturnURL, "{User}", 局_订单信息.User, -1)
 	ReturnURL = strings.Replace(ReturnURL, "{Type}", 局_订单信息.Type, -1)
+	ReturnURL = strings.Replace(ReturnURL, "{ProcessingType}", strconv.Itoa(局_订单信息.ProcessingType), -1)
+	ReturnURL = strings.Replace(ReturnURL, "{Extra}", 局_订单信息.Extra, -1)
 	return ReturnURL
 }
 
@@ -131,7 +133,7 @@ func Pay_支付宝Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip s
 	}
 	var payURL = url2.String()
 
-	return nil, gin.H{"PayURL": payURL, "OrderId": 局_订单信息.PayOrder}
+	return nil, gin.H{"Status": 1, "PayURL": payURL, "OrderId": 局_订单信息.PayOrder}
 }
 
 // Uid类型 1账号 2卡号
@@ -176,7 +178,7 @@ func Pay_支付宝H5_订单创建(Uid, Uid类型 int, 支付金额 float64, ip s
 	}
 	var payURL = url2.String()
 
-	return nil, gin.H{"PayURL": payURL, "OrderId": 局_订单信息.PayOrder}
+	return nil, gin.H{"Status": 1, "PayURL": payURL, "OrderId": 局_订单信息.PayOrder}
 }
 
 // Uid类型 1账号 2卡号
@@ -229,7 +231,7 @@ func Pay_支付宝当面付_订单创建(Uid, Uid类型 int, 支付金额 float6
 
 	var QRCode = rsp.Content.QRCode
 
-	return nil, gin.H{"PayQRCode": QRCode, "PayQRCodePNG": 生成二维码并转base64(QRCode), "OrderId": 局_订单信息.PayOrder}
+	return nil, gin.H{"Status": 1, "PayQRCode": QRCode, "PayQRCodePNG": 生成二维码并转base64(QRCode), "OrderId": 局_订单信息.PayOrder}
 
 }
 
@@ -340,7 +342,7 @@ func Pay_微信Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip stri
 	}
 	// 处理返回结果
 
-	return nil, gin.H{"PayQRCode": resp.CodeUrl, "PayQRCodePNG": 生成二维码并转base64(*resp.CodeUrl), "OrderId": 局_订单信息.PayOrder}
+	return nil, gin.H{"Status": 1, "PayQRCode": resp.CodeUrl, "PayQRCodePNG": 生成二维码并转base64(*resp.CodeUrl), "OrderId": 局_订单信息.PayOrder}
 
 }
 
@@ -409,6 +411,6 @@ func Pay_小叮当_订单创建(Uid, Uid类型 int, 支付金额 float64, ip str
 	}
 
 	// 处理返回结果
-	return nil, gin.H{"OrderId": 局_订单信息.PayOrder, "PayURL": 局_网址 + jsonStr}
+	return nil, gin.H{"Status": 1, "OrderId": 局_订单信息.PayOrder, "PayURL": 局_网址 + jsonStr}
 
 }
