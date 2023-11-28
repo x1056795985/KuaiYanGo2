@@ -129,6 +129,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	//在线列表==============================================
 	baseRouter.POST("GetLinkUserList", LinkUser.GetLinkUserList) // 获取在线列表
 	baseRouter.POST("NewWebApiToken", LinkUser.NewWebApiToken)   // 获取在线列表
+	baseRouter.POST("SetTokenOutTime", LinkUser.SetTokenOutTime) // 获取在线列表
 	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
 		baseRouter.POST("logout", LinkUser.Del批量注销)          // 批量注销在线
 		baseRouter.POST("DeleteLogout", LinkUser.Del批量删除已注销) // 批量删除已注销
