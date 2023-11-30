@@ -2,22 +2,20 @@ package utils
 
 import (
 	"bytes"
-	E "github.com/duolabmeng6/goefun/eTool"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 )
-import . "github.com/duolabmeng6/efun/efun"
 
 func W网页_取域名(Url string) string {
 	var 域名 string
-	if E取文本左边(Url, 8) == "https://" {
-		域名 = E.E文本_取出中间文本(Url, "https://", "/")
+	if W文本_取左边(Url, 8) == "https://" {
+		域名 = W文本_取出中间文本(Url, "https://", "/")
 	}
-	if E取文本左边(Url, 7) == "http://" {
-		域名 = E.E文本_取出中间文本(Url, "http://", "/")
+	if W文本_取左边(Url, 7) == "http://" {
+		域名 = W文本_取出中间文本(Url, "http://", "/")
 	}
 	return 域名
 }

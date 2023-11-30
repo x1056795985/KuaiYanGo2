@@ -6,9 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dop251/goja"
-	. "github.com/duolabmeng6/efun/efun"
-	E "github.com/duolabmeng6/goefun/eTool"
 	"github.com/gin-gonic/gin"
+	"github.com/imroc/req/v3"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
@@ -248,29 +247,36 @@ func jS_置在线动态标签(局_在线信息 DB.DB_LinksToken, 新动态标签
 }
 func jS_网页访问_GET(Url, 协议头一行一个, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
 
-	ehttp := NewHttp()
-	ehttp.E设置自动管理cookie(utils.W网页_取域名(Url))
-	ehttp.E设置超时时间(超时秒数)
+	client := req.C().SetTimeout(time.Duration(超时秒数) * time.Second)
+
 	if 代理ip != "" {
-		ehttp.E设置全局HTTP代理(代理ip)
+		client.SetProxyURL(代理ip)
 	}
-	ehttp.E设置全局头信息(协议头一行一个)
+	request := client.R()
 
-	ret, _ := ehttp.Get(Url)
-	局_响应头信息 := ehttp.E取所有头信息()
-
-	局_临时文本数组 := E分割文本(Cookies, ";")
-	var 局_临时MAP = make(map[string]string)
-
-	for _, 值 := range 局_临时文本数组 {
-		局_临时MAP[E.E文本_取左边(值, "=")] = E.E文本_取右边(值, "=")
-	}
-
-	for _, 值 := range ehttp.Cookies.Entries() {
-		for _, 值2 := range 值 {
-			//如果是重复的 新的会替换掉旧的cookies
-			局_临时MAP[值2.Name] = 值2.Value
+	局_协议头数组 := utils.W文本_分割文本(协议头一行一个, "\r")
+	for _, 值 := range 局_协议头数组 {
+		if strings.Index(值, ":") != -1 {
+			request.SetHeader(utils.W文本_取文本左边(值, ":"), utils.W文本_取文本右边(值, ":"))
 		}
+	}
+
+	ret, err := request.Get(Url)
+	if err != nil {
+		return js对象_网页响应{StatusCode: 0, Cookies: "", Headers: "", Body: err.Error()}
+	}
+
+	局_响应头信息 := ret.HeaderToString()
+
+	局_临时文本数组 := utils.W文本_分割文本(Cookies, ";") //分割传入的文本
+	var 局_临时MAP = make(map[string]string)
+	for _, 值 := range 局_临时文本数组 {
+		局_临时MAP[utils.W文本_取文本左边(值, "=")] = utils.W文本_取文本右边(值, "=")
+	}
+
+	for _, 值 := range ret.Cookies() {
+		//如果是重复的 新的会替换掉旧的cookies
+		局_临时MAP[值.Name] = 值.Value
 	}
 	Cookies = ""
 	for key, val := range 局_临时MAP {
@@ -278,46 +284,48 @@ func jS_网页访问_GET(Url, 协议头一行一个, Cookies string, 超时秒�
 			Cookies += key + "=" + val + ";"
 		}
 	}
-
-	return js对象_网页响应{StatusCode: ehttp.E取状态码(), Cookies: Cookies, Headers: 局_响应头信息, Body: ret}
+	return js对象_网页响应{StatusCode: ret.StatusCode, Cookies: Cookies, Headers: 局_响应头信息, Body: ret.String()}
 
 }
 func jS_网页访问_POST(Url, post, 协议头一行一个, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
+	client := req.C().SetTimeout(time.Duration(超时秒数) * time.Second)
 
-	ehttp := NewHttp()
-	ehttp.E设置自动管理cookie(utils.W网页_取域名(Url))
-	ehttp.E设置超时时间(超时秒数)
 	if 代理ip != "" {
-		ehttp.E设置全局HTTP代理(代理ip)
+		client.SetProxyURL(代理ip)
 	}
-	ehttp.E设置全局头信息(协议头一行一个)
+	request := client.R()
 
-	ret, _ := ehttp.Post(Url, post)
-	局_响应头信息 := ehttp.E取所有头信息()
-
-	局_临时文本数组 := E分割文本(Cookies, ";")
-	var 局_临时MAP = make(map[string]string)
-
-	for _, 值 := range 局_临时文本数组 {
-		局_临时MAP[E.E文本_取左边(值, "=")] = E.E文本_取右边(值, "=")
-	}
-
-	for _, 值 := range ehttp.Cookies.Entries() {
-		for _, 值2 := range 值 {
-			//如果是重复的 新的会替换掉旧的cookies
-			局_临时MAP[值2.Name] = 值2.Value
+	局_协议头数组 := utils.W文本_分割文本(协议头一行一个, "\r")
+	for _, 值 := range 局_协议头数组 {
+		if strings.Index(值, ":") != -1 {
+			request.SetHeader(utils.W文本_取文本左边(值, ":"), utils.W文本_取文本右边(值, ":"))
 		}
+	}
+
+	ret, err := request.SetBody(post).Post(Url)
+	if err != nil {
+		return js对象_网页响应{StatusCode: 0, Cookies: "", Headers: "", Body: err.Error()}
+	}
+
+	局_响应头信息 := ret.HeaderToString()
+
+	局_临时文本数组 := utils.W文本_分割文本(Cookies, ";") //分割传入的文本
+	var 局_临时MAP = make(map[string]string)
+	for _, 值 := range 局_临时文本数组 {
+		局_临时MAP[utils.W文本_取文本左边(值, "=")] = utils.W文本_取文本右边(值, "=")
+	}
+
+	for _, 值 := range ret.Cookies() {
+		//如果是重复的 新的会替换掉旧的cookies
+		局_临时MAP[值.Name] = 值.Value
 	}
 	Cookies = ""
 	for key, val := range 局_临时MAP {
 		if key != "" {
 			Cookies += key + "=" + val + ";"
 		}
-
 	}
-
-	return js对象_网页响应{StatusCode: ehttp.E取状态码(), Cookies: Cookies, Headers: 局_响应头信息, Body: ret}
-
+	return js对象_网页响应{StatusCode: ret.StatusCode, Cookies: Cookies, Headers: 局_响应头信息, Body: ret.String()}
 }
 
 type js对象_网页响应 struct {

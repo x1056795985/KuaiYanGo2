@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	E "github.com/duolabmeng6/goefun/eCore"
 	"server/utils/Qqwry"
 	"strconv"
 	"strings"
@@ -98,7 +97,7 @@ func Test_启动子程序(t *testing.T) {
 		"TaskPoolGetTask",
 		"TaskPoolSetTask",
 	}
-	易源码 := E.E读入文件("E:\\yun\\xuhaonan\\project\\TY通用后台管理系统\\对接HttpApi\\快验网络验证对接模块.e")
+	易源码 := W文件_读入文件("E:\\yun\\xuhaonan\\project\\TY通用后台管理系统\\对接HttpApi\\快验网络验证对接模块.e")
 	Y易源码替换APi接口并修复(易源码, ApiList, "abcdefghaaa")
 	//Aes加解密测试()
 	//Rsa加解密测试()
