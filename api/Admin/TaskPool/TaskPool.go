@@ -2,7 +2,6 @@ package TaskPool
 
 import (
 	"fmt"
-	E "github.com/duolabmeng6/goefun/eTool"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
@@ -312,7 +311,7 @@ func 创建不存在的Hook函数(请求 DB.TaskPool_类型) {
 			局_hook函数.Name = 局数组_函数名[索引]
 			局_hook函数.Value = "/云函数/" + 局数组_函数名[索引] + ".js"
 			_ = global.GVA_DB.Model(DB.DB_PublicJs{}).Create(&局_hook函数).Error
-			_ = E.E文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+局数组_函数名[索引]+".js", 初始模板函数头+局数组_函数名[索引]+初始模板函数尾)
+			_ = utils.W文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+局数组_函数名[索引]+".js", 初始模板函数头+局数组_函数名[索引]+初始模板函数尾)
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/axgle/mahonia"
 	"math/rand"
 	"strings"
 	"time"
@@ -30,6 +31,28 @@ func W文本_取出中间文本(内容 string, 左边文本 string, 右边文本
 		}
 	}
 	内容 = string([]byte(内容)[:右边位置])
+	return 内容
+}
+
+// 获取关键字左边文本
+func W文本_取文本左边(内容 string, 关键字 string) string {
+	位置 := strings.Index(内容, 关键字)
+	if 位置 == -1 {
+		return ""
+	}
+
+	位置 = 位置 + len(关键字)
+	内容 = string([]byte(内容)[位置:])
+	return 内容
+}
+
+// 获取关键字右边文本
+func W文本_取文本右边(内容 string, 关键字 string) string {
+	位置 := strings.Index(内容, 关键字)
+	if 位置 == -1 {
+		return ""
+	}
+	内容 = string([]byte(内容)[位置:])
 	return 内容
 }
 
@@ -73,4 +96,50 @@ func W文本_取随机字符串_数字(字符串长度 int) string {
 // 操作系统需求： Windows、Linux
 func W文本_分割文本(待分割文本 string, 用作分割的文本 string) []string {
 	return strings.Split(待分割文本, 用作分割的文本)
+}
+func W文本_gbk到utf8(src string) string {
+	srcDecoder := mahonia.NewDecoder("gbk")
+	desDecoder := mahonia.NewDecoder("utf-8")
+	resStr := srcDecoder.ConvertString(src)
+	_, resBytes, _ := desDecoder.Translate([]byte(resStr), true)
+	return string(resBytes)
+}
+
+func W文本_utf8到gbk(src string) string {
+	srcDecoder := mahonia.NewDecoder("utf-8")
+	desDecoder := mahonia.NewDecoder("gbk")
+	resStr := srcDecoder.ConvertString(src)
+	_, resBytes, _ := desDecoder.Translate([]byte(resStr), true)
+	return string(resBytes)
+}
+
+// 调用格式： 〈文本型〉 取文本左边 （文本型 欲取其部分的文本，整数型 欲取出字符的数目） - 系统核心支持库->文本操作
+// 英文名称：left
+// 返回一个文本，其中包含指定文本中从左边算起指定数量的字符。本命令为初级命令。
+// 参数<1>的名称为“欲取其部分的文本”，类型为“文本型（text）”。
+// 参数<2>的名称为“欲取出字符的数目”，类型为“整数型（int）”。
+//
+// 操作系统需求： Windows、Linux
+func W文本_取左边(欲取其部分的文本 string, 欲取出字符的数目 int) string {
+	if len(欲取其部分的文本) < 欲取出字符的数目 {
+		欲取出字符的数目 = len(欲取其部分的文本)
+	}
+	return string([]rune(欲取其部分的文本)[:欲取出字符的数目])
+}
+
+//调用格式： 〈文本型〉 取文本右边 （文本型 欲取其部分的文本，整数型 欲取出字符的数目） - 系统核心支持库->文本操作
+//英文名称：right
+//返回一个文本，其中包含指定文本中从右边算起指定数量的字符。本命令为初级命令。
+//参数<1>的名称为“欲取其部分的文本”，类型为“文本型（text）”。
+//参数<2>的名称为“欲取出字符的数目”，类型为“整数型（int）”。
+//
+//操作系统需求： Windows、Linux
+
+func W文本_取右边(欲取其部分的文本 string, 欲取出字符的数目 int) string {
+	l := len(欲取其部分的文本)
+	lpos := l - 欲取出字符的数目
+	if lpos < 0 {
+		lpos = 0
+	}
+	return string([]rune(欲取其部分的文本)[lpos:l])
 }

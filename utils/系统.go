@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	E "github.com/duolabmeng6/goefun/eCore"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,7 +13,7 @@ func X系统_权限检测() bool {
 	// 这个例子测试写权限，如果没有写权限则返回error。
 	// 注意文件不存在也会返回error，需要检查error的信息来获取到底是哪个错误导致。
 
-	E.E删除文件(GetCurrentAbPathByExecutable() + "/权限测试.json")
+	W文件_删除(GetCurrentAbPathByExecutable() + "/权限测试.json")
 
 	f, err := os.Create(GetCurrentAbPathByExecutable() + "/权限测试.json")
 	if err != nil {

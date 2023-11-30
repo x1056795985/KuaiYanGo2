@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	E "github.com/duolabmeng6/goefun/eTool"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
 	"io/ioutil"
@@ -456,7 +455,7 @@ func UserApi无Token解密() gin.HandlerFunc {
 		}
 
 		if string(局_fastjson.GetStringBytes("Key")) != "" {
-			c.Set("局_CryptoKeyAes", E.E文本_取随机字母和数字(24)) //随机生产AES密钥
+			c.Set("局_CryptoKeyAes", utils.W文本_取随机字符串(24)) //随机生产AES密钥
 		} else {
 			c.Set("局_CryptoKeyAes", AppInfo.CryptoKeyAes)
 		}

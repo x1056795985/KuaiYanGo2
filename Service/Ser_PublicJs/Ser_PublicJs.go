@@ -2,10 +2,9 @@ package Ser_PublicJs
 
 import (
 	"errors"
-	. "github.com/duolabmeng6/efun/efun"
-	E "github.com/duolabmeng6/goefun/eTool"
 	"server/global"
 	DB "server/structs/db"
+	"server/utils"
 	"time"
 )
 
@@ -48,7 +47,7 @@ func Z置值(id int, Value string) error {
 }
 func Z置值2(PublicJs DB.DB_PublicJs) error {
 	//注意宝塔写文件 文件会在 /www/server/panel 文件夹
-	err := E.E文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
+	err := utils.W文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
 	if err != nil {
 		return err
 	}
@@ -68,7 +67,7 @@ func Z置值2(PublicJs DB.DB_PublicJs) error {
 }
 func C创建(PublicJs DB.DB_PublicJs) error {
 	//注意宝塔写文件 文件会在 /www/server/panel 文件夹
-	err := E.E文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
+	err := utils.W文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
 	if err != nil {
 		return errors.New("Js写入文件失败:" + err.Error())
 	}
@@ -92,8 +91,8 @@ func P取值2(Appid int, Name string) (DB.DB_PublicJs, error) {
 	if ok {
 		局_PublicJs.Value = 局_临时.(string)
 	} else {
-		if E文件是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
-			局_PublicJs.Value = string(E读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
+		if utils.W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
+			局_PublicJs.Value = string(utils.W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
 			global.H缓存.Set(global.GVA_CONFIG.Q取运行目录+局_PublicJs.Value, 局_PublicJs.Value, time.Hour*720)
 		} else {
 			return 局_PublicJs, errors.New(Name + ".js文件读取失败可能被删除,请重新编辑公共函数")

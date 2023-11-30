@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dop251/goja"
-	. "github.com/duolabmeng6/goefun/eCore"
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
@@ -1355,8 +1354,8 @@ func UserApi_云函数执行(c *gin.Context) {
 		response.X响应状态(c, response.Status_未登录)
 		return
 	}
-	if E文件是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
-		局_PublicJs.Value = string(E读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
+	if utils.W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
+		局_PublicJs.Value = string(utils.W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
 	} else {
 		response.X响应状态消息(c, response.Status_操作失败, "js文件读取失败可能被删除")
 		return

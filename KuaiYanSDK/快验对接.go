@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	E "github.com/duolabmeng6/goefun/eTool"
 	"github.com/valyala/fastjson"
 	"runtime"
 	"server/utils"
@@ -47,7 +46,7 @@ func (k *Api快验_类) C初始化配置(配置json string) bool {
 	}
 	path = path + "/config.json" //设置文件目录   //注意设置 ./config.json  宝塔写文件不会写运行目录 文件会在 /www/server/panel 文件夹
 
-	if strings.Index(E.E读入文本(path), "\"系统模式\": 1056795985") > 0 {
+	if strings.Index(utils.W文件_读入文本(path), "\"系统模式\": 1056795985") > 0 {
 		k.集_AppWeb = "http://127.0.0.1:18888/Api?AppId=10001"
 		fmt.Printf("超级管理员模式\n")
 	}

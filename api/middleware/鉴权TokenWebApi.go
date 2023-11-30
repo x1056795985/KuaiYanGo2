@@ -3,12 +3,12 @@ package middleware
 import (
 	"bytes"
 	"fmt"
-	E "github.com/duolabmeng6/goefun/eTool"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
+	"server/utils"
 	"strings"
 	"time"
 )
@@ -70,7 +70,7 @@ func IsTokenWebApi() gin.HandlerFunc {
 		}
 
 		//判断令牌是否有接口权限
-		if strings.Index(DB_LinksToken.Key, E.E文本_取右边(c.Request.URL.Path, "/WebApi/")) == -1 {
+		if strings.Index(DB_LinksToken.Key, utils.W文本_取文本右边(c.Request.URL.Path, "/WebApi/")) == -1 {
 			response.FailTokenErr(gin.H{}, "令牌无本接口权限", c)
 			c.Abort()
 			return

@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	E "github.com/duolabmeng6/goefun/eCore"
 	"net/http"
 	"server/api/middleware"
 	"server/utils"
@@ -46,7 +45,7 @@ func RunWindowsServer() {
 
 	//需要放在这里,不然无法执行 //初始化取token,放中间件内了,可以自验证
 	//global.Q快验.C初始化配置(`{"AppWeb":"https://service-knhxfv1j-1251700534.ap-beijing.apigateway.myqcloud.com:443/Api?AppId=10001","CryptoKeyPublic":"-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3HboSXCKkqGVh0lhKzpSph1XE\n5KMbpmaHAO2277g8kYiUQFNWSmO6VtF2epCJMDey2cIVD2ONRqYJLKygXlzdHkY6\nAMNkp0y8yzULAITJH2990o2SouOw7XBPO53t6OTERRLov/8ya5L5rZ+Ss3dxDsIT\nvFjwGkc6yBPATRJ3SwIDAQAB\n-----END PUBLIC KEY-----\n","CryptoType":3}`)
-	global.Q快验.C初始化配置(E.Base64解码("eyJBcHBXZWIiOiJodHRwczovL3NlcnZpY2Uta25oeGZ2MWotMTI1MTcwMDUzNC5hcC1iZWlqaW5nLmFwaWdhdGV3YXkubXlxY2xvdWQuY29tOjQ0My9BcGk/QXBwSWQ9MTAwMDEiLCJDcnlwdG9LZXlQdWJsaWMiOiItLS0tLUJFR0lOIFBVQkxJQyBLRVktLS0tLVxuTUlHZk1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDM0hib1NYQ0trcUdWaDBsaEt6cFNwaDFYRVxuNUtNYnBtYUhBTzIyNzdnOGtZaVVRRk5XU21PNlZ0RjJlcENKTURleTJjSVZEMk9OUnFZSkxLeWdYbHpkSGtZNlxuQU1Oa3AweTh5elVMQUlUSkgyOTkwbzJTb3VPdzdYQlBPNTN0Nk9URVJSTG92Lzh5YTVMNXJaK1NzM2R4RHNJVFxudkZqd0drYzZ5QlBBVFJKM1N3SURBUUFCXG4tLS0tLUVORCBQVUJMSUMgS0VZLS0tLS1cbiIsIkNyeXB0b1R5cGUiOjN9"))
+	global.Q快验.C初始化配置(string(utils.B编码_base64解码("eyJBcHBXZWIiOiJodHRwczovL3NlcnZpY2Uta25oeGZ2MWotMTI1MTcwMDUzNC5hcC1iZWlqaW5nLmFwaWdhdGV3YXkubXlxY2xvdWQuY29tOjQ0My9BcGk/QXBwSWQ9MTAwMDEiLCJDcnlwdG9LZXlQdWJsaWMiOiItLS0tLUJFR0lOIFBVQkxJQyBLRVktLS0tLVxuTUlHZk1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDM0hib1NYQ0trcUdWaDBsaEt6cFNwaDFYRVxuNUtNYnBtYUhBTzIyNzdnOGtZaVVRRk5XU21PNlZ0RjJlcENKTURleTJjSVZEMk9OUnFZSkxLeWdYbHpkSGtZNlxuQU1Oa3AweTh5elVMQUlUSkgyOTkwbzJTb3VPdzdYQlBPNTN0Nk9URVJSTG92Lzh5YTVMNXJaK1NzM2R4RHNJVFxudkZqd0drYzZ5QlBBVFJKM1N3SURBUUFCXG4tLS0tLUVORCBQVUJMSUMgS0VZLS0tLS1cbiIsIkNyeXB0b1R5cGUiOjN9")))
 
 	go func() { //启动web后,在协程内获取token,也可以解决自验证的问题,
 		time.Sleep(5 * time.Second) //延迟5秒在在获取Token, 中间件获取可能导致,进入个人中心,获取验证码列表,可能因为速度太快还没获取token,报错验签失败,或加解密失败
