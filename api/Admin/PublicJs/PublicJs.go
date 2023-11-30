@@ -2,7 +2,6 @@ package PublicJs
 
 import (
 	"fmt"
-	. "github.com/duolabmeng6/goefun/eCore"
 	"github.com/gin-gonic/gin"
 	Db服务 "server/Service/Ser_AppInfo"
 	"server/Service/Ser_PublicJs"
@@ -10,6 +9,7 @@ import (
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"server/utils"
+	. "server/utils"
 	"strconv"
 )
 
@@ -33,8 +33,8 @@ func (a *Api) GetInfo(c *gin.Context) {
 		return
 	}
 
-	if E文件是否存在(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value) {
-		DB_PublicJs.Value = string(E读入文件(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value))
+	if W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value) {
+		DB_PublicJs.Value = string(W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value))
 	} else {
 		DB_PublicJs.Value = DB_PublicJs.Value + "[js文件读取失败可能被删除]"
 	}
@@ -140,8 +140,8 @@ func (a *Api) Delete(c *gin.Context) {
 		var DB_PublicJs DB.DB_PublicJs
 		err = global.GVA_DB.Model(DB.DB_PublicJs{}).Where(" Id = ? ", 值).First(&DB_PublicJs).Error
 		//同步删除云函数JS文件
-		if E文件是否存在(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value) {
-			err = E删除文件(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value)
+		if W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value) {
+			err = W文件_删除(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value)
 			if err != nil {
 				fmt.Printf("E删除文件失败%v", err.Error())
 			}

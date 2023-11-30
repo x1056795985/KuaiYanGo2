@@ -2,7 +2,7 @@ package Menu
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
+	jsoniter "github.com/json-iterator/go"
 	"net/http"
 	"time"
 )
@@ -31,7 +31,7 @@ func (a *MenuApi) GetMenu(c *gin.Context) {
 	var str2 StructName
 	//var Menu菜单 []Menu菜单
 
-	json.Unmarshal([]byte(str), &str2)
+	jsoniter.Unmarshal([]byte(str), &str2)
 	c.String(http.StatusOK, str)
 }
 

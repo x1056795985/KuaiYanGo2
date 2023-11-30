@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	E "github.com/duolabmeng6/goefun/eCore"
 	"os/exec"
 	"server/utils"
+	. "server/utils"
 	"strconv"
 	"strings"
 	"testing"
@@ -17,7 +17,7 @@ func Test_项目编译(t *testing.T) {
 }
 func 编译飞鸟快验() {
 	局_项目路径 := "E:\\yun\\xuhaonan\\project\\TY通用后台管理系统\\server2" //必须  \\ 路径间隔,不然打开文件夹路径错误
-	局_源码 := string(E.E读入文件(局_项目路径 + "/global/global.go"))
+	局_源码 := string(W文件_读入文件(局_项目路径 + "/global/global.go"))
 	局_旧版本号 := utils.W文本_取出中间文本(局_源码, "B版本号当前: \"", "\",")
 	局_临时数组 := strings.Split(局_旧版本号, ".")
 	if len(局_临时数组) != 3 {
@@ -29,7 +29,7 @@ func 编译飞鸟快验() {
 	局_新版本号 := strings.Join(局_临时数组, ".")
 	局_源码 = strings.Replace(局_源码, "B版本号当前: \""+局_旧版本号+"\",", "B版本号当前: \""+局_新版本号+"\",", 1)
 	// 保存修改后的源码文件
-	err := E.E写到文件(局_项目路径+"/global/global.go", []byte(局_源码))
+	err := W文件_写出文件(局_项目路径+"/global/global.go", []byte(局_源码))
 	if err != nil {
 		fmt.Println("保存修改后的源码文件失败:", err)
 		return
@@ -72,7 +72,7 @@ func 编译飞鸟快验() {
 
 	fmt.Println("打开文件夹并选中文件成功")
 
-	data := E.E读入文件(局_项目路径 + "\\" + 局_编译名称) //切片
+	data := W文件_读入文件(局_项目路径 + "\\" + 局_编译名称) //切片
 	has := md5.Sum(data)
 	局_本地文件MD5 := strings.ToUpper(fmt.Sprintf("%x", has)) //将[]byte转成16进制
 	fmt.Println("MD5 :  " + 局_本地文件MD5)
