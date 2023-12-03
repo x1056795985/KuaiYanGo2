@@ -88,10 +88,6 @@ func W文件_取父目录(dirpath string) string {
 	return path.Dir(dirpath)
 }
 
-func W文件_取扩展名(filepath string) string {
-	return path.Ext(filepath)
-}
-
 func W文件_删除(欲删除的文件名 string) error {
 	return os.Remove(欲删除的文件名)
 
@@ -174,4 +170,33 @@ func W文件_是否存在(路径 string) bool {
 	}
 
 	return false
+}
+
+// 调用格式： 〈文本型〉 取临时文件名 （［文本型 目录名］） - 系统核心支持库->磁盘操作
+// 英文名称：GetTempFileName
+// 返回一个在指定目录中确定不存在的 .TMP 全路径文件名称。本命令为初级命令。
+// 参数<1>的名称为“目录名”，类型为“文本型（text）”，可以被省略。如果省略本参数，默认将使用系统的标准临时目录。
+//
+// 操作系统需求： Windows
+func W文件_取临时文件名(目录名 string) (f *os.File, filepath string, err error) {
+	prefix := ""
+	f, err = ioutil.TempFile(目录名, prefix)
+	filepath = 目录名 + f.Name()
+	return f, filepath, err
+}
+
+//调用格式： 〈整数型〉 取文件尺寸 （文本型 文件名） - 系统核心支持库->磁盘操作
+//英文名称：FileLen
+//返回一个文件的长度，单位是字节。如果该文件不存在，将返回 -1。本命令为初级命令。
+//参数<1>的名称为“文件名”，类型为“文本型（text）”。
+//
+//操作系统需求： Windows、Linux
+
+func W文件_取大小(文件名 string) int64 {
+	f, err := os.Stat(文件名)
+	if err == nil {
+		return f.Size()
+	} else {
+		return -1
+	}
 }

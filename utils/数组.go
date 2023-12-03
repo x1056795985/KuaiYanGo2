@@ -1,6 +1,9 @@
 package utils
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 func S数组_整数是否存在(数组 []int, 整数 int) bool {
 	for _, num := range 数组 {
@@ -28,4 +31,16 @@ func S数组_是否为空(list []string) (isEmpty bool) {
 	}
 
 	return isEmpty
+}
+
+func S数组_排序整数(arr []int) []int {
+	局_arr := arr
+	sort.Ints(局_arr)
+	return 局_arr
+}
+
+func S数组_排序文本(arr []string) []string {
+	局_arr := arr
+	sort.Strings(局_arr)
+	return 局_arr
 }
