@@ -54,7 +54,7 @@ func W文本_取文本右边(内容 string, 关键字 string) string {
 	if 位置 == -1 {
 		return ""
 	}
-	内容 = string([]byte(内容)[位置:])
+	内容 = string([]byte(内容)[位置+len(关键字):])
 	return 内容
 }
 
