@@ -279,7 +279,9 @@ func (a *Api) Get取下级代理列表和可创建库存包列表(c *gin.Context
 		})
 	}
 	var 响应数据 结构请求_代理树和卡类树
-	响应数据.AgentTree = 转换为代理树2(nodes, -c.GetInt("Uid")) //只能给自己的上级代理添加库存
+	var 局_uid int
+	局_uid = -c.GetInt("Uid")
+	响应数据.AgentTree = 转换为代理树2(nodes, 局_uid) //只能给自己的上级代理添加库存
 	局_临时 := Ser_KaClass.Q取全部可制卡类树形框列表(请求.Id)
 	响应数据.KaClassTree = 局_临时
 	response.OkWithDetailed(响应数据, "获取成功", c)

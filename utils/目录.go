@@ -67,3 +67,8 @@ func M目录_取当前目录() string {
 	}
 	return dir
 }
+
+// 操作系统需求： Windows、Linux
+func M目录_删除(欲删除的目录名称 string) error {
+	return os.RemoveAll(欲删除的目录名称)
+}
