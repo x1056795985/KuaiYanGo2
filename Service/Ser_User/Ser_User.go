@@ -196,7 +196,19 @@ func Id置QQ邮箱手机号(Id int, QQ, 邮箱, 手机号 string) error {
 	if Id == 0 {
 		return errors.New("id不能为空")
 	}
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id = ?", Id).Updates(map[string]interface{}{"Qq": QQ, "Email": 邮箱, "Phone": 手机号}).Error
+
+	局data := map[string]interface{}{}
+	if QQ != "" {
+		局data["Qq"] = QQ
+	}
+	if QQ != "" {
+		局data["Email"] = 邮箱
+	}
+	if QQ != "" {
+		局data["Phone"] = 手机号
+	}
+
+	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id = ?", Id).Updates(&局data).Error
 
 	if err != nil {
 		global.GVA_LOG.Error(fmt.Sprintf("Id置QQ邮箱手机号失败ID:%v,%v,%v,%v,%v", Id, QQ, 邮箱, 手机号, err.Error()))
