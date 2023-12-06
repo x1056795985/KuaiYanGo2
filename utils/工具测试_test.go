@@ -11,7 +11,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"server/utils/Qqwry"
-	"server/utils/class"
 	"strconv"
 	"strings"
 	"testing"
@@ -43,7 +42,6 @@ KQA2DDRtFvgodMDSwwIDAQAB
 `
 
 func Test_启动子程序(t *testing.T) {
-	测试队列()
 
 	fmt.Println("执行完毕")
 }
@@ -123,27 +121,4 @@ func 签名_Rsa(base64后明文 string, RSA私钥 string) string {
 	}
 	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.MD5, hashed)
 	return strings.ToUpper(hex.EncodeToString(signature))
-}
-func 测试队列() {
-	var 队列 = class.L_队列{}
-	for i := 0; i < 1000; i++ {
-		队列.J加入队列(strconv.Itoa(i))
-	}
-	局_临时文本 := ""
-	局_临时文本2 := ""
-	for 队列.Q取队列长度() > 0 {
-		go func() {
-			if 队列.T弹出队列文本(&局_临时文本) {
-				局_临时文本2 += (局_临时文本 + "\r\n")
-				//fmt.Println("弹出队列:" + 局_临时文本)
-			} else {
-				//fmt.Println("弹出队列失败")
-			}
-		}()
-
-	}
-	C程序_延时(5000)
-	fmt.Println("最终" + strconv.Itoa(W文本_取行数(局_临时文本2)))
-	fmt.Println(局_临时文本2)
-
 }

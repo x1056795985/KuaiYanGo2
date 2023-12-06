@@ -1,6 +1,7 @@
 package AgentInventory
 
 import (
+	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Agent"
 	"server/Service/Ser_AgentInventory"
@@ -11,7 +12,6 @@ import (
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
-	"server/utils"
 	"strconv"
 	"time"
 )

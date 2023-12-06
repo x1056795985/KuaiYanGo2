@@ -1,6 +1,7 @@
 package Ser_Ka
 
 import (
+	"EFunc/utils"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
@@ -16,7 +17,6 @@ import (
 	"server/Service/Ser_UserClass"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
 	"strconv"
 	"strings"
 	"time"

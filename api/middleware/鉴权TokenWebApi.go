@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"EFunc/utils"
 	"bytes"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -8,7 +9,6 @@ import (
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
-	"server/utils"
 	"strings"
 	"time"
 )

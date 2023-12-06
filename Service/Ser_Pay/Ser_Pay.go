@@ -1,6 +1,7 @@
 package Ser_Pay
 
 import (
+	"EFunc/utils"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -19,7 +20,7 @@ import (
 	"server/Service/Ser_User"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
+	utils2 "server/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -376,7 +377,7 @@ func Pay_小叮当_订单创建(Uid, Uid类型 int, 支付金额 float64, ip str
 	values.Set("app_id", global.GVA_CONFIG.Z在线支付.X小叮当app_id)
 	values.Set("extra", "")
 
-	局_sign := utils.Md5String(fmt.Sprintf("order_no=%s&subject=%s&pay_type=%s&money=%s&app_id=%s&extra=%s&%s",
+	局_sign := utils2.Md5String(fmt.Sprintf("order_no=%s&subject=%s&pay_type=%s&money=%s&app_id=%s&extra=%s&%s",
 		values.Get("order_no"),
 		values.Get("subject"),
 		values.Get("pay_type"),

@@ -1,12 +1,12 @@
 package WebApi
 
 import (
+	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
 	"server/Service/Ser_RMBPayOrder"
 	"server/structs/Http/response"
 	DB "server/structs/db"
-	"server/utils"
 )
 
 func Q取支付订单状态(c *gin.Context) {

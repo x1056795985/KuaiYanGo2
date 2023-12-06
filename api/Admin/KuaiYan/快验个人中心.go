@@ -1,6 +1,7 @@
 package KuaiYan
 
 import (
+	"EFunc/utils"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,7 +16,7 @@ import (
 	"server/Service/Ser_User"
 	"server/global"
 	"server/structs/Http/response"
-	"server/utils"
+	utils2 "server/utils"
 	"syscall"
 	"time"
 )
@@ -544,7 +545,7 @@ func (a *Api) G更新程序(c *gin.Context) {
 		response.FailWithMessage("获取新版本下载地址失败:"+global.Q快验.Q取错误信息(nil), c)
 		return
 	}
-	if !utils.X系统_权限检测() {
+	if !utils2.X系统_权限检测() {
 		response.FailWithMessage("系统无写入文件权限,请检查权限是否777或755,运行用户是否为root", c)
 		return
 	}

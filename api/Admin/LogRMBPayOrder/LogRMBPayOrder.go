@@ -1,6 +1,7 @@
 package LogRMBPayOrder
 
 import (
+	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_RMBPayOrder"
@@ -8,7 +9,6 @@ import (
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
-	"server/utils"
 	"strconv"
 	"time"
 )

@@ -1,6 +1,7 @@
 package SetSystem
 
 import (
+	"EFunc/utils"
 	_ "embed"
 	"encoding/base64"
 	"errors"
@@ -11,7 +12,7 @@ import (
 	"server/config"
 	"server/global"
 	"server/structs/Http/response"
-	"server/utils"
+	utils2 "server/utils"
 	"strings"
 )
 
@@ -67,7 +68,7 @@ func (a *Api) S生成API加密源码SDK(c *gin.Context) {
 	var SDK []byte
 	switch 请求.Type {
 	case "E":
-		SDK = utils.Y易源码替换APi接口并修复(快验网络验证对接易模块, APi列表, 请求.Y用户API加密盐)
+		SDK = utils2.Y易源码替换APi接口并修复(快验网络验证对接易模块, APi列表, 请求.Y用户API加密盐)
 	}
 	if len(SDK) == 0 {
 		response.FailWithMessage("暂不支持:"+请求.Type, c)

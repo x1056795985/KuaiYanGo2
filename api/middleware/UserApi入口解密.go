@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"EFunc/utils"
 	"bytes"
 	"encoding/base64"
 	"fmt"
@@ -17,7 +18,7 @@ import (
 	"server/api/UserApi/response"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
+	utils2 "server/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -123,9 +124,9 @@ func G更新哈希APi名称(盐值 string) {
 
 	//更新加密路由表
 	J集_UserAPi路由_加密 = make(map[string]string, len(J集_UserAPi路由)+1)
-	J集_UserAPi路由_加密[utils.Md5String("GetToken"+盐值)] = "GetToken"
+	J集_UserAPi路由_加密[utils2.Md5String("GetToken"+盐值)] = "GetToken"
 	for 键名 := range J集_UserAPi路由 {
-		局_哈希后的值 := utils.Md5String(键名 + 盐值)
+		局_哈希后的值 := utils2.Md5String(键名 + 盐值)
 		J集_UserAPi路由_加密[局_哈希后的值] = 键名
 	}
 
@@ -213,16 +214,16 @@ func UserApi解密() gin.HandlerFunc {
 		var 局_临时AES密匙 []byte
 		if len(结构加密包.B签名) == 32 {
 			//签名都转大写防止误判
-			if strings.ToUpper(结构加密包.B签名) == strings.ToUpper(utils.Md5String(结构加密包.A密文+局_在线信息.CryptoKeyAes)) {
+			if strings.ToUpper(结构加密包.B签名) == strings.ToUpper(utils2.Md5String(结构加密包.A密文+局_在线信息.CryptoKeyAes)) {
 				局_临时AES密匙 = []byte(局_在线信息.CryptoKeyAes)
 			} else {
-				fmt.Printf("结构加密包.B签名校验失败%v!=%v", 结构加密包.B签名, strings.ToUpper(utils.Md5String(结构加密包.A密文+局_在线信息.CryptoKeyAes)))
+				fmt.Printf("结构加密包.B签名校验失败%v!=%v", 结构加密包.B签名, strings.ToUpper(utils2.Md5String(结构加密包.A密文+局_在线信息.CryptoKeyAes)))
 			}
 		}
 
 		if len(结构加密包.B签名) > 32 {
 			局_签名解密, _ := base64.StdEncoding.DecodeString(结构加密包.B签名)
-			局_临时AES密匙 = utils.Rsa私钥解密2([]byte(AppInfo.CryptoKeyPrivate), 局_签名解密)
+			局_临时AES密匙 = utils2.Rsa私钥解密2([]byte(AppInfo.CryptoKeyPrivate), 局_签名解密)
 		}
 
 		if len(局_临时AES密匙) == 0 && AppInfo.CryptoType != 1 { //只有明文才不检查
@@ -234,7 +235,7 @@ func UserApi解密() gin.HandlerFunc {
 
 		//===========有token解密明文======================
 		if AppInfo.CryptoType == 3 || AppInfo.CryptoType == 2 {
-			局_json明文 = utils.Aes解密_cbc192字节集(局_临时字节集, 局_临时AES密匙)
+			局_json明文 = utils2.Aes解密_cbc192字节集(局_临时字节集, 局_临时AES密匙)
 		} else if AppInfo.CryptoType == 1 {
 			局_json明文 = string(局_临时字节集)
 		}
@@ -411,13 +412,13 @@ func UserApi无Token解密() gin.HandlerFunc {
 			//强制这个接口必须走RSA方式
 			局_签名解密, _ := base64.StdEncoding.DecodeString(结构加密包.B签名)
 
-			局_临时AES密匙 := utils.Rsa私钥解密2([]byte(AppInfo.CryptoKeyPrivate), 局_签名解密)
+			局_临时AES密匙 := utils2.Rsa私钥解密2([]byte(AppInfo.CryptoKeyPrivate), 局_签名解密)
 
-			局_json明文 = utils.Aes解密_cbc192字节集(局_临时字节集, 局_临时AES密匙)
+			局_json明文 = utils2.Aes解密_cbc192字节集(局_临时字节集, 局_临时AES密匙)
 
 		} else if AppInfo.CryptoType == 2 {
 
-			局_json明文 = utils.Aes解密_cbc192(局_临时字节集, AppInfo.CryptoKeyAes)
+			局_json明文 = utils2.Aes解密_cbc192(局_临时字节集, AppInfo.CryptoKeyAes)
 		} else if AppInfo.CryptoType == 1 {
 
 			局_json明文 = string(局_临时字节集)

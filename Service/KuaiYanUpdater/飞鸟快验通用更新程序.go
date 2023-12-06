@@ -1,6 +1,7 @@
 package KuaiYanUpdater
 
 import (
+	"EFunc/utils"
 	"crypto/md5"
 	"fmt"
 	"github.com/imroc/req/v3"
@@ -8,7 +9,7 @@ import (
 	"github.com/valyala/fastjson"
 	"net/http"
 	"path/filepath"
-	"server/utils"
+
 	"strings"
 	"time"
 )

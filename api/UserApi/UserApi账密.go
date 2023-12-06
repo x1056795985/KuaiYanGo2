@@ -1,6 +1,7 @@
 package UserApi
 
 import (
+	"EFunc/utils"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -18,7 +19,7 @@ import (
 	"server/api/UserApi/response"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
+	utils2 "server/utils"
 	"strings"
 	"time"
 )
@@ -117,7 +118,7 @@ func UserApi_密码找回或修改_验证旧密码(c *gin.Context) {
 	}
 
 	局_user, _ := Ser_User.Id取详情(局_用户Id)
-	if !utils.BcryptCheck(string(请求json.GetStringBytes("OldPassWord")), 局_user.PassWord) {
+	if !utils2.BcryptCheck(string(请求json.GetStringBytes("OldPassWord")), 局_user.PassWord) {
 		response.X响应状态消息(c, response.Status_操作失败, "旧密码错误.")
 		return
 	}
@@ -157,7 +158,7 @@ func UserApi_密码找回或修改_超级密码(c *gin.Context) {
 	switch 请求json.GetInt("Type") {
 	case 1:
 		局_user, _ := Ser_User.Id取详情(局_用户Id)
-		if !utils.BcryptCheck(string(请求json.GetStringBytes("SuperPassWord")), 局_user.SuperPassWord) {
+		if !utils2.BcryptCheck(string(请求json.GetStringBytes("SuperPassWord")), 局_user.SuperPassWord) {
 			response.X响应状态消息(c, response.Status_操作失败, "超级密码错误.")
 			return
 		}
@@ -220,7 +221,7 @@ func UserApi_密码找回或修改_密保手机(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "用户不存在")
 		return
 	}
-	if 局_User.Phone == "" || strings.Index(局_短信验证码Id, "Note"+utils.Md5String(局_User.Phone)[:16]) == -1 {
+	if 局_User.Phone == "" || strings.Index(局_短信验证码Id, "Note"+utils2.Md5String(局_User.Phone)[:16]) == -1 {
 		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, string(请求json.GetStringBytes("User")), c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非账号绑定的验证码进行提交,可能是异常用户")
 		response.X响应状态消息(c, response.Status_操作失败, "验证码错误.")
 		return
