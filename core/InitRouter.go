@@ -520,7 +520,9 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	})
 
 	Router根Agent := Router.Group("Agent") //127.0.0.1:18080/  这个后面第一个不需要 / 符号
+	//Router根Agent.Use(middleware.AA())
 	Router根Agent.Use(middleware.IsAgentHost())
+
 	Router根Agent.Use(middleware.IsAgent是否关闭())
 
 	//打包静态VueAdmin文件============================

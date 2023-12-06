@@ -212,11 +212,11 @@ func NewApp信息(AppId, AppType int, AppName string) error {
 	NewApp.UrlDownload = `{
     "htmlurl": "www.baidu.com(自动下载失败打开指定网址,手动更新地址",
     "data": [{
-        "WenJianMin": "文件名{{AppVer}}.exe(  {{AppVer}} 这个变量会替换为最新版本的版本号,省的每次更新都改版本号 )",
+        "WenJianMin": "文件名{{AppName}}{{AppVer}}.exe(  {{AppName}}变量替换为应用名称{{AppVer}} 这个变量会替换为最新版本的版本号,省的每次更新都改版本号 )",
         "md5": "e10adc3949ba59abbe56e057f20f883e(小写文件md5可选,有就校验,空就只校验文件名)",
         "Lujing": "/(下载本地相对路径)",
         "size": "12345(可选,不填写也没问题)",
-        "url": "https://www.baidu.com/文件名{{AppVer}}.exe(下载路径)",
+        "url": "https://www.baidu.com/文件名{{AppName}}{{AppVer}}.exe(下载路径)",
         "YunXing": "1(值为更新完成后会运行这个文件,只能有一个文件值为1)"
 
     }, {
