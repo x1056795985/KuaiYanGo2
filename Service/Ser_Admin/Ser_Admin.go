@@ -22,7 +22,6 @@ func Id置新密码(Id int, NewPassWord string) error {
 	}
 
 	err := global.GVA_DB.Model(DB.DB_Admin{}).Where("Id = ?", Id).Updates(map[string]interface{}{"PassWord": utils.Md5String(NewPassWord)}).Error
-
 	if err != nil {
 		global.GVA_LOG.Error(fmt.Sprintf("Id置新密码失败:%v,%v,%v", Id, NewPassWord, err.Error()))
 		return errors.New("修改密码失败")
