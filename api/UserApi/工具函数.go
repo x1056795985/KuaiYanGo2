@@ -1,9 +1,9 @@
 package UserApi
 
 import (
+	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	DB "server/structs/db"
-	"server/utils"
 	"strconv"
 	"strings"
 )

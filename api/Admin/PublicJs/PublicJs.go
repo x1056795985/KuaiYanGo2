@@ -1,6 +1,7 @@
 package PublicJs
 
 import (
+	. "EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	Db服务 "server/Service/Ser_AppInfo"
@@ -8,8 +9,6 @@ import (
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
-	"server/utils"
-	. "server/utils"
 	"strconv"
 )
 
@@ -231,7 +230,7 @@ func (a *Api) New(c *gin.Context) {
 		return
 	}
 
-	if utils.W文本_是否包含关键字(请求.Name, "/") || utils.W文本_是否包含关键字(请求.Name, ".") {
+	if W文本_是否包含关键字(请求.Name, "/") || W文本_是否包含关键字(请求.Name, ".") {
 		response.FailWithMessage("函数名不能包含[/]或[].]符号", c)
 		return
 	}

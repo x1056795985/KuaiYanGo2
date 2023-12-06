@@ -1,6 +1,7 @@
 package UserApi
 
 import (
+	"EFunc/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,7 +29,7 @@ import (
 	"server/api/UserApi/response"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
+	utils2 "server/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -102,7 +103,7 @@ func UserApi_用户登录(c *gin.Context) {
 			return
 		}
 
-		if 局_User.PassWord == "" || !utils.BcryptCheck(string(请求json.GetStringBytes("PassWord")), 局_User.PassWord) {
+		if 局_User.PassWord == "" || !utils2.BcryptCheck(string(请求json.GetStringBytes("PassWord")), 局_User.PassWord) {
 			go Ser_Log.Log_写登录日志(局_User.User, c.ClientIP(), "密码错误:"+string(请求json.GetStringBytes("PassWord")), 局_在线信息.LoginAppid)
 			response.X响应状态消息(c, response.Status_登录失败, "用户名或密码错误")
 			return
@@ -723,7 +724,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 					response.X响应状态消息(c, response.Status_操作失败, "用户不存在.")
 					return
 				}
-				if 局密码 == "" || !utils.BcryptCheck(局密码, 局_User.PassWord) {
+				if 局密码 == "" || !utils2.BcryptCheck(局密码, 局_User.PassWord) {
 					go Ser_Log.Log_写登录日志(局_User.User, c.ClientIP(), "更换绑定登录时密码错误:"+局密码, AppInfo.AppId)
 					response.X响应状态消息(c, response.Status_登录失败, "用户名或密码错误")
 					return
@@ -803,7 +804,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 					response.X响应状态消息(c, response.Status_操作失败, "用户不存在.")
 					return
 				}
-				if 局密码 == "" || !utils.BcryptCheck(局密码, 局_User.PassWord) {
+				if 局密码 == "" || !utils2.BcryptCheck(局密码, 局_User.PassWord) {
 					go Ser_Log.Log_写登录日志(局_User.User, c.ClientIP(), "更换绑定登录时密码错误:"+局密码, AppInfo.AppId)
 					response.X响应状态消息(c, response.Status_登录失败, "用户名或密码错误")
 					return
@@ -904,19 +905,19 @@ func UserApi_取短信验证码信息(c *gin.Context) {
 			return
 		}
 		局_手机号 = 局_User.Phone
-		if !utils.Z正则_校验手机号(局_手机号, &局_错误信息) {
+		if !utils2.Z正则_校验手机号(局_手机号, &局_错误信息) {
 			response.X响应状态消息(c, response.Status_参数错误, "用户绑定手机号格式不正确")
 			return
 		}
 	} else {
-		if !utils.Z正则_校验手机号(局_手机号, &局_错误信息) {
+		if !utils2.Z正则_校验手机号(局_手机号, &局_错误信息) {
 			response.X响应状态消息(c, response.Status_参数错误, 局_错误信息)
 			return
 		}
 	}
 
 	局_验证码 := utils.W文本_取随机字符串_数字(6)
-	局_验证码ID := "Note" + utils.Md5String(局_手机号)[:16] + utils.W文本_取随机字符串(15)
+	局_验证码ID := "Note" + utils2.Md5String(局_手机号)[:16] + utils.W文本_取随机字符串(15)
 
 	err := Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, 局_手机号)
 	if err != nil {
@@ -1116,7 +1117,7 @@ func UserApi_用户登录远程注销(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_操作失败, "用户不存在")
 			return
 		}
-		if !utils.BcryptCheck(string(请求json.GetStringBytes("PassWord")), 局_User.PassWord) {
+		if !utils2.BcryptCheck(string(请求json.GetStringBytes("PassWord")), 局_User.PassWord) {
 			response.X响应状态消息(c, response.Status_操作失败, "用户名或密码错误")
 			return
 		}
