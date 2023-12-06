@@ -317,6 +317,7 @@ func (a *Api) Save行为验证码平台设置(c *gin.Context) {
 		return
 	}
 
+	global.GVA_Viper.Set("行为验证码平台配置.当前选择", 请求.D当前选择)
 	global.GVA_Viper.Set("行为验证码平台配置.极验行为验证4.验证_ID", 请求.J极验行为验证4.Y验证_ID)
 	global.GVA_Viper.Set("行为验证码平台配置.极验行为验证4.验证_KEY", 请求.J极验行为验证4.Y验证_KEY)
 

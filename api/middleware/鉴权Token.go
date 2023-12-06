@@ -193,3 +193,9 @@ func IsAgent是否关闭() gin.HandlerFunc {
 		c.Next()
 	}
 }
+func AA() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		fmt.Printf(c.Request.URL.Host)
+		c.Next()
+	}
+}

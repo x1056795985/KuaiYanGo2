@@ -100,6 +100,9 @@ func InitDbTables() {
 		DB.Db_Agent_卡类授权{},
 		DB.Db_Agent_库存日志{},
 		DB.Db_Agent_库存卡包{},
+
+		//DB.DB_Setting{},
+
 	)
 
 	if err != nil {

@@ -519,6 +519,7 @@ func UserApi_取新版本下载地址(c *gin.Context) {
 		}
 
 	}
+	AppInfo.UrlDownload = strings.Replace(AppInfo.UrlDownload, "{{AppName}}", AppInfo.AppName, -1)
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AppUpDataJson": AppInfo.UrlDownload})
 	return
