@@ -1,6 +1,7 @@
 package UserApi
 
 import (
+	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
@@ -9,7 +10,6 @@ import (
 	"server/Service/Ser_User"
 	"server/api/UserApi/response"
 	DB "server/structs/db"
-	"server/utils"
 )
 
 func KyApiSendSms(c *gin.Context) {

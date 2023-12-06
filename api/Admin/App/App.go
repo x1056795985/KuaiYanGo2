@@ -1,6 +1,7 @@
 package App
 
 import (
+	"EFunc/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
@@ -15,7 +16,6 @@ import (
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
-	"server/utils"
 	"strconv"
 	"strings"
 )

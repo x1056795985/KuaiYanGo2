@@ -1,6 +1,7 @@
 package User
 
 import (
+	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -13,7 +14,7 @@ import (
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
-	"server/utils"
+	utils2 "server/utils"
 	"strconv"
 )
 
@@ -350,11 +351,11 @@ func (a *Api) Save用户信息(c *gin.Context) {
 	}
 
 	if 请求.PassWord != "" {
-		m["PassWord"] = utils.BcryptHash(请求.PassWord)
+		m["PassWord"] = utils2.BcryptHash(请求.PassWord)
 	}
 
 	if 请求.SuperPassWord != "" {
-		m["SuperPassWord"] = utils.BcryptHash(请求.SuperPassWord)
+		m["SuperPassWord"] = utils2.BcryptHash(请求.SuperPassWord)
 	}
 
 	var db = global.GVA_DB.Model(DB.DB_User{}).Where("Id= ?", 请求.Id).Updates(&m)

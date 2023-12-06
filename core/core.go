@@ -1,6 +1,7 @@
 package core
 
 import (
+	"EFunc/utils"
 	"fmt"
 	"github.com/robfig/cron/v3"
 	"github.com/spf13/viper"
@@ -13,14 +14,14 @@ import (
 	"server/api/Admin/KuaiYan"
 	"server/core/internal"
 	"server/global"
-	"server/utils"
+	utils2 "server/utils"
 )
 
 // InitZap 日志系统初始化
 // Author [SliverHorn](https://github.com/SliverHorn)
 func InitZap() (logger *zap.Logger) {
 	// 判断是否有Director文件夹  没有就创建
-	if ok, _ := utils.PathExists(global.GVA_CONFIG.Zap.Director); !ok {
+	if ok, _ := utils2.PathExists(global.GVA_CONFIG.Zap.Director); !ok {
 		fmt.Printf("create %v directory\n", global.GVA_CONFIG.Zap.Director)
 		_ = os.Mkdir(global.GVA_CONFIG.Zap.Director, os.ModePerm)
 	}

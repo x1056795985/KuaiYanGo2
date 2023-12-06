@@ -1,6 +1,7 @@
 package Ser_User
 
 import (
+	"EFunc/utils"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
@@ -8,7 +9,7 @@ import (
 	"server/Service/Ser_Log"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
+	. "server/utils"
 	"strconv"
 	"time"
 	"unicode/utf8"
@@ -265,8 +266,8 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 	局_User.Qq = Qq
 	局_User.Email = Email
 	局_User.Phone = Phone
-	局_User.PassWord = utils.BcryptHash(PassWord)
-	局_User.SuperPassWord = utils.BcryptHash(SuperPassWord)
+	局_User.PassWord = BcryptHash(PassWord)
+	局_User.SuperPassWord = BcryptHash(SuperPassWord)
 	局_User.Status = 1
 	局_User.RegisterIp = Ip
 	局_User.RegisterTime = time.Now().Unix()
@@ -333,7 +334,7 @@ func Id置新密码(Id int, NewPassWord string) error {
 		return errors.New("Id不能为0")
 	}
 
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id = ?", Id).Updates(map[string]interface{}{"PassWord": utils.Md5String(NewPassWord)}).Error
+	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id = ?", Id).Updates(map[string]interface{}{"PassWord": Md5String(NewPassWord)}).Error
 
 	if err != nil {
 		global.GVA_LOG.Error(fmt.Sprintf("Id置新密码失败:%v,%v,%v", Id, NewPassWord, err.Error()))

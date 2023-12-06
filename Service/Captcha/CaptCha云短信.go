@@ -1,6 +1,7 @@
 package Captcha
 
 import (
+	"EFunc/utils"
 	系统错误 "errors"
 	"fmt"
 	"github.com/imroc/req/v3"
@@ -11,7 +12,6 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	sms_tx "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111" // 引入sms
 	"server/global"
-	"server/utils"
 	"strings"
 )
 

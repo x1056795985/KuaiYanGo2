@@ -1,6 +1,7 @@
 package OtherFunc
 
 import (
+	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
@@ -8,7 +9,6 @@ import (
 	"server/Service/Ser_Log"
 	"server/structs/Http/response"
 	DB "server/structs/db"
-	"server/utils"
 )
 
 type Api struct{}

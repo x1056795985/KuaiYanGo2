@@ -1,6 +1,7 @@
 package WebApi
 
 import (
+	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
@@ -17,7 +18,7 @@ import (
 	"server/Service/Ser_User"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
+	utils2 "server/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -198,7 +199,7 @@ func Pay小叮当Notify(c *gin.Context) {
 		c.PostForm("extra"),
 	)
 
-	局_sign = utils.Md5String(局_sign + global.GVA_CONFIG.Z在线支付.X小叮当接口密钥)
+	局_sign = utils2.Md5String(局_sign + global.GVA_CONFIG.Z在线支付.X小叮当接口密钥)
 
 	if strings.ToUpper(局_sign) != strings.ToUpper(c.PostForm("sign")) {
 		局_boyd := c.Request.PostForm.Encode()

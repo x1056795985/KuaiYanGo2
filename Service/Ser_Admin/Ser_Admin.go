@@ -1,12 +1,13 @@
 package Ser_Admin
 
 import (
+	"EFunc/utils"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
+	. "server/utils"
 	"strconv"
 )
 
@@ -21,7 +22,7 @@ func Id置新密码(Id int, NewPassWord string) error {
 		return errors.New("id不能为0")
 	}
 
-	err := global.GVA_DB.Model(DB.DB_Admin{}).Where("Id = ?", Id).Updates(map[string]interface{}{"PassWord": utils.Md5String(NewPassWord)}).Error
+	err := global.GVA_DB.Model(DB.DB_Admin{}).Where("Id = ?", Id).Updates(map[string]interface{}{"PassWord": Md5String(NewPassWord)}).Error
 	if err != nil {
 		global.GVA_LOG.Error(fmt.Sprintf("Id置新密码失败:%v,%v,%v", Id, NewPassWord, err.Error()))
 		return errors.New("修改密码失败")

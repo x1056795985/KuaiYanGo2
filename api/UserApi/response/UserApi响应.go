@@ -2,6 +2,7 @@
 package response
 
 import (
+	"EFunc/utils"
 	"encoding/base64"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,8 @@ import (
 	"net/http"
 	"server/Service/Ser_Js"
 	DB "server/structs/db"
-	"server/utils"
+	. "server/utils"
+	utils2 "server/utils"
 	"strings"
 	"time"
 )
@@ -47,7 +49,7 @@ func 响应加密处理(c *gin.Context, 明文Json string) {
 
 	if AppInfo.CryptoType == 2 {
 		//方式2就直接AES加密就好了 然后AES签名
-		临时 := utils.Aes加密_cbc192(明文Json, AesKey)
+		临时 := utils2.Aes加密_cbc192(明文Json, AesKey)
 		局_加密编码后 = base64.StdEncoding.EncodeToString(临时)
 		签名结果 = 签名_Aes(局_加密编码后, AesKey)
 	} else if AppInfo.CryptoType == 3 {
@@ -59,11 +61,11 @@ func 响应加密处理(c *gin.Context, 明文Json string) {
 					_, _ = rand.Read(局_AES随机密匙字节集)*/
 			局_AES随机密匙字节集 := []byte(utils.W文本_取随机字符串(24)) // 因为js暂时无法公钥解密出字节数组的密钥,所以暂时改为文本字符串,方便更多语言对接
 
-			临时 := utils.Aes加密_cbc192密匙字节数组(明文Json, 局_AES随机密匙字节集)
+			临时 := utils2.Aes加密_cbc192密匙字节数组(明文Json, 局_AES随机密匙字节集)
 			局_加密编码后 = base64.StdEncoding.EncodeToString(临时)
-			签名结果 = utils.RSA私钥加密([]byte(AppInfo.CryptoKeyPrivate), 局_AES随机密匙字节集) //RSa加密的是AES密钥
+			签名结果 = utils2.RSA私钥加密([]byte(AppInfo.CryptoKeyPrivate), 局_AES随机密匙字节集) //RSa加密的是AES密钥
 		} else { //不重要的信息,AES加密然后就还AES签名即可 提高效率
-			临时 := utils.Aes加密_cbc192(明文Json, AesKey)
+			临时 := utils2.Aes加密_cbc192(明文Json, AesKey)
 			局_加密编码后 = base64.StdEncoding.EncodeToString(临时)
 			签名结果 = 签名_Aes(局_加密编码后, AesKey)
 		}
@@ -78,7 +80,7 @@ func 响应加密处理(c *gin.Context, 明文Json string) {
 }
 
 func 签名_Aes(base64后明文 string, AesKey string) string {
-	return strings.ToUpper(utils.Md5String(base64后明文 + AesKey))
+	return strings.ToUpper(Md5String(base64后明文 + AesKey))
 }
 
 func X响应状态(c *gin.Context, 状态码 int) {

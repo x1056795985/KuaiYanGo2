@@ -1,6 +1,7 @@
 package Ser_Init
 
 import (
+	"EFunc/utils"
 	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
@@ -21,7 +22,7 @@ import (
 	"server/api/Admin/App"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
+	utils2 "server/utils"
 	"strconv"
 	"time"
 )
@@ -126,11 +127,11 @@ func InitDbTable数据() {
 		entities := []DB.DB_Admin{{
 			Id:            1,
 			User:          "admin",
-			PassWord:      utils.BcryptHash("admin"),
+			PassWord:      utils2.BcryptHash("admin"),
 			Phone:         "",
 			Email:         "",
 			Qq:            "",
-			SuperPassWord: utils.BcryptHash("admin"),
+			SuperPassWord: utils2.BcryptHash("admin"),
 			Status:        1,
 			Authority:     "All",
 			AgentDiscount: 100,

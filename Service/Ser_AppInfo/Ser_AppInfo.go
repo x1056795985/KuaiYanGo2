@@ -1,12 +1,13 @@
 package Ser_AppInfo
 
 import (
+	"EFunc/utils"
 	"errors"
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"server/Service/Ser_KaClass"
 	"server/global"
 	DB "server/structs/db"
-	"server/utils"
+	utils2 "server/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -244,7 +245,7 @@ func NewApp信息(AppId, AppType int, AppName string) error {
 	NewApp.CryptoType = 3                                            //默认Rsa交换Aes密匙
 	NewApp.CryptoKeyAes = rand_string.RandStringBytesMaskImprSrc(24) //aes cbc 192长度固定24
 
-	错误, 公钥base64, 私钥base64 := utils.GetRsaKey()
+	错误, 公钥base64, 私钥base64 := utils2.GetRsaKey()
 	if err != nil {
 		global.GVA_LOG.Error("新建app创建Rsa密匙失败:" + 错误.Error())
 	}
