@@ -1,12 +1,11 @@
 package main
 
 import (
+	. "EFunc/utils"
 	"bytes"
 	"crypto/md5"
 	"fmt"
 	"os/exec"
-	"server/utils"
-	. "server/utils"
 	"strconv"
 	"strings"
 	"testing"
@@ -18,7 +17,7 @@ func Test_项目编译(t *testing.T) {
 func 编译飞鸟快验() {
 	局_项目路径 := "E:\\yun\\xuhaonan\\project\\TY通用后台管理系统\\server2" //必须  \\ 路径间隔,不然打开文件夹路径错误
 	局_源码 := string(W文件_读入文件(局_项目路径 + "/global/global.go"))
-	局_旧版本号 := utils.W文本_取出中间文本(局_源码, "B版本号当前: \"", "\",")
+	局_旧版本号 := W文本_取出中间文本(局_源码, "B版本号当前: \"", "\",")
 	局_临时数组 := strings.Split(局_旧版本号, ".")
 	if len(局_临时数组) != 3 {
 		fmt.Printf("版本号读取失败")

@@ -57,6 +57,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_执行SQL功能", jS_执行SQL功能)
 	_ = vm.Set("$api_任务池_任务创建", jS_任务池_任务创建)
 	_ = vm.Set("$api_任务池_任务查询", jS_任务池_任务查询)
+	_ = vm.Set("$api_短信发送", jS_任务池_任务查询)
 
 	return vm
 }
