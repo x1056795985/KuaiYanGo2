@@ -2,14 +2,16 @@ package InitDB
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"server/Service/Ser_Init"
-	DB "server/structs/db"
-	"server/utils"
-
 	"server/global"
 	"server/structs/Http/request"
 	"server/structs/Http/response"
+	DB "server/structs/db"
+	"server/utils"
+	"strings"
 )
 
 // DBApi  初始化数据库api 具体实现位置
@@ -68,6 +70,7 @@ func (i *DBApi) InitDB(c *gin.Context) {
 			return
 		}
 	}
+
 	var 请求 request.InitDB //声明一个 initDB结果剖提
 	// 反序列化参数到结构体
 	if err := c.ShouldBindJSON(&请求); err != nil {
@@ -86,14 +89,20 @@ func (i *DBApi) InitDB(c *gin.Context) {
 	global.GVA_CONFIG.Mysql.MaxOpenConns = 100
 	global.GVA_CONFIG.Mysql.LogMode = "error"
 
-	global.GVA_DB = Ser_Init.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
+	局_db := Ser_Init.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
 
 	//开始创建数据库
-	if global.GVA_DB == nil {
-		global.GVA_LOG.Error("自动创建数据库失败!")
+	if 局_db == nil {
 		response.FailWithMessage("自动创建数据库失败，确认已启动Mysql,检查参数后再次进行初始化\r\n", c) //响应
 		return
 	}
+	//判断数据库编码
+	_, err := init_检测数据库编码格式(局_db)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c) //响应
+		return
+	}
+	global.GVA_DB = 局_db
 	global.GVA_Viper.Set("Mysql.Username", 请求.UserName)
 	global.GVA_Viper.Set("Mysql.Password", 请求.Password)
 	global.GVA_Viper.Set("Mysql.Path", 请求.Host)
@@ -110,11 +119,31 @@ func (i *DBApi) InitDB(c *gin.Context) {
 
 	global.GVA_Viper.SetConfigFile(global.GVA_CONFIG.Q取运行目录 + "/config.json")
 	global.GVA_Viper.SetConfigType("json")
-	err := global.GVA_Viper.WriteConfig()
+	err = global.GVA_Viper.WriteConfig()
 	if err != nil {
 		response.OkWithMessage("自动创建数据库成功,写配置文件失败:"+err.Error(), c)
 		return
 	}
 	response.OkWithMessage("自动创建数据库成功,默认账密都是admin", c)
 	return
+}
+
+func init_检测数据库编码格式(db *gorm.DB) (string, error) {
+	// 执行SQL语句查询数据库编码格式
+	var charset struct {
+		VariableName string
+		Value        string
+	}
+	err := db.Raw("show VARIABLES LIKE 'character_set_database'").Scan(&charset).Error
+	if err != nil {
+		return "", err
+	}
+	//# 修改数据库编码为 utf8mb4
+	//sql = "ALTER DATABASE your_database CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci"
+
+	// 检查编码格式是否为utf8mb4
+	if strings.Index(charset.Value, "utf8") == -1 { //utf8或 utf8mb4 都可以
+		return "charset.Value", errors.New("当前数据库编码格式为:" + charset.Value + "不是utf8mb4,请修改后重新初始化,不会修改看官网常见问题,修改数据库编码")
+	}
+	return charset.Value, nil
 }
