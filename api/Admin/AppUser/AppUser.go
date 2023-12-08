@@ -119,18 +119,39 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 	var app信息 DB.DB_AppInfo
 	app信息 = Ser_AppInfo.App取App详情(请求.AppId)
 	//是否vip状态可用  //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
-	if 请求.Status == 1 {
+
+	switch 请求.Status {
+	case 1:
 		if app信息.AppType == 2 || app信息.AppType == 4 {
 			局_DB.Where(表名_AppUser+".VipTime > ?", 0)
 		} else {
 			局_DB.Where(表名_AppUser+".VipTime > ?", time.Now().Unix())
 		}
-
-	} else if 请求.Status == 2 {
+	case 2:
 		if app信息.AppType == 2 || app信息.AppType == 4 {
 			局_DB.Where(表名_AppUser+".VipTime <= ?", 0)
 		} else {
 			局_DB.Where(表名_AppUser+".VipTime <= ?", time.Now().Unix())
+		}
+	case 3: //计时模式 1日内到期
+		if app信息.AppType == 1 || app信息.AppType == 3 {
+			局_DB.Where(表名_AppUser+".VipTime > ?", time.Now().Unix())
+			局_DB.Where(表名_AppUser+".VipTime <= ?", time.Now().Unix()+86400)
+		}
+	case 4: //计时模式 账号模式 3日内到期
+		if app信息.AppType == 1 || app信息.AppType == 3 {
+			局_DB.Where(表名_AppUser+".VipTime > ?", time.Now().Unix())
+			局_DB.Where(表名_AppUser+".VipTime <= ?", time.Now().Unix()+(86400*3))
+		}
+	case 5: //计时模式 账号模式 7日内到期
+		if app信息.AppType == 1 || app信息.AppType == 3 {
+			局_DB.Where(表名_AppUser+".VipTime > ?", time.Now().Unix())
+			局_DB.Where(表名_AppUser+".VipTime <= ?", time.Now().Unix()+(86400*7))
+		}
+	case 6: //计时模式 账号模式 30日内到期
+		if app信息.AppType == 1 || app信息.AppType == 3 {
+			局_DB.Where(表名_AppUser+".VipTime > ?", time.Now().Unix())
+			局_DB.Where(表名_AppUser+".VipTime <= ?", time.Now().Unix()+(86400*30))
 		}
 	}
 
