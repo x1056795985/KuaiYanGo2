@@ -38,11 +38,14 @@ func Id取User(Id int) string {
 	}
 	var 用户名 string
 	if Id < 0 {
-		global.GVA_DB.Model(DB.DB_Admin{}).Select("User").Where("Id=?", -Id).First(&用户名)
+		global.GVA_DB.Model(DB.DB_Admin{}).Select("User").Where("Id=?", -Id).Scan(&用户名)
 		return 用户名
 	}
 
-	global.GVA_DB.Model(DB.DB_User{}).Select("User").Where("Id=?", Id).First(&用户名)
+	err := global.GVA_DB.Debug().Model(DB.DB_User{}).Select("User").Where("Id=?", Id).Scan(&用户名).Error
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	return 用户名
 }
 
@@ -253,9 +256,9 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 		return errors.New("超级密码不能和密码相同")
 	}*/
 
-	if !utils.Z正则_校验密码(SuperPassWord, &msg) {
+	/*	if !utils.Z正则_校验密码(SuperPassWord, &msg) {
 		return errors.New("超级密码" + msg)
-	}
+	}*/
 	if User用户名取id(User) != 0 || Ser_Admin.User用户名取id(User) != 0 {
 		return errors.New("用户名已存在")
 	}

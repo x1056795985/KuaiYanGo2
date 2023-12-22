@@ -12,11 +12,13 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	sms_tx "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111" // 引入sms
 	"server/global"
+	"server/new/app/logic/common/setting"
 	"strings"
 )
 
 func Sms_当前选择发送短信验证码(模板变量 []string, 接收短信手机号 string) error {
-	局_临时 := global.GVA_CONFIG.D短信平台配置.D当前选择
+
+	局_临时 := setting.Q短信平台配置().D当前选择
 	switch 局_临时 {
 	case 0, 1:
 		return TX云_sms发送短信验证码(模板变量, 接收短信手机号)
@@ -32,24 +34,25 @@ func Sms_当前选择发送短信验证码(模板变量 []string, 接收短信�
 }
 
 func TX云_sms发送短信验证码(模板变量 []string, 接收短信手机号 string) error {
-	SecretId := global.GVA_CONFIG.D短信平台配置.TX云短信Sms.SECRET_ID
+	局_配置 := setting.Q短信平台配置()
+	SecretId := 局_配置.TX云短信Sms.SECRET_ID
 	if SecretId == "" {
 		return 系统错误.New("TX短信配置无效SECRET_ID")
 	}
 
-	SecretKey := global.GVA_CONFIG.D短信平台配置.TX云短信Sms.SECRET_KEY
+	SecretKey := 局_配置.TX云短信Sms.SECRET_KEY
 	if SecretId == "" {
 		return 系统错误.New("TX短信配置无效SECRET_KEY")
 	}
-	短信应用ID := global.GVA_CONFIG.D短信平台配置.TX云短信Sms.D短信应用ID
+	短信应用ID := 局_配置.TX云短信Sms.D短信应用ID
 	if SecretId == "" {
 		return 系统错误.New("TX短信配置无效短信应用ID")
 	}
-	短信签名 := global.GVA_CONFIG.D短信平台配置.TX云短信Sms.D短信签名
+	短信签名 := 局_配置.TX云短信Sms.D短信签名
 	if SecretId == "" {
 		return 系统错误.New("TX短信配置无效短信签名")
 	}
-	正文模板id := global.GVA_CONFIG.D短信平台配置.TX云短信Sms.Z正文模板ID
+	正文模板id := 局_配置.TX云短信Sms.Z正文模板ID
 	if SecretId == "" {
 		return 系统错误.New("TX短信配置无效正文模板id")
 	}
@@ -246,7 +249,7 @@ UnsupportedOperation.UnsupportedRegion	不支持该地区短信下发。
 
 // 本命令由自动生成，请配合[ go get -u gitee.com/anyueyinluo/Efunc ]库使用。
 func D短信宝_sms发送短信验证码(模板变量 []string, 接收短信手机号 string) error {
-	局_短信宝 := global.GVA_CONFIG.D短信平台配置.Sms短信宝
+	局_短信宝 := setting.Q短信平台配置().Sms短信宝
 
 	if 局_短信宝.User == "" {
 		return 系统错误.New("Sms短信宝用户名配置无效")
@@ -301,7 +304,7 @@ func D短信宝_sms发送短信验证码(模板变量 []string, 接收短信手�
 	return 系统错误.New("未知错误:" + 局_返回)
 }
 func Q七牛云_sms发送短信验证码(模板变量 []string, 接收短信手机号 string) error {
-	局_Sms七牛云 := global.GVA_CONFIG.D短信平台配置.Sms七牛云
+	局_Sms七牛云 := setting.Q短信平台配置().Sms七牛云
 
 	if 局_Sms七牛云.AccessKey == "" {
 		return 系统错误.New("Sms七牛云AccessKey配置无效")

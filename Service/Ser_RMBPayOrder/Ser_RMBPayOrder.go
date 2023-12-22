@@ -14,6 +14,7 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	DB "server/structs/db"
 	"strconv"
 	"sync"
@@ -228,13 +229,14 @@ func Order更新订单金额(订单号 string, 金额 float64) bool {
 	return true
 }
 func Order_退款_支付宝PC(订单信息 DB.DB_LogRMBPayOrder) error {
-	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
-	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝商户ID, privateKey, true)
+	局_支付配置 := setting.Q在线支付配置()
+	var privateKey = 局_支付配置.Z支付宝商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(局_支付配置.Z支付宝商户ID, privateKey, true)
 	if err != nil {
 		return errors.New("支付宝pc退款商户私钥载入失败")
 	}
 
-	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝公钥) // 加载支付宝公钥证书
+	err = client.LoadAliPayPublicKey(局_支付配置.Z支付宝公钥) // 加载支付宝公钥证书
 	if err != nil {
 		if err != nil {
 			return errors.New("支付宝pc退款支付宝公钥载入失败")
@@ -263,13 +265,14 @@ func Order_退款_支付宝PC(订单信息 DB.DB_LogRMBPayOrder) error {
 }
 
 func Order_退款_支付宝H5(订单信息 DB.DB_LogRMBPayOrder) error {
-	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝H5商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
-	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝H5商户ID, privateKey, true)
+	局_支付配置 := setting.Q在线支付配置()
+	var privateKey = 局_支付配置.Z支付宝H5商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(局_支付配置.Z支付宝H5商户ID, privateKey, true)
 	if err != nil {
 		return errors.New("支付宝H5退款商户私钥载入失败")
 	}
 
-	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝H5公钥) // 加载支付宝H5公钥证书
+	err = client.LoadAliPayPublicKey(局_支付配置.Z支付宝H5公钥) // 加载支付宝H5公钥证书
 	if err != nil {
 		if err != nil {
 			return errors.New("支付宝H5退款支付宝H5公钥载入失败")
@@ -297,13 +300,14 @@ func Order_退款_支付宝H5(订单信息 DB.DB_LogRMBPayOrder) error {
 	return errors.New(rsp.Content.SubMsg)
 }
 func Order_退款_支付宝当面付(订单信息 DB.DB_LogRMBPayOrder) error {
-	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
-	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户ID, privateKey, true)
+	局_支付配置 := setting.Q在线支付配置()
+	var privateKey = 局_支付配置.Z支付宝当面付商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(局_支付配置.Z支付宝当面付商户ID, privateKey, true)
 	if err != nil {
 		return errors.New("支付宝当面付退款商户私钥载入失败")
 	}
 
-	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝当面付公钥) // 加载支付宝公钥证书
+	err = client.LoadAliPayPublicKey(局_支付配置.Z支付宝当面付公钥) // 加载支付宝公钥证书
 	if err != nil {
 		if err != nil {
 			return errors.New("支付宝当面付退款支付宝公钥载入失败")
@@ -331,15 +335,16 @@ func Order_退款_支付宝当面付(订单信息 DB.DB_LogRMBPayOrder) error {
 	return errors.New(rsp.Content.SubMsg)
 }
 func Order_退款_微信支付(订单信息 DB.DB_LogRMBPayOrder) error {
+	局_支付配置 := setting.Q在线支付配置()
 	var (
-		mchID                      string = global.GVA_CONFIG.Z在线支付.W微信支付商户ID    // 商户号
-		mchCertificateSerialNumber string = global.GVA_CONFIG.Z在线支付.W微信支付商户证书序列号 // 商户证书序列号
-		mchAPIv3Key                string = global.GVA_CONFIG.Z在线支付.W微信支付商户v3密钥  // 商户APIv3密钥
+		mchID                      string = 局_支付配置.W微信支付商户ID    // 商户号
+		mchCertificateSerialNumber string = 局_支付配置.W微信支付商户证书序列号 // 商户证书序列号
+		mchAPIv3Key                string = 局_支付配置.W微信支付商户v3密钥  // 商户APIv3密钥
 	)
 
 	// 使用 utils 提供的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
 
-	mchPrivateKey, err := WXutils.LoadPrivateKey(global.GVA_CONFIG.Z在线支付.W微信支付商户证书串)
+	mchPrivateKey, err := WXutils.LoadPrivateKey(局_支付配置.W微信支付商户证书串)
 	if err != nil {
 		return errors.New("微信支付商户证书串载入失败")
 	}
@@ -361,7 +366,7 @@ func Order_退款_微信支付(订单信息 DB.DB_LogRMBPayOrder) error {
 			OutTradeNo:   core.String(订单信息.PayOrder),
 			OutRefundNo:  core.String(订单信息.PayOrder),
 			Reason:       core.String("协商退款"),
-			NotifyUrl:    core.String(global.GVA_CONFIG.X系统设置.X系统地址 + "/WebApi/PayWxRefundsNotify"),
+			NotifyUrl:    core.String(setting.Q系统设置().X系统地址 + "/WebApi/PayWxRefundsNotify"),
 			FundsAccount: refunddomestic.REQFUNDSACCOUNT_AVAILABLE.Ptr(),
 			Amount: &refunddomestic.AmountReq{
 				Currency: core.String("CNY"),
@@ -387,8 +392,8 @@ func Order_退款_微信支付(订单信息 DB.DB_LogRMBPayOrder) error {
 }
 
 func Q取余额充值_支付宝PC支付(局_用户Id int, 充值金额 float64, ip string) (gin.H, error) {
-
-	if !global.GVA_CONFIG.Z在线支付.Z支付宝开关 {
+	局_支付配置 := setting.Q在线支付配置()
+	if !局_支付配置.Z支付宝开关 {
 		return gin.H{}, errors.New("当前支付方式已关闭")
 	}
 
@@ -396,25 +401,25 @@ func Q取余额充值_支付宝PC支付(局_用户Id int, 充值金额 float64, 
 	if 局_用户名 == "" {
 		return gin.H{}, errors.New("要充值的用户不存在")
 	}
-	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
-	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝商户ID, privateKey, true)
+	var privateKey = 局_支付配置.Z支付宝商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(局_支付配置.Z支付宝商户ID, privateKey, true)
 	if err != nil {
 		return gin.H{}, errors.New("系统加载支付宝配置私钥失败,请检查参数")
 	}
-	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝公钥) // 加载支付宝公钥证书
+	err = client.LoadAliPayPublicKey(局_支付配置.Z支付宝公钥) // 加载支付宝公钥证书
 	if err != nil {
 		return gin.H{}, errors.New("系统加载支付宝配置公钥失败,请检查参数")
 	}
 
-	if 充值金额 <= 0 || 充值金额 > float64(global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额) {
-		return gin.H{}, errors.New(fmt.Sprintf("充值金额必须大于0且小于%.2f", global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额))
+	if 充值金额 <= 0 || 充值金额 > float64(局_支付配置.Z支付宝单次最大金额) {
+		return gin.H{}, errors.New(fmt.Sprintf("充值金额必须大于0且小于%.2f", 局_支付配置.Z支付宝单次最大金额))
 	}
 
 	局_余额订单信息, err := Order订单创建(局_用户Id, 1, 充值金额, "支付宝PC", "", ip, 0, "")
 
 	var p = alipay.TradePagePay{}
-	p.NotifyURL = global.GVA_CONFIG.X系统设置.X系统地址 + "/WebApi/PayAliNotify"
-	p.ReturnURL = global.GVA_CONFIG.Z在线支付.Z支付宝同步回调url
+	p.NotifyURL = setting.Q系统设置().X系统地址 + "/WebApi/PayAliNotify"
+	p.ReturnURL = 局_支付配置.Z支付宝同步回调url
 	p.Subject = "用户:" + 局_用户名 + "_充值余额"
 	p.OutTradeNo = 局_余额订单信息.PayOrder
 	p.TotalAmount = fmt.Sprintf("%.2f", 局_余额订单信息.Rmb)
@@ -429,27 +434,27 @@ func Q取余额充值_支付宝PC支付(局_用户Id int, 充值金额 float64, 
 }
 
 func Q取余额充值_微信支付支付(局_用户Id int, 充值金额 float64, ip string) (gin.H, error) {
-
+	局_支付配置 := setting.Q在线支付配置()
 	局_用户名 := Ser_User.Id取User(局_用户Id)
 	if 局_用户名 == "" {
 		return gin.H{}, errors.New("要充值的用户不存在")
 	}
 
-	if 充值金额 <= 0 || 充值金额 > float64(global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额) {
-		return gin.H{}, errors.New(fmt.Sprintf("充值金额必须大于0且小于%.2f", global.GVA_CONFIG.Z在线支付.Z支付宝单次最大金额))
+	if 充值金额 <= 0 || 充值金额 > float64(局_支付配置.Z支付宝单次最大金额) {
+		return gin.H{}, errors.New(fmt.Sprintf("充值金额必须大于0且小于%.2f", 局_支付配置.Z支付宝单次最大金额))
 	}
 
 	局_余额订单信息, err := Order订单创建(局_用户Id, 1, 充值金额, "微信支付", "", ip, 0, "")
 
 	var (
-		mchID                      string = global.GVA_CONFIG.Z在线支付.W微信支付商户ID    // 商户号
-		mchCertificateSerialNumber string = global.GVA_CONFIG.Z在线支付.W微信支付商户证书序列号 // 商户证书序列号
-		mchAPIv3Key                string = global.GVA_CONFIG.Z在线支付.W微信支付商户v3密钥  // 商户APIv3密钥
+		mchID                      string = 局_支付配置.W微信支付商户ID    // 商户号
+		mchCertificateSerialNumber string = 局_支付配置.W微信支付商户证书序列号 // 商户证书序列号
+		mchAPIv3Key                string = 局_支付配置.W微信支付商户v3密钥  // 商户APIv3密钥
 	)
 
 	// 使用 utils 提供的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
 
-	mchPrivateKey, err := WXutils.LoadPrivateKey(global.GVA_CONFIG.Z在线支付.W微信支付商户证书串)
+	mchPrivateKey, err := WXutils.LoadPrivateKey(局_支付配置.W微信支付商户证书串)
 	if err != nil {
 		return gin.H{}, errors.New("微信支付支付Url微信支付商户证书串加载失败")
 	}
@@ -468,13 +473,13 @@ func Q取余额充值_微信支付支付(局_用户Id int, 充值金额 float64,
 	svc := native.NativeApiService{Client: client}
 	resp, _, err := svc.Prepay(ctx,
 		native.PrepayRequest{
-			Appid:         core.String(global.GVA_CONFIG.Z在线支付.W微信支付AppId),
+			Appid:         core.String(局_支付配置.W微信支付AppId),
 			Mchid:         core.String(mchID),
 			Description:   core.String("用户:" + 局_用户名 + "_充值余额"),
 			OutTradeNo:    core.String(局_余额订单信息.PayOrder),
 			TimeExpire:    core.Time(time.Now().Add(time.Second * time.Duration(300))),
 			Attach:        core.String("用户:" + 局_用户名 + "_充值余额"),
-			NotifyUrl:     core.String(global.GVA_CONFIG.X系统设置.X系统地址 + "/WebApi/PayWxNotify"),
+			NotifyUrl:     core.String(setting.Q系统设置().X系统地址 + "/WebApi/PayWxNotify"),
 			GoodsTag:      core.String("WXG"),
 			LimitPay:      []string{},
 			SupportFapiao: core.Bool(false),

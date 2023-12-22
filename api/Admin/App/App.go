@@ -14,6 +14,7 @@ import (
 	"server/api/WebApi"
 	"server/api/middleware"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -44,7 +45,7 @@ func (a *Api) GetAppInfo(c *gin.Context) {
 	response.OkWithDetailed(结构响应_GetAppInfo{
 		AppInfo:   DB_AppInfo,
 		KaClass:   Ser_KaClass.KaName取map列表Int(请求.Id),
-		ServerUrl: global.GVA_CONFIG.X系统设置.X系统地址,
+		ServerUrl: setting.Q系统设置().X系统地址,
 		Port:      global.GVA_CONFIG.Port,
 	}, "获取成功", c)
 	return

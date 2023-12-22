@@ -17,6 +17,7 @@ import (
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -26,8 +27,9 @@ import (
 
 // 支付宝PC支付异步回调 Notify - 支付成功后会回调这里;我们可以用来修改订单状态等等
 func PayAliNotify(c *gin.Context) {
-	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
-	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝商户ID, privateKey, true)
+	局_支付配置 := setting.Q在线支付配置()
+	var privateKey = 局_支付配置.Z支付宝商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(局_支付配置.Z支付宝商户ID, privateKey, true)
 	if err != nil {
 		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统PayAliNotify", "系统内部", global.X系统信息.B版本号当前, "PayAliNotify回调商户私钥载入失败:"+err.Error(), c.ClientIP())
 		// 开始时间
@@ -35,7 +37,7 @@ func PayAliNotify(c *gin.Context) {
 		return
 	}
 
-	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝公钥) // 加载支付宝公钥证书
+	err = client.LoadAliPayPublicKey(局_支付配置.Z支付宝公钥) // 加载支付宝公钥证书
 	if err != nil {
 		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统PayAliNotify", "系统内部", global.X系统信息.B版本号当前, "PayAliNotify回调商户公钥载入失败:"+err.Error(), c.ClientIP())
 		// 开始时间
@@ -75,8 +77,9 @@ func PayAliNotify(c *gin.Context) {
 
 // 支付宝当面付支付异步回调 Notify - 支付成功后会回调这里;我们可以用来修改订单状态等等
 func PayAliNotify_当面付(c *gin.Context) {
-	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
-	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝当面付商户ID, privateKey, true)
+	局_支付配置 := setting.Q在线支付配置()
+	var privateKey = 局_支付配置.Z支付宝当面付商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(局_支付配置.Z支付宝当面付商户ID, privateKey, true)
 	if err != nil {
 		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统PayAliNotify当面付", "系统内部", global.X系统信息.B版本号当前, "PayAliNotify当面付回调商户私钥载入失败:"+err.Error(), c.ClientIP())
 		// 开始时间
@@ -84,7 +87,7 @@ func PayAliNotify_当面付(c *gin.Context) {
 		return
 	}
 
-	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝当面付公钥) // 加载支付宝当面付公钥证书
+	err = client.LoadAliPayPublicKey(局_支付配置.Z支付宝当面付公钥) // 加载支付宝当面付公钥证书
 	if err != nil {
 		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统PayAliNotify当面付", "系统内部", global.X系统信息.B版本号当前, "PayAliNotify回调商户公钥载入失败:"+err.Error(), c.ClientIP())
 		// 开始时间
@@ -121,8 +124,9 @@ func PayAliNotify_当面付(c *gin.Context) {
 
 // 支付宝H5支付异步回调 Notify - 支付成功后会回调这里;我们可以用来修改订单状态等等
 func PayAliNotify_H5(c *gin.Context) {
-	var privateKey = global.GVA_CONFIG.Z在线支付.Z支付宝H5商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
-	client, err := alipay.New(global.GVA_CONFIG.Z在线支付.Z支付宝H5商户ID, privateKey, true)
+	局_支付配置 := setting.Q在线支付配置()
+	var privateKey = 局_支付配置.Z支付宝H5商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(局_支付配置.Z支付宝H5商户ID, privateKey, true)
 	if err != nil {
 		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统PayAliNotifyH5", "系统内部", global.X系统信息.B版本号当前, "PayAliNotifyH5回调商户私钥载入失败:"+err.Error(), c.ClientIP())
 		// 开始时间
@@ -130,7 +134,7 @@ func PayAliNotify_H5(c *gin.Context) {
 		return
 	}
 
-	err = client.LoadAliPayPublicKey(global.GVA_CONFIG.Z在线支付.Z支付宝H5公钥) // 加载支付宝H5公钥证书
+	err = client.LoadAliPayPublicKey(局_支付配置.Z支付宝H5公钥) // 加载支付宝H5公钥证书
 	if err != nil {
 		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统PayAliNotifyH5", "系统内部", global.X系统信息.B版本号当前, "PayAliNotifyH5回调商户公钥载入失败:"+err.Error(), c.ClientIP())
 		// 开始时间
@@ -184,8 +188,9 @@ const (
 	AckFail = `<xml><return_code><![CDATA[FAIL]]></return_code></xml>`
 )
 
-// Pay小叮当Notify- 支付成功后会回调这里;我们可以用来修改订单状态等等
+// Pay小叮当Notify  支付成功后会回调这里;我们可以用来修改订单状态等等
 func Pay小叮当Notify(c *gin.Context) {
+	局_支付配置 := setting.Q在线支付配置()
 	//order_no=123456&subject=&pay_type=43&money=10.00&realmoney=10.00&result=success&xddpay_order=654321&app_id=10088&extra=abc
 
 	局_sign := fmt.Sprintf("order_no=%s&subject=%s&pay_type=%s&money=%s&realmoney=%s&result=success&xddpay_order=%s&app_id=%s&extra=%s&",
@@ -199,7 +204,7 @@ func Pay小叮当Notify(c *gin.Context) {
 		c.PostForm("extra"),
 	)
 
-	局_sign = utils2.Md5String(局_sign + global.GVA_CONFIG.Z在线支付.X小叮当接口密钥)
+	局_sign = utils2.Md5String(局_sign + 局_支付配置.X小叮当接口密钥)
 
 	if strings.ToUpper(局_sign) != strings.ToUpper(c.PostForm("sign")) {
 		局_boyd := c.Request.PostForm.Encode()
@@ -232,6 +237,7 @@ func Pay小叮当Notify(c *gin.Context) {
 
 // 微信支付支付异步回调 Notify - 支付成功后会回调这里;我们可以用来修改订单状态等等
 func PayWxNotify(c *gin.Context) {
+	局_支付配置 := setting.Q在线支付配置()
 	var 局_微信响应 微信回调响应
 	err := c.ShouldBindJSON(&局_微信响应)
 	if err != nil {
@@ -240,7 +246,7 @@ func PayWxNotify(c *gin.Context) {
 	}
 
 	plaintext, err := WXutils.DecryptAES256GCM(
-		global.GVA_CONFIG.Z在线支付.W微信支付商户v3密钥,
+		局_支付配置.W微信支付商户v3密钥,
 		局_微信响应.Resource.AssociatedData,
 		局_微信响应.Resource.Nonce, 局_微信响应.Resource.Ciphertext,
 	)
@@ -357,6 +363,7 @@ func Z支付成功_后处理(局_订单详细信息 DB.DB_LogRMBPayOrder) {
 
 // 微信支付支付退款回调 Notify成功后会回调这里;我们可以用来修改订单状态等等
 func PayWx退款Notify(c *gin.Context) {
+	局_支付配置 := setting.Q在线支付配置()
 	var 局_微信响应 微信回调响应
 	err := c.ShouldBindJSON(&局_微信响应)
 	if err != nil {
@@ -365,7 +372,7 @@ func PayWx退款Notify(c *gin.Context) {
 	}
 
 	plaintext, err := WXutils.DecryptAES256GCM(
-		global.GVA_CONFIG.Z在线支付.W微信支付商户v3密钥,
+		局_支付配置.W微信支付商户v3密钥,
 		局_微信响应.Resource.AssociatedData,
 		局_微信响应.Resource.Nonce, 局_微信响应.Resource.Ciphertext,
 	)

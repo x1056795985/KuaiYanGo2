@@ -262,7 +262,7 @@ func (a *Api) Save代理信息(c *gin.Context) {
 		return
 	}
 
-	if 请求.SuperPassWord != "" && !utils.Z正则_校验密码(请求.SuperPassWord, &msg) {
+	if 请求.SuperPassWord != "" { //不在校验格式因为可能为密保答案
 		response.FailWithMessage("超级密码"+msg, c)
 		return
 	}
