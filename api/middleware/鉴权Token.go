@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strings"
@@ -55,7 +56,7 @@ func IsTokenAdmin() gin.HandlerFunc {
 		c.Set("User", DB_LinksToken.User)
 		c.Set("局_在线信息", DB_LinksToken)
 
-		if global.GVA_CONFIG.X系统设置.W系统模式 == 1 { //演示模式不强制跳
+		if global.GVA_Viper.GetInt("系统模式") == 1 { //演示模式不强制跳
 			c.Next()
 			return
 		}
@@ -94,8 +95,13 @@ func IsTokenAdmin() gin.HandlerFunc {
 
 func IsAdminHost() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		if global.GVA_DB == nil { //没配置数据库直接放行
+			c.Next()
+			return
+		}
 		//需要处理 外网->宝塔->Nginx转发->快验,这种情况host会变成127.0.0.1,所以检测  Origin Referer 也没有域名才拦截
-		局_host := global.GVA_CONFIG.X系统设置.G管理员后台Host
+		局_host := setting.Q系统设置().G管理员后台Host
 		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
 			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行
 			if c.Request.Method == "GET" && c.Request.Host[:10] == "127.0.0.1:" {
@@ -103,7 +109,7 @@ func IsAdminHost() gin.HandlerFunc {
 				return
 			}
 
-			if global.GVA_CONFIG.X系统设置.W系统模式 == 1056795985 {
+			if global.GVA_Viper.GetInt("系统模式") == 1056795985 {
 				c.String(404, fmt.Sprintf("%v", c.Request))
 			} else {
 				c.String(404, "") //fmt.Sprintf("%v", c.Request)
@@ -119,6 +125,7 @@ func IsAdminHost() gin.HandlerFunc {
 // Token有效的才放行,否则返回Ttoken失效
 func IsTokenAgent() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		Token := c.Request.Header.Get("Token")
 		if Token == "" {
 			response.FailTokenErr(gin.H{"reload": true}, "请先登录", c)
@@ -160,8 +167,12 @@ func IsTokenAgent() gin.HandlerFunc {
 }
 func IsAgentHost() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if global.GVA_DB == nil { //没配置数据库直接放行
+			c.Next()
+			return
+		}
 		//需要处理 外网->宝塔->Nginx转发->快验,这种情况host会变成127.0.0.1,所以检测  Origin Referer 也没有域名才拦截
-		局_host := global.GVA_CONFIG.X系统设置.D代理后台Host
+		局_host := setting.Q系统设置().D代理后台Host
 		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
 			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行
 			if c.Request.Method == "GET" && c.Request.Host[:10] == "127.0.0.1:" {
@@ -169,7 +180,7 @@ func IsAgentHost() gin.HandlerFunc {
 				return
 			}
 
-			if global.GVA_CONFIG.X系统设置.W系统模式 == 1056795985 {
+			if global.GVA_Viper.GetInt("系统模式") == 1056795985 {
 				c.String(404, fmt.Sprintf("%v", c.Request))
 			} else {
 				c.String(404, "") //fmt.Sprintf("%v", c.Request)
@@ -184,8 +195,8 @@ func IsAgentHost() gin.HandlerFunc {
 
 func IsAgent是否关闭() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !global.GVA_CONFIG.X系统设置.D代理中心开关 {
-			c.String(404, global.GVA_CONFIG.X系统设置.D代理中心关闭提示)
+		if !setting.Q系统设置().D代理中心开关 {
+			c.String(404, setting.Q系统设置().D代理中心关闭提示)
 			c.Abort()
 			return
 		}

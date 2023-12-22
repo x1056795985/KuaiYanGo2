@@ -12,6 +12,7 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -79,7 +80,7 @@ func (a *Api) GetAdminInfo(c *gin.Context) {
 	response.OkWithDetailed(结构响应_GetAdminInfo{
 		AdminInfo:     DB_user,
 		UserMsgNoRead: 局_未读用户消息数量,
-		ServerName:    global.GVA_CONFIG.X系统设置.X系统名称,
+		ServerName:    setting.Q系统设置().X系统名称,
 	}, "获取成功", c)
 	return
 }

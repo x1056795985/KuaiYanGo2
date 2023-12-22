@@ -1,0 +1,5 @@
+package new
+
+func Main() {
+
+}

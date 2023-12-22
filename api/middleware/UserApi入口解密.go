@@ -17,6 +17,7 @@ import (
 	"server/api/UserApi"
 	"server/api/UserApi/response"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -140,9 +141,9 @@ func G更新哈希APi名称(盐值 string) {
 func UserApi解密() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		if !global.GVA_CONFIG.X系统设置.X系统开关 {
+		if !setting.Q系统设置().X系统开关 {
 			//什么都不返回,直接关闭
-			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), response.Status_系统已关闭, global.GVA_CONFIG.X系统设置.X系统关闭提示})
+			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), response.Status_系统已关闭, setting.Q系统设置().X系统关闭提示})
 			c.Abort()
 			return
 		}
@@ -298,7 +299,7 @@ func UserApi解密() gin.HandlerFunc {
 			局_验证码ID := string(局_fastjson.Get("Captcha").GetStringBytes("Id"))
 			局_验证码内容 := string(局_fastjson.Get("Captcha").GetStringBytes("Value"))
 
-			if 局_验证码类型 == 2 && (global.GVA_CONFIG.X行为验证码平台配置.J极验行为验证4.Y验证_ID == "" || global.GVA_CONFIG.X行为验证码平台配置.J极验行为验证4.Y验证_KEY == "") {
+			if 局_验证码类型 == 2 && (setting.Q行为验证码平台配置().J极验行为验证4.Y验证_ID == "" || setting.Q行为验证码平台配置().J极验行为验证4.Y验证_KEY == "") {
 				response.X响应状态消息(c, response.Status_验证码错误, "系统未设置行为验证码Id或Key,系统设置->行为验证码平台配置")
 				c.Abort()
 				return
@@ -367,9 +368,9 @@ type 请求响应_X响应状态 struct {
 
 func UserApi无Token解密() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !global.GVA_CONFIG.X系统设置.X系统开关 {
+		if !setting.Q系统设置().X系统开关 {
 			//什么都不返回,直接关闭
-			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), response.Status_系统已关闭, global.GVA_CONFIG.X系统设置.X系统关闭提示})
+			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), response.Status_系统已关闭, setting.Q系统设置().X系统关闭提示})
 			c.Abort()
 			return
 		}

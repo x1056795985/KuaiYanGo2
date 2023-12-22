@@ -58,7 +58,7 @@ func Get在线用户Ip地图分布统计(c *gin.Context) []gin.H {
 	  {name: "澳门特别行政区", value: 20},
 	  {name: "南海诸岛", value: 8},
 	]*/
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		var Data = make([]gin.H, 35)
 
 		Data[0] = gin.H{"name": "河北省", "value": 100}
@@ -181,7 +181,7 @@ func Get在线用户统计(c *gin.Context) []gin.H {
 	{value: 484, name: '测试应用4'},
 	{value: 300, name: '测试应用5'},
 	]*/
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		var Data = make([]gin.H, 5)
 		Data[0] = gin.H{"name": "演示模式应用1", "value": 1048}
 		Data[1] = gin.H{"name": "演示模式应用2", "value": 735}
@@ -231,7 +231,7 @@ func Get在线用户统计登录活动时间(c *gin.Context) []gin.H {
 	}
 
 	var Data = make([]gin.H, 2)
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		//Data[0] = gin.H{"name": "登录统计", "type": "line", "data": []int{1, 2, 3, 4, 5, 6, 7}}
 		//Data[1] = gin.H{"name": "活动统计", "type": "line", "data": []int{7, 6, 5, 4, 3, 2, 1}}
 		return Data
@@ -321,7 +321,7 @@ func Get应用用户类型统计(c *gin.Context) []gin.H {
 	{value: 484, name: '测试应用4'},
 	{value: 300, name: '测试应用5'},
 	]*/
-	if 局_Appid < 10000 || global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if 局_Appid < 10000 || global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		var Data = make([]gin.H, 5)
 		Data[0] = gin.H{"name": "未分类1", "value": 330}
 		Data[0] = gin.H{"name": "Vip1", "value": 1048}
@@ -366,7 +366,7 @@ func Get应用用户统计(c *gin.Context) [][]string {
 	  ['测试应用4', 4, 65, 999],
 	  ['测试应用5', 86, 65, 999]
 	]*/
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		var Data = [][]string{[]string{"product", "非会员", "会员", "总数"},
 			[]string{"测试应用1", "43", "25", "999"},
 			[]string{"测试应用2", "23", "33", "999"},
@@ -434,7 +434,7 @@ func Get卡号列表统计应用卡可用已用(c *gin.Context) [][]string {
 	  ['测试应用4', 4, 65, 999],
 	  ['测试应用5', 86, 65, 999]
 	]*/
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		var Data = [][]string{[]string{"product", "已用", "未用", "总数"},
 			[]string{"卡类1", "43", "25", "999"},
 			[]string{"卡类2", "23", "33", "999"},
@@ -503,7 +503,7 @@ func Get卡号列表统计应用卡类可用已用(c *gin.Context) [][]string {
 	  ['测试应用4', 4, 65, 999],
 	  ['测试应用5', 86, 65, 999]
 	]*/
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		var Data = [][]string{[]string{"product", "已用", "未用", "总数"},
 			[]string{"卡类1", "43", "25", "999"},
 			[]string{"卡类2", "23", "33", "999"},
@@ -591,7 +591,7 @@ func Get余额充值消费统计(c *gin.Context) []gin.H {
 	  }
 	]*/
 	var Data = make([]gin.H, 2)
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		Data[0] = gin.H{"name": "充值金额", "type": "line", "data": []int{320, 332, 341, 354, 390, 220, 450}}
 		Data[1] = gin.H{"name": "消费金额", "type": "line", "data": []int{120, 132, 101, 134, 90, 130, 210}}
 		return Data
@@ -686,7 +686,8 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 	  }
 	]*/
 	var Data = make([]gin.H, 2)
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		Data[0] = gin.H{"name": "消费点数", "type": "line", "data": []int{320, 332, 341, 354, 390, 220, 450}}
 		Data[1] = gin.H{"name": "消费积分", "type": "line", "data": []int{120, 132, 101, 134, 90, 130, 210}}
 		return Data
@@ -782,7 +783,7 @@ func Get卡号列表统计制卡(c *gin.Context) []gin.H {
 	  }
 	]*/
 	var Data = make([]gin.H, 2)
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		Data[0] = gin.H{"name": "制卡数量", "type": "line", "data": []int{320, 332, 341, 354, 390, 220, 450}}
 		return Data
 	}
@@ -923,7 +924,7 @@ func Get应用用户账号注册统计(c *gin.Context) []gin.H {
 	  }
 	]*/
 	var Data = make([]gin.H, 1)
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		Data[0] = gin.H{"name": "注册数量", "type": "line", "data": []int{120, 132, 101, 134, 90, 230, 210}}
 		return Data
 	}
@@ -988,7 +989,7 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 	  }
 	]*/
 	var Data = make([]gin.H, 2)
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 系统演示模式 {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
 		Data[0] = gin.H{"name": "注册数量", "type": "line", "data": []int{120, 132, 101, 134, 90, 230, 210}}
 		Data[1] = gin.H{"name": "登录数量", "type": "line", "data": []int{220, 182, 191, 234, 290, 330, 310}}
 		return Data
