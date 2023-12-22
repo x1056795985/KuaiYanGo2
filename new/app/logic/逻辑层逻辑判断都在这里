@@ -1,0 +1,1 @@
+	tx := *global.GVA_DB   //逻辑层复制全局变量

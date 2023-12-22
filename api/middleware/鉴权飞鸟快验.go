@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	"server/utils"
 	"strconv"
 	"sync"
@@ -79,9 +80,11 @@ func D读取缓存Token() bool {
 		//fmt.Printf("快验Token获取失败:%v", global.Q快验.Q取错误信息(nil))
 	} else {
 		//fmt.Printf("快验Token获取成功:%v", global.Q快验.J_Token)
-		if global.GVA_CONFIG.X系统设置.X系统地址 == "" {
-			global.GVA_CONFIG.X系统设置.X系统地址 = "http://" + global.Q快验.Q取用户IP() + ":" + strconv.Itoa(global.GVA_CONFIG.Port)
-			global.GVA_Viper.Set("系统设置.系统地址", global.GVA_CONFIG.X系统设置.X系统地址)
+		局_系统设置 := setting.Q系统设置()
+		if 局_系统设置.X系统地址 == "" {
+			局_系统设置.X系统地址 = "http://" + global.Q快验.Q取用户IP() + ":" + strconv.Itoa(global.GVA_CONFIG.Port)
+			_ = setting.Z系统设置(&局_系统设置)
+
 		}
 		global.GVA_Viper.Set(string(快验Token), global.Q快验.J_Token)                                                                             //写到配置重启备用
 		global.GVA_Viper.Set(string(ailiyunid), hex.EncodeToString(utils.Aes加密_cbc192_2(global.Q快验.J_CryptoKeyAes, global.Q快验.J_Token[:24]))) //写到配置重启备用

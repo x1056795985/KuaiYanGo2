@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"server/Service/Ser_Init"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	"server/structs/Http/request"
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -44,7 +45,13 @@ func (i *DBApi) CheckDB(c *gin.Context) {
 结果:
 	//global.GVA_LOG.Info(message)
 	//响应成功 并传入消息和数据
-	response.OkWithDetailed(gin.H{"needInit": needInit, "ServerName": global.GVA_CONFIG.X系统设置.X系统名称, "Filing": global.GVA_CONFIG.X系统设置.B备案号}, message, c)
+	局_系统名称 := "飞鸟快验后台管理"
+	局_备案名称 := ""
+	if global.GVA_DB != nil {
+		局_系统名称 = setting.Q系统设置().X系统名称
+		局_备案名称 = setting.Q系统设置().B备案号
+	}
+	response.OkWithDetailed(gin.H{"needInit": needInit, "ServerName": 局_系统名称, "Filing": 局_备案名称}, message, c)
 
 }
 
@@ -102,6 +109,7 @@ func (i *DBApi) InitDB(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c) //响应
 		return
 	}
+
 	global.GVA_DB = 局_db
 	global.GVA_Viper.Set("Mysql.Username", 请求.UserName)
 	global.GVA_Viper.Set("Mysql.Password", 请求.Password)

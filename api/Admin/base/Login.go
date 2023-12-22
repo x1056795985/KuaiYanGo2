@@ -40,7 +40,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 	// 判断验证码是否开启
 	openCaptcha := global.GVA_CONFIG.Captcha.OpenCaptcha               // 是否开启防暴次数
 	openCaptchaTimeOut := global.GVA_CONFIG.Captcha.OpenCaptchaTimeOut // 缓存超时时间
-	v, ok := global.H缓存.Get(客户端ip)                                // 获取这个ip已经被请求次数
+	v, ok := global.H缓存.Get(客户端ip)                                     // 获取这个ip已经被请求次数
 	if !ok {
 		// 获取这个ip已经被请求次数  如果没请求过, 设置值为1
 		global.H缓存.Set(客户端ip, 1, time.Second*time.Duration(openCaptchaTimeOut))
@@ -75,7 +75,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 
 	// 没查到数据  或  取反(密码正确)
 	if err != nil || !utils.BcryptCheck(Request.Password, DB_user.PassWord) {
-		if global.GVA_CONFIG.X系统设置.W系统模式 == 1 {
+		if global.GVA_Viper.GetInt("系统模式") == 1 {
 			response.FailWithMessage("账号或密码错误,当前为演示模式,账密都是 Admin", c)
 		} else {
 			response.FailWithMessage("账号或密码错误", c)
@@ -112,7 +112,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 	err = global.GVA_DB.Create(&DB_links_user).Error
 	go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "管理平台登录", 4)
 	快验 := global.X系统信息.D到期时间 < time.Now().Unix()
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 1 {
+	if global.GVA_Viper.GetInt("系统模式") == 1 {
 		快验 = false
 	}
 	response.OkWithDetailed(结构_登录响应{

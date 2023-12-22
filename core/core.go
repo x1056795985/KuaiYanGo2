@@ -46,56 +46,6 @@ func InitViper() *viper.Viper {
 	v := viper.New()
 	//写入默认值
 	v.SetDefault("Port", 18888)
-	v.SetDefault("系统设置.系统名称", "飞鸟快验后台管理系统")
-	v.SetDefault("系统设置.系统地址", "")
-	v.SetDefault("系统设置.管理员后台Host", "")
-	v.SetDefault("系统设置.WebApiHost", "")
-	v.SetDefault("系统设置.代理后台Host", "")
-	v.SetDefault("系统设置.系统开关", true)
-	v.SetDefault("系统设置.系统关闭提示", "系统已经关闭使用")
-	v.SetDefault("系统设置.代理中心开关", true)
-	v.SetDefault("系统设置.代理中心关闭提示", "代理中心已关闭")
-	v.SetDefault("系统设置.用户中心开关", true)
-	v.SetDefault("系统设置.系统模式", 0)
-	v.SetDefault("系统设置.备案号", "粤ICP备88888888号-1")
-
-	v.SetDefault("在线支付.禁止退款", false)
-
-	v.SetDefault("在线支付.支付宝开关", false)
-	v.SetDefault("在线支付.支付宝商户ID", "20210088888888")
-	v.SetDefault("在线支付.支付宝商户私钥", "")
-	v.SetDefault("在线支付.支付宝公钥", "")
-	v.SetDefault("在线支付.支付宝同步回调url", "https://www.baidu.com/s?wd=%E8%AE%A2%E5%8D%95{OrderId}%E6%94%AF%E4%BB%98%E6%88%90%E5%8A%9F")
-	v.SetDefault("在线支付.支付宝单次最大金额", 2000)
-
-	v.SetDefault("在线支付.支付宝当面付开关", false)
-	v.SetDefault("在线支付.支付宝当面付商户ID", "20210088888888")
-	v.SetDefault("在线支付.支付宝当面付商户私钥", "")
-	v.SetDefault("在线支付.支付宝当面付公钥", "")
-	v.SetDefault("在线支付.支付宝当面付同步回调url", "")
-	v.SetDefault("在线支付.支付宝当面付单次最大金额", 2000)
-
-	v.SetDefault("在线支付.支付宝H5开关", false)
-	v.SetDefault("在线支付.支付宝H5商户ID", "")
-	v.SetDefault("在线支付.支付宝H5商户私钥", "")
-	v.SetDefault("在线支付.支付宝H5公钥", "")
-	v.SetDefault("在线支付.支付宝H5同步回调url", "")
-	v.SetDefault("在线支付.支付宝H5单次最大金额", 2000)
-
-	v.SetDefault("在线支付.微信支付开关", false)
-	v.SetDefault("在线支付.微信支付商户ID", "1234567")
-	v.SetDefault("在线支付.微信支付AppId", "1234567")
-	v.SetDefault("在线支付.微信支付商户v3密钥", "")
-	v.SetDefault("在线支付.微信支付商户证书串", "")
-	v.SetDefault("在线支付.微信支付异步回调Url", "https://www.baidu.com")
-	v.SetDefault("在线支付.微信支付单次最大金额", 500)
-
-	v.SetDefault("在线支付.小叮当开关", false)
-	v.SetDefault("在线支付.小叮当app_id", "")
-	v.SetDefault("在线支付.小叮当接口密钥", "")
-	v.SetDefault("在线支付.小叮当支付类型", 43)
-	v.SetDefault("在线支付.小叮当单次最大金额", 500)
-
 	//==================验证码默认配置
 	v.SetDefault("captcha.open-captcha", 1)            //设置验证码默认ip防暴次数
 	v.SetDefault("captcha.open-captcha-timeout", 3600) //防暴时间 被爆破后开启验证秒数

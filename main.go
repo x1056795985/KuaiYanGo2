@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/songzhibin97/gkit/cache/local_cache"
 	"go.uber.org/zap"
 	"os"
 	"runtime/debug"
@@ -10,6 +11,8 @@ import (
 	"server/api/middleware"
 	"server/core"
 	"server/global"
+	"server/new/app/logic/common/setting"
+	"time"
 )
 
 /*设置包自动管理*/
@@ -35,9 +38,16 @@ func main() {
 	}()
 
 	global.GVA_Viper = core.InitViper() //初始化配置读写器 和全局配置结构变量GVA_config
-	middleware.G更新哈希APi名称(global.GVA_CONFIG.X系统设置.Y用户API加密盐)
-	global.GVA_LOG = core.InitZap()          // 初始化zap日志记录器
-	zap.ReplaceGlobals(global.GVA_LOG)       //替换系统的log记录器 为zap的全局日志记录器 方便统一管理
+
+	global.GVA_LOG = core.InitZap()    // 初始化zap日志记录器
+	zap.ReplaceGlobals(global.GVA_LOG) //替换系统的log记录器 为zap的全局日志记录器 方便统一管理
+	global.H缓存 = local_cache.NewCache( //需要比数据库先初始化,因为读取系统配置就用到缓存了
+		//设置缓存默认超时时间 为24小时
+		local_cache.SetDefaultExpire(time.Hour*24),
+		local_cache.SetCapture(func(k string, v interface{}) { //设置缓存删除捕获函数,缓存到期删除时会触发
+			//fmt.Printf("delete k:%s v:%v\n", k, v)
+		}),
+	)
 	global.GVA_DB = Ser_Init.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
 
 	if global.GVA_DB != nil { //如果数据库不为空
@@ -45,7 +55,8 @@ func main() {
 
 		// 程序结束前关闭数据库链接
 		db, _ := global.GVA_DB.DB()
-		defer db.Close() //延迟关闭程序结束前关闭表
+		defer db.Close()                                 //延迟关闭程序结束前关闭表
+		middleware.G更新哈希APi名称(setting.Q系统设置().Y用户API加密盐) //只有数据库成功才可以操作 不然或报错
 	} else {
 		global.GVA_LOG.Info(fmt.Sprintf("数据库连接失败,等待输入数据库信息"))
 	}

@@ -71,7 +71,7 @@ type 结构请求_GetAppUserList struct {
 	Keywords string `json:"Keywords"` // 关键字
 	Order    int    `json:"Order"`    // 0 倒序 1 正序
 	Sortable int    `json:"Sortable"` //排序字段名id  0id 1=到期时间
-	IsLogin  bool   `json:"IsLogin"`  //仅限登录
+	IsLogin  int    `json:"IsLogin"`  //1 在线 2不在线
 
 }
 
@@ -174,8 +174,12 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 		}
 
 	}
-	if 请求.IsLogin {
+
+	switch 请求.IsLogin {
+	case 1: //在线
 		局_DB.Where("(select count(db_links_Token.id)  FROM db_links_Token WHERE  " + 表名_AppUser + ".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid=" + strconv.Itoa(请求.AppId) + " )>0 ")
+	case 2: //不在线
+		局_DB.Where("(select count(db_links_Token.id)  FROM db_links_Token WHERE  " + 表名_AppUser + ".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid=" + strconv.Itoa(请求.AppId) + " )=0 ")
 	}
 
 	//Count(&总数) 必须放在where 后面 不然值会被清0

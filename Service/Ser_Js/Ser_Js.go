@@ -18,6 +18,7 @@ import (
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
 	"server/Service/Ser_User"
+	"server/Service/Ser_UserConfig"
 	"server/global"
 	DB "server/structs/db"
 	"strconv"
@@ -58,6 +59,9 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_任务池_任务创建", jS_任务池_任务创建)
 	_ = vm.Set("$api_任务池_任务查询", jS_任务池_任务查询)
 	_ = vm.Set("$api_短信发送", jS_任务池_任务查询)
+	_ = vm.Set("$api_用户名或卡号取uid", jS_用户名或卡号取uid)
+	_ = vm.Set("$api_取用户云配置", jS_取用户云配置)
+	_ = vm.Set("$api_置用户云配置", jS_置用户云配置)
 
 	return vm
 }
@@ -416,4 +420,51 @@ func jS_任务池_任务查询(任务Uuid string) js对象_通用返回 {
 
 	return js对象_通用返回{IsOk: true, Err: "", Data: a}
 
+}
+func jS_置用户云配置(局_在线信息 DB.DB_LinksToken, 配置名称, 配置值 string) js对象_通用返回 {
+
+	if 配置名称 == "" {
+		return js对象_通用返回{IsOk: false, Err: "配置名称不能为空"}
+	}
+	if 局_在线信息.LoginAppid <= 0 {
+		return js对象_通用返回{IsOk: false, Err: "登录信息必须大于0"}
+	}
+	if 局_在线信息.Uid <= 0 {
+		return js对象_通用返回{IsOk: false, Err: "Uid必须大于0"}
+	}
+	if 配置值 == "" { //值为空则删
+		global.GVA_DB.Model(DB.DB_UserConfig{}).Delete(DB.DB_UserConfig{
+			AppId: 局_在线信息.LoginAppid,
+			Uid:   局_在线信息.Uid,
+			Name:  配置值,
+		})
+	} else {
+		_ = Ser_UserConfig.Z置值(局_在线信息.LoginAppid, 局_在线信息.Uid, 配置名称, 配置值)
+	}
+
+	return js对象_通用返回{IsOk: true, Err: "成功"}
+}
+
+func jS_取用户云配置(局_在线信息 DB.DB_LinksToken, 配置名称 string) js对象_通用返回 {
+
+	if 配置名称 == "" {
+		return js对象_通用返回{IsOk: false, Err: "配置名称不能为空"}
+	}
+	if 局_在线信息.LoginAppid <= 0 {
+		return js对象_通用返回{IsOk: false, Err: "登录信息必须大于0"}
+	}
+	if 局_在线信息.Uid <= 0 {
+		return js对象_通用返回{IsOk: false, Err: "Uid必须大于0"}
+	}
+	局_值 := Ser_UserConfig.Q取值(局_在线信息.LoginAppid, 局_在线信息.Uid, 配置名称)
+
+	return js对象_通用返回{IsOk: true, Err: "成功", Data: 局_值}
+}
+
+func jS_用户名或卡号取uid(应用id int, 用户名或卡号 string) int {
+
+	if Ser_AppInfo.App是否为卡号(应用id) {
+		return Ser_Ka.Ka卡号取id(应用id, 用户名或卡号)
+	}
+	return Ser_User.User用户名取id(用户名或卡号)
 }

@@ -243,7 +243,7 @@ func (a *Api) New(c *gin.Context) {
 	}
 
 	var msg string
-	if !utils.Z正则_是否英数(请求.Prefix, &msg) {
+	if 请求.Prefix != "" && !utils.Z正则_是否英数(请求.Prefix, &msg) {
 		response.FailWithMessage("卡类前缀"+msg, c)
 		return
 	}

@@ -13,11 +13,12 @@ import (
 	"net/http"
 	"net/url"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	"time"
 )
 
 func CaptCha_行为验证码验证(验证码id, 验证码内容 string) error {
-	局_临时 := global.GVA_CONFIG.X行为验证码平台配置.D当前选择
+	局_临时 := setting.Q行为验证码平台配置().D当前选择
 	局_临时 = 1
 	switch 局_临时 {
 	case 0, 1:
@@ -32,8 +33,8 @@ func CaptCha_行为验证码验证(验证码id, 验证码内容 string) error {
 
 // 1,验证通过,2 极验服务器异常,验证通过,3验证失败
 func J极验_滑动验证码参数验证(验证码id, 验证码内容 string) error {
-	局_极验id := global.GVA_CONFIG.X行为验证码平台配置.J极验行为验证4.Y验证_ID
-	局_极验Key := global.GVA_CONFIG.X行为验证码平台配置.J极验行为验证4.Y验证_KEY
+	局_极验id := setting.Q行为验证码平台配置().J极验行为验证4.Y验证_ID
+	局_极验Key := setting.Q行为验证码平台配置().J极验行为验证4.Y验证_KEY
 
 	//{"captcha_id":"ea872eea9e20dce9de4e5da4297ee704","lot_number":"cb287e80eb44498bb58e53825e003291","pass_token":"bb5de929069b7d4b271a81e41d33906a5e3aa0cd5e869bdf3fbc8ee8be787c26","gen_time":"1685944268","captcha_output":"BFZFX-sB_WLMfXEmGExfGuhvp6VqzHxjzMIoh3mpHd5VPSZVHisuUaD6HVMfjFmOCnNSYUfZGIEIexJ4CLXbcX_X4a2sJd1ooQ1V5JhElfUUFtUhAS1OdUQJZ1j_XhIg8KjXQV9BD9v3S0c0awHd334-GR86EqVXkYD9O0iDtnpfMZyzEFt7IevV-buSwexVQAR5erRhQz0imMaWic3l8yTPOLYDxm-_UDvwikMk5krDTRFqBPmWyeBAFcJ8-skL"}
 	局_json, err2 := fastjson.Parse(验证码内容)

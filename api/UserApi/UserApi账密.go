@@ -17,7 +17,7 @@ import (
 	"server/Service/Ser_Pay"
 	"server/Service/Ser_User"
 	"server/api/UserApi/response"
-	"server/global"
+	"server/new/app/logic/common/setting"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strings"
@@ -299,7 +299,7 @@ func UserApi_订单_余额充值_微信支付支付(c *gin.Context) {
 		return
 	}
 
-	if !global.GVA_CONFIG.Z在线支付.W微信支付开关 {
+	if !setting.Q在线支付配置().W微信支付开关 {
 		response.X响应状态消息(c, response.Status_操作失败, "当前支付方式已关闭")
 		return
 	}

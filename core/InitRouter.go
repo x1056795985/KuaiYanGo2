@@ -3,7 +3,6 @@ package core
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/songzhibin97/gkit/cache/local_cache"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,32 +17,26 @@ import (
 	"server/core/dist/VueAgent"
 	VueAgentAssets "server/core/dist/VueAgent/assets"
 	"server/global"
+	"server/new/app/router"
 	"server/structs/Http/response"
-	"time"
 )
 
 // InitRouters 初始化总路由
 func InitRouters() *gin.Engine {
-	gin.SetMode(gin.ReleaseMode) //设置为生产模式
-	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1056795985) {
+	//gin.SetMode(gin.ReleaseMode) //设置为生产模式
+
+	if !(global.GVA_Viper.GetInt("系统模式") == 1056795985) {
 		gin.DefaultWriter = ioutil.Discard //禁止控制台输出
 
 	}
 
-	global.H缓存 = local_cache.NewCache(
-		//设置缓存默认超时时间 为24小时
-		local_cache.SetDefaultExpire(time.Hour*24),
-		local_cache.SetCapture(func(k string, v interface{}) { //设置缓存删除捕获函数,缓存到期删除时会触发
-			//fmt.Printf("delete k:%s v:%v\n", k, v)
-		}),
-	)
-
 	Router := gin.Default() //返回路由实例
+
 	// Router.Use(middleware.LoadTls())  // 如果需要使用https 请打开此中间件 然后前往 core/server.go 将启动模式 更变为 Router.RunTLS("端口","你的cre/pem文件","你的key文件")
 
 	// 跨域，如需跨域可以打开下面的注释
 	Router.Use(middleware.Cors()) // 直接放行全部跨域请求
-	Router.Use(统一恐慌恢复())          // 直接放行全部跨域请求
+	Router.Use(T统一恐慌恢复())         // 直接放行全部跨域请求
 
 	//公共路由器 无需鉴权
 	PublicGroup := Router.Group("")
@@ -51,8 +44,8 @@ func InitRouters() *gin.Engine {
 	RouterAdmin(PublicGroup)   //注册基础功能路由 不做鉴权  初始化token  获取验证码等等
 	RouterAgent(PublicGroup)   //注册基础功能路由 不做鉴权  初始化token  获取验证码等等
 	RouterWebApi(PublicGroup)
-
-	if global.GVA_CONFIG.X系统设置.W系统模式 == 1 {
+	router.RouterInit(PublicGroup)
+	if global.GVA_Viper.GetInt("系统模式") == 1 {
 		Router.NoRoute(func(c *gin.Context) {
 			response.FailWithMessage("演示模式不可操作,请部署到自己服务器深度体验", c)
 			return
@@ -63,7 +56,7 @@ func InitRouters() *gin.Engine {
 	return Router
 }
 
-func 统一恐慌恢复() gin.HandlerFunc {
+func T统一恐慌恢复() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -122,7 +115,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.GET("GetAdminInfo", User.GetAdminInfo) // 获取用户信息
 	baseRouter.POST("OutLogin", User.OutLogin)
 
-	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+	if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 		baseRouter.POST("AdminNewPassword", User.AdminNewPassword) //修改当前Token密码
 	}
 
@@ -130,7 +123,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.POST("GetLinkUserList", LinkUser.GetLinkUserList) // 获取在线列表
 	baseRouter.POST("NewWebApiToken", LinkUser.NewWebApiToken)   // 获取在线列表
 	baseRouter.POST("SetTokenOutTime", LinkUser.SetTokenOutTime) // 获取在线列表
-	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+	if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 		baseRouter.POST("logout", LinkUser.Del批量注销)          // 批量注销在线
 		baseRouter.POST("DeleteLogout", LinkUser.Del批量删除已注销) // 批量删除已注销
 	}
@@ -141,7 +134,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.POST("NewUser", User.New用户信息)         // 保存用户详细信息
 	baseRouter.POST("SetUserStatus", User.Set修改状态)   // 保存用户详细信息
 	baseRouter.POST("SetBatchAddRMB", User.P批量_增减余额) // 保存用户详细信息
-	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+	if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 		baseRouter.POST("DeleteUser", User.Del批量删除用户) // 获取用户详细信息
 	}
 	//代理账号===========================================
@@ -156,7 +149,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.POST("SetAgentUserStatus", AgentApp.Set修改状态)                        // 保存用户详细信息
 	baseRouter.POST("GetAgentKaClassAuthority", AgentApp.GetAgentKaClassAuthority) //取全部可制卡类和已授权卡类
 	baseRouter.POST("SetAgentKaClassAuthority", AgentApp.SetAgentKaClassAuthority) //设置代理可制卡类ID
-	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+	if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 		baseRouter.POST("DeleteAgentUser", AgentApp.Del批量删除代理) // 获取用户详细信息
 	}
 	//代理库存管理===========================================
@@ -169,7 +162,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.POST("GetInfo", AgentInventory.GetAgentInventoryInfo)                  // 获取详细信息
 	baseRouter.POST("New", AgentInventory.New库存报信息)                                   // 创建库存包
 	baseRouter.POST("Withdraw", AgentInventory.K库存撤回)                                 // 撤回转出的库存
-	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+	if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 		baseRouter.POST("Delete", AgentInventory.Del批量删除库存)
 	}
 	//应用管理===========================================
@@ -185,7 +178,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.GET("GetAllUserApi", App.Get全部用户APi)          // Get全部用户APi
 		baseRouter.GET("GetAllWebApi", App.Get全部WebAPi)          // Get全部用户APi
 		baseRouter.GET("GetAppIdMax", App.GetAppIdMax)           // 取AppId最大值
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Del批量删除App)  // 删除信息
 			baseRouter.POST("SaveInfo", App.SaveApp信息) // 保存详细信息
 		}
@@ -205,7 +198,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetBatchAddVipTime", App.Set批量维护_增减时间点数)
 		baseRouter.POST("SetBatchAllUserVipTime", App.P批量_全部用户增减时间点数)
 
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("DeleteBatch", App.Set批量维护_删除用户)
 			baseRouter.POST("Delete", App.Del批量删除软件用户) // 删除信息
 		}
@@ -222,7 +215,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetInfo", App.GetUserClassInfo)   // 获取详细信息
 		baseRouter.POST("SaveInfo", App.SetUserClass信息)    // 保存详细信息
 		baseRouter.GET("GetIdNameList", App.GetIdNameList) // 取id和名字数组
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Del批量删除用户类型) // 删除信息
 		}
 	}
@@ -237,7 +230,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetInfo", App.GetInfo)        // 获取详细信息
 		baseRouter.POST("SaveInfo", App.SaveInfo)      // 保存详细信息
 		//baseRouter.GET("GetIdNameList", App.GetIdNameList) // 取id和名字数组
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 		}
 	}
@@ -259,7 +252,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetKaTemplate", App.Q取卡号生成模板)
 		baseRouter.POST("SetKaTemplate", App.Set修改卡号生成模板)
 		baseRouter.POST("Recover", App.Z追回卡号)
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete)            // 删除信息
 			baseRouter.POST("DeleteBatch", App.Set批量维护_删除用户) // 删除信息
 
@@ -275,7 +268,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetInfo", App.GetInfo)             // 获取详细信息
 		baseRouter.POST("SetUserConfig", App.SetUserConfig) // 保存详细信息
 
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 		}
 	}
@@ -291,7 +284,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SaveInfo", App.SaveDB_PublicData信息) // 保存详细信息
 
 		baseRouter.POST("SetIsVip", App.Set修改vip限制)
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 		}
 	}
@@ -304,7 +297,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetList", App.GetPublicJsList) // 获取列表
 		baseRouter.POST("GetInfo", App.GetInfo)         // 获取详细信息
 		baseRouter.POST("SetIsVip", App.Set修改vip限制)     // 删除信息
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("New", App.New)                    // 新建信息
 			baseRouter.POST("SaveInfo", App.SaveDB_PublicJs信息) // 保存详细信息
 			baseRouter.POST("Delete", App.Delete)              // 删除信息
@@ -323,7 +316,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetStatus", App.Set修改状态)        // 保存详细信息
 		baseRouter.POST("DeleteTaskQueueTid", App.Q清空队列) // 保存详细信息
 
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Del批量删除) // 删除信息
 		}
 	}
@@ -345,7 +338,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("TestSendSMS", App.F发送短信平台测试)
 		baseRouter.POST("GetInfoCaptcha2", App.GetInfo行为验证码平台设置)
 		baseRouter.POST("SaveInfoCaptcha2", App.Save行为验证码平台设置)
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("SaveInfoSystem", App.Save信息System)
 			baseRouter.POST("SaveInfoPay", App.Save信息在线支付) // 保存详细信息
 		}
@@ -358,7 +351,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		App := Api.Admin.LogLogin                       //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetLogLoginList) // 获取列表
 		baseRouter.POST("GetInfo", App.GetInfo)         // 获取详细信息
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 		}
 
@@ -372,7 +365,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetList", App.GetLogMoneyList) // 获取列表
 		baseRouter.POST("GetInfo", App.GetInfo)         // 获取详细信息
 
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 		}
 	}
@@ -385,7 +378,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetList", App.GetLogAgentInventory) // 获取列表
 		baseRouter.POST("GetInfo", App.GetInfo)              // 获取详细信息
 
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 		}
 	}
@@ -398,7 +391,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		App := Api.Admin.LogVipNumber              //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetLogList) // 获取列表
 		baseRouter.POST("GetInfo", App.GetInfo)    // 获取详细信息
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 		}
 
@@ -411,7 +404,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		App := Api.Admin.LogRegister               //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetLogList) // 获取列表
 		baseRouter.POST("GetInfo", App.GetInfo)    // 获取详细信息
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 		}
 
@@ -422,7 +415,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	{
 		App := Api.Admin.LogAgentOtherFunc         //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetLogList) // 获取列表
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 		}
 
@@ -435,7 +428,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		App := Api.Admin.LogUserMsg                //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetLogList) // 获取列表
 		baseRouter.POST("GetInfo", App.GetInfo)    // 获取详细信息
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("SetIsRead", App.Set修改IsRead) // 设置已读状态
 			baseRouter.POST("Delete", App.Delete)         // 删除信息
 		}
@@ -450,7 +443,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetInfo", App.GetInfo)     // 获取详细信息
 		baseRouter.POST("New", App.New手动充值)
 		baseRouter.POST("SetPayOrderNote", App.Set修改备注)
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Delete) // 删除信息
 			baseRouter.POST("Out", App.Out退款)     // 退款
 		}
@@ -463,7 +456,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		App := Api.Admin.Panel //实现路由的 具体方法位置
 		//监控也
 		baseRouter.POST("getServerInfo", App.GetServerInfo) // 获取服务器信息
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("reloadSystem", App.ReloadSystem) // 重启服务
 			baseRouter.POST("StopSystem", App.StopSystem)     // 停止系统
 		}
@@ -502,7 +495,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetPayStatus", App.Q取支付通道状态)
 		baseRouter.POST("Updater", App.G更新程序)
 
-		if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("OutLogin", App.Q注销)
 			baseRouter.POST("GetPayPC", App.Y余额充值)
 			baseRouter.POST("PayMoneyToKa", App.Y余额购买充值卡)
@@ -515,6 +508,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 
 // Agent路由 menu 需要鉴权  menu
 func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
+
 	Router.GET("agent", func(context *gin.Context) { //客户经常输入错误,单独注册个路由,跳转正确地址
 		context.Redirect(http.StatusFound, "/Agent")
 	})
@@ -553,7 +547,7 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.POST("GetPayPC", MenuApi.Y余额充值)
 	baseRouter.POST("GetPayOrderStatus", MenuApi.Q取余额充值订单状态)
 
-	if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
+	if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 		baseRouter.POST("NewPassword", MenuApi.NewPassword) //修改当前Token密码
 	}
 	//卡号列表===========================================
@@ -644,135 +638,7 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 		App := Agent.Api.OtherFunc                          //实现路由的 具体方法位置
 		baseRouter.POST("SetAppUserKey", App.SetAppUserKey) // 获取列表
 	}
-	/*
 
-		//系统设置===========================================
-		baseRouter = Router根Agent.Group("/SetSystem")
-		baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-		{
-			App := Api.Admin.SetSystem //实现路由的 具体方法位置
-			baseRouter.POST("GetInfoSystem", App.GetInfoSystem)
-			baseRouter.POST("SaveInfoSystem", App.Save信息System)
-			baseRouter.POST("GenerateAPIEncryptedSDK", App.S生成API加密源码SDK)
-			//在线支付
-			baseRouter.POST("GetInfoPay", App.GetInfo在线支付) // 获取详细信息
-			baseRouter.POST("SaveInfoPay", App.Save信息在线支付) // 保存详细信息
-
-			//短信平台配置
-			baseRouter.POST("GetInfoSMS", App.GetInfo短信平台设置)         // 获取详细信息
-			baseRouter.POST("SaveInfoSMS", App.Save短信平台设置)           // 保存详细信息
-			baseRouter.POST("GetInfoCaptcha2", App.GetInfo行为验证码平台设置) // 获取详细信息
-			baseRouter.POST("SaveInfoCaptcha2", App.Save行为验证码平台设置)   // 保存详细信息
-		}
-		//登录日志===========================================
-		baseRouter = Router根Agent.Group("/LogLogin")
-		baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-		{
-			App := Api.Admin.LogLogin                       //实现路由的 具体方法位置
-			baseRouter.POST("GetList", App.GetLogLoginList) // 获取列表
-			baseRouter.POST("GetInfo", App.GetInfo)         // 获取详细信息
-			if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-				baseRouter.POST("Delete", App.Delete) // 删除信息
-			}
-
-		}
-
-
-		//积分点数日志===========================================
-		baseRouter = Router根Agent.Group("/LogVipNumber")
-		baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-		{
-			App := Api.Admin.LogVipNumber              //实现路由的 具体方法位置
-			baseRouter.POST("GetList", App.GetLogList) // 获取列表
-			baseRouter.POST("GetInfo", App.GetInfo)    // 获取详细信息
-			if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-				baseRouter.POST("Delete", App.Delete) // 删除信息
-			}
-
-		}
-
-		//用户消息===========================================
-		baseRouter = Router根Agent.Group("/LogUserMsg")
-		baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-		{
-			App := Api.Admin.LogUserMsg                   //实现路由的 具体方法位置
-			baseRouter.POST("GetList", App.GetLogList)    // 获取列表
-			baseRouter.POST("GetInfo", App.GetInfo)       // 获取详细信息
-			baseRouter.POST("SetIsRead", App.Set修改IsRead) // 设置已读状态
-			if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-				baseRouter.POST("Delete", App.Delete) // 删除信息
-			}
-		}
-		//余额充值订单===========================================
-		baseRouter = Router根Agent.Group("/LogRMBPayOrder")
-		baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-		{
-			App := Api.Admin.LogRMBPayOrder            //实现路由的 具体方法位置
-			baseRouter.POST("GetList", App.GetLogList) // 获取列表
-			baseRouter.POST("GetInfo", App.GetInfo)    // 获取详细信息
-			baseRouter.POST("New", App.New手动充值)
-			if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-				baseRouter.POST("Delete", App.Delete) // 删除信息
-				baseRouter.POST("Out", App.Out退款)     // 退款
-			}
-		}
-		//控制面板===========================================
-		baseRouter = Router根Agent.Group("/Panel")
-		baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-		{
-			App := Api.Admin.Panel //实现路由的 具体方法位置
-			//监控也
-			baseRouter.POST("getServerInfo", App.GetServerInfo) // 获取服务器信息
-			baseRouter.POST("reloadSystem", App.ReloadSystem)   // 重启服务
-			baseRouter.POST("StopSystem", App.StopSystem)       // 停止系统
-			//分析页
-			baseRouter.POST("ChartLinksUser", App.Get在线统计)
-			baseRouter.POST("ChartLinksUserIPCity", App.Get在线用户Ip地图分布统计)
-			baseRouter.POST("ChartLinksUserLoginTime", App.Get在线用户统计登录活动时间)
-			baseRouter.POST("ChartAppUserClass", App.Get应用用户类型统计)
-			baseRouter.POST("ChartUser", App.Get用户账号登录注册统计)
-			baseRouter.POST("ChartRMBAddSub", App.Get余额充值消费统计)
-			baseRouter.POST("ChartVipNumberAddSub", App.Get积分点数消费统计)
-			baseRouter.POST("ChartAppUser", App.Get应用用户统计)
-			baseRouter.POST("ChartAppKa", App.Get卡号列表统计应用卡可用已用)
-			baseRouter.POST("ChartAppKaClass", App.Get卡号列表统计应用卡类可用已用)
-			baseRouter.POST("ChartKaRegister", App.Get卡号列表统计制卡)
-			baseRouter.POST("ChartAppUserRegister", App.Get应用用户账号注册统计)
-			baseRouter.POST("ChartAgentLevel", App.Get代理组织架构图)
-		}
-		//快验个人中心===========================================
-		baseRouter = Router根Agent.Group("/KuaiYan")
-		baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-		baseRouter.Use(middleware.IsToken飞鸟快验())
-		{
-			App := Api.Admin.KuaiYan                              //实现路由的 具体方法位置
-			baseRouter.POST("GetCaptchaApiList", App.Q取开启验证码接口列表) // 获取列表
-			baseRouter.POST("GetCaptcha", App.Q取英数验证码)
-			baseRouter.POST("GetUserInfo", App.Q快验个人信息更新)
-			baseRouter.POST("GetSmsCaptcha", App.Q取短信验证码)
-			baseRouter.POST("SetPassword", App.Z快验找回密码)
-			baseRouter.POST("Register", App.Z快验注册)
-			baseRouter.POST("Login", App.D登录)
-			baseRouter.POST("GetIsBuyKaList", App.Q取可购买充值卡列表)
-			baseRouter.POST("GetPurchasedKaList", App.Q购买充值卡记录)
-			baseRouter.POST("GetPayStatus", App.Q取支付通道状态)
-			baseRouter.POST("Updater", App.G更新程序)
-
-			if !(global.GVA_CONFIG.X系统设置.W系统模式 == 1) {
-				baseRouter.POST("OutLogin", App.Q注销)
-				baseRouter.POST("GetPayPC", App.Y余额充值)
-				baseRouter.POST("PayMoneyToKa", App.Y余额购买充值卡)
-				baseRouter.POST("UseKa", App.K卡号充值)
-			}
-
-		}*/
 	return baseRouter
 }
 

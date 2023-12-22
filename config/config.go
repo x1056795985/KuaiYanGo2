@@ -1,20 +1,19 @@
 package config
 
 type Server struct {
+	Port    int     `mapstructure:"Port" json:"Port" yaml:"Port"`          // 端口值
+	Zap     Zap     `mapstructure:"zap" json:"zap" yaml:"zap"`             //日志配置
+	Captcha Captcha `mapstructure:"captcha" json:"captcha" yaml:"captcha"` //验证码配置
+	Q取运行目录  string
+	// gorm
+	Mysql Mysql `mapstructure:"mysql" json:"mysql" yaml:"mysql"`
+}
+type Server备用 struct {
 	X系统设置      X系统设置      `mapstructure:"系统设置" json:"系统设置" yaml:"系统设置"`                // 系统名称
 	Z在线支付      Z在线支付      `mapstructure:"在线支付" json:"在线支付" yaml:"在线支付"`                // 系统名称
 	D短信平台配置    D短信平台配置    `mapstructure:"短信平台配置" json:"短信平台配置" yaml:"短信平台配置"`          // 短信配置
 	X行为验证码平台配置 X行为验证码平台配置 `mapstructure:"行为验证码平台配置" json:"行为验证码平台配置" yaml:"行为验证码平台配置"` // 短信配置
-
-	Port    int `mapstructure:"Port" json:"Port" yaml:"Port"` // 端口值
-	Zap     Zap `mapstructure:"zap" json:"zap" yaml:"zap"`    //日志配置
-	Q取运行目录  string
-	Captcha Captcha `mapstructure:"captcha" json:"captcha" yaml:"captcha"` //验证码配置
-	//// gorm
-	Mysql Mysql `mapstructure:"mysql" json:"mysql" yaml:"mysql"`
-	//Mssql  Mssql           `mapstructure:"mssql" json:"mssql" yaml:"mssql"`
-	// 跨域配置
-	Cors CORS `mapstructure:"cors" json:"cors" yaml:"cors"`
+	Captcha    Captcha    `mapstructure:"captcha" json:"captcha" yaml:"captcha"`       //验证码配置
 }
 
 type X系统设置 struct {
@@ -29,8 +28,8 @@ type X系统设置 struct {
 	Y用户中心开关    bool   `mapstructure:"用户中心开关" json:"用户中心开关" yaml:"用户中心开关"`
 	D代理中心开关    bool   `mapstructure:"代理中心开关" json:"代理中心开关" yaml:"代理中心开关"`
 	D代理中心关闭提示  string `mapstructure:"代理中心关闭提示" json:"代理中心关闭提示" yaml:"代理中心关闭提示"`
-	W系统模式      int    `mapstructure:"系统模式" json:"系统模式" yaml:"系统模式"` // 0  正常用户 1 演示模式     1056795985 调试模式
-	B备案号       string `mapstructure:"备案号" json:"备案号" yaml:"备案号"`
+	//W系统模式      int    `mapstructure:"系统模式" json:"系统模式" yaml:"系统模式"` // 0  正常用户 1 演示模式     1056795985 调试模式
+	B备案号 string `mapstructure:"备案号" json:"备案号" yaml:"备案号"`
 }
 
 type Z在线支付 struct {

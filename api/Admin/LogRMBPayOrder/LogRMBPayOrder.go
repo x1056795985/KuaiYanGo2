@@ -7,6 +7,7 @@ import (
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/setting"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -258,8 +259,8 @@ func (a *Api) Out退款(c *gin.Context) {
 		return
 	}
 
-	if global.GVA_CONFIG.Z在线支付.J禁止退款 {
-		response.FailWithMessage("已禁止退款,请手动前往服务器目录,修改配置文件 禁止退款:true", c)
+	if setting.Q在线支付配置().J禁止退款 {
+		response.FailWithMessage("已禁止退款,请手动前往服务器数据库,修改配置信息文件 禁止退款:true", c)
 		return
 	}
 	局_订单信息, ok := Ser_RMBPayOrder.Order取订单详细(请求.PayOrder)

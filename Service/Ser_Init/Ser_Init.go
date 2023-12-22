@@ -20,7 +20,10 @@ import (
 	"server/Service/Ser_TaskPool"
 	"server/Service/Ser_User"
 	"server/api/Admin/App"
+	"server/config"
 	"server/global"
+	"server/new/app/logic/common/setting"
+	newDB "server/new/app/models/db"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -102,8 +105,7 @@ func InitDbTables() {
 		DB.Db_Agent_库存日志{},
 		DB.Db_Agent_库存卡包{},
 
-		//DB.DB_Setting{},
-
+		newDB.DB_Setting{},
 	)
 
 	if err != nil {
@@ -117,6 +119,8 @@ func InitDbTables() {
 
 func InitDbTable数据() {
 	db := global.GVA_DB //全局变量赋值到局部
+	数据库兼容旧版本()          //需要先兼容, 迁移配置数据 才能使用setting
+	局_例子记录 := setting.Q例子写出记录()
 	if db == nil {
 		return
 	}
@@ -143,18 +147,18 @@ func InitDbTable数据() {
 
 	//检查 用户表  是否有数据没有
 	局_例子版本 := 1
-	if global.GVA_Viper.GetInt("test.DB_User") < 局_例子版本 {
+	if 局_例子记录.DbUser < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_User{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_User.New用户信息("test0001", "test0001", "test0001test0001", "10001", "10001@qq.com", "", "127.0.0.1", "", 0, 0, 0)
 		}
-		global.GVA_Viper.Set("test.DB_User", 局_例子版本)
+		局_例子记录.DbUser = 局_例子版本
 	}
 
 	//-============================================结束==========================
 	//检查 DB_AppInfo表是否有应用如果没有插入测试应用============================================
 	局_例子版本 = 1
-	if global.GVA_Viper.GetInt("test.DB_AppInfo") < 局_例子版本 {
+	if 局_例子记录.DbAppinfo < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_AppInfo{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			_ = Ser_AppInfo.NewApp信息(10001, 1, "演示对接账密限时Rsa交换密匙")
@@ -168,13 +172,13 @@ func InitDbTable数据() {
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10002, "天卡", "Y01", 86400, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10002, "周卡", "Y01", 604800, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 		}
-		global.GVA_Viper.Set("test.DB_AppInfo", 局_例子版本)
+		局_例子记录.DbAppinfo = 局_例子版本
 	}
 	//-============================================结束==========================
 
 	//检查 余额充值订单 是否有应用如果没有插入测试应用============================================
 	局_例子版本 = 1
-	if global.GVA_Viper.GetInt("test.DB_LogRMBPayOrder") < 局_例子版本 {
+	if 局_例子记录.DbLogrmbpayorder < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			订单创建, _ := Ser_RMBPayOrder.Order订单创建(1, 1, 0.01, "支付宝PC", "演示数据", "127.0.0.1", 0, "")
@@ -196,23 +200,23 @@ func InitDbTable数据() {
 			订单创建, _ = Ser_RMBPayOrder.Order订单创建(1, 1, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
 			Ser_RMBPayOrder.Order更新订单状态(订单创建.PayOrder, Ser_RMBPayOrder.D订单状态_退款失败)
 		}
-		global.GVA_Viper.Set("test.DB_LogRMBPayOrder", 1)
+		局_例子记录.DbLogrmbpayorder = 局_例子版本
 	}
 	//-============================================结束==========================
 	//检查 余额日志  是否有数据没有
 	局_例子版本 = 1
-	if global.GVA_Viper.GetInt("test.DB_LogMoney") < 局_例子版本 {
+	if 局_例子记录.DbLogmoney < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_LogMoney{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_Log.Log_写余额日志("test0001", "127.0.0.1", "演示积分效果", -0.01)
 			Ser_Log.Log_写余额日志("test0001", "127.0.0.1", "演示积分效果", 0.01)
 		}
-		global.GVA_Viper.Set("test.DB_LogMoney", 局_例子版本)
+		局_例子记录.DbLogmoney = 局_例子版本
 	}
 	//-============================================结束==========================
 	//检查 积分点数  是否有数据没有
 	局_例子版本 = 1
-	if global.GVA_Viper.GetInt("test.DB_LogVipNumber") < 局_例子版本 {
+	if 局_例子记录.DbLogvipnumber < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_LogVipNumber{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_Log.Log_写积分点数时间日志("test0001", "127.0.0.1", "演示积分效果", -0.01, 10001, 1)
@@ -220,13 +224,13 @@ func InitDbTable数据() {
 			Ser_Log.Log_写积分点数时间日志("test0001", "127.0.0.1", "演示点数效果", 1, 10001, 2)
 			Ser_Log.Log_写积分点数时间日志("test0001", "127.0.0.1", "演示点数效果", -1, 10001, 2)
 		}
-		global.GVA_Viper.Set("test.DB_LogVipNumber", 局_例子版本)
+		局_例子记录.DbLogvipnumber = 局_例子版本
 	}
 	//-============================================结束==========================
 
 	//检查 公共变量表  是否有数据没有====================================================
 	局_例子版本 = 1
-	if global.GVA_Viper.GetInt("test.DB_PublicData") < 局_例子版本 {
+	if 局_例子记录.DbPublicdata < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_PublicData{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			_ = Ser_PublicData.C创建(DB.DB_PublicData{
@@ -242,7 +246,7 @@ func InitDbTable数据() {
 				Value: "飞鸟快验应用管理后台",
 			})
 		}
-		global.GVA_Viper.Set("test.DB_PublicData", 局_例子版本)
+		局_例子记录.DbPublicdata = 局_例子版本
 	}
 	//-============================================结束==========================
 
@@ -251,31 +255,31 @@ func InitDbTable数据() {
 	//-============================================结束==========================
 	//检查 任务类型  是否有数据没有
 	局_例子版本 = 1
-	if global.GVA_Viper.GetInt("test.TaskPool_类型") < 局_例子版本 {
+	if 局_例子记录.Taskpool < 局_例子版本 {
 		global.GVA_DB.Model(DB.TaskPool_类型{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			_ = Ser_TaskPool.Task类型创建("测试任务1", "hook模板_任务创建入库前", "", "", "")
 		}
-		global.GVA_Viper.Set("test.TaskPool_类型", 局_例子版本)
+		局_例子记录.Taskpool = 局_例子版本
 	}
 	//-============================================结束==========================
 
 	//检查 任务类型  是否有数据没有
 	局_例子版本 = 1
-	if global.GVA_Viper.GetInt("test.DB_LogUserMsg") < 局_例子版本 {
+	if 局_例子记录.DbLogusermsg < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_LogUserMsg{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_Log.Log_写用户消息(3, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.0", "建议做个自动赚钱的功能,启动软件后,微信余额就蹭蹭涨", "127.0.0.1")
 			Ser_Log.Log_写用户消息(2, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.0", `捕获到异常bug文件名:EDV8FCC.tmp句柄数:508,ExceptionText：运行时出错!\r\n\r\n错误代码：0\r\n\r\n错误信息：分配 1073741832 字节内存失败!\r\n0, 0\r\n\r\nCallStack:\r\n 0x024B7B4C\r\n  0x10063260\r\n   0x024A0410\r\n    0x024B5254\r\n     0x024B51B8\r\n      0x024B52A3\r\n       0x02300015\r\n\r\n异常调用过程： 0x024B8656\r\n  0x024B8A65\r\n   0x024AB2F5\r\n    0x024B7CA3\r\n     0x024B7B4C\r\n      0x024B7D74\r\n       0x10063260\r\n        0x024A0410\r\n         0x024B5254\r\n          0x024B51B8\r\n           0x024B52A3\r\n            0x02300015\r\n\r\n当前调用过程： 0x024B7B4C\r\n  0x10063260\r\n   0x024A0410\r\n    0x024B5254\r\n     0x024B51B8\r\n      0x024B52A3\r\n       0x02300015\r\n`, "127.0.0.1")
 			Ser_Log.Log_写用户消息(2, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.3", "内存写入错误错误信息:11191919;2424233", "127.0.0.1")
 		}
-		global.GVA_Viper.Set("test.DB_LogUserMsg", 局_例子版本)
+		局_例子记录.DbLogusermsg = 局_例子版本
 	}
 	//-============================================结束==========================
 
 	//检查 代理数量  是否有数据没有
 	局_例子版本 = 1
-	if global.GVA_Viper.GetInt("test.Db_Agent_Level") < 局_例子版本 {
+	if 局_例子记录.DbAgentLevel < 局_例子版本 {
 		global.GVA_DB.Model(DB.Db_Agent_Level{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_User.New用户信息("刘备", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", -1, 50, 0)
@@ -295,11 +299,11 @@ func InitDbTable数据() {
 				Ser_User.New用户信息("张苞", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", 局_Uid, 10, 0)
 			}
 		}
-		global.GVA_Viper.Set("test.Db_Agent_Level", 局_例子版本)
+		局_例子记录.DbAgentLevel = 局_例子版本
 	}
 	//-============================================结束==========================
-	数据库兼容旧版本()
-	err := global.GVA_Viper.WriteConfig()
+
+	err := setting.Z例子写出记录(&局_例子记录)
 	if err != nil {
 		return
 	}
@@ -577,6 +581,60 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 		Note:  "ApiHook例子,这个是演示hook登录结束后,修改响应明文的例子,",
 	})
 
+	Ser_PublicJs.C创建(DB.DB_PublicJs{
+		AppId: 1,
+		Name:  "置用户云配置",
+		Value: `function 置用户云配置(JSON形参文本) {
+    //return $用户在线信息; // {"Key":"aaaaaa","Status":1,"Tab":"AMD Ryzen 7 6800H with Radeon Graphics         |178BFBFF00A40F41","Uid":21,"User":"aaaaaa"}
+    //return $应用信息 // {"AppId":10001,"AppName":"演示对接账密限时Rsa交换密匙","Status":3,"VipData":"{\n\"VipData\":\"这里的数据,只有登录成功并且账号会员不过期才会传输出去的数据\",\n\"VipData2\":\"这里的数据,只有登录成功并且账号会员不过期才会传输出去的数据\"\n}
+    //return $用户在线信息.Uid
+
+    let 配置名 = "窗口宽度";
+    let 配置值 = "360px";
+
+    // $用户在线信息.LoginAppid=10001    //通过修改登录appid,可以读取其他应用的云配置信息
+    // 局uid=$api_用户名或卡号取uid($用户在线信息.LoginAppid,"aaaaaa")  // 可以通过这个获取指定用户的uid, 其实就是应用用户的来源id  无该用户返回0
+    $用户在线信息.Uid = 57 //通过修改uid 用户或卡号id,可以读取其他用户的云配置信息
+
+
+    var 局_结果对象 = $api_置用户云配置($用户在线信息, 配置名, 配置值)
+    if (局_结果对象.IsOk) {
+        return "写入成功"
+    }
+
+    return 局_结果对象.Err //这里存放错误信息,
+}`,
+		Type:  1,
+		IsVip: 0,
+		Note:  "置用户云配置例程",
+	})
+
+	Ser_PublicJs.C创建(DB.DB_PublicJs{
+		AppId: 1,
+		Name:  "取用户云配置",
+		Value: `function 取用户云配置(JSON形参文本) {
+    //return $用户在线信息; // {"Key":"aaaaaa","Status":1,"Tab":"AMD Ryzen 7 6800H with Radeon Graphics         |178BFBFF00A40F41","Uid":21,"User":"aaaaaa"}
+    //return $应用信息 // {"AppId":10001,"AppName":"演示对接账密限时Rsa交换密匙","Status":3,"VipData":"{\n\"VipData\":\"这里的数据,只有登录成功并且账号会员不过期才会传输出去的数据\",\n\"VipData2\":\"这里的数据,只有登录成功并且账号会员不过期才会传输出去的数据\"\n}
+    //return $用户在线信息.Uid
+
+    let 配置名 = "窗口宽度";
+
+    // $用户在线信息.LoginAppid=10001    //通过修改登录appid,可以读取其他应用的云配置信息
+    // 局uid=$api_用户名或卡号取uid($用户在线信息.LoginAppid,"aaaaaa")  // 可以通过这个获取指定用户的uid, 其实就是应用用户的来源id  无该用户返回0
+    $用户在线信息.Uid = 57 //通过修改uid 用户或卡号id,可以读取其他用户的云配置信息
+
+
+    var 局_结果对象 = $api_取用户云配置($用户在线信息, 配置名)
+    if (局_结果对象.IsOk) {
+        return 局_结果对象.Data //只要非异常都会返回值 即使没有这个配置也会返回空字符串
+    }
+
+    return 局_结果对象.Err //这里存放错误信息,只有参数不正确,或数据库无法连接的情况才会有错误
+}`,
+		Type:  1,
+		IsVip: 0,
+		Note:  "取用户云配置例程",
+	})
 	global.GVA_Viper.Set("test.DB_PublicJs", 局_例子版本)
 
 }
@@ -639,4 +697,30 @@ func 数据库兼容旧版本() {
 		fmt.Println("已处理并兼容用户云配置联合主键问题")
 	}
 
+	//2023/12/13  将配置信息改放到数据库,将旧的数据写入数据库
+	var 局_总数 int64
+	_ = db.Model(newDB.DB_Setting{}).Count(&局_总数).Error
+	if 局_总数 == 0 {
+		var GVA_CONFIG config.Server备用
+		if err = global.GVA_Viper.Unmarshal(&GVA_CONFIG); err == nil {
+			_ = setting.Z系统设置(&GVA_CONFIG.X系统设置)
+			_ = setting.Z短信平台配置(&GVA_CONFIG.D短信平台配置)
+			_ = setting.Z行为验证码平台配置(&GVA_CONFIG.X行为验证码平台配置)
+			_ = setting.Z在线支付配置(&GVA_CONFIG.Z在线支付)
+		}
+		var Test config.Test
+		Test.DbAgentLevel = global.GVA_Viper.GetInt("test.db_agent_level")
+		Test.DbAppinfo = global.GVA_Viper.GetInt("test.db_appinfo")
+		Test.DbLogmoney = global.GVA_Viper.GetInt("test.db_logmoney")
+		Test.DbLogrmbpayorder = global.GVA_Viper.GetInt("test.db_logrmbpayorder")
+		Test.DbLogusermsg = global.GVA_Viper.GetInt("test.db_logusermsg")
+		Test.DbLogvipnumber = global.GVA_Viper.GetInt("test.db_logvipnumber")
+		Test.DbPublicdata = global.GVA_Viper.GetInt("test.db_publicdata")
+		Test.DbUser = global.GVA_Viper.GetInt("test.db_user")
+		Test.Taskpool = global.GVA_Viper.GetInt("test.taskpool_类型")
+		Test.User = global.GVA_Viper.GetInt("test.user")
+		_ = setting.Z例子写出记录(&Test)
+
+		fmt.Printf("已处理并兼容用户云配置联合主键问题\n")
+	}
 }

@@ -588,7 +588,7 @@ func (a *Api) Q取卡号生成模板(c *gin.Context) {
 		if Ser_AppInfo.App是否为计点(请求.AppId) {
 			模板 += "点数"
 		} else {
-			模板 += "卡号"
+			模板 += "时间"
 		}
 		模板 += ":{VipTime} 积分:{VipTime} 软件:{AppName} 余额:{RMb} 积分:{VipNumber}"
 	}
