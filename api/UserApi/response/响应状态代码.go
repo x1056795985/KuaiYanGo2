@@ -28,6 +28,7 @@ const (
 	Status_已冻结无法登录      = 207
 	Status_同时在线超过最大值    = 208
 	Status_未登录          = 210
+	Status_黑名单信息        = 211 //ip  或绑定信息
 )
 
 var Status值键 = make(map[int]string)

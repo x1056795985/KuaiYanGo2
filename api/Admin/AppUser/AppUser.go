@@ -1,6 +1,8 @@
 package AppUser
 
 import (
+	"EFunc/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/Service/Ser_Admin"
@@ -323,6 +325,10 @@ func (a *Api) Save用户信息(c *gin.Context) {
 	for _, 值 := range 请求.UserConfig {
 		_ = Ser_UserConfig.Z置值(请求.AppId, 请求.AppUser.Uid, 值.Name, 值.Value)
 	}
+
+	if 局_旧用户信息.VipNumber != 请求.AppUser.VipNumber {
+		go Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Uid取User(请求.AppId, 请求.AppUser.Uid), c.ClientIP(), "管理员ID:"+strconv.Itoa(c.GetInt("Uid"))+"编辑用户信息积分变化:"+utils.Float64到文本(局_旧用户信息.VipNumber, 2)+"=>"+utils.Float64到文本(请求.AppUser.VipNumber, 2), 请求.AppUser.VipNumber-局_旧用户信息.VipNumber, 请求.AppId, 1)
+	}
 	return
 }
 
@@ -393,6 +399,10 @@ func (a *Api) New用户信息(c *gin.Context) {
 		return
 	}
 	response.OkWithMessage("添加成功", c)
+
+	if 局_信息.VipNumber != 0 {
+		go Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Uid取User(请求.AppId, 请求.Uid), c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带积分:%v", c.GetInt("Uid"), 局_信息.VipNumber), 局_信息.VipNumber, 请求.AppId, 1)
+	}
 	return
 }
 
