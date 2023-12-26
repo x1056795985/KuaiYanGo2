@@ -17,6 +17,7 @@ import (
 	"server/api/UserApi"
 	"server/api/UserApi/response"
 	"server/global"
+	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/setting"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -97,9 +98,9 @@ var J集_UserAPi路由 = map[string]路由信息{
 }
 
 type 路由信息 struct {
-	Z中文名  string
+	Z中文名   string
 	Z指向函数 func(*gin.Context)
-	X显示   bool //是否显示到前段
+	X显示     bool //是否显示到前段
 }
 
 var J集_UserAPi路由_加密 = map[string]string{}
@@ -161,6 +162,13 @@ func UserApi解密() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		if blacklist.Is黑名单(c.ClientIP(), Appid) {
+			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), response.Status_黑名单信息, "黑名单ip"})
+			c.Abort()
+			return
+		}
+
 		AppInfo := Ser_AppInfo.App取App详情(Appid)
 		c.Set("AppInfo", AppInfo) //必须先置入 防止响应信息时加密失败
 
@@ -386,6 +394,11 @@ func UserApi无Token解密() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		if blacklist.Is黑名单(c.ClientIP(), Appid) {
+			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), response.Status_黑名单信息, "黑名单ip"})
+			c.Abort()
+			return
+		}
 
 		AppInfo := Ser_AppInfo.App取App详情(Appid)
 
@@ -495,7 +508,6 @@ func UserApi检查数据库连接() gin.HandlerFunc {
 		return
 	}
 }
-
 func apiHook之前(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, Api string, json明文 *string) error {
 	//==========================ApiHook之前====================================
 	if utils.W文本_是否包含关键字(AppInfo.ApiHook, `"`+Api+`"`) { //先判断Api是否需要Hook

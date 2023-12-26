@@ -20,6 +20,8 @@ import (
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserConfig"
 	"server/global"
+	"server/new/app/models/db"
+	"server/new/app/service"
 	DB "server/structs/db"
 	"strconv"
 	"strings"
@@ -62,6 +64,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_用户名或卡号取uid", jS_用户名或卡号取uid)
 	_ = vm.Set("$api_取用户云配置", jS_取用户云配置)
 	_ = vm.Set("$api_置用户云配置", jS_置用户云配置)
+	_ = vm.Set("$api_置黑名单", jS_置黑名单)
 
 	return vm
 }
@@ -467,4 +470,14 @@ func jS_用户名或卡号取uid(应用id int, 用户名或卡号 string) int {
 		return Ser_Ka.Ka卡号取id(应用id, 用户名或卡号)
 	}
 	return Ser_User.User用户名取id(用户名或卡号)
+}
+
+func jS_置黑名单(AppId int, 黑名单信息, 备注 string) js对象_通用返回 {
+	var S = service.S_Blacklist{}
+	tx := *global.GVA_DB
+	err := S.Create(&tx, db.DB_Blacklist{AppId: AppId, ItemKey: 黑名单信息, Note: 备注})
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	}
+	return js对象_通用返回{IsOk: true, Err: "成功"}
 }

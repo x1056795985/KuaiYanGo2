@@ -2,6 +2,7 @@
 package global
 
 import (
+	ut "github.com/go-playground/universal-translator"
 	"github.com/robfig/cron/v3"
 	"github.com/songzhibin97/gkit/cache/local_cache"
 	"github.com/spf13/viper"
@@ -33,8 +34,10 @@ var (
 	Q快验 KuaiYanSDK.Api快验_类
 
 	X系统信息 = K快验帐号信息{
-		B版本号当前: "1.0.175",
+		B版本号当前: "1.0.177",
 	}
+	// 定义一个全局翻译器T
+	Trans ut.Translator
 )
 
 type K快验帐号信息 struct {

@@ -3,9 +3,16 @@ package core
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/locales/zh"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	enTranslations "github.com/go-playground/validator/v10/translations/en"
+	zhTranslations "github.com/go-playground/validator/v10/translations/zh"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"reflect"
 	"runtime/debug"
 	"server/api/Admin"
 	"server/api/Agent"
@@ -31,7 +38,7 @@ func InitRouters() *gin.Engine {
 	}
 
 	Router := gin.Default() //返回路由实例
-
+	_ = InitTrans("ZH")
 	// Router.Use(middleware.LoadTls())  // 如果需要使用https 请打开此中间件 然后前往 core/server.go 将启动模式 更变为 Router.RunTLS("端口","你的cre/pem文件","你的key文件")
 
 	// 跨域，如需跨域可以打开下面的注释
@@ -56,6 +63,47 @@ func InitRouters() *gin.Engine {
 	return Router
 }
 
+// InitTrans 初始化控制器翻译器
+func InitTrans(locale string) (err error) {
+	// 修改gin框架中的Validator引擎属性，实现自定制
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+
+		// 注册一个获取json tag的自定义方法 将字段名改为中文,
+		v.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := fld.Tag.Get("zh") //如果有这个信息,就是用这个
+			if name == "" {
+				name = fld.Tag.Get("json") //没有就用json
+			}
+			return name
+		})
+
+		zhT := zh.New() // 中文翻译器
+		//enT := en.New() // 英文翻译器
+		// 第一个参数是备用（fallback）的语言环境
+		// 后面的参数是应该支持的语言环境（支持多个）
+		uni := ut.New(zhT, zhT) //也是可以的
+		//uni := ut.New(enT, zhT, enT)
+
+		// locale 通常取决于 http 请求头的 'Accept-Language'
+		// 也可以使用 uni.FindTranslator(...) 传入多个locale进行查找
+		global.Trans, ok = uni.GetTranslator(locale)
+		if !ok {
+			return fmt.Errorf("uni.GetTranslator(%s) failed", locale)
+		}
+
+		// 注册翻译器
+		switch locale {
+		case "en":
+			err = enTranslations.RegisterDefaultTranslations(v, global.Trans)
+		case "zh":
+			err = zhTranslations.RegisterDefaultTranslations(v, global.Trans)
+		default:
+			err = zhTranslations.RegisterDefaultTranslations(v, global.Trans)
+		}
+		return
+	}
+	return
+}
 func T统一恐慌恢复() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {

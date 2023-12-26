@@ -106,6 +106,7 @@ func InitDbTables() {
 		DB.Db_Agent_库存卡包{},
 
 		newDB.DB_Setting{},
+		newDB.DB_Blacklist{},
 	)
 
 	if err != nil {
