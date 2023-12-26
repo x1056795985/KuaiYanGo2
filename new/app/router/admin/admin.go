@@ -24,5 +24,16 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("LogUserMsg/DeleteDuplicateMsg", 局_LogUserMsg.S删除重复消息)
 	}
+	//黑名单管理
+	局_Blacklist := controller.NewBlacklistController()
+	{
+		adminRouter.POST("Blacklist/GetList", 局_Blacklist.GetList)
+		adminRouter.POST("Blacklist/Create", 局_Blacklist.Create)
+		adminRouter.POST("Blacklist/Delete", 局_Blacklist.Delete)
+		adminRouter.POST("Blacklist/Update", 局_Blacklist.Update)
+		adminRouter.POST("Blacklist/Info", 局_Blacklist.Info)
+		adminRouter.POST("Blacklist/DeleteBatch", 局_Blacklist.DeleteBatch) //批量删除 1全部
+
+	}
 
 }

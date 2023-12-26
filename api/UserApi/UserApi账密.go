@@ -17,6 +17,7 @@ import (
 	"server/Service/Ser_Pay"
 	"server/Service/Ser_User"
 	"server/api/UserApi/response"
+	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/setting"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -549,6 +550,11 @@ func UserApi_用户注册(c *gin.Context) {
 		return
 	}
 
+	if blacklist.Is黑名单(string(请求json.GetStringBytes("Key")), AppInfo.AppId) {
+		response.X响应状态消息(c, response.Status_黑名单信息, "绑定信息为黑名单信息")
+		return
+	}
+
 	err := Ser_User.New用户信息(string(请求json.GetStringBytes("User")), string(请求json.GetStringBytes("PassWord")), string(请求json.GetStringBytes("SuperPassWord")), string(请求json.GetStringBytes("Qq")), string(请求json.GetStringBytes("Email")), string(请求json.GetStringBytes("Phone")), c.ClientIP(), "", 0, 0, 0)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())
@@ -561,6 +567,7 @@ func UserApi_用户注册(c *gin.Context) {
 	} else {
 		局_VipNumber = 0
 	}
+
 	//没有这个用户,应该是第一次登录应用,添加进去
 	err = Ser_AppUser.New用户信息(AppInfo.AppId, Ser_User.User用户名取id(string(请求json.GetStringBytes("User"))), string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_VipNumber, 0, 0, "")
 	if err != nil {

@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-var s service.S_Setting
-
 func Z文本(配置名 string, 配置值 interface{}) error {
 
 	db := service.S_Setting{}
@@ -39,7 +37,8 @@ func Q获取配置[T any](配置名 string) (T, error) {
 	计时 := utils.S时间_取现行时间戳13()
 
 	tx := *global.GVA_DB
-	jsonStr, err := s.Info(&tx, 配置名)
+	db := service.S_Setting{}
+	jsonStr, err := db.Info(&tx, 配置名)
 	if err == nil {
 		err = jsoniter.Unmarshal([]byte(jsonStr), &配置值)
 	}

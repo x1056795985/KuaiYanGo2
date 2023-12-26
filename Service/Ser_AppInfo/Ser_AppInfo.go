@@ -162,8 +162,8 @@ func App修改信息(AppInfo DB.DB_AppInfo) error {
 
 // NewApp信息
 func NewApp信息(AppId, AppType int, AppName string) error {
-	if AppId < 10000 {
-		return errors.New("AppId请输>=10000的整数")
+	if AppId <= 10000 {
+		return errors.New("AppId请输>10000的整数")
 	}
 	if utf8.RuneCountInString(AppName) < 4 || utf8.RuneCountInString(AppName) > 18 {
 		return errors.New("应用名称长度必须大于4小于18")

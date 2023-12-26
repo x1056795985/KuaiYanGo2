@@ -32,16 +32,16 @@ func (s *S_Setting) Update(tx *gorm.DB, key, value string) error {
 
 	return err
 }
-func (s *S_Setting) Delete(tx *gorm.DB, key interface{}) error {
-
-	switch k := key.(type) {
-	case string:
-		err := tx.Model(db.DB_Setting{}).Where("ItemKey = ?", k).Delete("").Error
-		return err
-	case []string:
-		err := tx.Model(db.DB_Setting{}).Where("ItemKey IN (?)", k).Delete("").Error
-		return err
+func (s *S_Setting) Delete(tx *gorm.DB, ItemKey interface{}) (影响行数 int64, error error) {
+	switch k := ItemKey.(type) {
+	case int64:
+		tx2 := tx.Model(db.DB_Setting{}).Where("ItemKey = ?", k).Delete("")
+		return tx2.RowsAffected, tx2.Error
+	case []int64:
+		tx2 := tx.Model(db.DB_Setting{}).Where("ItemKey IN (?)", k).Delete("")
+		return tx2.RowsAffected, tx2.Error
 	default:
-		return errors.New("unsupported key type")
+		return 0, errors.New("错误的数据")
 	}
+
 }

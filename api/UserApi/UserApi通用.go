@@ -28,6 +28,7 @@ import (
 	"server/Service/Ser_UserConfig"
 	"server/api/UserApi/response"
 	"server/global"
+	"server/new/app/logic/common/blacklist"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -50,7 +51,6 @@ func UserApi_GetToken(c *gin.Context) {
 	} else if AppInfo.CryptoType == 2 {
 		局_通讯AES密钥 = AppInfo.CryptoKeyAes
 	}
-
 	在线信息, err2 := Ser_LinkUser.New(0, 1, AppInfo.AppId, AppInfo.OutTime, "游客", "", "", c.ClientIP(), 局_通讯AES密钥)
 
 	if err2 != nil {
@@ -83,7 +83,10 @@ func UserApi_用户登录(c *gin.Context) {
 	var 局_Uid = 0
 	var 局_卡 DB.DB_Ka
 	var err error
-
+	if blacklist.Is黑名单(string(请求json.GetStringBytes("Key")), AppInfo.AppId) {
+		response.X响应状态消息(c, response.Status_黑名单信息, "绑定信息为黑名单信息")
+		return
+	}
 	var 局_卡号或用户名 = strings.TrimSpace(string(请求json.GetStringBytes("UserOrKa")))
 	if AppInfo.AppType == 3 || AppInfo.AppType == 4 {
 		//卡号
@@ -702,6 +705,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "应用禁止更换绑定信息.")
 		return
 	}
+
 	局_Uid := 局_在线信息.Uid
 	if !检测用户登录在线正常(&局_在线信息) {
 		局_账号 := string(请求json.GetStringBytes("User"))
@@ -740,9 +744,14 @@ func UserApi_置新绑定信息(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_绑定信息验证失败, "新绑定信息不能为空.")
 		return
 	}
+
 	//检查是否可以绑定相同信息
 	if AppInfo.IsUserKeySame == 2 && Ser_AppUser.B绑定信息是否存在(AppInfo.AppId, 局_信息绑定信息) {
 		response.X响应状态消息(c, response.Status_绑定信息已被其他用户使用, "绑定信息已被其他用户绑定.")
+		return
+	}
+	if blacklist.Is黑名单(局_信息绑定信息, AppInfo.AppId) {
+		response.X响应状态消息(c, response.Status_黑名单信息, "绑定信息为黑名单信息")
 		return
 	}
 

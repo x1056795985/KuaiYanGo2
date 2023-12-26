@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_Log"
+	"server/Service/Ser_User"
 	"server/global"
 	DB "server/structs/db"
 	"strconv"
@@ -72,6 +73,21 @@ func Id取User(AppId int, id int) string {
 		global.GVA_DB.Model(DB.DB_User{}).Select("User").Where("Id=?", Uid).First(&用户名)
 
 		return 用户名*/
+}
+
+func Uid取User(AppId int, Uid int) string {
+	var 用户名 string
+	if Ser_AppInfo.App是否为卡号(AppId) {
+		/*		var 卡号 string
+				return 卡号
+				用户名 = Ser_Ka.Id取卡号(Uid)   //这个有循环导入报错,待解决
+		*/
+		_ = global.GVA_DB.Model(DB.DB_Ka{}).Select("Name").Where("Id=?", Uid).First(&用户名)
+
+	} else {
+		用户名 = Ser_User.Id取User(Uid)
+	}
+	return 用户名
 }
 func Uid是否存在(AppId int, Uid int) bool {
 	var Count int64
