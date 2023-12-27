@@ -24,7 +24,7 @@ func (s *S_Blacklist) CountAdd1(tx *gorm.DB, Id int) (db.DB_Blacklist, error) {
 	return value, err
 }
 
-//读取黑名单key 高频访问,其他接口都为这个让路
+// 读取黑名单key 高频访问,其他接口都为这个让路
 func (s *S_Blacklist) InfoItemKey(tx *gorm.DB, ItemKey string) ([]db.DB_Blacklist, error) {
 	if 局_临时, ok := global.H缓存.Get("黑名单_" + ItemKey); ok { //高频
 		return 局_临时.([]db.DB_Blacklist), nil
@@ -47,6 +47,9 @@ func (s *S_Blacklist) Create(tx *gorm.DB, value db.DB_Blacklist) error {
 		value.Time = time.Now().Unix()
 	}
 	err := tx.Model(db.DB_Blacklist{}).Create(&value).Error
+	if _, ok := global.H缓存.Get("黑名单_" + value.ItemKey); ok { //黑名单添加也需要增加缓存。因为如果有缓存的情况加,增加一个同名黑名单,就不会读取这个新的,只会读取以前缓存的记录
+		global.H缓存.Delete("黑名单_" + value.ItemKey)
+	}
 	return err
 }
 func (s *S_Blacklist) Delete(tx *gorm.DB, Id interface{}) (影响行数 int64, error error) {
