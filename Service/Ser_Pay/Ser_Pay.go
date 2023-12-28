@@ -114,8 +114,13 @@ func Pay_支付宝Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip s
 	if err != nil {
 		return errors.New(局_支付配置.Z支付宝显示名称 + "公钥载入失败:" + err.Error()), gin.H{}
 	}
-	if 支付金额 <= 0 || 支付金额 > float64(局_支付配置.Z支付宝单次最大金额) {
-		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(局_支付配置.Z支付宝单次最大金额)), gin.H{}
+	if 支付金额 <= 0 {
+		return errors.New("支付金额必须大于0"), gin.H{}
+	}
+	if 处理类型 == 0 || 处理类型 == 2 { //余额充值 和 积分充值判断单次最大金额
+		if 支付金额 > float64(局_支付配置.Z支付宝单次最大金额) {
+			return errors.New("支付金额必须小于" + strconv.Itoa(局_支付配置.Z支付宝单次最大金额)), gin.H{}
+		}
 	}
 
 	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "支付宝PC", "", ip, 处理类型, 处理类型额外信息)
@@ -158,8 +163,14 @@ func Pay_支付宝H5_订单创建(Uid, Uid类型 int, 支付金额 float64, ip s
 	if err != nil {
 		return errors.New(局_支付配置.Z支付宝H5显示名称 + "公钥载入失败:" + err.Error()), gin.H{}
 	}
-	if 支付金额 <= 0 || 支付金额 > float64(局_支付配置.Z支付宝H5单次最大金额) {
-		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(局_支付配置.Z支付宝H5单次最大金额)), gin.H{}
+
+	if 支付金额 <= 0 {
+		return errors.New("支付金额必须大于0"), gin.H{}
+	}
+	if 处理类型 == 0 || 处理类型 == 2 { //余额充值 和 积分充值判断单次最大金额
+		if 支付金额 > float64(局_支付配置.Z支付宝H5单次最大金额) {
+			return errors.New("支付金额必须小于" + strconv.Itoa(局_支付配置.Z支付宝H5单次最大金额)), gin.H{}
+		}
 	}
 
 	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "支付宝H5", "", ip, 处理类型, 处理类型额外信息)
@@ -208,8 +219,14 @@ func Pay_支付宝当面付_订单创建(Uid, Uid类型 int, 支付金额 float6
 	if err != nil {
 		return errors.New(局_支付配置.Z支付宝当面付显示名称 + "公钥载入失败:" + err.Error()), gin.H{}
 	}
-	if 支付金额 <= 0 || 支付金额 > float64(局_支付配置.Z支付宝当面付单次最大金额) {
-		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(局_支付配置.Z支付宝当面付单次最大金额)), gin.H{}
+
+	if 支付金额 <= 0 {
+		return errors.New("支付金额必须大于0"), gin.H{}
+	}
+	if 处理类型 == 0 || 处理类型 == 2 { //余额充值 和 积分充值判断单次最大金额
+		if 支付金额 > float64(局_支付配置.Z支付宝当面付单次最大金额) {
+			return errors.New("支付金额必须小于" + strconv.Itoa(局_支付配置.Z支付宝当面付单次最大金额)), gin.H{}
+		}
 	}
 
 	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "支付宝当面付", "", ip, 处理类型, 处理类型额外信息)
@@ -278,9 +295,16 @@ func Pay_微信Pc_订单创建(Uid, Uid类型 int, 支付金额 float64, ip stri
 	if !局_支付配置.W微信支付开关 {
 		return errors.New(局_支付配置.W微信支付显示名称 + "支付方式已关闭"), gin.H{}
 	}
-	if 支付金额 <= 0 || 支付金额 > float64(局_支付配置.Z支付宝单次最大金额) {
-		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(局_支付配置.W微信支付单次最大金额)), gin.H{}
+
+	if 支付金额 <= 0 {
+		return errors.New("支付金额必须大于0"), gin.H{}
 	}
+	if 处理类型 == 0 || 处理类型 == 2 { //余额充值 和 积分充值判断单次最大金额
+		if 支付金额 > float64(局_支付配置.W微信支付单次最大金额) {
+			return errors.New("支付金额必须小于" + strconv.Itoa(局_支付配置.W微信支付单次最大金额)), gin.H{}
+		}
+	}
+
 	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "微信支付", "", ip, 处理类型, 处理类型额外信息)
 	局_用户提示信息, err2 := 取提示信息(局_订单信息, Uid, Uid类型)
 	if err2 != nil {
@@ -360,8 +384,14 @@ func Pay_小叮当_订单创建(Uid, Uid类型 int, 支付金额 float64, ip str
 	if !局_支付配置.X小叮当支付开关 {
 		return errors.New(局_支付配置.X小叮当支付显示名称 + "支付方式已关闭"), gin.H{}
 	}
-	if 支付金额 <= 0 || 支付金额 > float64(局_支付配置.Z支付宝单次最大金额) {
-		return errors.New("支付金额必须大于0且小于" + strconv.Itoa(局_支付配置.X小叮当单次最大金额)), gin.H{}
+
+	if 支付金额 <= 0 {
+		return errors.New("支付金额必须大于0"), gin.H{}
+	}
+	if 处理类型 == 0 || 处理类型 == 2 { //余额充值 和 积分充值判断单次最大金额
+		if 支付金额 > float64(局_支付配置.Z支付宝单次最大金额) {
+			return errors.New("支付金额必须小于" + strconv.Itoa(局_支付配置.Z支付宝单次最大金额)), gin.H{}
+		}
 	}
 
 	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "小叮当", "", ip, 处理类型, 处理类型额外信息)
