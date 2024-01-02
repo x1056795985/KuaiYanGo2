@@ -52,7 +52,6 @@ func (i *DBApi) CheckDB(c *gin.Context) {
 		局_备案名称 = setting.Q系统设置().B备案号
 	}
 	response.OkWithDetailed(gin.H{"needInit": needInit, "ServerName": 局_系统名称, "Filing": 局_备案名称}, message, c)
-
 }
 
 // InitDB

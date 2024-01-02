@@ -701,7 +701,7 @@ func 数据库兼容旧版本() {
 	//2023/12/13  将配置信息改放到数据库,将旧的数据写入数据库
 	var 局_总数 int64
 	_ = db.Model(newDB.DB_Setting{}).Count(&局_总数).Error
-	if 局_总数 == 0 {
+	if 局_总数 == 0 && global.GVA_Viper.IsSet("系统设置.系统开关") {
 		var GVA_CONFIG config.Server备用
 		if err = global.GVA_Viper.Unmarshal(&GVA_CONFIG); err == nil {
 			_ = setting.Z系统设置(&GVA_CONFIG.X系统设置)
