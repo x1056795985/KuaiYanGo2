@@ -4,7 +4,6 @@ package global
 import (
 	ut "github.com/go-playground/universal-translator"
 	"github.com/robfig/cron/v3"
-	"github.com/songzhibin97/gkit/cache/local_cache"
 	"github.com/spf13/viper"
 	"github.com/valyala/fastjson"
 	"go.uber.org/zap"
@@ -12,6 +11,7 @@ import (
 	"net/http"
 	"server/KuaiYanSDK"
 	"server/config"
+	"server/new/app/logic/common/cache"
 )
 
 var (
@@ -27,14 +27,14 @@ var (
 	GVA_Gin *http.Server
 
 	//缓存 用来缓存验证码key
-	H缓存 local_cache.Cache
+	H缓存 cache.Cache
 
 	Cron定时任务 定时任务
 
 	Q快验 KuaiYanSDK.Api快验_类
 
 	X系统信息 = K快验帐号信息{
-		B版本号当前: "1.0.179",
+		B版本号当前: "1.0.180",
 	}
 	// 定义一个全局翻译器T
 	Trans ut.Translator

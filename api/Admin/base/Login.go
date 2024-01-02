@@ -76,7 +76,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 	// 没查到数据  或  取反(密码正确)
 	if err != nil || !utils.BcryptCheck(Request.Password, DB_user.PassWord) {
 		if global.GVA_Viper.GetInt("系统模式") == 1 {
-			response.FailWithMessage("账号或密码错误,当前为演示模式,账密都是 Admin", c)
+			response.FailWithMessage("账号或密码错误,当前为演示模式,账密都是 admin", c)
 		} else {
 			response.FailWithMessage("账号或密码错误", c)
 		}
