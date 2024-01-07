@@ -3,6 +3,7 @@ package UserApi
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
+	"server/Service/Ser_LinkUser"
 	DB "server/structs/db"
 	"strconv"
 	"strings"
@@ -95,6 +96,17 @@ func Y用户数据信息还原(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信
 func 检测用户登录在线正常(在线信息 *DB.DB_LinksToken) bool {
 	if 在线信息.Uid > 0 && 在线信息.Status == 1 {
 		return true
+	}
+	return false
+}
+
+func 更新上下文缓存在线信息(c *gin.Context) bool {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	局_在线信息新, err := Ser_LinkUser.Token取User在线详情(局_在线信息.Token)
+	if err == nil {
+		c.Set("局_在线信息", 局_在线信息新) //修改在线信息缓存,因为hook里可能用到
 	}
 	return false
 }

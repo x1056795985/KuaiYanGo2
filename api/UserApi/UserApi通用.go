@@ -269,7 +269,7 @@ func UserApi_用户登录(c *gin.Context) {
 		局_用户类型.Name = "已删待改"
 		局_用户类型.Mark = 0
 	}
-
+	更新上下文缓存在线信息(c)
 	//这里吧成功的状态
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{
 		"User":          局_卡号或用户名,
@@ -1052,6 +1052,7 @@ func UserApi_用户登录注销(c *gin.Context) {
 		return
 	}
 	err := Ser_LinkUser.Set批量注销([]int{局_在线信息.Id})
+	更新上下文缓存在线信息(c)
 	if err != nil {
 		response.X响应状态(c, response.Status_操作失败)
 	} else {
@@ -1141,6 +1142,7 @@ func UserApi_用户登录远程注销(c *gin.Context) {
 	}
 
 	err := Ser_LinkUser.Set批量注销Uid(局_id)
+	更新上下文缓存在线信息(c)
 	if err != nil {
 		response.X响应状态(c, response.Status_操作失败)
 	} else {
@@ -1717,6 +1719,8 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
 	case "小叮当":
 		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
+	case "虎皮椒":
+		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
 	default:
 		err = errors.New("充值方式[" + 局_支付方式 + "]不存在")
 	}
@@ -1791,6 +1795,8 @@ func UserApi_订单_积分充值(c *gin.Context) {
 		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
 	case "小叮当":
 		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
+	case "虎皮椒":
+		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
 	default:
 		err = errors.New("充值方式[" + 局_支付方式 + "]不存在")
 	}
@@ -1859,6 +1865,8 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
 	case "小叮当":
 		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
+	case "虎皮椒":
+		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
 	default:
 		err = errors.New("充值方式[" + 局_支付方式 + "]不存在")
 	}

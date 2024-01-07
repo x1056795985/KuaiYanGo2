@@ -89,7 +89,7 @@ func Aes解密_cbc192(加密数据 []byte, key string) string {
 	return Aes解密_cbc192字节集(加密数据, []byte(key))
 }
 func Aes解密_cbc192字节集(加密数据 []byte, key []byte) string {
-	if len(key) != 24 || len(加密数据) < 16 {
+	if len(key) != 24 || len(加密数据) < 16 { //mark 还会报panic   len(src)%x.blockSize != 0   src=加密数据  没明白什么意思,感觉还是数据问题以后在解决
 		return ""
 	}
 	k := key[:24]

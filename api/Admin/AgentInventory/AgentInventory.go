@@ -303,6 +303,10 @@ type Node struct {
 }
 
 func 转换为代理树2(代理列表 []*Node, 上级ID int) []*Node {
+	if 代理列表 == nil {
+		return []*Node{}
+	}
+
 	memo := make(map[int]*Node)
 	for _, v := range 代理列表 {
 		if _, ok := memo[v.Id]; ok {

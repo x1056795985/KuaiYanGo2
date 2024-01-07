@@ -78,6 +78,18 @@ type Z在线支付 struct {
 	X小叮当接口密钥   string `mapstructure:"小叮当接口密钥" json:"小叮当接口密钥" `
 	X小叮当支付类型   int    `mapstructure:"小叮当支付类型" json:"小叮当支付类型" `
 	X小叮当单次最大金额 int    `mapstructure:"小叮当单次最大金额" json:"小叮当单次最大金额" `
+	Z在线支付_虎皮椒
+}
+
+type Z在线支付_虎皮椒 struct {
+	H虎皮椒支付开关      bool   `mapstructure:"虎皮椒支付开关" json:"虎皮椒支付开关"`
+	H虎皮椒支付显示名称    string `mapstructure:"虎皮椒支付显示名称" json:"虎皮椒支付显示名称"`
+	H虎皮椒appId     string `mapstructure:"虎皮椒appId" json:"虎皮椒appId"`
+	H虎皮椒appSecret string `mapstructure:"虎皮椒appSecret" json:"虎皮椒appSecret" `
+	H虎皮椒支付类型      int    `mapstructure:"虎皮椒支付类型" json:"虎皮椒支付类型" `
+	H虎皮椒同步回调url   string `mapstructure:"虎皮椒同步回调url" json:"虎皮椒同步回调url"`
+	H虎皮椒单次最大金额    int    `mapstructure:"虎皮椒单次最大金额" json:"虎皮椒单次最大金额" `
+	H虎皮椒支付网关      string `mapstructure:"虎皮椒支付网关" json:"虎皮椒支付网关" `
 }
 
 type D短信平台配置 struct {

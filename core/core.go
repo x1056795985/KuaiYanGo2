@@ -122,7 +122,7 @@ func InitViper() *viper.Viper {
 // InitCron定时任务 //
 // 新建Cron定时任务,并插入需要初始化的任务
 func InitCron定时任务() {
-	global.Cron定时任务.Cron = cron.New() //这里设置的 5位表达式 没有秒
+	global.Cron定时任务.Cron = cron.New(cron.WithSeconds()) //这里设置的 6位表达式 秒级
 
 	//1  "0 0 0 * * *"  每天的 0点启动  * 通配符可以匹配任何数字
 	//2  "*/5 * * * * *" 表示每隔5秒钟执行一次
@@ -133,9 +133,9 @@ func InitCron定时任务() {
 	//7  "0 0 1 1 * ?"  表示每月1号凌晨1点执行一次
 	//8  "0 1,2,3 * * * ?" 表示在1分，2分，3分执行一次
 	//9  "0 0 0,1,2 * * ?" 表示每天的0点，1点，2点执行一次
-	global.Cron定时任务.T添加任务("在线列表定时注销已过期", "*/1 * * * *", Ser_Cron.Corn_在线列表定时注销已过期) //每分钟执行一次
-	global.Cron定时任务.T添加任务("在线列表定时删除已过期", "*/1 * * * *", Ser_Cron.Corn_在线列表定时删除已过期) //每分钟执行一次
-	global.Cron定时任务.T添加任务("在线列表定时删除已过期", "0 0 * * ?", Ser_TaskPool.Task数据删除过期)     //每天0点执行一次
-	global.Cron定时任务.T添加任务("快验心跳", "*/5 * * * *", KuaiYan.K快验心跳)                    //5分钟心跳执行一次
+	global.Cron定时任务.T添加任务("在线列表定时注销已过期", "0 */1 * * * *", Ser_Cron.Corn_在线列表定时注销已过期) //每分钟执行一次
+	global.Cron定时任务.T添加任务("在线列表定时删除已过期", "0 */1 * * * *", Ser_Cron.Corn_在线列表定时删除已过期) //每分钟执行一次
+	global.Cron定时任务.T添加任务("在线列表定时删除已过期", "0 0 0 * * ?", Ser_TaskPool.Task数据删除过期)     //每天0点执行一次
+	global.Cron定时任务.T添加任务("快验心跳", "0 */5 * * * *", KuaiYan.K快验心跳)                    //5分钟心跳执行一次
 	global.Cron定时任务.Cron.Start()
 }

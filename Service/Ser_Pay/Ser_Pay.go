@@ -3,6 +3,7 @@ package Ser_Pay
 import (
 	"EFunc/utils"
 	"context"
+	"crypto/md5"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"github.com/imroc/req/v3"
 	"github.com/skip2/go-qrcode"
 	"github.com/smartwalle/alipay/v3"
+	"github.com/valyala/fastjson"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/option"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/native"
@@ -21,6 +23,7 @@ import (
 	"server/new/app/logic/common/setting"
 	DB "server/structs/db"
 	utils2 "server/utils"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -69,6 +72,12 @@ func Pay_取支付通道状态() gin.H {
 		局map["小叮当"] = 局_支付配置.X小叮当支付开关
 	}
 
+	if 局_支付配置.H虎皮椒支付显示名称 != "" {
+		局map[局_支付配置.H虎皮椒支付显示名称] = 局_支付配置.H虎皮椒支付开关
+	} else {
+		局map["虎皮椒"] = 局_支付配置.H虎皮椒支付开关
+	}
+
 	return 局map
 }
 
@@ -86,6 +95,8 @@ func Pay_显示名称转原名(显示名称 string) string {
 		return "微信支付"
 	case 局_支付配置.X小叮当支付显示名称:
 		return "小叮当"
+	case 局_支付配置.H虎皮椒支付显示名称:
+		return "虎皮椒"
 	default:
 		return 显示名称
 	}
@@ -451,4 +462,105 @@ func Pay_小叮当_订单创建(Uid, Uid类型 int, 支付金额 float64, ip str
 	// 处理返回结果
 	return nil, gin.H{"Status": 1, "OrderId": 局_订单信息.PayOrder, "PayURL": 局_网址 + jsonStr}
 
+}
+
+// Uid类型 1账号 2卡号
+// 0 余额充值 1 购卡直冲 2 应用积分充值
+func Pay_虎皮椒_订单创建(Uid, Uid类型 int, 支付金额 float64, ip string, 处理类型 int, 处理类型额外信息 string) (error, gin.H) {
+	局_支付配置 := setting.Q在线支付配置()
+	if !局_支付配置.H虎皮椒支付开关 {
+		return errors.New(局_支付配置.H虎皮椒支付显示名称 + "支付方式已关闭"), gin.H{}
+	}
+
+	if 支付金额 <= 0 {
+		return errors.New("支付金额必须大于0"), gin.H{}
+	}
+	if 处理类型 == 0 || 处理类型 == 2 { //余额充值 和 积分充值判断单次最大金额
+		if 支付金额 > float64(局_支付配置.Z支付宝单次最大金额) {
+			return errors.New("支付金额必须小于" + strconv.Itoa(局_支付配置.Z支付宝单次最大金额)), gin.H{}
+		}
+	}
+
+	局_订单信息, err := Ser_RMBPayOrder.Order订单创建(Uid, Uid类型, 支付金额, "虎皮椒", "", ip, 处理类型, 处理类型额外信息)
+	局_用户提示信息, err2 := 取提示信息(局_订单信息, Uid, Uid类型)
+	if err2 != nil {
+		return err2, gin.H{}
+	}
+	局_网址 := `https://api.xunhupay.com/payment/do.html`
+	if len(局_支付配置.H虎皮椒支付网关) > 10 {
+		局_网址 = 局_支付配置.H虎皮椒支付网关
+	}
+
+	params := map[string]string{
+		"version":        "1.1",
+		"trade_order_id": 局_订单信息.PayOrder,
+		"total_fee":      utils.Float64到文本(局_订单信息.Rmb, 2),
+		"title":          局_用户提示信息,
+		"notify_url":     setting.Q系统设置().X系统地址 + "/WebApi/PayHuPiJiaoNotify",
+		"return_url":     局_支付配置.H虎皮椒同步回调url,
+		"wap_name":       局_用户提示信息,
+		"callback_url":   "",
+		"time":           strconv.FormatInt(time.Now().Unix(), 10),
+		"appid":          局_支付配置.H虎皮椒appId,
+		"nonce_str":      strconv.FormatInt(time.Now().Unix(), 10),
+	}
+	data := url.Values{}
+	for k, v := range params {
+		data.Add(k, v)
+	}
+	data.Add("hash", Sign_虎皮椒(局_支付配置.H虎皮椒appSecret, params))
+	post数据 := data.Encode()
+	Http请求 := req.SetRedirectPolicy(req.NoRedirectPolicy()).R()
+	Http请求.SetBodyString(post数据)
+	Http请求.SetHeader("Content-Type", "application/x-www-form-urlencoded")
+	var 局_请求结果 *req.Response
+	for i := 0; i < 3; i++ { // 重试三次防止意外
+		局_请求结果, err = Http请求.Post(局_网址)
+		if len(局_请求结果.Bytes()) > 0 || err != nil {
+			break
+		}
+	}
+	if err != nil || 局_请求结果.String() == "" {
+		return errors.New("支付地址获取失败:" + 局_请求结果.String()), gin.H{}
+	}
+
+	/*	{
+		"openid":"2019081202",
+		"url":"https:\/\/api.xunhupay.com\/alipay\/pay\/index.html?id=20351731&nonce_str=3642452019&time=1522390464&appid=20146122002&hash=ef07fb856239c6066a8c84c21835e047",
+		"errcode":0,
+		"errmsg":"success!",
+		"hash":"3a91e22ee359c914b0788c6007377638"
+	}*/
+
+	parse, err := fastjson.Parse(局_请求结果.String())
+	if err != nil {
+		return errors.New("支付信息解析失败:" + 局_请求结果.String()), gin.H{}
+	}
+
+	局_url := string(parse.GetStringBytes("url"))
+	url_qrcode := string(parse.GetStringBytes("url_qrcode"))
+
+	// 处理返回结果
+	return nil, gin.H{"Status": 1, "OrderId": 局_订单信息.PayOrder, "PayURL": 局_url, "url_qrcode": url_qrcode}
+
+}
+
+// Sign 签名方法
+func Sign_虎皮椒(appSecret string, params map[string]string) string {
+	var data string
+	keys := make([]string, 0, 0)
+	for key, _ := range params {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	//拼接
+	for _, k := range keys {
+		data = fmt.Sprintf("%s%s=%s&", data, k, params[k])
+	}
+	data = strings.Trim(data, "&")
+	data = fmt.Sprintf("%s%s", data, appSecret)
+	m := md5.New()
+	m.Write([]byte(data))
+	sign := fmt.Sprintf("%x", m.Sum(nil))
+	return sign
 }

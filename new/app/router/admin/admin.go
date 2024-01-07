@@ -35,5 +35,16 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("Blacklist/DeleteBatch", 局_Blacklist.DeleteBatch) //批量删除 1全部
 
 	}
+	//定时任务管理
+	局_Cron := controller.NewCronController()
+	{
+		adminRouter.POST("Cron/GetList", 局_Cron.GetList)
+		adminRouter.POST("Cron/Create", 局_Cron.Create)
+		adminRouter.POST("Cron/Delete", 局_Cron.Delete)
+		adminRouter.POST("Cron/Update", 局_Cron.Update)
+		adminRouter.POST("Cron/Info", 局_Cron.Info)
+		adminRouter.POST("Cron/DeleteBatch", 局_Cron.DeleteBatch)   //批量删除 1全部
+		adminRouter.POST("Cron/UpdateStatus", 局_Cron.UpdateStatus) //更新状态
+	}
 
 }

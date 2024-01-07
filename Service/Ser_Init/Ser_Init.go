@@ -107,6 +107,7 @@ func InitDbTables() {
 
 		newDB.DB_Setting{},
 		newDB.DB_Blacklist{},
+		newDB.DB_Cron{},
 	)
 
 	if err != nil {
