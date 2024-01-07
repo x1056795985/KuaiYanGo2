@@ -13,6 +13,8 @@ import (
 type S_Blacklist struct {
 }
 
+const 黑名单_ = "黑名单_"
+
 func (s *S_Blacklist) Info(tx *gorm.DB, Id int) (db.DB_Blacklist, error) {
 	var value db.DB_Blacklist
 	err := tx.Model(db.DB_Blacklist{}).Where("Id =?", Id).First(&value).Error
@@ -26,19 +28,19 @@ func (s *S_Blacklist) CountAdd1(tx *gorm.DB, Id int) (db.DB_Blacklist, error) {
 
 // 读取黑名单key 高频访问,其他接口都为这个让路
 func (s *S_Blacklist) InfoItemKey(tx *gorm.DB, ItemKey string) ([]db.DB_Blacklist, error) {
-	if 局_临时, ok := global.H缓存.Get("黑名单_" + ItemKey); ok { //高频
+	if 局_临时, ok := global.H缓存.Get(黑名单_ + ItemKey); ok { //高频
 		return 局_临时.([]db.DB_Blacklist), nil
 	}
 
 	var value = []db.DB_Blacklist{}
 	err := tx.Model(db.DB_Blacklist{}).Where("ItemKey = ?", ItemKey).Find(&value).Error
-	global.H缓存.Set("黑名单_"+ItemKey, value, time.Hour*720) //保存一个月
+	global.H缓存.Set(黑名单_+ItemKey, value, time.Hour*720) //保存一个月
 	return value, err
 }
 func (s *S_Blacklist) Update(tx *gorm.DB, value db.DB_Blacklist) error {
 	err := tx.Model(db.DB_Blacklist{}).Where("ItemKey = ?", value.ItemKey).Updates(&value).Error
-	if _, ok := global.H缓存.Get("黑名单_" + value.ItemKey); ok {
-		global.H缓存.Delete("黑名单_" + value.ItemKey)
+	if _, ok := global.H缓存.Get(黑名单_ + value.ItemKey); ok {
+		global.H缓存.Delete(黑名单_ + value.ItemKey)
 	}
 	return err
 }
@@ -47,8 +49,8 @@ func (s *S_Blacklist) Create(tx *gorm.DB, value db.DB_Blacklist) error {
 		value.Time = time.Now().Unix()
 	}
 	err := tx.Model(db.DB_Blacklist{}).Create(&value).Error
-	if _, ok := global.H缓存.Get("黑名单_" + value.ItemKey); ok { //黑名单添加也需要增加缓存。因为如果有缓存的情况加,增加一个同名黑名单,就不会读取这个新的,只会读取以前缓存的记录
-		global.H缓存.Delete("黑名单_" + value.ItemKey)
+	if _, ok := global.H缓存.Get(黑名单_ + value.ItemKey); ok { //黑名单添加也需要增加缓存。因为如果有缓存的情况加,增加一个同名黑名单,就不会读取这个新的,只会读取以前缓存的记录
+		global.H缓存.Delete(黑名单_ + value.ItemKey)
 	}
 	return err
 }
@@ -66,8 +68,8 @@ func (s *S_Blacklist) Delete(tx *gorm.DB, Id interface{}) (影响行数 int64, e
 		return 0, errors.New("错误的数据")
 	}
 	for 索引, _ := range ItemKey {
-		if _, ok := global.H缓存.Get("黑名单_" + ItemKey[索引]); ok {
-			global.H缓存.Delete("黑名单_" + ItemKey[索引])
+		if _, ok := global.H缓存.Get(黑名单_ + ItemKey[索引]); ok {
+			global.H缓存.Delete(黑名单_ + ItemKey[索引])
 		}
 	}
 	return tx2.RowsAffected, tx2.Error
@@ -124,8 +126,8 @@ func (s *S_Blacklist) DeleteType(tx *gorm.DB, Type int) (影响行数 int64, err
 	}
 
 	for 索引, _ := range ItemKey {
-		if _, ok := global.H缓存.Get("黑名单_" + ItemKey[索引]); ok {
-			global.H缓存.Delete("黑名单_" + ItemKey[索引])
+		if _, ok := global.H缓存.Get(黑名单_ + ItemKey[索引]); ok {
+			global.H缓存.Delete(黑名单_ + ItemKey[索引])
 		}
 	}
 	return tx2.RowsAffected, tx2.Error
