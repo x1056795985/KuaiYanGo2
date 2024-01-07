@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"server/new/app/router/admin"
+	"server/new/app/router/webapi"
 )
 
 // 总路由
@@ -17,6 +18,9 @@ func RouterInit(gin *gin.RouterGroup) *gin.RouterGroup {
 	// 跨域，如需跨域可以打开下面的注释
 	router := admin.AllRouter{}
 	router.InitAdminRouter(Router) //初始化管理员路由
+
+	routerWebApi := webApi.AllRouter{}
+	routerWebApi.InitWebApiRouter(Router) //初始化WEBAPi路由
 
 	return gin
 }

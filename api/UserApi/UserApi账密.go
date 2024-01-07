@@ -490,6 +490,8 @@ func UserApi_订单_余额充值(c *gin.Context) {
 		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
 	case "小叮当":
 		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
+	case "虎皮椒":
+		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
 	default:
 		err = errors.New("充值方式[" + 局_支付方式 + "]不存在")
 	}

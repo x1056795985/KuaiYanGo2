@@ -143,6 +143,8 @@ func (a *Api) Y余额充值(c *gin.Context) {
 		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
 	case "小叮当":
 		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
+	case "虎皮椒":
+		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
 	default:
 		err = errors.New("充值方式 [" + 请求.Type + "] 不存在")
 	}
