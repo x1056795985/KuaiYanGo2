@@ -3,7 +3,6 @@ package global
 
 import (
 	ut "github.com/go-playground/universal-translator"
-	"github.com/robfig/cron/v3"
 	"github.com/spf13/viper"
 	"github.com/valyala/fastjson"
 	"go.uber.org/zap"
@@ -12,6 +11,7 @@ import (
 	"server/KuaiYanSDK"
 	"server/config"
 	"server/new/app/logic/common/cache"
+	"server/new/app/logic/common/cron"
 )
 
 var (
@@ -29,12 +29,12 @@ var (
 	//缓存 用来缓存验证码key
 	H缓存 cache.Cache
 
-	Cron定时任务 定时任务
+	Cron定时任务 cron.D定时任务
 
 	Q快验 KuaiYanSDK.Api快验_类
 
 	X系统信息 = K快验帐号信息{
-		B版本号当前: "1.0.182",
+		B版本号当前: "1.0.197",
 	}
 	// 定义一个全局翻译器T
 	Trans ut.Translator
@@ -64,22 +64,4 @@ type K快验帐号信息 struct {
 	Y邮箱        string
 	S手机号       string
 	Qq         string
-}
-type 定时任务 struct {
-	Cron    *cron.Cron
-	Map任务列表 map[string]cron.EntryID
-}
-
-func (c *定时任务) T添加任务(任务名称, 表达式 string, cmd func()) error {
-	if c.Map任务列表 == nil {
-		c.Map任务列表 = map[string]cron.EntryID{}
-	}
-	EntryID, err := c.Cron.AddFunc(表达式, cmd)
-	if err == nil {
-		c.Map任务列表[任务名称] = EntryID
-	} else {
-		GVA_LOG.Error("定时任务添加失败:" + 任务名称 + err.Error())
-		return err
-	}
-	return nil
 }
