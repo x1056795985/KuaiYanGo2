@@ -65,16 +65,17 @@ type 结构请求_单id struct {
 }
 
 type 结构请求_GetAppUserList struct {
-	AppId    int    `json:"AppId"`    // Appid 必填
-	Page     int    `json:"Page"`     // 页
-	Size     int    `json:"Size"`     // 页数量
-	Status   int    `json:"Status"`   // 状态id
-	Type     int    `json:"Type"`     // 关键字类型  1 id 2 用户名 3绑定信息 4 动态标签
-	Keywords string `json:"Keywords"` // 关键字
-	Order    int    `json:"Order"`    // 0 倒序 1 正序
-	Sortable int    `json:"Sortable"` //排序字段名id  0id 1=到期时间
-	IsLogin  int    `json:"IsLogin"`  //1 在线 2不在线
-
+	AppId         int    `json:"AppId"`         // Appid 必填
+	Page          int    `json:"Page"`          // 页
+	Size          int    `json:"Size"`          // 页数量
+	Status        int    `json:"Status"`        // 1本软件正常,2本软件冻结
+	Type          int    `json:"Type"`          // 关键字类型  1 id 2 用户名 3绑定信息 4 动态标签
+	Keywords      string `json:"Keywords"`      // 关键字
+	Order         int    `json:"Order"`         // 0 倒序 1 正序
+	Sortable      int    `json:"Sortable"`      //排序字段名id  0id 1=到期时间
+	IsLogin       int    `json:"IsLogin"`       //1 在线 2不在线
+	VipTimeStatus int    `json:"VipTimeStatus"` //vip剩余时间状态
+	UserClassId   int    `json:"UserClassId"`   //用户类型Id
 }
 
 // GetAppUserList
@@ -122,7 +123,7 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 	app信息 = Ser_AppInfo.App取App详情(请求.AppId)
 	//是否vip状态可用  //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
 
-	switch 请求.Status {
+	switch 请求.VipTimeStatus {
 	case 1:
 		if app信息.AppType == 2 || app信息.AppType == 4 {
 			局_DB.Where(表名_AppUser+".VipTime > ?", 0)
@@ -182,6 +183,12 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 		局_DB.Where("(select count(db_links_Token.id)  FROM db_links_Token WHERE  " + 表名_AppUser + ".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid=" + strconv.Itoa(请求.AppId) + " )>0 ")
 	case 2: //不在线
 		局_DB.Where("(select count(db_links_Token.id)  FROM db_links_Token WHERE  " + 表名_AppUser + ".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid=" + strconv.Itoa(请求.AppId) + " )=0 ")
+	}
+	if 请求.Status > 0 {
+		局_DB.Where(表名_AppUser+".Status = ? ", 请求.Status)
+	}
+	if 请求.UserClassId >= 0 {
+		局_DB.Where(表名_AppUser+".UserClassId = ? ", 请求.UserClassId)
 	}
 
 	//Count(&总数) 必须放在where 后面 不然值会被清0
@@ -530,7 +537,8 @@ func (a *Api) Set批量维护_删除用户(c *gin.Context) {
 		} else {
 			局_row, err = Ser_AppUser.S删除VipTime小于等于X且删除卡号(c, 请求.AppId, time.Now().Unix(), c.ClientIP())
 		}
-
+	case 3: //删除卡号已删,的软件用户
+		局_row, err = Ser_AppUser.S删除卡号不存在的软件用户(c, 请求.AppId)
 	}
 
 	if err != nil {
@@ -551,6 +559,7 @@ type 结构请求_全部用户增减时间点数 struct {
 	UserPrefix        string `json:"UserPrefix"`        //用户或卡号前缀,空为不限制
 	OneLoginTimeStart int    `json:"OneLoginTimeStart"` //首次登录区时间戳开始 0为不限制
 	OneLoginTimeEnd   int    `json:"OneLoginTimeEnd"`   //首次登录区时间戳结束 0为不限制
+	UserClassId       []int  `json:"UserClassId"`       //用户类型ID  -1 为没有
 }
 
 // Del批量维护_全部用户增减时间点数
@@ -577,7 +586,7 @@ func (a *Api) P批量_全部用户增减时间点数(c *gin.Context) {
 		response.OkWithMessage("操作类型错误", c)
 		return
 	case 1:
-		影响数量, err2 := Ser_AppUser.P批量_全部用户增减时间或点数(请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd)
+		影响数量, err2 := Ser_AppUser.P批量_全部用户增减时间或点数(请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd, 请求.UserClassId)
 		if err2 != nil {
 			response.FailWithMessage(err2.Error(), c)
 		} else {
@@ -585,7 +594,7 @@ func (a *Api) P批量_全部用户增减时间点数(c *gin.Context) {
 		}
 
 	case 2:
-		影响数量, err2 := Ser_AppUser.P批量_全部用户增减时间或点数(请求.AppId, -请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd)
+		影响数量, err2 := Ser_AppUser.P批量_全部用户增减时间或点数(请求.AppId, -请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd, 请求.UserClassId)
 		if err2 != nil {
 			response.FailWithMessage(err2.Error(), c)
 		} else {

@@ -12,6 +12,11 @@ import (
 type S_Cron struct {
 }
 
+// NewCronService 创建 NewCronService 实例
+func NewCronService(db *gorm.DB) *S_Cron {
+	return &S_Cron{}
+}
+
 func (s *S_Cron) Info(tx *gorm.DB, Id int) (db.DB_Cron, error) {
 	var value db.DB_Cron
 	err := tx.Model(db.DB_Cron{}).Where("Id =?", Id).First(&value).Error
@@ -20,6 +25,9 @@ func (s *S_Cron) Info(tx *gorm.DB, Id int) (db.DB_Cron, error) {
 
 func (s *S_Cron) Update(tx *gorm.DB, value db.DB_Cron) error {
 	err := tx.Model(db.DB_Cron{}).Where("Id = ?", value.Id).Updates(&value).Error
+	if err != nil {
+
+	}
 	return err
 }
 func (s *S_Cron) Create(tx *gorm.DB, value db.DB_Cron) error {
@@ -90,4 +98,17 @@ func (s *S_Cron) DeleteType(tx *gorm.DB, Type int) (影响行数 int64, error er
 		return 0, errors.New("类型错误")
 	}
 	return tx2.RowsAffected, tx2.Error
+}
+
+// GetAllInfo 获取全部任务信息
+func (s *S_Cron) GetAllInfo(tx *gorm.DB, status int) ([]db.DB_Cron, error) {
+	var value = []db.DB_Cron{}
+	var tx2 *gorm.DB
+	tx2 = tx.Model(db.DB_Cron{})
+	if status > 0 {
+		tx2 = tx2.Where("Status = ?", status)
+	}
+	err := tx2.Find(&value).Error
+
+	return value, err
 }

@@ -24,6 +24,7 @@ import (
 	"server/global"
 	"server/new/app/logic/common/setting"
 	newDB "server/new/app/models/db"
+	"server/new/app/service"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -108,6 +109,7 @@ func InitDbTables() {
 		newDB.DB_Setting{},
 		newDB.DB_Blacklist{},
 		newDB.DB_Cron{},
+		newDB.DB_Cron_log{},
 	)
 
 	if err != nil {
@@ -304,7 +306,20 @@ func InitDbTable数据() {
 		局_例子记录.DbAgentLevel = 局_例子版本
 	}
 	//-============================================结束==========================
-
+	//检查 定时任务,例子
+	局_例子版本 = 1
+	if 局_例子记录.Cron < 局_例子版本 {
+		global.GVA_DB.Model(newDB.DB_Cron{}).Count(&局_数量)
+		if 局_数量 == 0 {
+			var S = service.S_Cron{}
+			tx := *global.GVA_DB
+			_ = S.Create(&tx, newDB.DB_Cron{Name: "测试网页访问", Status: 2, IsLog: 2, Type: 1, Cron: `0 0 0 * * ?`, RunText: `https://www.baidu.com`, Note: "例子每分钟请求一次"})
+			_ = S.Create(&tx, newDB.DB_Cron{Name: "测试公共函数", Status: 2, IsLog: 2, Type: 2, Cron: `0 0 0 * * ?`, RunText: `测试网页访问("aaa")`, Note: "例子每分钟执行一次公共函数"})
+			_ = S.Create(&tx, newDB.DB_Cron{Name: "测试执行sql", Status: 2, IsLog: 2, Type: 3, Cron: `0 * * * * ?`, RunText: `DELETE FROM db_cron_log WHERE  RunTime<{{十位时间戳}}-86400`, Note: "例子每天请求一次,支持变量{{十位时间戳}}会替换当前时间戳"})
+		}
+		局_例子记录.Cron = 局_例子版本
+	}
+	//-============================================结束==========================
 	err := setting.Z例子写出记录(&局_例子记录)
 	if err != nil {
 		return

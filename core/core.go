@@ -3,17 +3,16 @@ package core
 import (
 	"EFunc/utils"
 	"fmt"
-	"github.com/robfig/cron/v3"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
 	"runtime"
-	"server/Service/Ser_Cron"
-	"server/Service/Ser_TaskPool"
 	"server/api/Admin/KuaiYan"
 	"server/core/internal"
 	"server/global"
+	"server/new/app/logic/common/cron"
+	"server/new/app/logic/common/cron/functions"
 	utils2 "server/utils"
 )
 
@@ -46,6 +45,7 @@ func InitViper() *viper.Viper {
 	v := viper.New()
 	//写入默认值
 	v.SetDefault("Port", 18888)
+	v.SetDefault("系统模式", 0)
 	//==================验证码默认配置
 	v.SetDefault("captcha.open-captcha", 1)            //设置验证码默认ip防暴次数
 	v.SetDefault("captcha.open-captcha-timeout", 3600) //防暴时间 被爆破后开启验证秒数
@@ -122,7 +122,9 @@ func InitViper() *viper.Viper {
 // InitCron定时任务 //
 // 新建Cron定时任务,并插入需要初始化的任务
 func InitCron定时任务() {
-	global.Cron定时任务.Cron = cron.New(cron.WithSeconds()) //这里设置的 6位表达式 秒级
+
+	global.Cron定时任务 = cron.D定时任务{} //这里设置的 6位表达式 秒级
+	global.Cron定时任务.Init()
 
 	//1  "0 0 0 * * *"  每天的 0点启动  * 通配符可以匹配任何数字
 	//2  "*/5 * * * * *" 表示每隔5秒钟执行一次
@@ -133,9 +135,15 @@ func InitCron定时任务() {
 	//7  "0 0 1 1 * ?"  表示每月1号凌晨1点执行一次
 	//8  "0 1,2,3 * * * ?" 表示在1分，2分，3分执行一次
 	//9  "0 0 0,1,2 * * ?" 表示每天的0点，1点，2点执行一次
-	global.Cron定时任务.T添加任务("在线列表定时注销已过期", "0 */1 * * * *", Ser_Cron.Corn_在线列表定时注销已过期) //每分钟执行一次
-	global.Cron定时任务.T添加任务("在线列表定时删除已过期", "0 */1 * * * *", Ser_Cron.Corn_在线列表定时删除已过期) //每分钟执行一次
-	global.Cron定时任务.T添加任务("在线列表定时删除已过期", "0 0 0 * * ?", Ser_TaskPool.Task数据删除过期)     //每天0点执行一次
-	global.Cron定时任务.T添加任务("快验心跳", "0 */5 * * * *", KuaiYan.K快验心跳)                    //5分钟心跳执行一次
+	err := global.Cron定时任务.T添加本机任务("快验心跳", "0 */5 * * * *", KuaiYan.K快验心跳)
+	if err != nil {
+		global.GVA_LOG.Error("T添加任务定时任务快验心跳失败:" + err.Error())
+	} //5分钟心跳执行一次
+
+	err = global.Cron定时任务.T添加本机任务("定时刷新数据库定时任务2", "0 */1 * * * *", functions.S刷新数据库定时任务2)
+	if err != nil {
+		global.GVA_LOG.Error("定时刷新数据库定时任务2失败:" + err.Error())
+	}
+	_ = functions.S刷新数据库定时任务(true)
 	global.Cron定时任务.Cron.Start()
 }

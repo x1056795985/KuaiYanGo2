@@ -98,9 +98,9 @@ var J集_UserAPi路由 = map[string]路由信息{
 }
 
 type 路由信息 struct {
-	Z中文名   string
+	Z中文名  string
 	Z指向函数 func(*gin.Context)
-	X显示     bool //是否显示到前段
+	X显示   bool //是否显示到前段
 }
 
 var J集_UserAPi路由_加密 = map[string]string{}
