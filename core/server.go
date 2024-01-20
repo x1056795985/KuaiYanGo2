@@ -4,6 +4,7 @@ import (
 	"EFunc/utils"
 	"fmt"
 	"net/http"
+	"server/Service/KuaiYanUpdater"
 	"server/api/middleware"
 	utils2 "server/utils"
 
@@ -54,6 +55,7 @@ func RunWindowsServer() {
 			middleware.D读取缓存Token()
 		}()
 	}
+	KuaiYanUpdater.B宝塔_修改项目信息pid()
 	err := global.GVA_Gin.ListenAndServe() //执行到此处会暂停,直到系统退出
 	if err != nil {
 		global.GVA_LOG.Error(err.Error())

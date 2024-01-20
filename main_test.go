@@ -37,7 +37,6 @@ func 编译飞鸟快验() {
 	//设置编译为linux
 	cmd := exec.Command("go", "env", "-w", "GOOS=linux")
 	cmd.Dir = 局_项目路径
-
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
@@ -49,12 +48,24 @@ func 编译飞鸟快验() {
 	} else {
 		fmt.Println(out.String())
 	}
-
+	//设置编译使用gcc
+	/*	cmd = exec.Command("go", "env", "-w", "CGO_ENABLED=0")
+		cmd.Dir = 局_项目路径
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if err != nil {
+			fmt.Println("命令执行失败:"+err.Error(), stderr.String())
+			return
+		} else {
+			fmt.Println(out.String())
+		}
+	*/
 	cmd = exec.Command("go", "build", "-o", 局_编译名称, "main.go")
 	cmd.Dir = 局_项目路径
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println("命令执行失败:", err)
+		fmt.Println("命令执行失败:", err.Error())
 		return
 	}
 	fmt.Println("编译命令执行成功:" + 局_编译名称)

@@ -1,6 +1,7 @@
 package Ser_AppUser
 
 import (
+	"EFunc/utils"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -370,6 +371,33 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 
 	return
 }
+func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64, err error) {
+	if !Ser_AppInfo.App是否为卡号(AppId) {
+		return 0, errors.New("仅限卡号类型应用使用")
+	}
+
+	db := global.GVA_DB.Model(DB.DB_AppUser{})
+	var ids []int
+	//获取全部uid 就是卡号id
+	err = db.Table("db_AppUser_" + strconv.Itoa(AppId)).Select("Uid").Find(&ids).Error
+
+	if err != nil {
+		return 0, err
+	}
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	var KaId []int
+	err = db.Model(DB.DB_Ka{}).Select("Id").Where("Uid IN ? ", ids).Find(&KaId).Error
+
+	Uids := utils.S数组_整数取差集(KaId, ids)
+	if len(Uids) == 0 {
+		return 0, nil
+	}
+	db = global.GVA_DB.Model(DB.DB_AppUser{})
+	db = db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids).Delete("")
+	return db.RowsAffected, db.Error
+}
 
 func Z置状态_同步卡号修改(AppId int, id []int, Status int) error {
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(AppId)
@@ -390,7 +418,7 @@ func Z置状态_同步卡号修改(AppId int, id []int, Status int) error {
 		return err
 	})
 }
-func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int) (影响行数 int64, err error) {
+func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int, UserClassId []int) (影响行数 int64, err error) {
 
 	if AppId < 10000 || !Ser_AppInfo.AppId是否存在(AppId) {
 		return 0, errors.New("AppId不存在")
@@ -432,6 +460,9 @@ func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号�
 	}
 	if 注册时间结束 > 0 {
 		db = db.Where("ai.RegisterTime < ?", 注册时间结束)
+	}
+	if len(UserClassId) >= 0 { //0 是未分类
+		db = db.Where("ai.UserClassId IN ?", UserClassId)
 	}
 
 	var 局_id数组 []int

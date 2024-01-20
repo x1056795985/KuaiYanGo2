@@ -257,12 +257,12 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
 	{
-		App := Api.Admin.UserClass                         //实现路由的 具体方法位置
-		baseRouter.POST("GetList", App.GetUserClassList)   // 获取列表
-		baseRouter.POST("New", App.NewUserClass信息)         // 新建信息
-		baseRouter.POST("GetInfo", App.GetUserClassInfo)   // 获取详细信息
-		baseRouter.POST("SaveInfo", App.SetUserClass信息)    // 保存详细信息
-		baseRouter.GET("GetIdNameList", App.GetIdNameList) // 取id和名字数组
+		App := Api.Admin.UserClass                          //实现路由的 具体方法位置
+		baseRouter.POST("GetList", App.GetUserClassList)    // 获取列表
+		baseRouter.POST("New", App.NewUserClass信息)          // 新建信息
+		baseRouter.POST("GetInfo", App.GetUserClassInfo)    // 获取详细信息
+		baseRouter.POST("SaveInfo", App.SetUserClass信息)     // 保存详细信息
+		baseRouter.POST("GetIdNameList", App.GetIdNameList) // 取id和名字数组
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Del批量删除用户类型) // 删除信息
 		}

@@ -4,12 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"server/global"
+	"server/new/app/logic/common/cron/functions"
 	"server/new/app/models/db"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
+	"server/new/app/utils"
 	"server/structs/Http/response"
 	"strconv"
+	"time"
 )
 
 // Cron
@@ -59,12 +62,21 @@ func (C *Cron) Create(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
+
+	if !utils.IsCron表达式(请求.Cron) {
+		response.FailWithMessage("cron表达式不争取,标准6位,秒,分,时,天,月,周", c)
+		return
+	}
 	var S = service.S_Cron{}
 	tx := *global.GVA_DB
 	err := S.Create(&tx, db.DB_Cron{Name: 请求.Name, Status: 请求.Status, Type: 请求.Type, Cron: 请求.Cron, RunText: 请求.RunText, Note: 请求.Note})
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 	}
+	if 请求.Status == 1 {
+		_ = functions.S刷新数据库定时任务(true)
+	}
+
 	response.Ok(c)
 }
 
@@ -86,6 +98,7 @@ func (C *Cron) Delete(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	_ = functions.S刷新数据库定时任务(true)
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
 	return
 }
@@ -103,6 +116,10 @@ func (C *Cron) Update(c *gin.Context) {
 		response.FailWithMessage("Id必须大于0", c)
 		return
 	}
+	if !utils.IsCron表达式(请求.Cron) {
+		response.FailWithMessage("cron表达式不争取,标准6位,秒,分,时,天,月,周", c)
+		return
+	}
 
 	var S = service.S_Cron{}
 	tx := *global.GVA_DB
@@ -110,7 +127,7 @@ func (C *Cron) Update(c *gin.Context) {
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 	}
-
+	_ = functions.S刷新数据库定时任务(true)
 	response.OkWithMessage("操作成功", c)
 	return
 }
@@ -181,6 +198,7 @@ func (C *Cron) DeleteBatch(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	_ = functions.S刷新数据库定时任务(true)
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
 	return
 }
@@ -214,7 +232,36 @@ func (C *Cron) UpdateStatus(c *gin.Context) {
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 	}
-
+	_ = functions.S刷新数据库定时任务(true)
 	response.OkWithMessage("操作成功", c)
+	return
+}
+
+// Z执行
+// @action 执行一次
+// @show  2
+func (C *Cron) Z执行(c *gin.Context) {
+	var 请求 request.Id
+	//解析失败
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	if 请求.Id <= 0 {
+		response.FailWithMessage("Id必须大于0", c)
+		return
+	}
+
+	var S = service.S_Cron{}
+	tx := *global.GVA_DB
+	CronInfo, err := S.Info(&tx, 请求.Id)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	通用任务执行函数2, err := functions.T通用任务执行函数2(time.Now().Unix(), CronInfo)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+	}
+	response.OkWithMessage(通用任务执行函数2, c)
 	return
 }
