@@ -49,13 +49,14 @@ func (a *Api) SetAppUserKey(c *gin.Context) {
 		response.FailWithMessage("用户不存在", c)
 		return
 	}
+
 	局_用户详情, err2 := Ser_AppUser.Id取详情(请求.AppId, AppUserid)
 	if err2 != nil {
 		response.FailWithMessage(err2.Error(), c)
 		return
 	}
 
-	err = Ser_AppUser.Set绑定信息(请求.AppId, AppUserid, 请求.Key)
+	err = Ser_AppUser.Set绑定信息(请求.AppId, 局_用户详情.Uid, 请求.Key)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
