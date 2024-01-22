@@ -26,6 +26,9 @@ func S刷新数据库定时任务2() {
 
 // 定时刷新数据库,或redis订阅刷新
 func S刷新数据库定时任务(主动 bool) error {
+	if global.GVA_DB == nil {
+		return nil
+	}
 	c := &global.Cron定时任务
 	c.L临界.Lock()
 	defer c.L临界.Unlock()
@@ -38,8 +41,8 @@ func S刷新数据库定时任务(主动 bool) error {
 			局_is刷新 = false
 		}
 	}
-
-	if 局_is刷新 || 主动 {
+	_, 局_是否存在 := global.H缓存.Get("map集群任务Hash") //如果不存在也刷新
+	if 局_is刷新 || 主动 || !局_是否存在 {
 
 		var S = service.NewCronService(global.GVA_DB)
 		tx := *global.GVA_DB
