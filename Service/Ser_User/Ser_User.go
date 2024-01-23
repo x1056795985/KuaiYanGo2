@@ -205,10 +205,10 @@ func Id置QQ邮箱手机号(Id int, QQ, 邮箱, 手机号 string) error {
 	if QQ != "" {
 		局data["Qq"] = QQ
 	}
-	if QQ != "" {
+	if 邮箱 != "" {
 		局data["Email"] = 邮箱
 	}
-	if QQ != "" {
+	if 手机号 != "" {
 		局data["Phone"] = 手机号
 	}
 

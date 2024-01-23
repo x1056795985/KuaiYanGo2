@@ -171,10 +171,10 @@ func (a *Api) GetKaList(c *gin.Context) {
 }
 
 type 结构响应_GetKaList struct {
-	List      interface{}         `json:"List"`      // 列表
-	Count     int64               `json:"Count"`     // 总数
-	AppType   int                 `json:"AppType"`   //
-	UserClass map[int]string      `json:"UserClass"` //
+	List      interface{}                   `json:"List"`      // 列表
+	Count     int64                         `json:"Count"`     // 总数
+	AppType   int                           `json:"AppType"`   //
+	UserClass map[int]string                `json:"UserClass"` //
 	KaClass   map[int]结构响应_卡类名称价格 `json:"KaClass"`   //
 }
 type 结构响应_卡类名称价格 struct {
@@ -321,7 +321,7 @@ type DB_Ka_精简 struct {
 	UserClassName string  `json:"UserClassName"`
 	Num           int     `json:"Num" gorm:"column:Num;comment:可以充值次数"`
 	MaxOnline     int     `json:"MaxOnline" gorm:"column:MaxOnline;comment:最大在线数"` //修改可以修改App最大在线数量
-	RegisterTime  int     `json:"RegisterTime" `                                   //制卡时间
+	RegisterTime  int     `json:"RegisterTime" `                                        //制卡时间
 }
 
 type 结构请求_库存制卡 struct {
@@ -339,11 +339,6 @@ func (a *Api) K库存制卡(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
-	局_卡类信息, err := Ser_KaClass.KaClass取详细信息(请求.Id)
-	if err != nil {
-		response.FailWithMessage("卡类id不存在", c)
-		return
-	}
 
 	数组_卡 := make([]DB.DB_Ka, 请求.Number) //make初始化,有3个元素的切片, len和cap都为3
 	err = Ser_Ka.Ka代理批量库存购买(数组_卡[:], 请求.Id, 请求.Number, c.GetInt("Uid"), 请求.AgentNote, c.ClientIP())
@@ -352,8 +347,9 @@ func (a *Api) K库存制卡(c *gin.Context) {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
 		return
 	}
+
 	局_用户类型名称 := ""
-	局_用户类型, ok := Ser_UserClass.Id取详情(局_卡类信息.AppId, 局_卡类信息.UserClassId)
+	局_用户类型, ok := Ser_UserClass.Id取详情(数组_卡[0].AppId, 数组_卡[0].UserClassId)
 	if ok {
 		局_用户类型名称 = 局_用户类型.Name
 	}
@@ -519,7 +515,7 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 
 type 响应_AppIdNameList struct {
 	Map   map[string]string `json:"Map"`
-	Array []键值对             `json:"Array"`
+	Array []键值对          `json:"Array"`
 }
 
 type 键值对 struct {
