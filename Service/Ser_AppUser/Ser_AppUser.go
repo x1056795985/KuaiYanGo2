@@ -376,7 +376,7 @@ func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64,
 		return 0, errors.New("仅限卡号类型应用使用")
 	}
 
-	db := global.GVA_DB.Model(DB.DB_AppUser{})
+	db := *global.GVA_DB.Model(DB.DB_AppUser{})
 	var ids []int
 	//获取全部uid 就是卡号id
 	err = db.Table("db_AppUser_" + strconv.Itoa(AppId)).Select("Uid").Find(&ids).Error
@@ -388,15 +388,19 @@ func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64,
 		return 0, nil
 	}
 	var KaId []int
-	err = db.Model(DB.DB_Ka{}).Select("Id").Where("Uid IN ? ", ids).Find(&KaId).Error
+	db = *global.GVA_DB.Model(DB.DB_Ka{})
+	err = db.Select("Id").Where("AppId = ? ", AppId).Scan(&KaId).Error
+	if err != nil {
+		return 0, err
+	}
 
 	Uids := utils.S数组_整数取差集(KaId, ids)
 	if len(Uids) == 0 {
 		return 0, nil
 	}
-	db = global.GVA_DB.Model(DB.DB_AppUser{})
-	db = db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids).Delete("")
-	return db.RowsAffected, db.Error
+	db = *global.GVA_DB.Model(DB.DB_AppUser{})
+	db2 := db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids).Delete("")
+	return db2.RowsAffected, db2.Error
 }
 
 func Z置状态_同步卡号修改(AppId int, id []int, Status int) error {

@@ -70,10 +70,10 @@ func K快验系统开始更新(更新文件文本 string, 更新成功后处理�
 			_ = utils.M目录_创建(集_运行目录 + string(局_文件[索引].GetStringBytes("Lujing")))
 		}
 		J_任务列表[索引] = 更新文件列表{
-			本地文件名:                       局_本地路径,
-			远程下载地址:                     string(局_文件[索引].GetStringBytes("url")),
+			本地文件名:  局_本地路径,
+			远程下载地址: string(局_文件[索引].GetStringBytes("url")),
 			更新结束后是否需要自动执行该文件: string(局_文件[索引].GetStringBytes("YunXing")) == "1",
-			是否已下载:                       false,
+			是否已下载: false,
 		}
 		if J_任务列表[索引].更新结束后是否需要自动执行该文件 {
 			执行程序路径 = J_任务列表[索引].本地文件名
@@ -90,7 +90,7 @@ func K快验系统开始更新(更新文件文本 string, 更新成功后处理�
 
 				if 局_临时文件MD5 == 局_本地文件MD5 {
 					J_任务列表[索引].是否已下载 = true //文件已经存在直接跳过
-					continue                           //到循环尾
+					continue                //到循环尾
 				}
 			}
 		} else if utils.W文件_是否存在(局_本地路径) { //不推荐文件名,可能会出现不准确的情况
@@ -172,9 +172,9 @@ func K快验系统开始更新(更新文件文本 string, 更新成功后处理�
 }
 
 type 更新文件列表 struct {
-	本地文件名                       string
-	远程下载地址                     string
-	是否已下载                       bool
+	本地文件名            string
+	远程下载地址           string
+	是否已下载            bool
 	更新结束后是否需要自动执行该文件 bool //注意，该数据类型中此成员为真只允许有一个。建议设为主程序。
 }
 
@@ -184,7 +184,7 @@ func B宝塔_修改项目信息pid() {
 	root := "/var/tmp/gopids" // 请将此处替换为你的目录路径
 	f, err := os.Open(root)
 	if err != nil {
-		fmt.Println("打开目录失败:", err)
+		//fmt.Println("打开目录失败:", err)
 		return
 	}
 	defer f.Close()
