@@ -171,10 +171,10 @@ func (a *Api) GetKaList(c *gin.Context) {
 }
 
 type 结构响应_GetKaList struct {
-	List      interface{}                   `json:"List"`      // 列表
-	Count     int64                         `json:"Count"`     // 总数
-	AppType   int                           `json:"AppType"`   //
-	UserClass map[int]string                `json:"UserClass"` //
+	List      interface{}         `json:"List"`      // 列表
+	Count     int64               `json:"Count"`     // 总数
+	AppType   int                 `json:"AppType"`   //
+	UserClass map[int]string      `json:"UserClass"` //
 	KaClass   map[int]结构响应_卡类名称价格 `json:"KaClass"`   //
 }
 type 结构响应_卡类名称价格 struct {
@@ -215,7 +215,7 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 		return
 	}
 
-	提示, err := Ser_Ka.K卡号追回(请求.Id[0])
+	提示, err := Ser_Ka.K卡号追回(请求.Id[0], c.GetInt("Uid"), c.ClientIP())
 
 	if err != nil {
 		response.FailWithMessage("追回失败:"+err.Error(), c)
@@ -223,7 +223,7 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 	}
 
 	局_卡号详情, _ := Ser_Ka.Id取详情(请求.Id[0])
-	局_信息 := "操作卡号管理:卡号更换新卡号:" + 局_卡号详情.Name
+	局_信息 := "操作卡号管理:代理追回卡号:" + 局_卡号详情.Name
 	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_卡号详情.Name, DB.D代理功能_卡号追回, c.ClientIP(), 局_信息)
 
 	response.OkWithMessage(提示, c)
@@ -321,7 +321,7 @@ type DB_Ka_精简 struct {
 	UserClassName string  `json:"UserClassName"`
 	Num           int     `json:"Num" gorm:"column:Num;comment:可以充值次数"`
 	MaxOnline     int     `json:"MaxOnline" gorm:"column:MaxOnline;comment:最大在线数"` //修改可以修改App最大在线数量
-	RegisterTime  int     `json:"RegisterTime" `                                        //制卡时间
+	RegisterTime  int     `json:"RegisterTime" `                                   //制卡时间
 }
 
 type 结构请求_库存制卡 struct {
@@ -515,7 +515,7 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 
 type 响应_AppIdNameList struct {
 	Map   map[string]string `json:"Map"`
-	Array []键值对          `json:"Array"`
+	Array []键值对             `json:"Array"`
 }
 
 type 键值对 struct {

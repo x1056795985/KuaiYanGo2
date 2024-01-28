@@ -203,7 +203,7 @@ func (a *Api) New代理信息(c *gin.Context) {
 		response.FailWithMessage("用户名"+msg, c)
 		return
 	}
-	err = Ser_User.New用户信息(请求.User, 请求.PassWord, 请求.SuperPassWord, 请求.Qq, 请求.Email, 请求.Phone, c.ClientIP(), 请求.Note, 请求.UPAgentId, 请求.AgentDiscount, 请求.Rmb)
+	err = Ser_User.New用户信息(请求.User, 请求.PassWord, 请求.SuperPassWord, 请求.Qq, 请求.Email, 请求.Phone, c.ClientIP(), 请求.Note, 请求.UPAgentId, 请求.AgentDiscount, 请求.Rmb, "")
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
