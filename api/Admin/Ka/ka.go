@@ -254,7 +254,7 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 		response.FailWithMessage("Id数组暂时只支持1个成员数,后续扩展中", c)
 		return
 	}
-	提示, err := Ser_Ka.K卡号追回(请求.Id[0])
+	提示, err := Ser_Ka.K卡号追回(请求.Id[0], -c.GetInt("Uid"), c.ClientIP())
 
 	if err != nil {
 		response.FailWithMessage("追回失败:"+err.Error(), c)

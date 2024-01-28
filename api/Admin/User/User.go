@@ -392,7 +392,7 @@ func (a *Api) New用户信息(c *gin.Context) {
 		response.FailWithMessage("非系统管理员只能创建余额=0的普通用户", c)
 		return
 	}
-	err = Ser_User.New用户信息(请求.User, 请求.PassWord, 请求.SuperPassWord, 请求.Qq, 请求.Email, 请求.Phone, c.ClientIP(), 请求.Note, 0, 0, 请求.Rmb)
+	err = Ser_User.New用户信息(请求.User, 请求.PassWord, 请求.SuperPassWord, 请求.Qq, 请求.Email, 请求.Phone, c.ClientIP(), 请求.Note, 0, 0, 请求.Rmb, "")
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
