@@ -223,7 +223,7 @@ func Id置QQ邮箱手机号(Id int, QQ, 邮箱, 手机号 string) error {
 }
 
 // New用户信息
-func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注 string, UPAgentId int, AgentDiscount int, Rmb float64) error {
+func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注 string, UPAgentId int, AgentDiscount int, Rmb float64, RealNameAttestation string) error {
 
 	msg := ""
 	局_最短长度 := 6
@@ -275,7 +275,7 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 	局_User.RegisterIp = Ip
 	局_User.RegisterTime = time.Now().Unix()
 	局_User.UPAgentId = UPAgentId
-	局_User.RealNameAttestation = ""
+	局_User.RealNameAttestation = RealNameAttestation
 	局_User.AgentDiscount = AgentDiscount
 	局_User.LoginTime = 0
 	局_User.LoginAppid = 0

@@ -613,7 +613,7 @@ func Ka修改代理备注(代理User string, id []int, AgentNote string) error {
 }
 
 // 已用充值卡将相应的卡使用者和推荐人强行扣回充值卡面值,可能扣成负数
-func K卡号追回(ID int) (提示 string, 错误 error) {
+func K卡号追回(ID int, 代理id int, ip string) (提示 string, 错误 error) {
 
 	卡号详情卡号, err := Id取详情(ID)
 	if err != nil {
@@ -635,7 +635,7 @@ func K卡号追回(ID int) (提示 string, 错误 error) {
 	局_追回积分结果 := make(map[string]int, len(已用用户数组))
 	局_追回余额结果 := make(map[string]int, len(已用用户数组))
 	局_追回推荐人时间点数结果 := make(map[string]int, len(已用用户数组))
-
+	局_操作人用户名 := Ser_User.Id取User(代理id)
 	if 卡号详情卡号.User == "" {
 		return "", errors.New("无已充值用户,但有使用次数,可能手动修改使用次数导致的")
 	}
@@ -660,9 +660,9 @@ func K卡号追回(ID int) (提示 string, 错误 error) {
 			if err == nil {
 				局_追回时间点数结果[值] = 1
 				if 局_is计点 {
-					go Ser_Log.Log_写积分点数时间日志(值, "127.0.0.1", "追回卡号:"+卡号详情卡号.Name+",减少用户点数", float64(-卡号详情卡号.VipTime), 卡号详情卡号.AppId, 2)
+					go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+卡号详情卡号.Name+",减少用户点数", float64(-卡号详情卡号.VipTime), 卡号详情卡号.AppId, 2)
 				} else {
-					go Ser_Log.Log_写积分点数时间日志(值, "127.0.0.1", "追回卡号:"+卡号详情卡号.Name+",减少用户时间", float64(-卡号详情卡号.VipTime), 卡号详情卡号.AppId, 3)
+					go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+卡号详情卡号.Name+",减少用户时间", float64(-卡号详情卡号.VipTime), 卡号详情卡号.AppId, 3)
 
 				}
 			} else {
@@ -671,7 +671,7 @@ func K卡号追回(ID int) (提示 string, 错误 error) {
 		}
 		if 卡号详情卡号.VipNumber != 0 {
 			err = Ser_AppUser.Id积分增减_批量(卡号详情卡号.AppId, []int{局_应用用户ID}, 卡号详情卡号.VipNumber, false)
-			go Ser_Log.Log_写积分点数时间日志(值, "127.0.0.1", "追回卡号:"+卡号详情卡号.Name+",减少用户积分", utils.Float64取负值(卡号详情卡号.VipNumber), 卡号详情卡号.AppId, 1)
+			go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+卡号详情卡号.Name+",减少用户积分", utils.Float64取负值(卡号详情卡号.VipNumber), 卡号详情卡号.AppId, 1)
 			if err == nil {
 				局_追回积分结果[值] = 1
 			} else {
@@ -681,7 +681,7 @@ func K卡号追回(ID int) (提示 string, 错误 error) {
 		if !局_is卡号 && 卡号详情卡号.RMb != 0 {
 			err = Ser_User.Id余额增减_批量([]int{Ser_User.User用户名取id(值)}, 卡号详情卡号.RMb, false)
 			if err == nil {
-				go Ser_Log.Log_写余额日志(值, "127.0.0.1", "追回卡号:"+卡号详情卡号.Name+",减少用户余额", utils.Float64取负值(卡号详情卡号.RMb))
+				go Ser_Log.Log_写余额日志(值, ip, 局_操作人用户名+"追回卡号:"+卡号详情卡号.Name+",减少用户余额", utils.Float64取负值(卡号详情卡号.RMb))
 				局_追回余额结果[值] = 1
 			} else {
 				局_追回余额结果[值] = 2
@@ -706,10 +706,9 @@ func K卡号追回(ID int) (提示 string, 错误 error) {
 			err = Ser_AppUser.Id点数增减_批量(卡号详情卡号.AppId, []int{局_应用用户ID}, 卡号详情卡号.InviteCount, false)
 			if err == nil {
 				if 局_is计点 {
-					go Ser_Log.Log_写积分点数时间日志(值, "127.0.0.1", "追回卡号:"+卡号详情卡号.Name+",减少用户点数", float64(-卡号详情卡号.VipTime), 卡号详情卡号.AppId, 2)
+					go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+卡号详情卡号.Name+",减少用户点数", float64(-卡号详情卡号.VipTime), 卡号详情卡号.AppId, 2)
 				} else {
-					go Ser_Log.Log_写积分点数时间日志(值, "127.0.0.1", "追回卡号:"+卡号详情卡号.Name+",减少用户时间", float64(-卡号详情卡号.VipTime), 卡号详情卡号.AppId, 3)
-
+					go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+卡号详情卡号.Name+",减少用户时间", float64(-卡号详情卡号.VipTime), 卡号详情卡号.AppId, 3)
 				}
 				局_追回推荐人时间点数结果[值] = 1
 			} else {

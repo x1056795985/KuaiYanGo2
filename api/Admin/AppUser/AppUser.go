@@ -502,6 +502,45 @@ func (a *Api) Set批量维护_增减时间点数(c *gin.Context) {
 	return
 }
 
+// 批量维护 修改用户类型
+func (a *Api) Set批量维护_修改用户类型(c *gin.Context) {
+	var 请求 struct {
+		Id          []int `json:"Id"`          //用户id数组
+		AppId       int   `json:"AppId"`       //用户id数组
+		UserClassId int   `json:"UserClassId"` //
+	}
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if 请求.AppId <= 0 {
+		response.FailWithMessage("AppId错误", c)
+		return
+	}
+	if len(请求.Id) == 0 {
+		response.FailWithMessage("Id数组为空", c)
+		return
+	}
+
+	局_用户类型, ok := Ser_UserClass.Id取详情(请求.AppId, 请求.UserClassId)
+	if !ok {
+		response.FailWithMessage("类型不存在", c)
+		return
+	}
+	var 局_数量 int64
+	局_数量, err = Ser_AppUser.X修改用户类型_批量(请求.AppId, 请求.Id, 局_用户类型.Id)
+
+	if err != nil {
+		response.FailWithMessage("修改失败", c)
+		global.GVA_LOG.Error("修改失败:" + err.Error())
+		return
+	}
+	response.OkWithMessage("修改成功,数量:"+strconv.Itoa(int(局_数量)), c)
+	return
+}
+
 type 结构请求_批量删除用户 struct {
 	AppId int `json:"AppId"` //用户id数组
 	Type  int `json:"Type"`  //1 无点数或已过期
