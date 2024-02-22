@@ -91,6 +91,7 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"TaskPoolSetTask":     {"任务池_任务处理返回", UserApi.UserApi_任务池_任务处理返回, true},
 	"GetUserConfig":       {"取用户云配置", UserApi.UserApi_取用户云配置, true},
 	"SetUserConfig":       {"置用户云配置", UserApi.UserApi_置用户云配置, true},
+	"SetAgentUid":         {"置代理标识", UserApi.UserApi_置代理标识, true},
 
 	//快验Api
 	"KyApiSendSms":           {"快验发送验证码短信", UserApi.KyApiSendSms, false},
@@ -186,7 +187,7 @@ func UserApi解密() gin.HandlerFunc {
 			return
 		}
 		if 局_在线信息.Status != 1 {
-			response.X响应状态(c, response.Status_Token已注销)
+			response.X响应状态带数据(c, response.Status_Token已注销, gin.H{"LogoutCode": 局_在线信息.LogoutCode})
 			c.Abort()
 			return
 		}

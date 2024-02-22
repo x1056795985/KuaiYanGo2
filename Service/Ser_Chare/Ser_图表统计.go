@@ -1,6 +1,7 @@
 package Ser_Chare
 
 import (
+	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_AppInfo"
@@ -562,7 +563,7 @@ func Get卡号列表统计应用卡类可用已用(c *gin.Context) [][]string {
 type 临时应用id总数键值对 struct {
 	应用AppId int
 	总数      int
-	在线数量    int
+	在线数量  int
 }
 type 结构_请求类型 struct {
 	Type  int `json:"Type"`
@@ -958,8 +959,9 @@ func Get应用用户账号注册统计(c *gin.Context) []gin.H {
 			局_数量[索引-1] = a
 		}
 	}
-
 	Data[0] = gin.H{"name": "注册数量", "type": "line", "data": 局_数量}
+
+	//统计日活========================
 
 	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
 		global.H缓存.Set("图表数据_Get用户账号统计"+strconv.Itoa(局_type.Type)+"_"+strconv.Itoa(局_type.AppId), Data, time.Minute*10)
@@ -1037,19 +1039,19 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 			"Count(case when ( RegisterTime between "+时间处理函数(-1)+" and "+时间处理函数(0)+") then 1 else null end) as  '6' ",
 			"Count(case when ( RegisterTime between "+时间处理函数(0)+" and "+时间处理函数(1)+") then 1 else null end) as  '7' ").
 		First(&局_临时)
-
 	for 键名, 值 := range 局_临时 {
 		索引, _ := strconv.Atoi(键名)
 		if 值 == nil {
 			局_数量[索引-1] = 0
 		} else {
-			a, _ := strconv.Atoi(string(值.([]uint8)))
+			a, _ := strconv.Atoi(utils.D到文本(值))
 			局_数量[索引-1] = a
 		}
 	}
-
 	Data[0] = gin.H{"name": "注册数量", "type": "line", "data": 局_数量}
-	global.GVA_DB.Model(DB.DB_User{}).
+
+	//mark 这个获取算法有bug,这个是通过用户列表最后一次登录时间统计的数据,但是实际如果用户连续两天登录,前一天登录的数据就没了,所以不可使用
+	/*	global.GVA_DB.Model(DB.DB_User{}).
 		Select("Count(case when ( LoginTime between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then 1 else null end) as  '1' ",
 			"Count(case when ( LoginTime between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then 1 else null end) as  '2' ",
 			"Count(case when ( LoginTime between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then 1 else null end) as  '3' ",
@@ -1057,14 +1059,24 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 			"Count(case when ( LoginTime between "+时间处理函数(-2)+" and "+时间处理函数(-1)+") then 1 else null end) as  '5' ",
 			"Count(case when ( LoginTime between "+时间处理函数(-1)+" and "+时间处理函数(0)+") then 1 else null end) as  '6' ",
 			"Count(case when ( LoginTime between "+时间处理函数(0)+" and "+时间处理函数(1)+") then 1 else null end) as  '7' ").
-		First(&局_临时)
+		First(&局_临时)*/
+	//老老实实读取登录日志吧
+	global.GVA_DB.Model(DB.DB_LogLogin{}).
+		Select("Count(case when ( Time between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then 1 else null end) as  '1' ",
+			"Count(case when ( Time between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then 1 else null end) as  '2' ",
+			"Count(case when ( Time between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then 1 else null end) as  '3' ",
+			"Count(case when ( Time between "+时间处理函数(-3)+" and "+时间处理函数(-2)+") then 1 else null end) as  '4' ",
+			"Count(case when ( Time between "+时间处理函数(-2)+" and "+时间处理函数(-1)+") then 1 else null end) as  '5' ",
+			"Count(case when ( Time between "+时间处理函数(-1)+" and "+时间处理函数(0)+") then 1 else null end) as  '6' ",
+			"Count(case when ( Time between "+时间处理函数(0)+" and "+时间处理函数(1)+") then 1 else null end) as  '7' ").
+		Where("Note = ?", "用户登录").First(&局_临时)
 	for 键名, 值 := range 局_临时 {
 		索引, _ := strconv.Atoi(键名)
 
 		if 值 == nil {
 			局_数量[索引-1] = 0
 		} else {
-			a, _ := strconv.Atoi(string(值.([]uint8)))
+			a, _ := strconv.Atoi(utils.D到文本(值))
 			局_数量[索引-1] = a
 		}
 

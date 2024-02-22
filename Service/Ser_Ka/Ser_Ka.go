@@ -215,44 +215,28 @@ func Ka代理批量购买(卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int,
 	局_文本 = fmt.Sprintf("新制卡号:[%s -> %s],同时间批次({{卡号索引}}/%d)", Ser_AppInfo.App取AppName(卡信息切片[0].AppId), Ser_KaClass.Id取Name(卡信息切片[0].KaClassId), len(卡信息切片))
 	go Ser_Log.Log_写卡号操作日志(局_购卡人信息.User, ip, 局_文本, 数组_卡号, 1, Ser_Agent.Q取Id代理级别(局_购卡人信息.Id))
 
-	//开始分利润
-	var 下级信息 DB.DB_User
-	下级信息 = 局_购卡人信息
-	局_下级分成百分比 := 0
-	for {
-
-		局_百分比分成 := utils.Float64除int64(int64(下级信息.AgentDiscount-局_下级分成百分比), 100, 2)
-
-		局_分成金额 := utils.Float64乘Float64(局_总计金额, 局_百分比分成)
-		if 局_分成金额 > 0 {
-			新余额, err2 := Ser_User.Id余额增减(下级信息.Id, 局_分成金额, true)
-			if err2 != nil {
-				//,一般不会出现,除非用户不存在
-				global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成余额增加失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), 下级信息.Id, 局_分成金额, 局_ID列表))
-			} else {
-				str := fmt.Sprintf("下级代理:%s,制卡ID{%s},分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_购卡人信息.User, 局_ID列表, utils.Float64到文本(局_分成金额, 2), utils.Float64到文本(局_总计金额, 2), 下级信息.AgentDiscount, 局_下级分成百分比, utils.Float64到文本(新余额, 2))
-				if 下级信息.Id == 局_购卡人信息.Id {
-					str = fmt.Sprintf("代理制卡ID{%s},自消费分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_ID列表, utils.Float64到文本(局_分成金额, 2), utils.Float64到文本(局_总计金额, 2), 下级信息.AgentDiscount, 局_下级分成百分比, utils.Float64到文本(新余额, 2))
-				}
-				Ser_Log.Log_写余额日志(下级信息.User, ip, str, 局_分成金额)
-			}
-		}
-
-		if 下级信息.UPAgentId <= 0 {
-			//上级是管理员了 跳出循环
-			break
-		}
-
-		局_下级分成百分比 = 下级信息.AgentDiscount
-		下级信息, ok = Ser_User.Id取详情(下级信息.UPAgentId)
-		if !ok {
-			//,一般不会出现,除非用户不存在
-			global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成,取上级代理ID:%d详情失败,下级代理ID:%d,卡号ID:%s", 下级信息.UPAgentId, 下级信息.Id, 局_ID列表))
-			break
-		}
-
+	//开始分利润 20240202 mark处理重构以后改事务
+	代理分成数据, err2 := Ser_Agent.D代理分成计算(局_购卡人信息.UPAgentId, 局_总计金额)
+	if err2 != nil {
+		global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成计算失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), 局_购卡人信息.UPAgentId, 局_总计金额, 局_ID列表))
+		return err2
 	}
 
+	for 局_索引 := range 代理分成数据 {
+		d := 代理分成数据[局_索引] //太长了,放个变量里
+		新余额, err2 = Ser_User.Id余额增减(d.Uid, d.S实际分成金额, true)
+		if err2 != nil {
+			//,一般不会出现,除非用户不存在
+			global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成余额增加失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), d.Uid, d.S实际分成金额, 局_ID列表))
+		} else {
+			str := fmt.Sprintf("下级代理:%s,制卡ID{%s},分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_购卡人信息.User, 局_ID列表, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_总计金额, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
+			if d.Uid == 局_购卡人信息.Id {
+				str = fmt.Sprintf("代理制卡ID{%s},自消费分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_ID列表, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_总计金额, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
+			}
+			Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), ip, str, d.S实际分成金额)
+		}
+	}
+	// 分成结束==============
 	return nil
 }
 
@@ -545,7 +529,7 @@ SELECT DISTINCT AppId  FROM db_App_Info  WHERE AppId IN (SELECT DISTINCT AppId  
 
 			//如果是冻结同时注销在线的uid
 			if status == 2 {
-				_ = Ser_LinkUser.Set批量注销Uid数组(局_map[AppId], AppId)
+				_ = Ser_LinkUser.Set批量注销Uid数组(局_map[AppId], AppId, Ser_LinkUser.Z注销_管理员手动注销)
 			}
 
 		}

@@ -53,7 +53,7 @@ func (a *Api) AdminNewPassword(c *gin.Context) {
 // OutLogin
 // 退出登录
 func (a *Api) OutLogin(c *gin.Context) {
-	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"))
+	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"), Ser_LinkUser.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		return
@@ -135,7 +135,7 @@ type 结构请求_GetUserList struct {
 	Status   int    `json:"Status"`   // 状态id
 	Type     int    `json:"Type"`     // 关键字类型  1 id 2 用户名 3绑定信息 4 动态标签
 	Keywords string `json:"Keywords"` // 关键字
-	Order    int    `json:"Order"`    // 0 倒序 1 正序
+	Order    int    `json:"Order"`    // 排序方式
 	Role     int    `json:"Role"`     //  0 全部 1普通用户  2 3 4 代理商
 }
 
@@ -154,10 +154,9 @@ func (a *Api) GetUserList(c *gin.Context) {
 	var 总数 int64
 	局_DB := global.GVA_DB.Model(DB.DB_User{})
 
-	if 请求.Order == 1 {
-		局_DB.Order("Id ASC")
-	} else {
-		局_DB.Order("Id DESC")
+	局_排序 := map[int]string{0: "Id ASC", 1: "Id DESC", 2: "Id ASC", 3: "LoginTime DESC", 4: "LoginTime ASC"}
+	if utils.Map_键名是否存在(局_排序, 请求.Order) {
+		局_DB.Order(局_排序[请求.Order])
 	}
 
 	if 请求.Status == 1 || 请求.Status == 2 {
@@ -429,7 +428,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 		for _, 值 := range 请求.Id {
 			局_user数组 = append(局_user数组, Ser_User.Id取User(值))
 		}
-		_ = Ser_LinkUser.Set批量注销User数组(局_user数组)
+		_ = Ser_LinkUser.Set批量注销User数组(局_user数组, Ser_LinkUser.Z注销_管理员手动注销)
 
 	} else {
 		err = global.GVA_DB.Model(DB.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 1).Error
