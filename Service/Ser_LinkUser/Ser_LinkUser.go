@@ -64,8 +64,9 @@ func NewWebApiToken(OutTIme int, Key, Tab string) (DB.DB_LinksToken, error) {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Create(&DB_links_user).Error
 	return DB_links_user, err
 }
+
 func Set自动注销超时时间(OutTIme int, id []int) error {
-	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("id IN ?", id).Update("OutTIme", OutTIme).Error
+	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("id IN ?", id).Updates(map[string]interface{}{"OutTime": OutTIme}).Error
 	return err
 }
 func Token更新最后活动时间(Token string) {
@@ -136,12 +137,12 @@ func Q指定应用真实在线(AppId int) int64 {
 	_ = global.GVA_DB.Model(DB.DB_LinksToken{}).Where("LoginAppid=?", AppId).Where("Status=1").Where("User!=?", "游客").Count(&局_在线总数).Error
 	return 局_在线总数
 }
-func Set批量注销(Id []int) error {
-	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id IN ? ", Id).Updates(map[string]interface{}{"OutTime": 0, "Status": 2}).Error
+func Set批量注销(Id []int, 注销原因 int) error {
+	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id IN ? ", Id).Updates(map[string]interface{}{"OutTime": 0, "Status": 2, "LogoutCode": 注销原因}).Error
 	return err
 }
-func Set批量注销Uid(UId int) error {
-	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("UId = ? ", UId).Updates(map[string]interface{}{"OutTime": 0, "Status": 2}).Error
+func Set批量注销Uid(UId int, 注销原因 int) error {
+	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("UId = ? ", UId).Updates(map[string]interface{}{"OutTime": 0, "Status": 2, "LogoutCode": 注销原因}).Error
 	return err
 }
 func Set批量注销全部代理() error {
@@ -150,20 +151,24 @@ func Set批量注销全部代理() error {
 }
 
 // 可指定AppId,0为全部注销
-func Set批量注销Uid数组(UId []int, AppId int) error {
+func Set批量注销Uid数组(UId []int, AppId int, 注销原因 int) error {
 	db := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("UId IN ? ", UId)
 	if AppId != 0 {
 		db.Where("LoginAppid =? ", AppId)
 	}
-	err := db.Updates(map[string]interface{}{"OutTime": 0, "Status": 2}).Error
+	err := db.Updates(map[string]interface{}{"OutTime": 0, "Status": 2, "LogoutCode": 注销原因}).Error
 	return err
 }
-func Set批量注销User数组(User []string) error {
+func Set批量注销User数组(User []string, 注销原因 int) error {
 	db := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("User IN ? ", User)
-	err := db.Updates(map[string]interface{}{"OutTime": 0, "Status": 2}).Error
+	err := db.Updates(map[string]interface{}{"OutTime": 0, "Status": 2, "LogoutCode": 注销原因}).Error
 	return err
 }
 func Set动态标签(Id int, 新动态标签 string) error {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ? ", Id).Updates(map[string]interface{}{"Tab": 新动态标签}).Error
+	return err
+}
+func Set代理标志(Id int, 代理Uid int) error {
+	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ? ", Id).Updates(map[string]interface{}{"AgentUid": 代理Uid}).Error
 	return err
 }

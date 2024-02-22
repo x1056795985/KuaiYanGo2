@@ -90,7 +90,7 @@ func (a *Api) SaveKa信息(c *gin.Context) {
 
 	//如果是冻结同时注销在线的uid
 	if 请求.Status == 2 {
-		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧卡号信息.Id}, 请求.AppId)
+		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧卡号信息.Id}, 请求.AppId, Ser_LinkUser.Z注销_管理员手动注销)
 	}
 	if err != nil {
 		response.FailWithMessage("保存失败", c)

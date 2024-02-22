@@ -11,6 +11,7 @@ import (
 	"github.com/valyala/fastjson"
 	"server/Service/Captcha"
 	"server/Service/Ser_Admin"
+	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Js"
@@ -230,7 +231,7 @@ func UserApi_用户登录(c *gin.Context) {
 		if AppInfo.ExceedMaxOnlineOut == 1 {
 			//踢掉最早在线
 			局_要踢掉的数量 = len(局_已经在线数量) - 局_AppUser.MaxOnline + 1
-			_ = Ser_LinkUser.Set批量注销(局_已经在线数量[:局_要踢掉的数量])
+			_ = Ser_LinkUser.Set批量注销(局_已经在线数量[:局_要踢掉的数量], Ser_LinkUser.Z注销_超过同时在线注销)
 			//已经登录的数量-最大数量 +1
 			go Ser_Log.Log_写登录日志(局_卡号或用户名, c.ClientIP(), "登录同时在线超过最大值已注销最早登录:"+strconv.Itoa(局_要踢掉的数量), 局_在线信息.LoginAppid)
 
@@ -766,6 +767,14 @@ func UserApi_置新绑定信息(c *gin.Context) {
 		if err != nil {
 			response.X响应状态消息(c, response.Status_Vip已到期, "剩余会员时间或点数不足.")
 			return
+		} else {
+			局_日志 := "用户置新绑定,旧绑定信息:" + 局_AppUser.Key + ",新绑定信息:" + 局_信息绑定信息
+			局_type := 3
+			if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
+				局_type = 2
+			}
+			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, utils.D到数值(-AppInfo.UpKeyData), AppInfo.AppId, 局_type)
+
 		}
 	} else {
 		AppInfo.UpKeyData = 0
@@ -840,6 +849,13 @@ func UserApi_解除绑定信息(c *gin.Context) {
 		if err != nil {
 			response.X响应状态消息(c, response.Status_Vip已到期, "剩余会员时间或点数不足.")
 			return
+		} else {
+			局_日志 := "用户解除绑定信息,旧绑定信息:" + 局_在线信息.Key
+			局_type := 3
+			if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
+				局_type = 2
+			}
+			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, utils.D到数值(-AppInfo.UpKeyData), AppInfo.AppId, 局_type)
 		}
 	}
 
@@ -848,6 +864,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"ReduceVipTime": AppInfo.UpKeyData})
 	} else {
 		_ = Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(AppInfo.UpKeyData), true) //退还已经扣除的点数
+		// 暂时想不出什么情况会修改失败 概率较低
 		response.X响应状态(c, response.Status_SQl错误)
 	}
 
@@ -1051,7 +1068,7 @@ func UserApi_用户登录注销(c *gin.Context) {
 		response.X响应状态(c, response.Status_未登录)
 		return
 	}
-	err := Ser_LinkUser.Set批量注销([]int{局_在线信息.Id})
+	err := Ser_LinkUser.Set批量注销([]int{局_在线信息.Id}, Ser_LinkUser.Z注销_用户操作注销)
 	更新上下文缓存在线信息(c)
 	if err != nil {
 		response.X响应状态(c, response.Status_操作失败)
@@ -1141,7 +1158,7 @@ func UserApi_用户登录远程注销(c *gin.Context) {
 		}
 	}
 
-	err := Ser_LinkUser.Set批量注销Uid(局_id)
+	err := Ser_LinkUser.Set批量注销Uid(局_id, Ser_LinkUser.Z注销_用户远程注销)
 	更新上下文缓存在线信息(c)
 	if err != nil {
 		response.X响应状态(c, response.Status_操作失败)
@@ -1589,11 +1606,10 @@ func UserApi_卡号充值(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"UseKa","User":"aaaaaa","Ka":"aaaaaa","InviteUser":"aaaaaa","Time":1684071722,"Status":41016}
-	局_卡号 := string(请求json.GetStringBytes("Ka"))
-	局_推荐人 := string(请求json.GetStringBytes("InviteUser"))
+	局_卡号 := strings.TrimSpace(string(请求json.GetStringBytes("Ka")))
+	局_推荐人 := strings.TrimSpace(string(请求json.GetStringBytes("InviteUser")))
 	err用户, err推荐人 := Ser_Ka.K卡号充值_事务(AppInfo.AppId, 局_卡号, string(请求json.GetStringBytes("User")), 局_推荐人, c.ClientIP())
 	if err用户 != nil {
 		response.X响应状态消息(c, response.Status_操作失败, err用户.Error())
@@ -1652,7 +1668,7 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"GetAliPayPC","User":"aaaaaa","KaClassId":1,"PayType":"小叮当","Time":1684152719,"Status":15959}
 
-	局_用户名 := string(请求json.GetStringBytes("User"))
+	局_用户名 := strings.TrimSpace(string(请求json.GetStringBytes("User")))
 	局_卡号 := Ser_AppInfo.App是否为卡号(AppInfo.AppId)
 	var 局_Uid = 0
 	var 局_Uid类型 = 0
@@ -1696,7 +1712,7 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 		return
 	}
 
-	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"AppUserId":%d}`, 局_卡类信息.Id, 局_AppUser.Id)
+	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"AppUserId":%d,"AgentUid":%d}`, 局_卡类信息.Id, 局_AppUser.Id, 局_在线信息.AgentUid)
 
 	var 响应数据 gin.H
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
@@ -1746,7 +1762,7 @@ func UserApi_订单_积分充值(c *gin.Context) {
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"GetAliPayPC","User":"aaaaaa","Money":0.01,"PayType":"小叮当","Time":1684152719,"Status":15959}
 
-	局_用户名 := string(请求json.GetStringBytes("User"))
+	局_用户名 := strings.TrimSpace(string(请求json.GetStringBytes("User")))
 	局_卡号 := Ser_AppInfo.App是否为卡号(AppInfo.AppId)
 	var 局_Uid = 0
 	var 局_Uid类型 = 0
@@ -1842,7 +1858,7 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 		return
 	}
 
-	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"Ip":"%s"}`, 局_卡类信息.Id, c.ClientIP())
+	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"Ip":"%s","AgentUid":%d}`, 局_卡类信息.Id, c.ClientIP(), 局_在线信息.AgentUid)
 
 	var 响应数据 gin.H
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
@@ -1876,5 +1892,24 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 	} else {
 		response.X响应状态带数据(c, c.GetInt("局_成功Status"), 响应数据)
 	}
+	return
+}
+func UserApi_置代理标识(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	局_代理uid := 请求json.GetInt("AgentUid")
+	if Ser_Agent.Q取Id代理级别(局_代理uid) <= 0 {
+		response.X响应状态消息(c, response.Status_操作失败, "AgentUid非代理Uid")
+		return
+	}
+
+	err := Ser_LinkUser.Set代理标志(局_在线信息.Id, 局_代理uid)
+	if err != nil {
+		response.X响应状态(c, response.Status_操作失败)
+		return
+	}
+	response.X响应状态(c, c.GetInt("局_成功Status"))
 	return
 }

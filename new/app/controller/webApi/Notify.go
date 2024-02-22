@@ -80,7 +80,7 @@ func (s *PayNotify) PayHuPiJiaoNotify(c *gin.Context) {
 			if ok {
 				局_订单详细信息.PayOrder2 = tradeOrderID
 			}
-			WebApi.Z支付成功_后处理(局_订单详细信息)
+			WebApi.Z支付成功_后处理(c, 局_订单详细信息)
 		}
 	}
 
