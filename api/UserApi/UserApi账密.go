@@ -8,6 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
 	"server/Service/Captcha"
+	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
@@ -17,6 +18,7 @@ import (
 	"server/Service/Ser_Pay"
 	"server/Service/Ser_User"
 	"server/api/UserApi/response"
+	"server/global"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/setting"
 	DB "server/structs/db"
@@ -127,7 +129,7 @@ func UserApi_密码找回或修改_验证旧密码(c *gin.Context) {
 	if err := Ser_User.Id置新密码(局_用户Id, 局_新密码); err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "修改失败")
 	} else {
-		_ = Ser_LinkUser.Set批量注销Uid(局_用户Id)
+		_ = Ser_LinkUser.Set批量注销Uid(局_用户Id, Ser_LinkUser.Z注销_用户改密注销)
 		response.X响应状态消息(c, c.GetInt("局_成功Status"), "修改成功")
 	}
 	return
@@ -174,7 +176,7 @@ func UserApi_密码找回或修改_超级密码(c *gin.Context) {
 	if err := Ser_User.Id置新密码(局_用户Id, 局_新密码); err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "修改失败")
 	} else {
-		_ = Ser_LinkUser.Set批量注销Uid(局_用户Id)
+		_ = Ser_LinkUser.Set批量注销Uid(局_用户Id, Ser_LinkUser.Z注销_用户改密注销)
 		response.X响应状态消息(c, c.GetInt("局_成功Status"), "修改成功")
 	}
 	return
@@ -235,7 +237,7 @@ func UserApi_密码找回或修改_密保手机(c *gin.Context) {
 	if err := Ser_User.Id置新密码(局_用户Id, 局_新密码); err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "修改失败")
 	} else {
-		_ = Ser_LinkUser.Set批量注销Uid(局_用户Id)
+		_ = Ser_LinkUser.Set批量注销Uid(局_用户Id, Ser_LinkUser.Z注销_用户改密注销)
 		response.X响应状态消息(c, c.GetInt("局_成功Status"), "修改成功")
 	}
 	return
@@ -424,6 +426,24 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_操作失败, "购卡失败,请重试")
 		}
 		return
+	} else if 局_在线信息.AgentUid > 0 {
+		//代理分成
+		//开始分利润 20240202 mark处理重构以后改事务
+		代理分成数据, err3 := Ser_Agent.D代理分成计算(局_在线信息.AgentUid, 局_卡类.Money)
+		if err3 == nil {
+			for 局_索引 := range 代理分成数据 {
+				d := 代理分成数据[局_索引] //太长了,放个变量里
+				新余额, err2 = Ser_User.Id余额增减(d.Uid, d.S实际分成金额, true)
+				if err2 != nil {
+					//,一般不会出现,除非用户不存在
+					global.GVA_LOG.Error(fmt.Sprintf("用户余额代理分成余额增加失败:%s,代理ID:%d,金额¥%v,卡号ID:%d", err2.Error(), d.Uid, d.S实际分成金额, 局_卡信息.Id))
+				} else {
+					str := fmt.Sprintf("用户余额制卡ID:%d,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_卡信息.Id, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_卡类.Money, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
+					Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), c.ClientIP(), str, d.S实际分成金额)
+				}
+			}
+		}
+		// 分成结束==============
 	}
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AppId": 局_卡信息.AppId, "KaClassId": 局_卡信息.KaClassId, "KaClassName": 局_卡类.Name, "KaName": 局_卡信息.Name})
 

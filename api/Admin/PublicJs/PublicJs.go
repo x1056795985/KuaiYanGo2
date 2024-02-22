@@ -61,9 +61,10 @@ func (a *Api) GetPublicJsList(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-
+	fmt.Println(global.GVA_DB)
 	局_DB := global.GVA_DB.Model(DB.DB_PublicJs{})
-
+	// global.GVA_DB.Model(DB.DB_PublicJs{}).Debug()
+	//局_DB.Debug() //debug不能放到上面,会导致where不生效,反正是不行,采坑20240220
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
 	} else if 请求.Order == 2 {
@@ -72,10 +73,8 @@ func (a *Api) GetPublicJsList(c *gin.Context) {
 
 	if 请求.Keywords != "" {
 		switch 请求.Type {
-		case 1: //Id
-			局_DB.Where("Id=? ", 请求.Keywords)
-		case 2: //函数名
-			局_DB.Where("LOCATE( ?, Name)>0 ", 请求.Keywords)
+		case 1: //函数名
+			局_DB.Where("Name LIKE ?", "%"+请求.Keywords+"%")
 		}
 	}
 

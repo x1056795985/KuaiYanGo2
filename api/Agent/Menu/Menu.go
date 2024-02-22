@@ -79,7 +79,7 @@ func (a *Api) NewPassword(c *gin.Context) {
 // OutLogin
 // 退出登录
 func (a *Api) OutLogin(c *gin.Context) {
-	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"))
+	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"), Ser_LinkUser.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		return

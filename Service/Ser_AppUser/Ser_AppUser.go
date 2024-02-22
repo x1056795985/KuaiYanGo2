@@ -166,7 +166,6 @@ func B绑定信息是否存在(AppId int, 绑定信息 string) bool {
 	return Count != 0
 }
 func Set绑定信息(AppId, 用户Uid int, 绑定信息 string) error {
-
 	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid = ? ", 用户Uid).Update("Key", 绑定信息).Error
 	if err != nil {
 		return err

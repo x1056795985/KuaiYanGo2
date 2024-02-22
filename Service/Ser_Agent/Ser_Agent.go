@@ -1,7 +1,9 @@
 package Ser_Agent
 
 import (
+	"EFunc/utils"
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"server/Service/Ser_Admin"
 	"server/Service/Ser_User"
@@ -270,4 +272,52 @@ func Q取全部代理功能ID_int数组() []int {
 		局_数组 = append(局_数组, key)
 	}
 	return 局_数组
+}
+
+type 代理分成结构 struct {
+	Uid      int
+	F分成百分比   int     //就是设置的自身百分比
+	F分给下级百分比 int     //下级的百分比
+	S实际自身百分比 int     //自身百分比-下级的百分比  实际会分到的百分比
+	S实际分成金额  float64 //
+}
+
+// 四舍五入  索引越小,代理级别越靠下
+func D代理分成计算(代理id int, 局_总计金额 float64) ([]代理分成结构, error) {
+
+	var 局_返回 = make([]代理分成结构, 0, 3)
+	//开始分利润
+	var 下级信息 DB.DB_User
+	下级信息, ok := Ser_User.Id取详情(代理id)
+	if !ok {
+		return 局_返回, fmt.Errorf("代理id:%d,不存在", 代理id)
+	}
+	局_下级分成百分比 := 0
+	for {
+		局_临时 := 代理分成结构{}
+		局_临时.Uid = 下级信息.Id
+		局_临时.F分成百分比 = 下级信息.AgentDiscount
+		局_临时.F分给下级百分比 = 局_下级分成百分比
+		局_临时.S实际自身百分比 = 下级信息.AgentDiscount - 局_下级分成百分比
+		if 局_临时.S实际自身百分比 == 0 {
+			局_临时.S实际分成金额 = 0
+		} else {
+			局_百分比小数 := utils.Float64除int64(int64(局_临时.S实际自身百分比), 100, 2) //转换成小数百分比
+			局_临时.S实际分成金额 = utils.Float64乘Float64(局_总计金额, 局_百分比小数)
+		}
+
+		局_返回 = append(局_返回, 局_临时) //加入到返回数组
+		if 下级信息.UPAgentId <= 0 {
+			//上级是管理员了 跳出循环
+			break
+		}
+
+		局_下级分成百分比 = 局_临时.F分成百分比
+		下级信息, ok = Ser_User.Id取详情(下级信息.UPAgentId) //继续往上找代理
+		if !ok {
+			//代理不存在代理被删了, 结束,返回
+			break
+		}
+	}
+	return 局_返回, nil
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"gorm.io/gorm"
+	"server/Service/Ser_LinkUser"
 	DB "server/structs/db"
 	"time"
 )
@@ -28,6 +29,6 @@ func (s *LinksTokenService) S删除已过期的Token() error {
 // RevokeExpiredTokens 定时注销已过期的 token
 func (s *LinksTokenService) Z注销已过期的Token() error {
 	// 注销超时的 token
-	tx := s.db.Model(DB.DB_LinksToken{}).Where("Status = 1").Where("LastTime + OutTime < ?", time.Now().Unix()).Update("Status", 2)
+	tx := s.db.Model(DB.DB_LinksToken{}).Where("Status = 1").Where("LastTime + OutTime < ?", time.Now().Unix()).Updates(map[string]interface{}{"Status": 2, "LogoutCode": Ser_LinkUser.Z注销_心跳超时自动注销})
 	return tx.Error
 }

@@ -51,9 +51,11 @@ func (a *LinkUserApi) GetLinkUserList(c *gin.Context) {
 		case 3: //绑定信息
 			局_DB.Where("LOCATE(?, `Key` )>0 ", 请求.Keywords)
 		case 4: //动态标签
-			局_DB.Where("LOCATE(?,Tab )>0 ", 请求.Keywords)
+			局_DB.Where("Tab LIKE ?", "%"+请求.Keywords+"%")
 		case 5: //AppVer  软件版本
-			局_DB.Where("LOCATE(?,AppVer )>0 ", 请求.Keywords)
+			局_DB.Where("AppVer LIKE ?", "%"+请求.Keywords+"%")
+		case 6: //代理标识Uid
+			局_DB.Where("AgentUid LIKE ?", "%"+请求.Keywords+"%")
 		}
 	}
 
@@ -164,7 +166,7 @@ func (a *LinkUserApi) Del批量注销(c *gin.Context) {
 		return
 	}
 
-	err = Ser_LinkUser.Set批量注销(请求.Id)
+	err = Ser_LinkUser.Set批量注销(请求.Id, Ser_LinkUser.Z注销_管理员手动注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		global.GVA_LOG.Error("Del批量注销:" + err.Error())

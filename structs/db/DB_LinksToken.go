@@ -18,6 +18,8 @@ type DB_LinksToken struct {
 	IPCity           string `json:"IPCity" gorm:"column:IPCity;size:500;comment:ip信息"`
 	RiskControl      int    `json:"RiskControl" gorm:"column:RiskControl;comment:风控分数分数越高用户越可疑 "`
 	CryptoKeyAes     string `json:"-" gorm:"column:CryptoKeyAes;size:24;comment:存储通讯KeyAes"`
+	LogoutCode       int    `json:"LogoutCode" gorm:"column:LogoutCode;comment:注销原因代号"`
+	AgentUid         int    `json:"AgentUid" gorm:"column:AgentUid;comment:代理标志,代理uid"`
 }
 
 func (DB_LinksToken) TableName() string {

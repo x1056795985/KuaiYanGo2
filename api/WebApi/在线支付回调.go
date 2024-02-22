@@ -9,6 +9,7 @@ import (
 	"github.com/valyala/fastjson"
 	WXutils "github.com/wechatpay-apiv3/wechatpay-go/utils"
 	"net/http"
+	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
@@ -67,7 +68,7 @@ func PayAliNotify(c *gin.Context) {
 		局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(noti.OutTradeNo)
 		if ok && 局_订单详细信息.Status == 1 { //有订单且订单信息为未支付
 			局_订单详细信息.PayOrder2 = noti.TradeNo
-			Z支付成功_后处理(局_订单详细信息)
+			Z支付成功_后处理(c, 局_订单详细信息)
 		}
 	}
 
@@ -114,7 +115,7 @@ func PayAliNotify_当面付(c *gin.Context) {
 		局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(noti.OutTradeNo)
 		if ok && 局_订单详细信息.Status == 1 { //有订单且订单信息为未支付
 			局_订单详细信息.PayOrder2 = noti.TradeNo
-			Z支付成功_后处理(局_订单详细信息)
+			Z支付成功_后处理(c, 局_订单详细信息)
 		}
 	}
 
@@ -161,7 +162,7 @@ func PayAliNotify_H5(c *gin.Context) {
 		局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(noti.OutTradeNo)
 		if ok && 局_订单详细信息.Status == 1 { //有订单且订单信息为未支付
 			局_订单详细信息.PayOrder2 = noti.TradeNo
-			Z支付成功_后处理(局_订单详细信息)
+			Z支付成功_后处理(c, 局_订单详细信息)
 		}
 	}
 
@@ -227,7 +228,7 @@ func Pay小叮当Notify(c *gin.Context) {
 
 			}
 			局_订单详细信息.PayOrder2 = c.PostForm("xddpay_order")
-			Z支付成功_后处理(局_订单详细信息)
+			Z支付成功_后处理(c, 局_订单详细信息)
 		}
 	}
 
@@ -272,14 +273,14 @@ func PayWxNotify(c *gin.Context) {
 
 		if ok && 局_订单详细信息.Status == 1 { //有订单且订单信息为未支付
 			局_订单详细信息.PayOrder2 = string(局_回调.GetStringBytes("transaction_id"))
-			Z支付成功_后处理(局_订单详细信息)
+			Z支付成功_后处理(c, 局_订单详细信息)
 		}
 	}
 
 	c.String(http.StatusOK, "success")
 	return
 }
-func Z支付成功_后处理(局_订单详细信息 DB.DB_LogRMBPayOrder) {
+func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMBPayOrder) {
 	if 局_订单详细信息.Status != 1 {
 		return
 	}
@@ -307,12 +308,32 @@ func Z支付成功_后处理(局_订单详细信息 DB.DB_LogRMBPayOrder) {
 
 		卡类ID := 局_fastjson.GetInt("KaClassId")
 		AppUserId := 局_fastjson.GetInt("AppUserId")
+		AgentUid := 局_fastjson.GetInt("AgentUid")
 		err12 := Ser_Ka.K卡类直冲_事务(卡类ID, AppUserId, 局_订单详细信息.Ip)
 		if err12 != nil {
 			Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+err12.Error())
 			return
 		}
 		Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+"充值卡类ID:"+strconv.Itoa(卡类ID))
+		if AgentUid > 0 {
+			//代理分成
+			//开始分利润 20240202 mark处理重构以后改事务
+			代理分成数据, err3 := Ser_Agent.D代理分成计算(AgentUid, 局_订单详细信息.Rmb)
+			if err3 == nil {
+				for 局_索引 := range 代理分成数据 {
+					d := 代理分成数据[局_索引] //太长了,放个变量里
+					新余额, err4 := Ser_User.Id余额增减(d.Uid, d.S实际分成金额, true)
+					if err4 != nil {
+						//,一般不会出现,除非用户不存在
+						global.GVA_LOG.Error(fmt.Sprintf("用户购卡直冲代理分成余额增加失败:%s,代理ID:%d,金额¥%v,订单ID:%s", err4.Error(), d.Uid, d.S实际分成金额, 局_订单详细信息.PayOrder))
+					} else {
+						str := fmt.Sprintf("用户购卡直冲订单ID:%s,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_订单详细信息.PayOrder, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_订单详细信息.Rmb, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
+						Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), c.ClientIP(), str, d.S实际分成金额)
+					}
+				}
+			}
+			// 分成结束==============
+		}
 	case 2: //积分充值
 		局_fastjson, err2 := fastjson.Parse(局_订单详细信息.Extra)
 		if err2 != nil {
@@ -342,6 +363,7 @@ func Z支付成功_后处理(局_订单详细信息 DB.DB_LogRMBPayOrder) {
 			return
 		}
 		卡类ID := 局_fastjson.GetInt("KaClassId")
+		AgentUid := 局_fastjson.GetInt("AgentUid")
 		局_Ip := string(局_fastjson.GetStringBytes("Ip"))
 
 		局_卡信息, err2 := Ser_Ka.Ka单卡创建(卡类ID, "系统自动", "支付购卡订单ID:"+局_订单详细信息.PayOrder, "", 0)
@@ -354,11 +376,29 @@ func Z支付成功_后处理(局_订单详细信息 DB.DB_LogRMBPayOrder) {
 		局_文本 := fmt.Sprintf("支付购卡订单ID:%s,卡类:%d,消费:%.2f)", 局_订单详细信息.PayOrder, 局_卡信息.KaClassId, 局_订单详细信息.Rmb)
 
 		go Ser_Log.Log_写卡号操作日志("支付购卡", 局_Ip, 局_文本, []string{局_卡信息.Name}, 1, 5)
+		if AgentUid > 0 {
+			//代理分成
+			//开始分利润 20240202 mark处理重构以后改事务
+			代理分成数据, err3 := Ser_Agent.D代理分成计算(AgentUid, 局_订单详细信息.Rmb)
+			if err3 == nil {
+				for 局_索引 := range 代理分成数据 {
+					d := 代理分成数据[局_索引] //太长了,放个变量里
+					新余额, err4 := Ser_User.Id余额增减(d.Uid, d.S实际分成金额, true)
+					if err4 != nil {
+						//,一般不会出现,除非用户不存在
+						global.GVA_LOG.Error(fmt.Sprintf("用户购卡直冲代理分成余额增加失败:%s,代理ID:%d,金额¥%v,订单ID:%s", err4.Error(), d.Uid, d.S实际分成金额, 局_订单详细信息.PayOrder))
+					} else {
+						str := fmt.Sprintf("用户购卡直冲订单ID:%s,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_订单详细信息.PayOrder, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_订单详细信息.Rmb, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
+						Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), c.ClientIP(), str, d.S实际分成金额)
+					}
+				}
+			}
+			// 分成结束==============
+		}
 	default:
 		return
 	}
 	Ser_RMBPayOrder.Order更新订单状态(局_订单详细信息.PayOrder, Ser_RMBPayOrder.D订单状态_成功) //修改订单信息为充值成功
-
 }
 
 // 微信支付支付退款回调 Notify成功后会回调这里;我们可以用来修改订单状态等等

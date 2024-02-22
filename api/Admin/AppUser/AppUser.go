@@ -319,7 +319,7 @@ func (a *Api) Save用户信息(c *gin.Context) {
 
 	//如果是冻结同时注销在线的uid
 	if 请求.AppUser.Status == 2 {
-		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧用户信息.Uid}, 请求.AppId)
+		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧用户信息.Uid}, 请求.AppId, Ser_LinkUser.Z注销_管理员手动注销)
 	}
 
 	if err != nil {
@@ -449,7 +449,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 		for _, 值 := range 请求.Id {
 			局_uid数组 = append(局_uid数组, Ser_AppUser.Id取Uid(请求.AppId, 值))
 		}
-		_ = Ser_LinkUser.Set批量注销Uid数组(局_uid数组, 请求.AppId)
+		_ = Ser_LinkUser.Set批量注销Uid数组(局_uid数组, 请求.AppId, Ser_LinkUser.Z注销_管理员手动注销)
 	}
 
 	response.OkWithMessage("修改成功", c)
