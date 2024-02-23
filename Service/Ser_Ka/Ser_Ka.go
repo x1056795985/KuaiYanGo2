@@ -216,7 +216,7 @@ func Ka代理批量购买(卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int,
 	go Ser_Log.Log_写卡号操作日志(局_购卡人信息.User, ip, 局_文本, 数组_卡号, 1, Ser_Agent.Q取Id代理级别(局_购卡人信息.Id))
 
 	//开始分利润 20240202 mark处理重构以后改事务
-	代理分成数据, err2 := Ser_Agent.D代理分成计算(局_购卡人信息.UPAgentId, 局_总计金额)
+	代理分成数据, err2 := Ser_Agent.D代理分成计算(局_购卡人信息.Id, 局_总计金额)
 	if err2 != nil {
 		global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成计算失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), 局_购卡人信息.UPAgentId, 局_总计金额, 局_ID列表))
 		return err2
