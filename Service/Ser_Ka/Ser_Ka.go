@@ -1314,7 +1314,7 @@ func K卡类直冲_事务(卡类ID, 软件用户id int, 来源IP string) error {
 		global.GVA_LOG.Error("充值失败,回滚事务,报错信息:" + err.Error())
 		return errors.New("充值失败,重试")
 	}
-	if !局_is卡号 || 局_卡信息.RMb > 0 {
+	if !局_is卡号 && 局_卡信息.RMb > 0 { //账号模式,且 rmb>0 才操作
 		err = tx.Model(DB.DB_User{}).Where("Id = ?", 局_App用户.Uid).Update("RMB", gorm.Expr("RMB + ?", 局_卡信息.RMb)).Error
 		if err != nil {
 			tx.Rollback() //失败回滚事务
@@ -1323,7 +1323,7 @@ func K卡类直冲_事务(卡类ID, 软件用户id int, 来源IP string) error {
 		}
 		var 局_新余额 float64
 		_ = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id = ?", 局_App用户.Uid).First(&局_新余额).Error
-		go Ser_Log.Log_写余额日志(Ser_AppUser.Id取User(局_卡信息.AppId, 局_App用户.Uid), 来源IP, "购卡直冲应用ID:"+strconv.Itoa(局_卡信息.AppId)+"卡类Id:"+strconv.Itoa(局_卡信息.Id)+"充值余额|新余额≈"+utils.Float64到文本(局_新余额, 2), 局_卡信息.RMb)
+		go Ser_Log.Log_写余额日志(Ser_AppUser.Uid取User(局_卡信息.AppId, 局_App用户.Uid), 来源IP, "购卡直冲应用ID:"+strconv.Itoa(局_卡信息.AppId)+"卡类Id:"+strconv.Itoa(局_卡信息.Id)+"充值余额|新余额≈"+utils.Float64到文本(局_新余额, 2), 局_卡信息.RMb)
 	}
 	//用户的充值成功 提交事务
 	tx.Commit()

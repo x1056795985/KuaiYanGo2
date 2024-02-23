@@ -1712,7 +1712,7 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 		return
 	}
 
-	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"AppUserId":%d,"AgentUid":%d}`, 局_卡类信息.Id, 局_AppUser.Id, 局_在线信息.AgentUid)
+	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"AppUserId":%d,"AgentUid":%d,"AgentMoney":%v}`, 局_卡类信息.Id, 局_AppUser.Id, 局_在线信息.AgentUid, utils.Float64到文本(局_卡类信息.AgentMoney, 2))
 
 	var 响应数据 gin.H
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
@@ -1858,7 +1858,7 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 		return
 	}
 
-	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"Ip":"%s","AgentUid":%d}`, 局_卡类信息.Id, c.ClientIP(), 局_在线信息.AgentUid)
+	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"Ip":"%s","AgentUid":%d,"AgentMoney":%v}`, 局_卡类信息.Id, c.ClientIP(), 局_在线信息.AgentUid, utils.Float64到文本(局_卡类信息.AgentMoney, 2))
 
 	var 响应数据 gin.H
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))

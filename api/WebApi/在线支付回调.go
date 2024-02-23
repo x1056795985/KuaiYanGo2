@@ -225,7 +225,6 @@ func Pay小叮当Notify(c *gin.Context) {
 					Ser_RMBPayOrder.Order更新订单金额(局_订单详细信息.PayOrder, 真实金额)
 					局_订单详细信息.Rmb = 真实金额
 				}
-
 			}
 			局_订单详细信息.PayOrder2 = c.PostForm("xddpay_order")
 			Z支付成功_后处理(c, 局_订单详细信息)
@@ -300,7 +299,7 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", "系统", global.X系统信息.B版本号当前, "订单ID"+局_订单详细信息.PayOrder+"支付异步回调成功,充值余额失败:"+err.Error(), 局_订单详细信息.Ip)
 			return
 		}
-	case 1:
+	case 1: //购卡直冲
 		局_fastjson, err2 := fastjson.Parse(局_订单详细信息.Extra)
 		if err2 != nil {
 			return
@@ -309,16 +308,17 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 		卡类ID := 局_fastjson.GetInt("KaClassId")
 		AppUserId := 局_fastjson.GetInt("AppUserId")
 		AgentUid := 局_fastjson.GetInt("AgentUid")
+		AgentMoney := 局_fastjson.GetFloat64("AgentMoney")
 		err12 := Ser_Ka.K卡类直冲_事务(卡类ID, AppUserId, 局_订单详细信息.Ip)
 		if err12 != nil {
 			Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+err12.Error())
 			return
 		}
 		Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+"充值卡类ID:"+strconv.Itoa(卡类ID))
-		if AgentUid > 0 {
+		if AgentUid > 0 && AgentMoney > 0 {
 			//代理分成
 			//开始分利润 20240202 mark处理重构以后改事务
-			代理分成数据, err3 := Ser_Agent.D代理分成计算(AgentUid, 局_订单详细信息.Rmb)
+			代理分成数据, err3 := Ser_Agent.D代理分成计算(AgentUid, AgentMoney)
 			if err3 == nil {
 				for 局_索引 := range 代理分成数据 {
 					d := 代理分成数据[局_索引] //太长了,放个变量里
@@ -327,7 +327,7 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 						//,一般不会出现,除非用户不存在
 						global.GVA_LOG.Error(fmt.Sprintf("用户购卡直冲代理分成余额增加失败:%s,代理ID:%d,金额¥%v,订单ID:%s", err4.Error(), d.Uid, d.S实际分成金额, 局_订单详细信息.PayOrder))
 					} else {
-						str := fmt.Sprintf("用户购卡直冲订单ID:%s,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_订单详细信息.PayOrder, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_订单详细信息.Rmb, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
+						str := fmt.Sprintf("用户购卡直冲订单ID:%s,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_订单详细信息.PayOrder, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(AgentMoney, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
 						Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), c.ClientIP(), str, d.S实际分成金额)
 					}
 				}
@@ -341,6 +341,7 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 		}
 		AppID := 局_fastjson.GetInt("AppID")
 		AppUserId := 局_fastjson.GetInt("AppUserId")
+
 		局_软件用户信息, _ := Ser_AppUser.Id取详情(AppID, AppUserId)
 
 		局_应用信息 := Ser_AppInfo.App取App详情(AppID)
@@ -364,6 +365,7 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 		}
 		卡类ID := 局_fastjson.GetInt("KaClassId")
 		AgentUid := 局_fastjson.GetInt("AgentUid")
+		AgentMoney := 局_fastjson.GetFloat64("AgentMoney")
 		局_Ip := string(局_fastjson.GetStringBytes("Ip"))
 
 		局_卡信息, err2 := Ser_Ka.Ka单卡创建(卡类ID, "系统自动", "支付购卡订单ID:"+局_订单详细信息.PayOrder, "", 0)
@@ -376,10 +378,10 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 		局_文本 := fmt.Sprintf("支付购卡订单ID:%s,卡类:%d,消费:%.2f)", 局_订单详细信息.PayOrder, 局_卡信息.KaClassId, 局_订单详细信息.Rmb)
 
 		go Ser_Log.Log_写卡号操作日志("支付购卡", 局_Ip, 局_文本, []string{局_卡信息.Name}, 1, 5)
-		if AgentUid > 0 {
+		if AgentUid > 0 && AgentMoney > 0 {
 			//代理分成
 			//开始分利润 20240202 mark处理重构以后改事务
-			代理分成数据, err3 := Ser_Agent.D代理分成计算(AgentUid, 局_订单详细信息.Rmb)
+			代理分成数据, err3 := Ser_Agent.D代理分成计算(AgentUid, AgentMoney)
 			if err3 == nil {
 				for 局_索引 := range 代理分成数据 {
 					d := 代理分成数据[局_索引] //太长了,放个变量里
@@ -388,7 +390,7 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 						//,一般不会出现,除非用户不存在
 						global.GVA_LOG.Error(fmt.Sprintf("用户购卡直冲代理分成余额增加失败:%s,代理ID:%d,金额¥%v,订单ID:%s", err4.Error(), d.Uid, d.S实际分成金额, 局_订单详细信息.PayOrder))
 					} else {
-						str := fmt.Sprintf("用户购卡直冲订单ID:%s,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_订单详细信息.PayOrder, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_订单详细信息.Rmb, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
+						str := fmt.Sprintf("用户支付购卡订单ID:%s,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_订单详细信息.PayOrder, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(AgentMoney, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
 						Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), c.ClientIP(), str, d.S实际分成金额)
 					}
 				}

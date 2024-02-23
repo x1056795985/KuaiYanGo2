@@ -287,7 +287,8 @@ func Id点数增减(AppId, Id int, 增减值 int64, is增加 bool) error {
 	db.Raw(fmt.Sprintf(`SELECT VipTime FROM db_AppUser_%d WHERE Id = %d  LIMIT 1`, AppId, Id)).Scan(&局_点数)
 	//读取旧的数值
 
-	if !Ser_AppInfo.App是否为计点(AppId) {
+	局_计点 := Ser_AppInfo.App是否为计点(AppId)
+	if !局_计点 {
 		// 如果不是计点方式 减去当前时间戳 为真实剩余时间
 		局_点数 -= time.Now().Unix()
 	}
@@ -295,7 +296,12 @@ func Id点数增减(AppId, Id int, 增减值 int64, is增加 bool) error {
 	if 局_点数 < 增减值 {
 		// 局_点数或时间不足,回滚并返回
 		db.Rollback()
-		return errors.New("点数不足")
+		if 局_计点 {
+			return errors.New("点数不足")
+		} else {
+			return errors.New("剩余时间不足")
+		}
+
 	}
 
 	err := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime - ?", 增减值)).Error

@@ -23,6 +23,7 @@ import (
 	"server/new/app/logic/common/setting"
 	DB "server/structs/db"
 	utils2 "server/utils"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -426,10 +427,12 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_操作失败, "购卡失败,请重试")
 		}
 		return
-	} else if 局_在线信息.AgentUid > 0 {
+	} else if 局_在线信息.AgentUid > 0 && 局_卡类.AgentMoney > 0 {
+		go Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), "自助购卡->"+AppInfo.AppName+`->卡ID:`+strconv.Itoa(局_卡类.Id)+",卡号:"+局_卡类.Name+":"+局_卡信息.Name+"|新余额≈"+utils.Float64到文本(新余额, 2), utils.Float64取负值(局_卡类.Money))
+
 		//代理分成
 		//开始分利润 20240202 mark处理重构以后改事务
-		代理分成数据, err3 := Ser_Agent.D代理分成计算(局_在线信息.AgentUid, 局_卡类.Money)
+		代理分成数据, err3 := Ser_Agent.D代理分成计算(局_在线信息.AgentUid, 局_卡类.AgentMoney)
 		if err3 == nil {
 			for 局_索引 := range 代理分成数据 {
 				d := 代理分成数据[局_索引] //太长了,放个变量里
@@ -446,8 +449,6 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 		// 分成结束==============
 	}
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AppId": 局_卡信息.AppId, "KaClassId": 局_卡信息.KaClassId, "KaClassName": 局_卡类.Name, "KaName": 局_卡信息.Name})
-
-	go Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), "自助购卡->"+AppInfo.AppName+`->`+局_卡类.Name+":"+局_卡信息.Name+"|新余额≈"+utils.Float64到文本(新余额, 2), utils.Float64取负值(局_卡类.Money))
 
 	局_文本 := fmt.Sprintf("自助购卡应用:%s,卡类:%s,消费:%.2f)", AppInfo.AppName, 局_卡类.Name, 局_卡类.Money)
 	go Ser_Log.Log_写卡号操作日志(局_在线信息.User, c.ClientIP(), 局_文本, []string{局_卡信息.Name}, 1, 0)
