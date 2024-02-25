@@ -157,7 +157,7 @@ type 结构响应_GetUserList struct {
 }
 
 // New
-func (a *Api) New库存报信息(c *gin.Context) {
+func (a *Api) New库存包信息(c *gin.Context) {
 	var 请求 DB.Db_Agent_库存卡包
 	err := c.ShouldBindJSON(&请求)
 	//解析失败

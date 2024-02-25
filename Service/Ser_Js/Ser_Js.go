@@ -346,10 +346,12 @@ type js对象_网页响应 struct {
 	Body       string `json:"Body"`
 }
 
-func jS_执行SQL查询(SQL string) js对象_通用返回 {
+// 执行sql查询,支持预处理绑定参数
+func jS_执行SQL查询(SQL string, data []interface{}) js对象_通用返回 {
 	var results []map[string]interface{}
+
 	// 执行 SQL 查询
-	if err := global.GVA_DB.Raw(SQL).Scan(&results).Error; err != nil {
+	if err := global.GVA_DB.Raw(SQL, data...).Scan(&results).Error; err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
 	// 将查询结果转换为 JSON 格式的字符串
@@ -365,8 +367,8 @@ func jS_执行SQL查询(SQL string) js对象_通用返回 {
 	return js对象_通用返回{IsOk: true, Err: string(jsonStr), Data: results}
 
 }
-func jS_执行SQL功能(SQL string) js对象_通用返回 {
-	局_执行结果 := global.GVA_DB.Exec(SQL)
+func jS_执行SQL功能(SQL string, data []interface{}) js对象_通用返回 {
+	局_执行结果 := global.GVA_DB.Exec(SQL, data...)
 
 	if err := 局_执行结果.Error; err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}

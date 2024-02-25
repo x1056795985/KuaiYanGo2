@@ -208,7 +208,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.POST("GetList", AgentInventory.GetAgentInventoryList)                  // 获取列表
 	baseRouter.POST("GetAgentTreeAndKaClassTree", AgentInventory.Get取下级代理列表和可创建库存包列表) // 获取列表
 	baseRouter.POST("GetInfo", AgentInventory.GetAgentInventoryInfo)                  // 获取详细信息
-	baseRouter.POST("New", AgentInventory.New库存报信息)                                   // 创建库存包
+	baseRouter.POST("New", AgentInventory.New库存包信息)                                   // 创建库存包
 	baseRouter.POST("Withdraw", AgentInventory.K库存撤回)                                 // 撤回转出的库存
 	if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 		baseRouter.POST("Delete", AgentInventory.Del批量删除库存)
@@ -348,6 +348,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetIsVip", App.Set修改vip限制)     // 删除信息
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("New", App.New)                    // 新建信息
+			baseRouter.POST("TestRunJs", App.C测试执行)            // 新建信息
 			baseRouter.POST("SaveInfo", App.SaveDB_PublicJs信息) // 保存详细信息
 			baseRouter.POST("Delete", App.Delete)              // 删除信息
 		}

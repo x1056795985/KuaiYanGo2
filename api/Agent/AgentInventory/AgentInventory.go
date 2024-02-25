@@ -179,6 +179,7 @@ func (a *Api) New库存购买(c *gin.Context) {
 		response.FailWithMessage(err2.Error(), c)
 		return
 	}
+
 	response.OkWithMessage("操作成功", c)
 
 	User1角色 := Ser_Agent.Q取Id代理级别(c.GetInt("Uid"))
@@ -193,7 +194,6 @@ func (a *Api) New库存购买(c *gin.Context) {
 	}
 
 	Ser_Log.Log_写库存转移日志(新库存卡包.Id, 新库存卡包.NumMax, 3, 局_创建用户名, User1角色, 局_创建用户名, User1角色, c.ClientIP(), "自助购买")
-
 	return
 }
 

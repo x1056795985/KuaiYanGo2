@@ -111,6 +111,24 @@ func New代理购买(归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, 
 		局_log := fmt.Sprintf("购买库存包ID:%d,代理价格(%v)*库存数量(%d)|新余额≈%v", 库存卡包.Id, 局_卡类详情.AgentMoney, NumMax, utils.Float64到文本(局_新余额, 2))
 		go Ser_Log.Log_写余额日志(Ser_User.Id取User(归属Uid), ip, 局_log, utils.Float64取负值(局_总金额))
 	}
+	//代理分成
+	//开始分利润 20240202 mark处理重构以后改事务
+	代理分成数据, err3 := Ser_Agent.D代理分成计算(归属Uid, 局_总金额)
+	if err3 == nil {
+		for 局_索引 := range 代理分成数据 {
+			d := 代理分成数据[局_索引] //太长了,放个变量里
+			新余额, err4 := Ser_User.Id余额增减(d.Uid, d.S实际分成金额, true)
+			if err4 != nil {
+				//,一般不会出现,除非用户不存在
+				global.GVA_LOG.Error(fmt.Sprintf("代理购买库存包代理分成余额增加失败:%s,代理ID:%d,金额¥%v,库存ID:%s", err4.Error(), d.Uid, d.S实际分成金额, 库存卡包.Id))
+			} else {
+				str := fmt.Sprintf("代理购买库存包ID:%d,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 库存卡包.Id, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_总金额, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
+				Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), ip, str, d.S实际分成金额)
+			}
+		}
+	}
+	// 分成结束==============
+
 	return 库存卡包, err
 }
 
