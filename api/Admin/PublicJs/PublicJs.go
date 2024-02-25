@@ -3,13 +3,16 @@ package PublicJs
 import (
 	. "EFunc/utils"
 	"fmt"
+	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	Db服务 "server/Service/Ser_AppInfo"
+	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
+	"time"
 )
 
 type Api struct{}
@@ -276,4 +279,77 @@ func (a *Api) Set修改vip限制(c *gin.Context) {
 type 结构请求_批量修改vip限制 struct {
 	Id    []int `json:"Id"`    //id数组
 	IsVip int   `json:"IsVip"` //1 解冻 2冻结
+}
+
+// Del批量修改
+func (a *Api) C测试执行(c *gin.Context) {
+	var 请求 struct {
+		Id int `json:"Id"` //id
+	}
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+
+	defer func() {
+		if err2 := recover(); err2 != nil {
+			局_GoJa错误, ok := err2.(*goja.Exception)
+			if ok {
+				response.FailWithMessage("异常:可能JS函数传参或返回值类型错误,具体:"+局_GoJa错误.String(), c)
+			} else {
+				response.FailWithMessage("异常:可能JS函数传参或返回值类型错误,具体:js引擎未返回报错信息", c)
+			}
+			return
+		}
+	}()
+
+	if !Ser_PublicJs.Id是否存在(请求.Id) {
+		response.FailWithMessage("JS公共函数不存在", c)
+		return
+	}
+	局_耗时 := time.Now().UnixMilli()
+
+	var 局_PublicJs DB.DB_PublicJs
+
+	局_PublicJs, err = Ser_PublicJs.Q取值2(请求.Id)
+
+	if err != nil {
+		response.FailWithMessage("JS公共函数不存在", c)
+		return
+	}
+
+	if W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
+		局_PublicJs.Value = string(W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
+	} else {
+		response.FailWithMessage("js文件读取失败可能被删除", c)
+		return
+	}
+
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	局_云函数型参数 := "{}"
+
+	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息)
+	_, err = vm.RunString(局_PublicJs.Value)
+	if 局_详细错误, ok := err.(*goja.Exception); ok {
+		response.FailWithMessage("JS代码运行失败:"+局_详细错误.String(), c)
+		return
+	}
+	var 局_待执行js函数名 func(string) interface{}
+	ret := vm.Get(局_PublicJs.Name)
+	if ret == nil {
+		response.FailWithMessage("Js中没有["+局_PublicJs.Name+"()]函数", c)
+		return
+	}
+	err = vm.ExportTo(ret, &局_待执行js函数名)
+	if err != nil {
+		response.FailWithMessage("Js绑定函数到变量失败", c)
+		return
+	}
+	局_return := 局_待执行js函数名(局_云函数型参数)
+	局_耗时 = time.Now().UnixMilli() - 局_耗时
+	response.OkWithDetailed(gin.H{"Return": 局_return, "Time": 局_耗时}, "执行成功,耗时:"+strconv.FormatInt(局_耗时, 10), c)
+	return
 }
