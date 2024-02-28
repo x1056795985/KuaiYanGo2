@@ -691,6 +691,7 @@ func UserApi_取应用基础信息(c *gin.Context) {
 		"AppType": AppInfo.AppType,
 		"AppName": AppInfo.AppName,
 		"AppWeb":  AppInfo.AppWeb,
+		"Status":  AppInfo.Status,
 	})
 	return
 }
