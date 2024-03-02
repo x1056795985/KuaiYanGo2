@@ -54,10 +54,6 @@ func (k *Api快验_类) C初始化配置(配置json string) bool {
 	k.集_Api网关ApiAppSecret = []byte{55, 50, 74, 103, 53, 79, 68, 79, 118, 49, 115, 82, 118, 115, 107, 81, 90, 100, 101, 57, 57, 73, 51, 110, 75, 114, 52, 104, 102, 51, 51, 121, 54, 53, 50, 57, 81, 115, 99}
 	k.集_Api网关ApiAppKey = `A` + `P` + `I` + `D` + `3` + `u` + `z` + `f` + `b` + `f` + `4` + `p` + `h` + `b` + `g` + `s` + `h` + `a` + `e` + `2` + `y` + `M` + `g` + `0` + `4` + `h` + `1` + `W` + `0` + `s` + `7` + `B` + `p` + `j` + `X` + `q` + `F` + `6` + `4` + `6`
 
-	//fmt.Println(k.集_Api网关ApiAppSecret)
-	//const ApiAppKey = "APID3uzfbf4phbgshae2yMg04h1W0s7BpjXqF646"
-	//const ApiAppSecret = "72Jg5ODOv1sRvskQZde99I3nKr4hf33y6529Qsc"
-
 	switch k.集_CryptoType {
 	case 3:
 		k.J_CryptoKeyAes = []byte(utils.W文本_取随机字符串(24))
