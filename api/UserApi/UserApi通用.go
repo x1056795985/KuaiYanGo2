@@ -687,11 +687,12 @@ func UserApi_取应用基础信息(c *gin.Context) {
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{
-		"AppId":   AppInfo.AppId,
-		"AppType": AppInfo.AppType,
-		"AppName": AppInfo.AppName,
-		"AppWeb":  AppInfo.AppWeb,
-		"Status":  AppInfo.Status,
+		"AppId":            AppInfo.AppId,
+		"AppType":          AppInfo.AppType,
+		"AppName":          AppInfo.AppName,
+		"AppWeb":           AppInfo.AppWeb,
+		"Status":           AppInfo.Status,
+		"AppStatusMessage": AppInfo.AppStatusMessage,
 	})
 	return
 }
