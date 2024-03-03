@@ -3,6 +3,7 @@ package UserConfig
 import (
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_AppInfo"
+	"server/Service/Ser_AppUser"
 	"server/Service/Ser_UserConfig"
 	"server/global"
 	"server/structs/Http/response"
@@ -157,6 +158,14 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("变量名不能为空", c)
 		return
 	}
+	if 请求.AppId <= 0 {
+		response.FailWithMessage("AppId错误", c)
+		return
+	}
+	if !Ser_AppUser.Uid是否存在(请求.AppId, 请求.Uid) {
+		response.FailWithMessage("软件用户不存在", c)
+		return
+	}
 
 	if Ser_UserConfig.Name是否存在(请求.AppId, 请求.Uid, 请求.Name) {
 		response.FailWithMessage("变量名已存在", c)
@@ -164,7 +173,9 @@ func (a *Api) New(c *gin.Context) {
 	}
 
 	请求.Time = time.Now().Unix()
-	//app_id 没有这个字段排除掉
+	请求.UpdateTime = time.Now().Unix()
+	请求.User = Ser_AppUser.Uid取User(请求.AppId, 请求.Uid)
+
 	err = Ser_UserConfig.C创建(请求)
 	if err != nil {
 		response.FailWithMessage("添加失败", c)
