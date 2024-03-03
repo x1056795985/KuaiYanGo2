@@ -23,9 +23,11 @@ import (
 	utils2 "server/utils"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
+// 键名不能有长度正好32的名称, 否则可能会和md5(用户api) 冲突隐患
 var J集_UserAPi路由 = map[string]路由信息{
 	//"GetToken": UserApi.UserApi_GetToken,   //通过中间件单独处理了,不放在路由内,防止重复调用
 	"NewUserInfo":            {"用户注册", UserApi.UserApi_用户注册, true},
@@ -99,12 +101,10 @@ var J集_UserAPi路由 = map[string]路由信息{
 }
 
 type 路由信息 struct {
-	Z中文名  string
+	Z中文名   string
 	Z指向函数 func(*gin.Context)
-	X显示   bool //是否显示到前段
+	X显示     bool //是否显示到前段
 }
-
-var J集_UserAPi路由_加密 = map[string]string{}
 
 var 集_UserAPi路由强制RSA = map[string]int{
 	"GetToken":            1,
@@ -118,24 +118,65 @@ var 集_UserAPi路由强制RSA = map[string]int{
 func init() {
 	fmt.Sprintln("集_UserAPi路由被初始化了")
 }
-func G更新哈希APi名称(盐值 string) {
+
+var J集_UserAPi路由_加密 加密路由信息
+
+type 加密路由信息 struct {
+	L路由md5  string //每次更新加密路由缓存, 都更新这个索引,每次读取路由,都检测索引是否和缓存相同,如果不同,更新索引
+	J加密路由 map[string]string
+	D读写锁   sync.RWMutex
+}
+
+func (this *加密路由信息) G更新md5APi名称(盐值 string) {
+
 	if 盐值 == "" {
 		//无加密 清空加密路由表
-		J集_UserAPi路由_加密 = make(map[string]string, 0)
+		this.J加密路由 = make(map[string]string, 0)
 		return
 	}
+	if !this.D读写锁.TryLock() { // 尝试进入,如果成功继续,如果失败,说明有其他线程在更新,直接返回即可
+		return
+	}
+	defer this.D读写锁.Unlock()
 
 	//更新加密路由表
-	J集_UserAPi路由_加密 = make(map[string]string, len(J集_UserAPi路由)+1)
-	J集_UserAPi路由_加密[utils2.Md5String("GetToken"+盐值)] = "GetToken"
-	for 键名 := range J集_UserAPi路由 {
-		局_哈希后的值 := utils2.Md5String(键名 + 盐值)
-		J集_UserAPi路由_加密[局_哈希后的值] = 键名
+	this.J加密路由 = make(map[string]string, len(J集_UserAPi路由)+1)
+	局_临时文本 := utils2.Md5String("GetToken" + 盐值)
+	this.J加密路由[局_临时文本] = "GetToken"
+
+	fmt.Printf("API名称加密已更新:%s => %s\n", this.J加密路由[局_临时文本], 局_临时文本)
+	局_路由md5原值 := ""
+	for 局_用户api := range J集_UserAPi路由 {
+		局_哈希后的值 := utils2.Md5String(局_用户api + 盐值)
+		this.J加密路由[局_哈希后的值] = 局_用户api
+		fmt.Printf("API名称加密已更新:%s => %s\n", 局_用户api, 局_哈希后的值)
+		局_路由md5原值 = 局_路由md5原值 + 局_哈希后的值
 	}
 
-	for 键名 := range J集_UserAPi路由_加密 {
-		fmt.Printf("API名称加密已更新:%s => %s\n", J集_UserAPi路由_加密[键名], 键名)
+	this.L路由md5 = utils2.Md5String(局_路由md5原值)
+	global.H缓存.Set("J集_UserAPi加密路由md5", this.L路由md5, -1) //写到redis
+
+}
+
+func (this *加密路由信息) Q取md5APi名称(md5值 string) (string, bool) {
+	if len(md5值) != 32 {
+		return "", false
 	}
+	//大部分都是直接有结果的,直接返回即可
+	局_用户api, ok := this.J加密路由[md5值]
+	if ok {
+		return 局_用户api, ok
+	}
+	// 失败了
+	//检测是否和redis 加密数据md5一样,如果不相同,说明有其他端更新了,本端没更新
+	云_L路由md5, ok := global.H缓存.Get("J集_UserAPi加密路由md5")
+	if !ok || 云_L路由md5 != this.L路由md5 {
+		this.G更新md5APi名称(setting.Q系统设置().Y用户API加密盐)
+	}
+
+	//更新完后在返回
+	局_用户api, ok = this.J加密路由[md5值]
+	return 局_用户api, ok
 
 }
 
@@ -282,8 +323,8 @@ func UserApi解密() gin.HandlerFunc {
 
 		ok := false
 		// 如果有加密后的API,就会赋值原始APi到变量,如果失败,不会改变
-		if len(J集_UserAPi路由_加密) > 0 { //如果>0说明启用Api加密了,
-			if 局_Api, ok = J集_UserAPi路由_加密[局_Api]; !ok {
+		if len(J集_UserAPi路由_加密.J加密路由) > 0 { //如果>0说明启用Api加密了,
+			if 局_Api, ok = J集_UserAPi路由_加密.Q取md5APi名称(局_Api); !ok {
 				response.X响应状态消息(c, response.Status_Api不存在, "API名称加密错误")
 				c.Abort()
 				return
@@ -456,8 +497,8 @@ func UserApi无Token解密() gin.HandlerFunc {
 		局_Api := strings.TrimSpace(string(局_fastjson.GetStringBytes("Api")))
 		ok := false
 		// 如果有加密后的API,就会赋值原始APi到变量,如果失败,不会改变
-		if len(J集_UserAPi路由_加密) > 0 { //如果>0说明启用Api加密了,
-			if 局_Api, ok = J集_UserAPi路由_加密[局_Api]; !ok {
+		if len(J集_UserAPi路由_加密.J加密路由) > 0 { //如果>0说明启用Api加密了,
+			if 局_Api, ok = J集_UserAPi路由_加密.Q取md5APi名称(局_Api); !ok {
 				response.X响应状态消息(c, response.Status_Api不存在, "API名称加密错误")
 				c.Abort()
 				return

@@ -47,7 +47,7 @@ func (a *LinkUserApi) GetLinkUserList(c *gin.Context) {
 		case 1: //在线id
 			局_DB.Where("Id = ?", 请求.Keywords)
 		case 2: //用户名
-			局_DB.Where("User = ?", 请求.Keywords)
+			局_DB.Where("User  LIKE ?", "%"+请求.Keywords+"%")
 		case 3: //绑定信息
 			局_DB.Where("LOCATE(?, `Key` )>0 ", 请求.Keywords)
 		case 4: //动态标签

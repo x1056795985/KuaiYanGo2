@@ -87,7 +87,7 @@ func (a *Api) Save信息System(c *gin.Context) {
 		response.FailWithMessage("保存失败:"+err.Error(), c)
 		return
 	}
-	middleware.G更新哈希APi名称(setting.Q系统设置().Y用户API加密盐)
+	middleware.J集_UserAPi路由_加密.G更新md5APi名称(setting.Q系统设置().Y用户API加密盐)
 	response.OkWithMessage("保存成功", c)
 	return
 }
