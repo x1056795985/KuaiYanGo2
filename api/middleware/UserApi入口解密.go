@@ -93,7 +93,7 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"TaskPoolSetTask":     {"任务池_任务处理返回", UserApi.UserApi_任务池_任务处理返回, true},
 	"GetUserConfig":       {"取用户云配置", UserApi.UserApi_取用户云配置, true},
 	"SetUserConfig":       {"置用户云配置", UserApi.UserApi_置用户云配置, true},
-	"SetAgentUid":         {"置代理标识", UserApi.UserApi_置代理标识, true},
+	"SetAgentUid":         {"置代理标识", UserApi.UserApi_置代理标志, true},
 
 	//快验Api
 	"KyApiSendSms":           {"快验发送验证码短信", UserApi.KyApiSendSms, false},
@@ -101,9 +101,9 @@ var J集_UserAPi路由 = map[string]路由信息{
 }
 
 type 路由信息 struct {
-	Z中文名   string
+	Z中文名  string
 	Z指向函数 func(*gin.Context)
-	X显示     bool //是否显示到前段
+	X显示   bool //是否显示到前段
 }
 
 var 集_UserAPi路由强制RSA = map[string]int{
@@ -122,8 +122,8 @@ func init() {
 var J集_UserAPi路由_加密 加密路由信息
 
 type 加密路由信息 struct {
-	L路由md5  string //每次更新加密路由缓存, 都更新这个索引,每次读取路由,都检测索引是否和缓存相同,如果不同,更新索引
-	J加密路由 map[string]string
+	L路由md5 string //每次更新加密路由缓存, 都更新这个索引,每次读取路由,都检测索引是否和缓存相同,如果不同,更新索引
+	J加密路由  map[string]string
 	D读写锁   sync.RWMutex
 }
 

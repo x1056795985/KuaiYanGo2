@@ -22,7 +22,7 @@ func (a *Api) GetInfoSystem(c *gin.Context) {
 	return
 }
 
-//go:embed  \..\..\..\SDK/易语言/飞鸟快验网络验证对接模块.e
+// 暂时放弃  go:embed  \..\..\..\SDK/易语言/飞鸟快验网络验证对接模块.e
 var 快验网络验证对接易模块 []byte
 
 type 请求_S生成API加密源码SDK struct {
