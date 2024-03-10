@@ -198,7 +198,7 @@ func UserApi_用户登录(c *gin.Context) {
 			}
 		}
 
-		局_AppUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid)
+		局_AppUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid) //充值之后重新读取一遍
 	}
 
 	if 局_AppUser.Status == 2 {
@@ -841,7 +841,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 		return
 	}
 	if 局_AppUser.Key == "" {
-		response.X响应状态消息(c, response.Status_操作失败, "未绑定信息,无需解除")
+		response.X响应状态消息(c, response.Status_操作失败, "无绑定信息,无需解除")
 		return
 	}
 
@@ -852,7 +852,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_Vip已到期, "剩余会员时间或点数不足.")
 			return
 		} else {
-			局_日志 := "用户解除绑定信息,旧绑定信息:" + 局_在线信息.Key
+			局_日志 := "用户解除绑定信息,旧绑定信息:" + 局_AppUser.Key
 			局_type := 3
 			if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
 				局_type = 2
@@ -1896,7 +1896,7 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 	}
 	return
 }
-func UserApi_置代理标识(c *gin.Context) {
+func UserApi_置代理标志(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)

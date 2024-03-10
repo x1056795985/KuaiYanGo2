@@ -250,6 +250,7 @@ func (a *Api) Q快验个人信息更新(c *gin.Context) {
 			"AppVerUpdateTime": 文件修改日期,
 			"AppVerNew":        global.X系统信息.B版本号最新,
 			"linkTokenCount":   0,
+			"AgentUid":         global.GVA_Viper.GetInt("duid"),
 		}, "获取成功", c)
 		return
 	}
@@ -301,6 +302,7 @@ func (a *Api) Q快验个人信息更新(c *gin.Context) {
 		"AppVerUpdateTime": 文件修改日期,
 		"AppVerNew":        global.X系统信息.B版本号最新,
 		"linkTokenCount":   局_在线计数,
+		"AgentUid":         global.GVA_Viper.GetInt("duid"),
 	}, "获取成功", c)
 	return
 }
