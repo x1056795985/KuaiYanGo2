@@ -1,10 +1,11 @@
 package config
 
 type Server struct {
-	Port    int     `mapstructure:"Port" json:"Port" yaml:"Port"`          // 端口值
-	Zap     Zap     `mapstructure:"zap" json:"zap" yaml:"zap"`             //日志配置
-	Captcha Captcha `mapstructure:"captcha" json:"captcha" yaml:"captcha"` //验证码配置
-	Q取运行目录  string
+	AgentUid int     `mapstructure:"duid" json:"duid"`                      //代理uid
+	Port     int     `mapstructure:"Port" json:"Port" yaml:"Port"`          // 端口值
+	Zap      Zap     `mapstructure:"zap" json:"zap" yaml:"zap"`             //日志配置
+	Captcha  Captcha `mapstructure:"captcha" json:"captcha" yaml:"captcha"` //验证码配置
+	Q取运行目录   string
 	// gorm
 	Mysql Mysql `mapstructure:"mysql" json:"mysql" yaml:"mysql"`
 }

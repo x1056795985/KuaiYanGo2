@@ -1238,3 +1238,15 @@ func (k *Api快验_类) R任务池_任务处理返回(UUid string, 任务状态 
 	}
 	return true
 }
+
+func (k *Api快验_类) Z置代理标志(AgentUid int) bool {
+	请求json := make(map[string]interface{}, 10)
+	请求json["Api"] = "SetAgentUid"
+	请求json["AgentUid"] = AgentUid
+
+	_, ok := k.通讯(请求json)
+	if !ok { // 直接返回即可,错误原因 在 发包并返回解密 已经有了
+		return false
+	}
+	return true
+}

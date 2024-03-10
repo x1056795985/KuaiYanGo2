@@ -53,6 +53,9 @@ func RunWindowsServer() {
 		go func() { //启动web后,在协程内获取token,也可以解决自验证的问题,
 			time.Sleep(5 * time.Second) //延迟5秒在在获取Token, 中间件获取可能导致,进入个人中心,获取验证码列表,可能因为速度太快还没获取token,报错验签失败,或加解密失败
 			middleware.D读取缓存Token()
+			if global.GVA_Viper.GetInt("duid") > 0 {
+				global.Q快验.Z置代理标志(global.GVA_Viper.GetInt("duid"))
+			}
 		}()
 	}
 	KuaiYanUpdater.B宝塔_修改项目信息pid()

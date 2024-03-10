@@ -501,7 +501,7 @@ func (a *Api) Set修改卡号生成模板(c *gin.Context) {
 		global.GVA_LOG.Error("修改失败:" + err.Error())
 		return
 	}
-	response.OkWithMessage("修改成功", c)
+	response.OkWithMessage("模板已保存", c)
 	return
 }
 func (a *Api) Q取卡号生成模板(c *gin.Context) {
