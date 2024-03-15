@@ -98,7 +98,8 @@ func App取AppType(Appid int) (AppType int) {
 
 func App是否为卡号(Appid int) bool {
 	var AppType int = 0 //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
+	db := *global.GVA_DB
+	_ = db.Model(DB.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
 	if AppType == 3 || AppType == 4 {
 		return true
 	}
@@ -107,7 +108,8 @@ func App是否为卡号(Appid int) bool {
 
 func App是否为计点(Appid int) bool {
 	var AppType int = 0 //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
+	db := *global.GVA_DB
+	_ = db.Model(DB.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
 	if AppType == 2 || AppType == 4 {
 		return true
 	}
@@ -116,7 +118,8 @@ func App是否为计点(Appid int) bool {
 
 func App存在数量(Appid int) int64 {
 	var count int64 = 0
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId = ?", Appid).Count(&count).Error
+	db := *global.GVA_DB
+	_ = db.Model(DB.DB_AppInfo{}).Where("AppId = ?", Appid).Count(&count).Error
 
 	return count
 

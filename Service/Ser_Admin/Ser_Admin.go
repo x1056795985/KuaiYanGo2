@@ -95,7 +95,8 @@ func Id余额增减(Id int, 增减值 float64, is增加 bool) (新余额 float64
 	}
 }
 func Id取余额(Id int) (余额 float64) {
-	_ = global.GVA_DB.Model(DB.DB_Admin{}).Select("Rmb").Where("Id=?", Id).Take(&余额).Error
+	db := *global.GVA_DB
+	_ = db.Model(DB.DB_Admin{}).Select("Rmb").Where("Id=?", Id).Take(&余额).Error
 	return
 }
 func User用户名取id(用户名 string) int {
@@ -104,7 +105,8 @@ func User用户名取id(用户名 string) int {
 	}
 
 	var Id int
-	_ = global.GVA_DB.Model(DB.DB_Admin{}).Select("Id").Where("User=?", 用户名).Take(&Id)
+	db := *global.GVA_DB
+	db.Model(DB.DB_Admin{}).Select("Id").Where("User=?", 用户名).Take(&Id)
 	return Id
 }
 func Id取详情(Id int) (用户详情 DB.DB_Admin, ok bool) {

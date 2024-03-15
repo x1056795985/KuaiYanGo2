@@ -256,7 +256,7 @@ func jS_置公共变量(变量名, 值 string) bool {
 func jS_置在线动态标签(局_在线信息 DB.DB_LinksToken, 新动态标签 string) bool {
 	return Ser_LinkUser.Set动态标签(局_在线信息.Id, 新动态标签) == nil
 }
-func jS_网页访问_GET(Url, 协议头一行一个, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
+func jS_网页访问_GET(Url string, 协议头一行一个 interface{}, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
 
 	client := req.C().SetTimeout(time.Duration(超时秒数) * time.Second)
 
@@ -264,8 +264,14 @@ func jS_网页访问_GET(Url, 协议头一行一个, Cookies string, 超时秒�
 		client.SetProxyURL(代理ip)
 	}
 	request := client.R()
-
-	局_协议头数组 := utils.W文本_分割文本(协议头一行一个, "\r")
+	request.SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.289 Safari/537.36")
+	var 局_协议头数组 []string
+	switch v := 协议头一行一个.(type) {
+	case string:
+		局_协议头数组 = utils.W文本_分割文本(v, "\r")
+	case []string:
+		局_协议头数组 = v
+	}
 	for _, 值 := range 局_协议头数组 {
 		if strings.Index(值, ":") != -1 {
 			request.SetHeader(utils.W文本_取文本左边(值, ":"), utils.W文本_取文本右边(值, ":"))
@@ -298,15 +304,28 @@ func jS_网页访问_GET(Url, 协议头一行一个, Cookies string, 超时秒�
 	return js对象_网页响应{StatusCode: ret.StatusCode, Cookies: Cookies, Headers: 局_响应头信息, Body: ret.String()}
 
 }
-func jS_网页访问_POST(Url, post, 协议头一行一个, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
+func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
 	client := req.C().SetTimeout(time.Duration(超时秒数) * time.Second)
 
 	if 代理ip != "" {
 		client.SetProxyURL(代理ip)
 	}
 	request := client.R()
+	request.SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.289 Safari/537.36")
 
-	局_协议头数组 := utils.W文本_分割文本(协议头一行一个, "\r")
+	if utils.W文本_是否JSON(post) {
+		request.SetHeader("Content-Type", "application/json")
+		request.SetHeader("Accept", "application/json, text/plain, */*")
+	}
+
+	var 局_协议头数组 []string
+	switch v := 协议头一行一个.(type) {
+	case string:
+		局_协议头数组 = utils.W文本_分割文本(v, "\r")
+	case []string:
+		局_协议头数组 = v
+	}
+
 	for _, 值 := range 局_协议头数组 {
 		if strings.Index(值, ":") != -1 {
 			request.SetHeader(utils.W文本_取文本左边(值, ":"), utils.W文本_取文本右边(值, ":"))
