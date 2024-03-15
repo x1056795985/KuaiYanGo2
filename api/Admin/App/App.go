@@ -286,7 +286,7 @@ const Api之前Hook函数模板 = `(JSON请求明文) {
 
     //局_url = "https://www.baidu.com/"
     //局_返回 = $api_网页访问_GET(局_url, 15, "")
-    //局_返回 = $api_网页访问_POST(局_url, "api=123", 15, "")
+    //局_返回 = $api_网页访问_POST(局_url, "api=123", "",15, "")
     //{"StatusCode":200,"Headers":"Date: Sun, 21 May 2023 10:26:32 GMT\r\nContent-Length: 0\r\nContent-Type: application/x-www-form-urlencoded,\r\n","Cookies":"","Body":""}
 
     if (局_返回.Body !== "") {
@@ -309,7 +309,12 @@ const Api之后Hook函数模板 = `(JSON响应明文) {
 
     //局_url = "https://www.baidu.com/"
     //局_返回 = $api_网页访问_GET(局_url, 15, "")
-    //局_返回 = $api_网页访问_POST(局_url, "api=123", 15, "")
+    //    协议头 = [
+    //        "Accept: application/json, text/javascript, */*; q=0.01",
+    //        "Content-Type: application/json",
+    //        "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+    //    ]
+    //    返回对象 = $api_网页访问_POST(局_url, "api=123",协议头,"", 15, "")
     //{"StatusCode":200,"Headers":"Date: Sun, 21 May 2023 10:26:32 GMT\r\nContent-Length: 0\r\nContent-Type: application/x-www-form-urlencoded,\r\n","Cookies":"","Body":""}
 
     //这里可以替换响应的json信息文本, 如果想拦截直接替换为报错的json就可以了,注意状态码,和时间戳

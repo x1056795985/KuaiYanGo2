@@ -272,6 +272,11 @@ func (a *Api) Out退款(c *gin.Context) {
 		response.FailWithMessage("订单非充值成功状态", c)
 		return
 	}
+	局_用户名 := Ser_User.Id取User(局_订单信息.Uid)
+	if 局_用户名 == "" {
+		response.FailWithMessage("查询不到用户id:"+strconv.Itoa(局_订单信息.Uid)+",的用户", c)
+		return
+	}
 	if 请求.IsOutRMB {
 		/*		for i := 0; i < 100; i++ {
 				go Ser_User.Id余额增减(局_订单信息.Uid, 局_订单信息.Rmb, false)
@@ -281,16 +286,16 @@ func (a *Api) Out退款(c *gin.Context) {
 			response.FailWithMessage(err2.Error(), c)
 			return
 		} else {
-			go Ser_Log.Log_写余额日志(Ser_User.Id取User(局_订单信息.Uid), c.ClientIP(), "管理员操作退款,余额充值订单:"+局_订单信息.PayOrder+",扣除用户已充值余额"+"|新余额≈"+utils.Float64到文本(局_新余额, 2), utils.Float64取负值(局_订单信息.Rmb))
+			go Ser_Log.Log_写余额日志(局_用户名, c.ClientIP(), "管理员操作退款,余额充值订单:"+局_订单信息.PayOrder+",扣除用户已充值余额"+"|新余额≈"+utils.Float64到文本(局_新余额, 2), utils.Float64取负值(局_订单信息.Rmb))
 		}
 	}
 
 	// 定义一个映射，存储支付类型和对应的退款函数
 	refundFuncMap := map[string]func(订单信息 DB.DB_LogRMBPayOrder) error{
-		"支付宝PC":     Ser_RMBPayOrder.Order_退款_支付宝PC,
-		"支付宝H5":     Ser_RMBPayOrder.Order_退款_支付宝H5,
+		"支付宝PC":  Ser_RMBPayOrder.Order_退款_支付宝PC,
+		"支付宝H5":  Ser_RMBPayOrder.Order_退款_支付宝H5,
 		"支付宝当面付": Ser_RMBPayOrder.Order_退款_支付宝当面付,
-		"微信支付":     Ser_RMBPayOrder.Order_退款_微信支付,
+		"微信支付":   Ser_RMBPayOrder.Order_退款_微信支付,
 	}
 
 	// 根据支付类型从映射中获取对应的退款函数

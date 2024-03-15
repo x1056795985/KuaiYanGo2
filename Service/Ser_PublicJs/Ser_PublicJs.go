@@ -21,7 +21,8 @@ func Id是否存在(Id int) bool {
 func Name是否存在(AppId int, Name string) bool {
 
 	var Count int64
-	_ = global.GVA_DB.Model(DB.DB_PublicJs{}).Select("1").Where("AppId=?", AppId).Where("Name=?", Name).Take(&Count)
+	db := *global.GVA_DB
+	db.Model(DB.DB_PublicJs{}).Select("1").Where("AppId=?", AppId).Where("Name=?", Name).Take(&Count)
 	return Count > 0
 }
 func Q取值(AppId int, Name string) string {

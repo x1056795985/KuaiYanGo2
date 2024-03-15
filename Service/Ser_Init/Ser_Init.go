@@ -359,8 +359,13 @@ return 局_用户信息
 
     局_url = "https://www.baidu.com/sugrec?&prod=pc_his&from=pc_web&json=1&sid=38516_36555_38613_38538_38595_38581_36803_38485_38637_26350_38621_38663&hisdata=%5B%7B%22time%22%3A1675596837%2C%22kw%22%3A%22python%E8%BF%90%E8%A1%8C%E6%97%B6%E4%BF%AE%E6%94%B9%E4%BB%A3%E7%A0%81%22%7D%2C%7B%22time%22%3A1675605796%2C%22kw%22%3A%22%E7%86%8A%E7%8C%AB%208.23%20%E6%BA%90%E7%A0%81%22%2C%22fq%22%3A2%7D%2C%7B%22time%22%3A1675609301%2C%22kw%22%3A%22go%20%E4%BC%98%E7%A7%80%E9%A1%B9%E7%9B%AE%22%7D%2C%7B%22time%22%3A1675671958%2C%22kw%22%3A%22win11%20%E7%AA%97%E5%8F%A3%E6%97%A0%E6%B3%95%E6%8B%96%E6%96%87%E4%BB%B6%22%7D%2C%7B%22time%22%3A1675673946%2C%22kw%22%3A%22win11%20%E6%97%A0%E6%B3%95%E6%8B%96%E6%94%BE%22%2C%22fq%22%3A3%7D%2C%7B%22time%22%3A1676041744%2C%22kw%22%3A%22ns%20retroarch%20%E6%9A%82%E5%81%9C%22%7D%2C%7B%22time%22%3A1676042251%2C%22kw%22%3A%22ns%20retroarch%20%E6%B2%A1%E6%9C%89%E8%AE%BE%E7%BD%AE%22%7D%2C%7B%22time%22%3A1676096636%2C%22kw%22%3A%22gin%20%E5%92%8C%20beego%22%7D%2C%7B%22time%22%3A1676126858%2C%22kw%22%3A%22ruby%E5%92%8Cgo%22%7D%2C%7B%22time%22%3A1676177555%2C%22kw%22%3A%22%E7%A7%9F%E5%8F%B7%E7%8E%A9%E7%BD%91%E6%98%93%E4%B8%8A%E5%8F%B7%E5%99%A8%22%7D%5D&_t=1684664739701&req=2&csor=0"
 
-    返回对象 = $api_网页访问_GET(局_url, 15, "")
-    //返回对象 = $api_网页访问_POST(局_url, "api=123", 15, "")
+    //返回对象 = $api_网页访问_GET(局_url, 15, "")
+    协议头 = [
+        "Accept: application/json, text/javascript, */*; q=0.01",
+        "Content-Type: application/json",
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+    ]
+    返回对象 = $api_网页访问_POST(局_url, "api=123",协议头,"", 15, "")
     //{"StatusCode":200,"Headers":"Date: Sun, 21 May 2023 10:26:32 GMT\r\nContent-Length: 0\r\nContent-Type: application/x-www-form-urlencoded,\r\n","Cookies":"","Body":""}
     return 返回对象.Body //只返回响应信息
 }`,
@@ -523,7 +528,7 @@ const js对象_通用返回 = { //api函数返回基本都是这个
     局_post = '{"AppId":10001,"Id":[69],"Status":2}' //这里可以根据需求自己修改参数, 这个id是卡号id,AppId是卡号归属id
     局_token = "WD3NMTTWNG40DERXA6WRZTK3BZZLTKMJ"  //这个需要自己抓包替换
     协议头 = "Token: " + 局_token
-    返回对象 = $api_网页访问_POST(局_url, 局_post, 协议头, 15, "")
+    返回对象 = $api_网页访问_POST(局_url, 局_post,协议头, "", 15, "")
 
     return 返回对象
 }`,
