@@ -75,9 +75,11 @@ func ID取用户名(UID int) (UPAgentName string) {
 // 不区分用户表还是管理员表
 func ID取分成百分比(UID int) (分成百分比 int) {
 	if UID > 0 {
-		_ = global.GVA_DB.Model(DB.DB_User{}).Select("AgentDiscount").Where("Id=?", UID).First(&分成百分比)
+		db := *global.GVA_DB
+		db.Model(DB.DB_User{}).Select("AgentDiscount").Where("Id=?", UID).First(&分成百分比)
 	} else if UID < 0 {
-		_ = global.GVA_DB.Model(DB.DB_Admin{}).Select("AgentDiscount").Where("Id=?", -UID).First(&分成百分比)
+		db := *global.GVA_DB
+		db.Model(DB.DB_Admin{}).Select("AgentDiscount").Where("Id=?", -UID).First(&分成百分比)
 	}
 	return
 }
