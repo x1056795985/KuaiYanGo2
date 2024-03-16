@@ -1084,7 +1084,7 @@ func UserApi_心跳(c *gin.Context) {
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	if !检测用户登录在线正常(&局_在线信息) {
-		response.X响应状态(c, response.Status_未登录)
+		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": 1})
 		return
 	}
 
