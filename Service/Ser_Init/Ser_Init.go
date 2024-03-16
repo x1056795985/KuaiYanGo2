@@ -421,6 +421,7 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 		AppId: 1,
 		Name:  "用户余额增减案例",
 		Value: `function 用户余额增减案例(JSON形参文本) {
+	return 0 // 默认函数安全防护 正式使用时请删掉本行
     JSON形参文本 = JSON形参文本.replace(/'/g, '"') //因为易语言 双引号不方便,所以到js里换成替换单引号成双引号 //注意永远不要相信客户端传参
 
     var 局_形参对象 = JSON.parse(JSON形参文本); //使用JSON.parse() 将JSON字符串转为JS对象;
@@ -484,7 +485,7 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 		AppId: 1,
 		Name:  "执行SQL功能测试",
 		Value: `function 执行SQL功能测试(JSON形参文本) {
-
+	return 0 // 默认函数安全防护 正式使用时请删掉本行
     var 局_结果对象 = $api_执行SQL功能("UPDATE db_public_js SET Type=Type+1 WHERE  Id=11") //获取公共函数数据库全部信息
     if (局_结果对象.isOk) {
         //这里说明成功了,
@@ -504,7 +505,7 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 		AppId: 1,
 		Name:  "执行SQL查询测试",
 		Value: `function 执行SQL查询测试(JSON形参文本) {
-
+	return {} // 默认函数安全防护 正式使用时请删掉本行
     var 局_结果对象 = $api_执行SQL查询(" SELECT * FROM db_public_js")  
 
     if (局_结果对象.isOk) {
