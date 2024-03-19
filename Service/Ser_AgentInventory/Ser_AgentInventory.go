@@ -107,9 +107,12 @@ func New代理购买(归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, 
 		err = tx.Create(&库存卡包).Error
 		return err
 	})
+
 	if err == nil {
 		局_log := fmt.Sprintf("购买库存包ID:%d,代理价格(%v)*库存数量(%d)|新余额≈%v", 库存卡包.Id, 局_卡类详情.AgentMoney, NumMax, utils.Float64到文本(局_新余额, 2))
 		go Ser_Log.Log_写余额日志(Ser_User.Id取User(归属Uid), ip, 局_log, utils.Float64取负值(局_总金额))
+	} else {
+		return 库存卡包, err
 	}
 	//代理分成
 	//开始分利润 20240202 mark处理重构以后改事务
