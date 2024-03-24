@@ -35,7 +35,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 	// 判断验证码是否开启
 	openCaptcha := global.GVA_CONFIG.Captcha.OpenCaptcha               // 是否开启防暴次数
 	openCaptchaTimeOut := global.GVA_CONFIG.Captcha.OpenCaptchaTimeOut // 缓存超时时间
-	v, ok := global.H缓存.Get(客户端ip)                                // 获取这个ip已经被请求次数
+	v, ok := global.H缓存.Get(客户端ip)                                     // 获取这个ip已经被请求次数
 	if !ok {
 		// 获取这个ip已经被请求次数  如果没请求过, 设置值为1
 		global.H缓存.Set(客户端ip, 1, time.Second*time.Duration(openCaptchaTimeOut))
@@ -101,7 +101,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 	DB_links_user.OutTime = 36000 //退出时间
 	DB_links_user.LastTime = DB_links_user.LoginTime
 	//DB_links_user.Token = utils.BcryptHash(DB_links_user.User + string(DB_links_user.LoginTime) + string(DB_links_user.OutTIme) + DB_links_user.Key + rand_string.RandStringBytesMaskImprSrc(25))
-	DB_links_user.Token = strings.ToUpper(rand_string.RandStringBytesMaskImprSrc(32))
+	DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	DB_links_user.LoginAppid = 2 //代理后台代号2
 
 	err = global.GVA_DB.Create(&DB_links_user).Error
