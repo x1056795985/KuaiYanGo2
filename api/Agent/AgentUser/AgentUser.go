@@ -231,8 +231,8 @@ func (a *Api) Save代理信息(c *gin.Context) {
 		return
 	}
 
-	if Ser_Agent.Q取上级代理的子级代理级别(c.GetInt("Uid"), 请求.Id) <= 0 {
-		response.FailWithMessage("权限不足,只能操作自己的子级代理", c)
+	if Ser_Agent.Q取上级代理的子级代理级别(c.GetInt("Uid"), 请求.Id) != 1 {
+		response.FailWithMessage("权限不足,只能操作自己的直属子级代理", c)
 		return
 	}
 
@@ -437,6 +437,37 @@ func (a *Api) SetAgentKaClassAuthority(c *gin.Context) {
 	} else {
 		response.FailWithMessage("操作失败错误:"+err.Error(), c)
 	}
+	return
+}
+
+// 转账给下级代理
+func (a *Api) SendRmbTOAgent(c *gin.Context) {
+	var 请求 struct {
+		Id  int     `json:"Id"`
+		RMB float64 `json:"Rmb"`
+	}
+	err := c.ShouldBindJSON(&请求)
+	if err != nil {
+		response.FailWithMessage("提交参数错误:"+err.Error(), c)
+		return
+	}
+	if !Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_转账) {
+		response.FailWithMessage("权限不足,无转账权限,请联系上级授权", c)
+		return
+	}
+
+	if Ser_Agent.Q取上级代理的子级代理级别(c.GetInt("Uid"), 请求.Id) != 1 {
+		response.FailWithMessage("只能转账给自己的直属下级代理", c)
+		return
+	}
+	var 源新余额, 目标新余额 float64
+	源新余额, 目标新余额, err = Ser_User.Id余额转账(c.GetInt("Uid"), 请求.Id, 请求.RMB, c.ClientIP())
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	response.OkWithDetailed(map[string]float64{"sourceRmb": 源新余额, "targetRmb": 目标新余额}, "操作成功", c)
 	return
 }
 

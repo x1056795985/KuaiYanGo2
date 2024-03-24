@@ -10,6 +10,7 @@ const D代理功能_余额充值 = -5
 const D代理功能_发展下级代理 = -6
 const D代理功能_卡号追回 = -7
 const D代理功能_修改用户绑定 = -8
+const D代理功能_转账 = -9
 
 type Db_Agent_卡类授权 struct {
 	ID   int    `json:"Id" gorm:"column:Id;primaryKey;comment:Id"`

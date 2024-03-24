@@ -640,6 +640,7 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.POST("SetAgentUserStatus", AgentApp.Set修改状态)                        // 保存用户详细信息
 	baseRouter.POST("GetAgentKaClassAuthority", AgentApp.GetAgentKaClassAuthority) //取全部可制卡类和已授权卡类
 	baseRouter.POST("SetAgentKaClassAuthority", AgentApp.SetAgentKaClassAuthority) //设置代理可制卡类ID
+	baseRouter.POST("SendRmbTOAgent", AgentApp.SendRmbTOAgent)                     //转账
 	baseRouter.POST("ChartAgentLevel", AgentApp.Get代理组织架构图)
 
 	//代理库存管理===========================================

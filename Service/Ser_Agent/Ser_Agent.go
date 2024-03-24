@@ -255,6 +255,7 @@ func Q取全部代理功能ID_MAP() map[int]string {
 	局_map[DB.D代理功能_发展下级代理] = "发展下级代理"
 	局_map[DB.D代理功能_卡号追回] = "卡号追回"
 	局_map[DB.D代理功能_修改用户绑定] = "修改用户绑定"
+	局_map[DB.D代理功能_转账] = "转账"
 	return 局_map
 }
 

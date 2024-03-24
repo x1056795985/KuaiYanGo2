@@ -106,7 +106,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 	DB_links_user.OutTime = 36000 //退出时间
 	DB_links_user.LastTime = DB_links_user.LoginTime
 	//DB_links_user.Token = utils.BcryptHash(DB_links_user.User + string(DB_links_user.LoginTime) + string(DB_links_user.OutTIme) + DB_links_user.Key + rand_string.RandStringBytesMaskImprSrc(25))
-	DB_links_user.Token = strings.ToUpper(rand_string.RandStringBytesMaskImprSrc(32))
+	DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	DB_links_user.LoginAppid = 1 //管理员后台代号1
 
 	err = global.GVA_DB.Create(&DB_links_user).Error
@@ -130,7 +130,6 @@ type 结构_登录请求 struct {
 	Password  string `json:"password"`  // 密码
 	Captcha   string `json:"captcha"`   // 验证码
 	CaptchaId string `json:"captchaId"` // 验证码ID
-
 }
 
 // 登录响应结构体

@@ -45,6 +45,7 @@ func 连接旧数据库() *gorm.DB {
 		DefaultStringSize:         191,                                                                            // string 类型字段的默认长度
 		SkipInitializeWithVersion: false,                                                                          // 根据版本自动配置
 	}
+	
 	旧数据库, err := gorm.Open(mysql.New(mysqlConfig))
 	if err != nil {
 		//链接失败了

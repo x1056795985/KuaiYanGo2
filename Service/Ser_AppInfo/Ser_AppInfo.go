@@ -245,8 +245,8 @@ func NewApp信息(AppId, AppType int, AppName string) error {
 "VipData2":"这里的数据,只有登录成功并且账号会员不过期才会传输出去的数据"
 }`
 	}
-	NewApp.CryptoType = 3                                            //默认Rsa交换Aes密匙
-	NewApp.CryptoKeyAes = rand_string.RandStringBytesMaskImprSrc(24) //aes cbc 192长度固定24
+	NewApp.CryptoType = 3                              //默认Rsa交换Aes密匙
+	NewApp.CryptoKeyAes = rand_string.RandomLetter(24) //aes cbc 192长度固定24
 
 	错误, 公钥base64, 私钥base64 := utils2.GetRsaKey()
 	if err != nil {

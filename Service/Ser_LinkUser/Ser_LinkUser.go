@@ -38,10 +38,11 @@ func New(Uid, Status, LoginAppid, OutTIme int, User, Tab, Key, Ip, CryptoKeyAes 
 		DB_links_user.IPCity = 省市 + " " + 运行商
 	}
 	DB_links_user.Status = Status
-	DB_links_user.LoginTime = int64(time.Now().Unix())
+	DB_links_user.LoginTime = time.Now().Unix()
 	DB_links_user.OutTime = OutTIme //退出时间 半小时
 	DB_links_user.LastTime = DB_links_user.LoginTime
-	DB_links_user.Token = strings.ToUpper(rand_string.RandStringBytesMaskImprSrc(32))
+
+	DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	DB_links_user.LoginAppid = LoginAppid     //管理员后台代号1
 	DB_links_user.CryptoKeyAes = CryptoKeyAes //通讯key
 	err = global.GVA_DB.Create(&DB_links_user).Error
@@ -50,7 +51,7 @@ func New(Uid, Status, LoginAppid, OutTIme int, User, Tab, Key, Ip, CryptoKeyAes 
 func NewWebApiToken(OutTIme int, Key, Tab string) (DB.DB_LinksToken, error) {
 	var DB_links_user DB.DB_LinksToken
 	DB_links_user.Uid = 0
-	DB_links_user.User = strings.ToUpper(rand_string.RandStringBytesMaskImprSrc(32))
+	DB_links_user.User = strings.ToUpper(rand_string.RandomLetter(32))
 	DB_links_user.Tab = Tab
 	DB_links_user.Key = Key
 	DB_links_user.Ip = ""
