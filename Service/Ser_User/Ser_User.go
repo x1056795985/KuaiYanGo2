@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"server/Service/Ser_Admin"
 	"server/Service/Ser_Log"
 	"server/global"
@@ -161,7 +162,91 @@ func Id余额增减(Id int, 增减值 float64, is增加 bool) (新余额 float64
 	}
 
 }
+func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余额, 目标新余额 float64, err error) {
+	//return Id余额增减2(Id, 增减值, is增加)
+	if Id == 0 || 目标id == 0 {
+		return 源新余额, 目标新余额, errors.New("用户不存在")
+	}
+	if 增减值 <= 0 {
+		return 源新余额, 目标新余额, errors.New("金额必须大于0")
+	}
+	var 源用户详情 DB.DB_User
 
+	var ok bool
+	//首次查询,无锁先判断一次
+	if 源用户详情, ok = Id取详情(Id); !ok {
+		return 源新余额, 目标新余额, errors.New("源用户不存在")
+	}
+
+	if 源用户详情.Rmb < 增减值 {
+		return 源新余额, 目标新余额, errors.New("余额不足")
+	}
+	var 目标用户详情 DB.DB_User
+	if 目标用户详情, ok = Id取详情(目标id); !ok {
+		return 源新余额, 目标新余额, errors.New("目标用户不存在")
+	}
+
+	//这里就是转账了,需要开启事务保证
+	db := global.GVA_DB
+	tx := db.Begin() //开启事务
+
+	err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", Id).First(&源用户详情).Error //加锁再查一次
+
+	if err != nil || 源用户详情.Rmb < 增减值 {
+		// 余额不足,回滚并返回   表必须InnoDB引擎才可以,否则会真实发生扣余额,
+		tx.Rollback()
+		return 源新余额, 目标新余额, errors.New("余额不足")
+	}
+	// 减少余额
+	sql := "UPDATE db_User SET RMB = RMB - ? WHERE Id = ?"
+	tx.Exec(sql, 增减值, Id)
+
+	if tx.Error != nil {
+		tx.Rollback()
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
+		return 源新余额, 目标新余额, errors.New("余额减少失败查看服务器日志检查原因")
+	}
+
+	// 查询新余额
+	sql = "SELECT RMB FROM db_User WHERE Id = ?"
+	tx = tx.Raw(sql, Id).Scan(&源新余额)
+	if tx.Error != nil {
+		tx.Rollback()
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
+		return 源新余额, 目标新余额, errors.New("查询余额失败查看服务器日志检查原因")
+	}
+
+	if 源新余额 < 0 {
+		// 余额不足,回滚并返回   表必须InnoDB引擎才可以,否则会真实发生扣余额,
+		tx.Rollback()
+		return 源新余额, 目标新余额, errors.New("用户余额不足,缺少:" + utils.Float64到文本(utils.Float64取绝对值(源新余额), 2))
+	}
+	//目标账号
+	// 增加余额
+	sql = "UPDATE db_User SET RMB = RMB + ? WHERE Id = ?"
+	tx.Exec(sql, 增减值, 目标id)
+
+	if tx.Error != nil {
+		tx.Rollback()
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "目标Id余额增加失败:" + tx.Error.Error())
+		return 源新余额, 目标新余额, errors.New("余额增加失败查看服务器日志检查原因")
+	}
+	// 查询新余额
+	sql = "SELECT RMB FROM db_User WHERE Id = ?"
+	tx = tx.Raw(sql, 目标id).Scan(&目标新余额)
+	if tx.Error != nil {
+		tx.Rollback()
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "目标id查询余额失败:" + tx.Error.Error())
+		return 源新余额, 目标新余额, errors.New("目标id查询余额失败查看服务器日志检查原因")
+	}
+	tx.Commit() //操作完成提交事务
+
+	Ser_Log.Log_写余额日志(源用户详情.User, ip, "转账给:"+目标用户详情.User+"|新余额≈"+utils.Float64到文本(源新余额, 2), 增减值)
+	Ser_Log.Log_写余额日志(目标用户详情.User, ip, "收到来自"+源用户详情.User+"的转账.|新余额≈"+utils.Float64到文本(目标新余额, 2), 增减值)
+
+	return 源新余额, 目标新余额, nil
+
+}
 func User取详情(User string) (用户详情 DB.DB_User, ok bool) {
 	err := global.GVA_DB.Model(DB.DB_User{}).Where("User=?", User).First(&用户详情).Error
 	return 用户详情, err == nil
