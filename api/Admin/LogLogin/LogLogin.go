@@ -43,6 +43,7 @@ type 结构请求_GetDB_LogLoginList struct {
 	Keywords     string   `json:"Keywords"`     // 关键字
 	Order        int      `json:"Order"`        // 0 倒序 1 正序
 	RegisterTime []string `json:"RegisterTime"` // 制卡开始时间 制卡结束时间
+	Appid        int      `json:"Appid"`        // 制卡开始时间 制卡结束时间
 }
 
 // GetDB_LogLoginList
@@ -63,6 +64,10 @@ func (a *Api) GetLogLoginList(c *gin.Context) {
 	} else {
 		局_DB.Order("Id DESC")
 	}
+	if 请求.Appid > 0 {
+		局_DB.Where("LoginType = ?", 请求.Appid)
+	}
+
 	if 请求.RegisterTime != nil && len(请求.RegisterTime) == 2 && 请求.RegisterTime[0] != "" && 请求.RegisterTime[1] != "" {
 		制卡开始时间, _ := strconv.Atoi(请求.RegisterTime[0])
 		制卡结束时间, _ := strconv.Atoi(请求.RegisterTime[1])
