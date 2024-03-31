@@ -1,6 +1,7 @@
 package Ka
 
 import (
+	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -15,6 +16,7 @@ import (
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
+	"strings"
 )
 
 type Api struct{}
@@ -170,7 +172,12 @@ func (a *Api) GetKaList(c *gin.Context) {
 		case 1: //id
 			局_DB.Where("Id = ?", 请求.Keywords)
 		case 2: //卡号
-			局_DB.Where("LOCATE(?, Name)>0 ", 请求.Keywords)
+			if strings.Index(请求.Keywords, ",") == -1 {
+				局_DB.Where("Name  LIKE ?", "%"+请求.Keywords+"%")
+			} else {
+				局_数组 := utils.W文本_分割文本(请求.Keywords, ",")
+				局_DB.Where("Name IN ? ", 局_数组)
+			}
 		case 3: //管理员备注
 			局_DB.Where("LOCATE(?, AdminNote)>0 ", 请求.Keywords)
 		case 4: //代理备注

@@ -2,12 +2,14 @@
 package LinkUser
 
 import (
+	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	App服务 "server/Service/Ser_AppInfo"
 	"server/Service/Ser_LinkUser"
 	"server/global"
 	"server/structs/Http/response"
 	DB "server/structs/db"
+	"strings"
 )
 
 type LinkUserApi struct{}
@@ -47,7 +49,13 @@ func (a *LinkUserApi) GetLinkUserList(c *gin.Context) {
 		case 1: //在线id
 			局_DB.Where("Id = ?", 请求.Keywords)
 		case 2: //用户名
-			局_DB.Where("User  LIKE ?", "%"+请求.Keywords+"%")
+
+			if strings.Index(请求.Keywords, ",") == -1 {
+				局_DB.Where("User  LIKE ?", "%"+请求.Keywords+"%")
+			} else {
+				局_数组 := utils.W文本_分割文本(请求.Keywords, ",")
+				局_DB.Where("User IN ? ", 局_数组)
+			}
 		case 3: //绑定信息
 			局_DB.Where("LOCATE(?, `Key` )>0 ", 请求.Keywords)
 		case 4: //动态标签

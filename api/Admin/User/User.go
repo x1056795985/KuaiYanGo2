@@ -17,6 +17,7 @@ import (
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
+	"strings"
 )
 
 type Api struct{}
@@ -176,7 +177,12 @@ func (a *Api) GetUserList(c *gin.Context) {
 		case 1: //id
 			局_DB.Where("Id = ?", 请求.Keywords)
 		case 2: //用户名
-			局_DB.Where("LOCATE(?, User)>0 ", 请求.Keywords)
+			if strings.Index(请求.Keywords, ",") == -1 {
+				局_DB.Where("User  LIKE ?", "%"+请求.Keywords+"%")
+			} else {
+				局_数组 := utils.W文本_分割文本(请求.Keywords, ",")
+				局_DB.Where("User IN ? ", 局_数组)
+			}
 		case 3: //余额大于X
 			float, _ := strconv.ParseFloat(请求.Keywords, 64)
 			局_DB.Where("Rmb > ?", float)

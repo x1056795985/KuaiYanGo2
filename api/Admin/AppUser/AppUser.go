@@ -164,11 +164,22 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 			局_DB.Where(表名_AppUser+".Id = ?", 请求.Keywords)
 		case 2: //用户id
 			局_DB.Where(表名_AppUser+".Uid = ?", 请求.Keywords)
-		case 3: //用户id
+		case 3: //用户名 '支持,号分割
+			局_用户名数组 := utils.W文本_分割文本(请求.Keywords, ",")
 			if Ser_AppInfo.App是否为卡号(请求.AppId) {
-				局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where LOCATE(?, db_Ka.Name)>0 )", 请求.Keywords))
+				if len(局_用户名数组) == 1 {
+					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where db_Ka.Name like %"+请求.Keywords+"%", 局_用户名数组))
+				} else {
+					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where db_Ka.Name IN?", 局_用户名数组))
+				}
+
 			} else {
-				局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where LOCATE(?, db_User.User)>0 )", 请求.Keywords))
+				if len(局_用户名数组) == 1 {
+					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where db_User.User  like %"+请求.Keywords+"%", 局_用户名数组))
+				} else {
+					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where db_User.User IN ? ", 局_用户名数组))
+				}
+
 			}
 		case 4: //绑定信息
 			局_DB.Where("`Key` like ?", "%"+请求.Keywords+"%")
