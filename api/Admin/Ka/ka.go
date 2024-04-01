@@ -16,7 +16,6 @@ import (
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
-	"strings"
 )
 
 type Api struct{}
@@ -172,11 +171,11 @@ func (a *Api) GetKaList(c *gin.Context) {
 		case 1: //id
 			局_DB.Where("Id = ?", 请求.Keywords)
 		case 2: //卡号
-			if strings.Index(请求.Keywords, ",") == -1 {
+			局_文本数组 := utils.Z正则_取全部匹配子文本(请求.Keywords, "([A-Za-z0-9]+)")
+			if len(局_文本数组) == 1 {
 				局_DB.Where("Name  LIKE ?", "%"+请求.Keywords+"%")
 			} else {
-				局_数组 := utils.W文本_分割文本(请求.Keywords, ",")
-				局_DB.Where("Name IN ? ", 局_数组)
+				局_DB.Where("Name IN ? ", 局_文本数组)
 			}
 		case 3: //管理员备注
 			局_DB.Where("LOCATE(?, AdminNote)>0 ", 请求.Keywords)
