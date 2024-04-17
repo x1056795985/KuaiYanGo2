@@ -503,12 +503,9 @@ func (a *Api) Set批量维护_增减时间点数(c *gin.Context) {
 
 	response.OkWithMessage("修改成功", c)
 
-	if Ser_AppInfo.App是否为计点(请求.AppId) {
-		for _, 局_id := range 请求.Id {
-			Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+Ser_Admin.Id取User(c.GetInt("Uid"))+"批量增减点数", float64(请求.Status), 请求.AppId, 2)
-		}
+	for _, 局_id := range 请求.Id {
+		Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+Ser_Admin.Id取User(c.GetInt("Uid"))+"批量增减点数", float64(请求.Status), 请求.AppId, utils.S三元(Ser_AppInfo.App是否为计点(请求.AppId), 2, 3))
 	}
-
 	return
 }
 

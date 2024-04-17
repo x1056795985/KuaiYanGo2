@@ -322,7 +322,7 @@ func UserApi_用户减少余额(c *gin.Context) {
 	}
 
 	go Ser_Log.Log_写余额日志(局_User.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("Log"), 新余额), utils.Float64取负值(局_增减值))
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Money": 局_User.Rmb})
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Money": 新余额})
 
 	//用户减少成功,开始判断代理增加  不需要让用户知道,代理是否有分成,所以上面直接返回就行
 	局_代理用户Id := 请求json.GetInt("AgentId")
@@ -336,6 +336,7 @@ func UserApi_用户减少余额(c *gin.Context) {
 		return
 	}
 
+	//如果小于于0 就是管理员id给管理员分成,大于0就是用户id
 	if 局_代理用户Id < 0 {
 		局_代理用户Id = -局_代理用户Id
 		局_管理员信息, ok2 := Ser_Admin.Id取详情(局_代理用户Id)
@@ -359,7 +360,7 @@ func UserApi_用户减少余额(c *gin.Context) {
 			//如果想检测是否为1级代理,可以改成 局_代理信息.UPAgentId >= 0  1级代理的上级代理,必然是管理员负数
 			go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_User.User, c.ClientIP(), fmt.Sprintf("余额减少api,形参分成代理Id(%v)非代理id,可能非法用户尝试篡改应用数据", 局_代理用户Id))
 		} else {
-			代理新余额, 代理err := Ser_User.Id余额增减(局_代理信息.UPAgentId, 局_代理分成金额Id, true)
+			代理新余额, 代理err := Ser_User.Id余额增减(局_代理信息.Id, 局_代理分成金额Id, true)
 			if 代理err == nil {
 				go Ser_Log.Log_写余额日志(局_代理信息.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("AgentMoneyLog"), 代理新余额), 局_代理分成金额Id)
 			} else {
