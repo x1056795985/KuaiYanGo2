@@ -17,7 +17,6 @@ import (
 	"server/global"
 	"server/structs/Http/response"
 	utils2 "server/utils"
-	"syscall"
 	"time"
 )
 
@@ -214,11 +213,13 @@ func (a *Api) Q快验个人信息更新(c *gin.Context) {
 		if 文件信息 != nil {
 			// linux环境下代码如下
 			//*syscall.Stat_t 兼容windos 实际是linux的数据 防止ide报错 windos断言必定返回假
-			linuxFileAttr, ok := 文件信息.Sys().(*syscall.Stat_t)
-			if ok {
+			// 20240417 因为升级到go 1.22 兼容代码忘记以前怎么改的了,放弃,只读取linux下的文件修改日期
+			//linuxFileAttr, ok := 文件信息.Sys().(*syscall.Stat_t)
+
+			if false {
 				//fmt.Println("文件创建时间", SecondToTime(linuxFileAttr.Ctim.Sec))
 				//fmt.Println("最后访问时间", SecondToTime(linuxFileAttr.Atim.Sec))
-				文件修改日期 = SecondToTime(linuxFileAttr.Atim.Sec).String()
+				//文件修改日期 = SecondToTime(linuxFileAttr.Atim.Sec).String()
 				//fmt.Println("最后修改时间", SecondToTime(linuxFileAttr.Mtim.Sec))
 			} else {
 				文件修改日期 = 文件信息.ModTime().String()
@@ -480,9 +481,9 @@ func (a *Api) Y余额充值(c *gin.Context) {
 }
 
 type 结构请求_余额充值 struct {
-	Type  string  `json:"Type"` //选择支付通道
+	Type      string  `json:"Type"` //选择支付通道
 	C充值金额 float64 `json:"RMB"`
-	D订单ID string  `json:"OrderId"`
+	D订单ID   string  `json:"OrderId"`
 }
 
 func (a *Api) Q取支付通道状态(c *gin.Context) {
