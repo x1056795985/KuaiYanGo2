@@ -216,7 +216,7 @@ func UserApi_用户登录(c *gin.Context) {
 				response.X响应状态(c, response.Status_Vip已到期)
 				return
 			}
-		} else { //计时模式
+		} else {                                         //计时模式
 			if 局_AppUser.VipTime <= time.Now().Unix() { // 相等也限制登录, 防止刚注册 时间和过期正好相当
 				go Ser_Log.Log_写登录日志(局_卡号或用户名, c.ClientIP(), "Vip已过期", 局_在线信息.LoginAppid)
 				response.X响应状态(c, response.Status_Vip已到期)
@@ -448,6 +448,51 @@ func UserApi_用户减少积分(c *gin.Context) {
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"VipNumber": 局_AppUser.VipNumber})
 	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("%s|剩余%v", 请求json.GetStringBytes("Log"), 局_AppUser.VipNumber), 局_增减值, AppInfo.AppId, 1)
+
+	//用户减少成功,开始判断代理增加  不需要让用户知道,代理是否有分成,所以上面直接返回就行
+	局_代理用户Id := 请求json.GetInt("AgentId")
+	局_代理分成金额Id := 请求json.GetFloat64("AgentMoney")
+	if 局_代理用户Id == 0 || 局_代理分成金额Id <= 0 {
+		return
+	}
+
+	if 局_代理分成金额Id > 请求json.GetFloat64("Money") { //判断代理分成金额是否比用户减少余额还高
+		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_在线信息.User, c.ClientIP(), fmt.Sprintf("代理%v分成值(%v)大于用户减少余额(%v),可能非法用户尝试篡改应用数据", 局_代理用户Id, 局_代理分成金额Id, 请求json.GetFloat64("Money")))
+		return
+	}
+	//如果小于于0 就是管理员id给管理员分成,大于0就是用户id
+	if 局_代理用户Id < 0 {
+		局_代理用户Id = -局_代理用户Id
+		局_管理员信息, ok2 := Ser_Admin.Id取详情(局_代理用户Id)
+		if ok2 == false {
+			//管理不存在就不用风控记录了,没什么用
+			return
+		}
+		管理员新余额, 管理员err := Ser_Admin.Id余额增减(局_管理员信息.Id, 局_代理分成金额Id, true)
+		if 管理员err == nil {
+			go Ser_Log.Log_写余额日志(局_管理员信息.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("AgentMoneyLog"), 管理员新余额), 局_代理分成金额Id)
+		} else {
+			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", AppInfo.AppName, 局_在线信息.AppVer, fmt.Sprintf("给管理员分成增加余额时失败失败:%v,%v", 管理员err.Error(), c.GetString("局_json明文")), c.ClientIP())
+		}
+	} else {
+		局_代理信息, ok2 := Ser_User.Id取详情(局_代理用户Id)
+		if ok2 == false {
+			//用户不存在就不用风控记录了,没什么用
+			return
+		}
+		if 局_代理信息.UPAgentId == 0 { //检测代理是否为普通用户,没有上级代理必然是普通用户,如果是普通用户触发风控
+			//如果想检测是否为1级代理,可以改成 局_代理信息.UPAgentId >= 0  1级代理的上级代理,必然是管理员负数
+			go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_在线信息.User, c.ClientIP(), fmt.Sprintf("积分减少api,形参分成代理Id(%v)非代理id,可能非法用户尝试篡改应用数据", 局_代理用户Id))
+		} else {
+			代理新余额, 代理err := Ser_User.Id余额增减(局_代理信息.Id, 局_代理分成金额Id, true)
+			if 代理err == nil {
+				go Ser_Log.Log_写余额日志(局_代理信息.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("AgentMoneyLog"), 代理新余额), 局_代理分成金额Id)
+			} else {
+				go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", AppInfo.AppName, 局_在线信息.AppVer, fmt.Sprintf("给代理分成增加余额时失败失败:%v,%v", 代理err.Error(), c.GetString("局_json明文")), c.ClientIP())
+			}
+		}
+	}
+
 	return
 }
 
@@ -562,7 +607,7 @@ func UserApi_取公共变量(c *gin.Context) {
 	局_变量名 := string(请求json.GetStringBytes("Name"))
 
 	局_云变量数据, err := Ser_PublicData.P取值2(1, 局_变量名) //1>所以有软件公共读
-	if err != nil || 局_云变量数据.Type > 3 {           //只允许变量  不允许读取云函数
+	if err != nil || 局_云变量数据.Type > 3 {                 //只允许变量  不允许读取云函数
 		response.X响应状态消息(c, response.Status_操作失败, "变量不存在,请到后台应用编辑,添加专属变量")
 		return
 	}
@@ -719,7 +764,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 			response.X响应状态(c, response.Status_未登录)
 			return
 		} else {
-			局_在线信息.User = 局_账号                                //如果出错,写日志时会用到
+			局_在线信息.User = 局_账号                        //如果出错,写日志时会用到
 			if AppInfo.AppType == 3 || AppInfo.AppType == 4 { //是卡号
 				局_Uid = Ser_Ka.Ka卡号取id(AppInfo.AppId, 局_账号)
 				if 局_Uid == 0 {
@@ -812,7 +857,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 			response.X响应状态(c, response.Status_未登录)
 			return
 		} else {
-			局_在线信息.User = 局_账号                                //如果出错,写日志时会用到
+			局_在线信息.User = 局_账号                        //如果出错,写日志时会用到
 			if AppInfo.AppType == 3 || AppInfo.AppType == 4 { //是卡号
 				局_Uid = Ser_Ka.Ka卡号取id(AppInfo.AppId, 局_账号)
 				if 局_Uid == 0 {
@@ -1326,9 +1371,9 @@ func UserApi_置用户类型(c *gin.Context) {
 				//已经过期了直接赋值新类型 现行时间+新时间就可以了
 				局_App用户.VipTime = 局_现行时间戳
 			} else {
-				局_App用户.VipTime = 局_App用户.VipTime - 局_现行时间戳                   //先计算还剩多长时间
+				局_App用户.VipTime = 局_App用户.VipTime - 局_现行时间戳                             //先计算还剩多长时间
 				局_增减时间点数 := 局_App用户.VipTime * 局_旧用户类型.Weight / 局_新用户类型.Weight //剩余时间 权重转换转换结果值
-				局_App用户.VipTime = 局_现行时间戳 + 局_增减时间点数                          // 现在时间 + 旧权重转换后的新权重时间+卡增减时间
+				局_App用户.VipTime = 局_现行时间戳 + 局_增减时间点数                                // 现在时间 + 旧权重转换后的新权重时间+卡增减时间
 			}
 		}
 		局_App用户.UserClassId = 局_新用户类型.Id //最后更换类型,防止前面用到卡类id,计算权重转换类型错误
