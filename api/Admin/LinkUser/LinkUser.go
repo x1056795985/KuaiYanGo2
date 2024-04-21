@@ -5,6 +5,7 @@ import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	App服务 "server/Service/Ser_AppInfo"
+	"server/Service/Ser_AppUser"
 	"server/Service/Ser_LinkUser"
 	"server/global"
 	"server/structs/Http/response"
@@ -84,6 +85,10 @@ func (a *LinkUserApi) GetLinkUserList(c *gin.Context) {
 
 	for 索引 := range DB_LinksToken {
 		DB_LinksToken[索引].AppName = AppName[DB_LinksToken[索引].LoginAppid]
+		if DB_LinksToken[索引].Uid > 0 {
+			//过于繁琐,以后有时间考虑优化一下,暂时这样
+			DB_LinksToken[索引].Note = Ser_AppUser.Uid取备注(DB_LinksToken[索引].LoginAppid, DB_LinksToken[索引].Uid)
+		}
 	}
 
 	response.OkWithDetailed(结构响应_GetLinkUserList{
@@ -111,6 +116,7 @@ type 结构响应_GetLinkUserList struct {
 type DB_LinksToken2 struct {
 	DB.DB_LinksToken
 	AppName string `json:"AppName"` //登录平台App名字
+	Note    string `json:"Note"`    //软件用户备注
 }
 
 // 创建webApi使用的Token

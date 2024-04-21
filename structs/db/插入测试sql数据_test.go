@@ -5,7 +5,6 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"math/rand"
-	"server/utils"
 	"strconv"
 	"testing"
 	"time"
@@ -18,7 +17,7 @@ func Test_启动子程序(t *testing.T) {
 	//插入测试用户()
 	//插入用户登录日志()
 	//插入余额充值日志()
-	插入余额变化日志()
+	//插入余额变化日志()
 }
 func 连接新数据库() *gorm.DB {
 
@@ -45,7 +44,7 @@ func 连接旧数据库() *gorm.DB {
 		DefaultStringSize:         191,                                                                            // string 类型字段的默认长度
 		SkipInitializeWithVersion: false,                                                                          // 根据版本自动配置
 	}
-	
+
 	旧数据库, err := gorm.Open(mysql.New(mysqlConfig))
 	if err != nil {
 		//链接失败了
@@ -184,7 +183,7 @@ func 插入用户登录日志() {
 	}
 }
 
-func 插入余额变化日志() {
+/*func 插入余额变化日志() {
 	旧数据库 := 连接旧数据库()
 	var 局_BsphpLog []BsphpLog
 	var Ty_user DB_LogMoney
@@ -197,7 +196,7 @@ func 插入余额变化日志() {
 		Ty_user.User = 值.User
 		Ty_user.Time = 值.Date
 		Ty_user.Ip = 值.Ip
-		Ty_user.Count, _ = strconv.ParseFloat(utils.W文本_取出中间文本(值.Test+"###", "|", "###"), 64)
+		Ty_user.Count, _ = strconv.ParseFloat(W文本_取出中间文本(值.Test+"###", "|", "###"), 64)
 		Ty_user.Count = -Ty_user.Count
 		Ty_user.Note = 值.Test
 		err = 新数据库.Table("db_log_money").Create(&Ty_user).Error
@@ -209,7 +208,7 @@ func 插入余额变化日志() {
 		}
 	}
 	fmt.Printf("插用户成功" + strconv.FormatInt(总数, 10))
-}
+}*/
 
 type BsphpRmbPayLog struct {
 	Id           int

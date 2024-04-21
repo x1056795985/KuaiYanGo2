@@ -90,6 +90,13 @@ func Uid取User(AppId int, Uid int) string {
 	}
 	return 用户名
 }
+
+func Uid取备注(AppId int, Uid int) string {
+	var 备注 string
+	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Note").Where("Uid=?", Uid).First(&备注).Error
+
+	return 备注
+}
 func Uid是否存在(AppId int, Uid int) bool {
 	var Count int64
 	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("1").Where("UId=?", Uid).First(&Count)

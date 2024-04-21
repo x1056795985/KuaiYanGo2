@@ -2,8 +2,8 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"server/global"
+	"server/new/app/controller/Common"
 	"server/new/app/logic/common/cron/functions"
 	"server/new/app/models/db"
 	"server/new/app/models/request"
@@ -19,30 +19,12 @@ import (
 // @MenuName 二开扩展
 // @ModuleName 定时任务
 type Cron struct {
+	Common.Common
 }
 
 func NewCronController() *Cron {
 	var C = Cron{}
 	return &C
-}
-
-// 统一反序列化参数
-func (C *Cron) ToJSON(c *gin.Context, obj any) bool {
-	if err := c.ShouldBindJSON(obj); err != nil {
-		// 获取validator.ValidationErrors类型的errors
-		errs, ok := err.(validator.ValidationErrors)
-		errStr := ""
-		if !ok {
-			errStr = "参数错误:" + err.Error() //	// 非validator.ValidationErrors类型错误直接返回
-		} else {
-			for _, v := range errs.Translate(global.Trans) { // validator.ValidationErrors类型错误则进行翻译
-				errStr += v + ","
-			}
-		}
-		response.FailWithMessage(errStr, c)
-		return false
-	}
-	return true
 }
 
 // Create
