@@ -13,6 +13,7 @@ import (
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
+	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_Pay"
 	"server/Service/Ser_RMBPayOrder"
@@ -314,7 +315,10 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 			Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+err12.Error())
 			return
 		}
-		Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+"充值卡类ID:"+strconv.Itoa(卡类ID))
+
+		局_卡类信息, _ := Ser_KaClass.KaClass取详细信息(卡类ID)
+
+		Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+"充值卡类ID:"+strconv.Itoa(卡类ID)+",应用:"+Ser_AppInfo.AppId取应用名称(局_卡类信息.AppId)+局_卡类信息.Name+",名称:"+局_卡类信息.Name)
 		if AgentUid > 0 && AgentMoney > 0 {
 			//代理分成
 			//开始分利润 20240202 mark处理重构以后改事务

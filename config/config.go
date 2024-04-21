@@ -35,7 +35,15 @@ type X系统设置 struct {
 
 type Z在线支付 struct {
 	J禁止退款 bool `mapstructure:"禁止退款" json:"禁止退款" yaml:"禁止退款"`
+	Z在线支付_支付宝pc
+	Z在线支付_支付宝当面付
+	Z在线支付_支付宝H5
+	Z在线支付_微信支付
+	Z在线支付_小叮当
+	Z在线支付_虎皮椒
+}
 
+type Z在线支付_支付宝pc struct {
 	Z支付宝开关      bool   `mapstructure:"支付宝开关" json:"支付宝开关" yaml:"支付宝开关"`
 	Z支付宝显示名称    string `mapstructure:"支付宝显示名称" json:"支付宝显示名称"`
 	Z支付宝商户ID    string `mapstructure:"支付宝商户ID" json:"支付宝商户ID" yaml:"支付宝商户ID"`
@@ -44,7 +52,8 @@ type Z在线支付 struct {
 	Z支付宝公钥      string `mapstructure:"支付宝公钥" json:"支付宝公钥" yaml:"支付宝公钥"`
 	Z支付宝同步回调url string `mapstructure:"支付宝同步回调url" json:"支付宝同步回调url" yaml:"支付宝同步回调url"`
 	Z支付宝单次最大金额  int    `mapstructure:"支付宝单次最大金额" json:"支付宝单次最大金额" yaml:"支付宝单次最大金额"`
-
+}
+type Z在线支付_支付宝当面付 struct {
 	Z支付宝当面付开关      bool   `mapstructure:"支付宝当面付开关" json:"支付宝当面付开关" yaml:"支付宝当面付开关"`
 	Z支付宝当面付显示名称    string `mapstructure:"支付宝当面付显示名称" json:"支付宝当面付显示名称"`
 	Z支付宝当面付商户ID    string `mapstructure:"支付宝当面付商户ID" json:"支付宝当面付商户ID" yaml:"支付宝当面付商户ID"`
@@ -53,7 +62,8 @@ type Z在线支付 struct {
 	Z支付宝当面付公钥      string `mapstructure:"支付宝当面付公钥" json:"支付宝当面付公钥" yaml:"支付宝当面付公钥"`
 	Z支付宝当面付同步回调url string `mapstructure:"支付宝当面付同步回调url" json:"支付宝当面付同步回调url" yaml:"支付宝当面付同步回调url"`
 	Z支付宝当面付单次最大金额  int    `mapstructure:"支付宝当面付单次最大金额" json:"支付宝当面付单次最大金额" yaml:"支付宝当面付单次最大金额"`
-
+}
+type Z在线支付_支付宝H5 struct {
 	Z支付宝H5开关      bool   `mapstructure:"支付宝H5开关" json:"支付宝H5开关"`
 	Z支付宝H5显示名称    string `mapstructure:"支付宝H5显示名称" json:"支付宝H5显示名称"`
 	Z支付宝H5商户ID    string `mapstructure:"支付宝H5商户ID" json:"支付宝H5商户ID" `
@@ -62,7 +72,8 @@ type Z在线支付 struct {
 	Z支付宝H5公钥      string `mapstructure:"支付宝H5公钥" json:"支付宝H5公钥" `
 	Z支付宝H5同步回调url string `mapstructure:"支付宝H5同步回调url" json:"支付宝H5同步回调url"`
 	Z支付宝H5单次最大金额  int    `mapstructure:"支付宝H5单次最大金额" json:"支付宝H5单次最大金额" `
-
+}
+type Z在线支付_微信支付 struct {
 	W微信支付开关      bool   `mapstructure:"微信支付开关" json:"微信支付开关" yaml:"微信支付开关"`
 	W微信支付显示名称    string `mapstructure:"微信支付显示名称" json:"微信支付显示名称"`
 	W微信支付商户ID    string `mapstructure:"微信支付商户ID" json:"微信支付商户ID" yaml:"微信支付商户ID"`
@@ -72,14 +83,14 @@ type Z在线支付 struct {
 	W微信支付商户证书序列号 string `mapstructure:"微信支付商户证书序列号" json:"微信支付商户证书序列号" yaml:"微信支付商户证书序列号"`
 	W微信支付异步回调Url string `mapstructure:"微信支付异步回调Url" json:"微信支付异步回调Url" yaml:"微信支付异步回调Url"`
 	W微信支付单次最大金额  int    `mapstructure:"微信支付单次最大金额" json:"微信支付单次最大金额" yaml:"微信支付单次最大金额"`
-
+}
+type Z在线支付_小叮当 struct {
 	X小叮当支付开关   bool   `mapstructure:"小叮当支付开关" json:"小叮当支付开关"`
 	X小叮当支付显示名称 string `mapstructure:"小叮当支付显示名称" json:"小叮当支付显示名称"`
 	X小叮当app_id string `mapstructure:"小叮当app_id" json:"小叮当app_id"`
 	X小叮当接口密钥   string `mapstructure:"小叮当接口密钥" json:"小叮当接口密钥" `
 	X小叮当支付类型   int    `mapstructure:"小叮当支付类型" json:"小叮当支付类型" `
 	X小叮当单次最大金额 int    `mapstructure:"小叮当单次最大金额" json:"小叮当单次最大金额" `
-	Z在线支付_虎皮椒
 }
 
 type Z在线支付_虎皮椒 struct {
