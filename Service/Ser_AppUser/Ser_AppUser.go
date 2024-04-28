@@ -188,8 +188,15 @@ func Q取绑定信息(AppId, 用户Uid int) string {
 	return 绑定信息
 }
 func Ser用户类型Vip时间(AppId, 用户Uid, 用户类型Id int, VipTime int64) error {
-
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid = ? ", 用户Uid).Updates(map[string]interface{}{"UserClassId": 用户类型Id, "VipTime": VipTime}).Error
+	db := *global.GVA_DB
+	db = *db.Debug()
+	err := db.Model(DB.DB_AppUser{}).
+		Table("db_AppUser_"+strconv.Itoa(AppId)).
+		Where("Uid = ? ", 用户Uid).
+		Updates(map[string]interface{}{
+			"UserClassId": 用户类型Id,
+			"VipTime":     VipTime,
+		}).Error
 	if err != nil {
 		return err
 	}

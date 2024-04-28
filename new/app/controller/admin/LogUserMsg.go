@@ -22,5 +22,4 @@ func (s *LogUserMsg) S删除重复消息(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 	}
 	response.Ok(c)
-
 }

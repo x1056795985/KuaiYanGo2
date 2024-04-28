@@ -10,6 +10,7 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_RMBPayOrder"
 	"server/api/WebApi"
+	"server/new/app/logic/common/rmbPay"
 	"server/new/app/logic/common/setting"
 	"sort"
 	"strings"
@@ -20,6 +21,13 @@ type PayNotify struct {
 
 func NewPayNotifyController() *PayNotify {
 	return &PayNotify{}
+}
+
+// 置代理在线支付信息
+func (s *PayNotify) PayNotify(c *gin.Context) {
+	响应信息, 响应代码 := rmbPay.L_rmbPay.D订单回调(c)
+	//因为每个平台响应信息都不一样, 所以这个接口,由底层返回响应信息文本和状态码
+	c.String(响应代码, 响应信息)
 }
 
 // 虎皮椒异步回调  Notify - 支付成功后会回调这里;我们可以用来修改订单状态等等
