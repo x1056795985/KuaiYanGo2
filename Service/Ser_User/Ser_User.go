@@ -242,7 +242,8 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 	tx.Commit() //操作完成提交事务
 
 	Ser_Log.Log_写余额日志(源用户详情.User, ip, "转账给:"+目标用户详情.User+"|新余额≈"+utils.Float64到文本(源新余额, 2), 增减值)
-	Ser_Log.Log_写余额日志(目标用户详情.User, ip, "收到来自"+源用户详情.User+"的转账.|新余额≈"+utils.Float64到文本(目标新余额, 2), 增减值)
+	// 源用户详情.User   20240422 因为可能泄漏上级代理用户名,所以不在直接显示
+	Ser_Log.Log_写余额日志(目标用户详情.User, ip, "收到来自上级的转账.|新余额≈"+utils.Float64到文本(目标新余额, 2), 增减值)
 
 	return 源新余额, 目标新余额, nil
 
