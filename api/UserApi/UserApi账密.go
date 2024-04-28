@@ -2,9 +2,9 @@ package UserApi
 
 import (
 	"EFunc/utils"
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
 	"server/Service/Captcha"
@@ -20,7 +20,10 @@ import (
 	"server/api/UserApi/response"
 	"server/global"
 	"server/new/app/logic/common/blacklist"
+	"server/new/app/logic/common/rmbPay"
 	"server/new/app/logic/common/setting"
+	"server/new/app/models/common"
+	"server/new/app/models/constant"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -489,9 +492,7 @@ func UserApi_订单_余额充值(c *gin.Context) {
 		return
 	}
 
-	局_额外数据 := ""
 	var err error
-	var 响应数据 gin.H
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
 	if 局_支付方式 == "" {
 		response.X响应状态消息(c, response.Status_操作失败, "支付方式不能为空")
@@ -500,27 +501,22 @@ func UserApi_订单_余额充值(c *gin.Context) {
 	//修改支付显示别名为原名称
 	局_支付方式 = Ser_Pay.Pay_显示名称转原名(局_支付方式)
 	fmt.Printf(局_支付方式)
-	switch strings.TrimSpace(局_支付方式) {
-	case "支付宝PC":
-		err, 响应数据 = Ser_Pay.Pay_支付宝Pc_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
-	case "支付宝H5":
-		err, 响应数据 = Ser_Pay.Pay_支付宝H5_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
-	case "支付宝当面付":
-		err, 响应数据 = Ser_Pay.Pay_支付宝当面付_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
-	case "微信支付":
-		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
-	case "小叮当":
-		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
-	case "虎皮椒":
-		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 0, 局_额外数据)
-	default:
-		err = errors.New("充值方式[" + 局_支付方式 + "]不存在")
-	}
 
+	//==============下边为测试数据
+	var 参数 common.PayParams
+	参数.Uid = 局_Uid
+	参数.UidType = 局_Uid类型
+	参数.Type = 局_支付方式
+	参数.Rmb = 请求json.GetFloat64("Money")
+	参数.ProcessingType = constant.D订单类型_余额充值
+	参数.E额外信息 = gjson.New("{}")
+	err = 参数.E额外信息.Set("AppId", AppInfo.AppId)
+
+	响应数据2, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "充值方式["+string(请求json.GetStringBytes("PayType"))+"]"+err.Error())
 	} else {
-		response.X响应状态带数据(c, c.GetInt("局_成功Status"), 响应数据)
+		response.X响应状态带数据(c, c.GetInt("局_成功Status"), 响应数据2)
 	}
 	return
 }
