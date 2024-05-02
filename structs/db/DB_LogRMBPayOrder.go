@@ -16,6 +16,7 @@ type DB_LogRMBPayOrder struct {
 	Time           int64   `json:"Time" gorm:"column:Time;index;comment:时间"`
 	Ip             string  `json:"Ip" gorm:"column:Ip;size:200;comment:ip地址"`
 	Note           string  `json:"Note" gorm:"column:Note;size:5000;comment:信息"`
+	ReceivedUid    int     `json:"ReceivedUid" gorm:"column:ReceivedUid;default:0;index;comment:代收款代理Uid"`
 }
 
 func (DB_LogRMBPayOrder) TableName() string {

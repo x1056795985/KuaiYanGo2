@@ -14,10 +14,10 @@ func (r *AllRouter) InitWebApiRouter(router *gin.RouterGroup) {
 	//回调支付
 	局_NotifyController := controller.NewPayNotifyController()
 	{
-		webApiRouter.POST("/PayHuPiJiaoNotify", 局_NotifyController.PayHuPiJiaoNotify)
-
 		//http://anyueyinluo.w1.luyouxia.net/payNotify/240426223543000001
-		webApiRouter.POST("/payNotify/:order", 局_NotifyController.PayNotify) //通用回调
-		webApiRouter.POST("/PayXiaoDingDangNotify", 局_NotifyController.PayNotify)
+		webApiRouter.POST("/payNotify/:order", 局_NotifyController.PayNotify)   //通用支付回调
+		webApiRouter.POST("/payNotify2/:order", 局_NotifyController.PayNotify2) //通用退款回调
+
+		webApiRouter.POST("/PayXiaoDingDangNotify", 局_NotifyController.PayNotify) //兼容旧版 因为服务器已配置
 	}
 }

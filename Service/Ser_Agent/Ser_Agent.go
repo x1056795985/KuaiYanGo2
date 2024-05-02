@@ -1,7 +1,7 @@
 package Ser_Agent
 
 import (
-	"EFunc/utils"
+	. "EFunc/utils"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
@@ -306,8 +306,8 @@ func D代理分成计算(代理id int, 局_总计金额 float64) ([]代理分成
 		if 局_临时.S实际自身百分比 == 0 {
 			局_临时.S实际分成金额 = 0
 		} else {
-			局_百分比小数 := utils.Float64除int64(int64(局_临时.S实际自身百分比), 100, 2) //转换成小数百分比
-			局_临时.S实际分成金额 = utils.Float64乘Float64(局_总计金额, 局_百分比小数)
+			局_百分比小数 := Float64除int64(D到数值(局_临时.S实际自身百分比), 100, 2) //转换成小数百分比
+			局_临时.S实际分成金额 = Float64乘Float64(局_总计金额, 局_百分比小数)
 		}
 
 		局_返回 = append(局_返回, 局_临时) //加入到返回数组

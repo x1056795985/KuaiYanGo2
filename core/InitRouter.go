@@ -711,18 +711,8 @@ func RouterUserApi(Router *gin.RouterGroup) *gin.RouterGroup {
 // WebApi路由入口
 func RouterWebApi(Router *gin.RouterGroup) *gin.RouterGroup {
 
-	baseRouter := Router.Group("/WebApi") //WebApi不做任何加密中间件处理
-	{
-		baseRouter.POST("/PayAliNotify", WebApi.PayAliNotify)
-		baseRouter.POST("/PayAliNotifyDangMianFu", WebApi.PayAliNotify_当面付)
-		baseRouter.POST("/PayAliNotifyH5", WebApi.PayAliNotify_H5)
-		baseRouter.POST("/PayWxNotify", WebApi.PayWxNotify)
-		//baseRouter.POST("/PayXiaoDingDangNotify", WebApi.Pay小叮当Notify)
-		baseRouter.POST("/PayWxRefundsNotify", WebApi.PayWx退款Notify)
-	}
-
 	//任务池===========================================
-	baseRouter = Router.Group("/WebApi/")
+	baseRouter := Router.Group("/WebApi/") //WebApi不做任何加密中间件处理
 	baseRouter.Use(middleware.IsWebApiHost())
 	baseRouter.Use(middleware.IsTokenWebApi()) ///鉴权中间件 检查 token  单独优先处理
 	{

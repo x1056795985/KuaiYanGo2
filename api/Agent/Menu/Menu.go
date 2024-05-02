@@ -1,19 +1,20 @@
 package Menu
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"server/Service/Ser_Agent"
 	"server/Service/Ser_LinkUser"
-	"server/Service/Ser_Pay"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/rmbPay"
+	"server/new/app/models/common"
+	"server/new/app/models/constant"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"server/utils"
 	"strconv"
-	"strings"
 )
 
 type Api struct{}
@@ -95,7 +96,8 @@ type 结构请求_余额充值 struct {
 }
 
 func (a *Api) Q取支付通道状态(c *gin.Context) {
-	局map := Ser_Pay.Pay_取支付通道状态()
+	局map := rmbPay.L_rmbPay.Pay_取支付通道状态()
+
 	response.OkWithData(局map, c)
 	return
 }
@@ -126,28 +128,17 @@ func (a *Api) Y余额充值(c *gin.Context) {
 	局_Uid := c.GetInt("Uid")
 	局_Uid类型 := 1 //代理一定都是账号
 	局_支付方式 := 请求.Type
-	局_额外数据 := ""
-	//修改支付显示别名为原名称
-	局_支付方式 = Ser_Pay.Pay_显示名称转原名(局_支付方式)
-	//fmt.Printf(局_支付方式)
-	var 响应数据 gin.H
+	//==============下边为支付数据
+	var 参数 common.PayParams
+	参数.Uid = 局_Uid
+	参数.UidType = 局_Uid类型
+	参数.Type = 局_支付方式
+	参数.Rmb = 请求.C充值金额
+	参数.ProcessingType = constant.D订单类型_余额充值
+	参数.E额外信息 = gjson.New("{}")
+	err = 参数.E额外信息.Set("AppId", constant.APPID_代理平台)
 
-	switch strings.TrimSpace(局_支付方式) {
-	case "支付宝PC":
-		err, 响应数据 = Ser_Pay.Pay_支付宝Pc_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
-	case "支付宝H5":
-		err, 响应数据 = Ser_Pay.Pay_支付宝H5_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
-	case "支付宝当面付":
-		err, 响应数据 = Ser_Pay.Pay_支付宝当面付_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
-	case "微信支付":
-		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
-	case "小叮当":
-		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
-	case "虎皮椒":
-		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(局_Uid, 局_Uid类型, 请求.C充值金额, c.ClientIP(), 0, 局_额外数据)
-	default:
-		err = errors.New("充值方式 [" + 请求.Type + "] 不存在")
-	}
+	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
 
 	if err != nil {
 		response.FailWithMessage("充值方式 ["+请求.Type+"] "+err.Error(), c)

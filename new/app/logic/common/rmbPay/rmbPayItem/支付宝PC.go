@@ -121,9 +121,9 @@ func (j 支付宝PC) D订单退款(c *gin.Context, 参数 *m.PayParams) (err err
 	}
 	return errors.New(rsp.Content.SubMsg)
 }
-func (j 支付宝PC) D订单回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
+func (j 支付宝PC) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	defer func() {
-		if err != nil {
+		if err == nil {
 			响应信息 = "success"
 			响应代码 = http.StatusOK
 		} else {
@@ -168,5 +168,8 @@ func (j 支付宝PC) D订单回调(c *gin.Context, 参数 *m.PayParams) (响应�
 	} else {
 		err = errors.New(string(noti.TradeStatus))
 	}
+	return
+}
+func (j 支付宝PC) D订单退款回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	return
 }

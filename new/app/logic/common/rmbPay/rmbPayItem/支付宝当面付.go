@@ -93,17 +93,17 @@ func (j 支付宝当面付) D订单创建(c *gin.Context, 参数 *m.PayParams) (
 	return
 }
 func (j 支付宝当面付) D订单退款(c *gin.Context, 参数 *m.PayParams) (err error) {
-
-	var privateKey = 参数.Z支付配置s.Z支付宝商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
-	client, err := alipay.New(参数.Z支付配置s.Z支付宝商户ID, privateKey, true)
+	支付配置 := 参数.Z支付配置s.Z在线支付_支付宝当面付
+	var privateKey = 支付配置.Z支付宝当面付商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
+	client, err := alipay.New(支付配置.Z支付宝当面付商户ID, privateKey, true)
 	if err != nil {
-		return errors.Join(err, errors.New("支付宝pc退款商户私钥载入失败"))
+		return errors.Join(err, errors.New("支付宝当面付退款商户私钥载入失败"))
 	}
 
-	err = client.LoadAliPayPublicKey(参数.Z支付配置s.Z支付宝公钥) // 加载支付宝公钥证书
+	err = client.LoadAliPayPublicKey(支付配置.Z支付宝当面付公钥) // 加载支付宝公钥证书
 	if err != nil {
 		if err != nil {
-			return errors.Join(err, errors.New("支付宝pc退款支付宝公钥载入失败"))
+			return errors.Join(err, errors.New("支付宝当面付退款支付宝公钥载入失败"))
 		}
 	}
 	var p = alipay.TradeRefund{}
@@ -127,9 +127,9 @@ func (j 支付宝当面付) D订单退款(c *gin.Context, 参数 *m.PayParams) (
 	}
 	return errors.New(rsp.Content.SubMsg)
 }
-func (j 支付宝当面付) D订单回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
+func (j 支付宝当面付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	defer func() {
-		if err != nil {
+		if err == nil {
 			响应信息 = "success"
 			响应代码 = http.StatusOK
 		} else {
@@ -174,5 +174,8 @@ func (j 支付宝当面付) D订单回调(c *gin.Context, 参数 *m.PayParams) (
 	} else {
 		err = errors.New(string(noti.TradeStatus))
 	}
+	return
+}
+func (j 支付宝当面付) D订单退款回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	return
 }

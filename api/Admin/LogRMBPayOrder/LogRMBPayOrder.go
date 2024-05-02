@@ -1,16 +1,16 @@
 package LogRMBPayOrder
 
 import (
-	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Log"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
 	"server/global"
-	"server/new/app/logic/common/setting"
+	"server/new/app/logic/common/rmbPay"
+	"server/new/app/models/common"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -111,18 +111,26 @@ func (a *Api) GetLogList2(c *gin.Context) {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
 		return
 	}
+	var 局_响应 []结构响应_GetDB_LogRMBPayOrderList_item
+	局_响应 = make([]结构响应_GetDB_LogRMBPayOrderList_item, len(DB_LogRMBPayOrder))
 	for 索引 := range DB_LogRMBPayOrder {
-		DB_LogRMBPayOrder[索引].Extra = Ser_RMBPayOrder.C处理类型[DB_LogRMBPayOrder[索引].ProcessingType]
-		if DB_LogRMBPayOrder[索引].Extra == "" {
-			DB_LogRMBPayOrder[索引].Extra = "未知原因" + strconv.Itoa(DB_LogRMBPayOrder[索引].ProcessingType)
+		局_响应[索引].DB_LogRMBPayOrder = DB_LogRMBPayOrder[索引]
+		局_响应[索引].Processing = Ser_RMBPayOrder.C处理类型[DB_LogRMBPayOrder[索引].ProcessingType]
+		if 局_响应[索引].Processing == "" {
+			局_响应[索引].Processing = "未知原因" + strconv.Itoa(DB_LogRMBPayOrder[索引].ProcessingType)
 		}
-
+		//删首尾 {} 然后 子文本替换 , 为 \n,
+		局_响应[索引].Extra = strings.Replace(strings.Replace(局_响应[索引].Extra, "}", "", -1), "{", "", -1)
+		局_响应[索引].Extra = strings.Replace("其他信息:,"+局_响应[索引].Extra, ",", "<br />", -1)
 	}
-
-	response.OkWithDetailed(结构响应_GetDB_LogRMBPayOrderList{DB_LogRMBPayOrder, 总数}, "获取成功", c)
+	response.OkWithDetailed(结构响应_GetDB_LogRMBPayOrderList{局_响应, 总数}, "获取成功", c)
 	return
 }
 
+type 结构响应_GetDB_LogRMBPayOrderList_item struct {
+	DB.DB_LogRMBPayOrder
+	Processing string `json:"Processing"`
+}
 type 结构响应_GetDB_LogRMBPayOrderList struct {
 	List  interface{} `json:"List"`  // 列表
 	Count int64       `json:"Count"` // 总数
@@ -258,69 +266,15 @@ func (a *Api) Out退款(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
-
-	if setting.Q在线支付配置().J禁止退款 {
-		response.FailWithMessage("已禁止退款,请手动前往服务器数据库,修改配置信息文件 禁止退款:true", c)
-		return
-	}
-	局_订单信息, ok := Ser_RMBPayOrder.Order取订单详细(请求.PayOrder)
-	if !ok {
-		response.FailWithMessage("订单不存在", c)
-		return
-	}
-	if 局_订单信息.Status != 3 {
-		response.FailWithMessage("订单非充值成功状态", c)
-		return
-	}
-	局_用户名 := Ser_User.Id取User(局_订单信息.Uid)
-	if 局_用户名 == "" {
-		response.FailWithMessage("查询不到用户id:"+strconv.Itoa(局_订单信息.Uid)+",的用户", c)
-		return
-	}
-	if 请求.IsOutRMB {
-		/*		for i := 0; i < 100; i++ {
-				go Ser_User.Id余额增减(局_订单信息.Uid, 局_订单信息.Rmb, false)
-			}*/
-		局_新余额, err2 := Ser_User.Id余额增减(局_订单信息.Uid, 局_订单信息.Rmb, false)
-		if err2 != nil {
-			response.FailWithMessage(err2.Error(), c)
-			return
-		} else {
-			go Ser_Log.Log_写余额日志(局_用户名, c.ClientIP(), "管理员操作退款,余额充值订单:"+局_订单信息.PayOrder+",扣除用户已充值余额"+"|新余额≈"+utils.Float64到文本(局_新余额, 2), utils.Float64取负值(局_订单信息.Rmb))
-		}
-	}
-
-	// 定义一个映射，存储支付类型和对应的退款函数
-	refundFuncMap := map[string]func(订单信息 DB.DB_LogRMBPayOrder) error{
-		"支付宝PC":  Ser_RMBPayOrder.Order_退款_支付宝PC,
-		"支付宝H5":  Ser_RMBPayOrder.Order_退款_支付宝H5,
-		"支付宝当面付": Ser_RMBPayOrder.Order_退款_支付宝当面付,
-		"微信支付":   Ser_RMBPayOrder.Order_退款_微信支付,
-	}
-
+	var 参数 common.PayParams
+	参数.PayOrder = 请求.PayOrder
+	err = rmbPay.L_rmbPay.D订单退款(c, 参数, 请求.IsOutRMB, 请求.Note)
 	// 根据支付类型从映射中获取对应的退款函数
-	refundFunc, ok := refundFuncMap[局_订单信息.Type]
-	if !ok {
-		response.FailWithMessage("暂不支持该支付类型退款", c)
-		return
-	}
 
-	Ser_RMBPayOrder.Order更新订单状态(局_订单信息.PayOrder, Ser_RMBPayOrder.D订单状态_退款中)
-	// 调用对应的退款函数
-	err = refundFunc(局_订单信息)
 	if err != nil {
-		response.FailWithMessage("退款失败:"+err.Error(), c)
-		Ser_RMBPayOrder.Order更新订单状态(局_订单信息.PayOrder, Ser_RMBPayOrder.D订单状态_退款失败)
-		Ser_RMBPayOrder.Order更新订单备注(局_订单信息.PayOrder, 局_订单信息.Note+"退款失败:"+err.Error())
-		if 请求.IsOutRMB { //退款失败,再把余额加回去
-			新余额, _ := Ser_User.Id余额增减(局_订单信息.Uid, 局_订单信息.Rmb, true)
-			Ser_Log.Log_写余额日志(Ser_User.Id取User(局_订单信息.Uid), c.ClientIP(), "管理员操作退款失败恢复余额"+"|新余额≈"+utils.Float64到文本(新余额, 2), 局_订单信息.Rmb)
-		}
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
-
-	Ser_RMBPayOrder.Order更新订单备注(局_订单信息.PayOrder, 请求.Note)
-	Ser_RMBPayOrder.Order更新订单状态(局_订单信息.PayOrder, Ser_RMBPayOrder.D订单状态_退款成功)
 	response.OkWithMessage("操作成功", c)
 	return
 }

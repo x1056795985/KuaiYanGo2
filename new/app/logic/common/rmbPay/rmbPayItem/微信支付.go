@@ -152,7 +152,6 @@ func (j 微信支付) D订单退款(c *gin.Context, 参数 *m.PayParams) (err er
 	svc := refunddomestic.RefundsApiService{Client: client}
 	resp, result, err := svc.Create(c,
 		refunddomestic.CreateRequest{
-
 			OutTradeNo:   core.String(参数.PayOrder),
 			OutRefundNo:  core.String(参数.PayOrder),
 			Reason:       core.String("协商退款"),
@@ -171,6 +170,7 @@ func (j 微信支付) D订单退款(c *gin.Context, 参数 *m.PayParams) (err er
 		return errors.New(err.(*core.APIError).Message)
 	} else {
 		// 处理返回结果
+		参数.Status = constant.D订单状态_退款中 //微信需要等回调才能知道是否退款成功
 		log.Printf("status=%d resp=%s", result.Response.StatusCode, resp)
 
 		//{RefundId:50300705822023051734540677508, OutRefundNo:202305171343250001, TransactionId:4200001829202305172758614786, OutTradeNo:202305171343250001, Channel:ORIGINAL, UserReceivedAcco
@@ -180,9 +180,9 @@ func (j 微信支付) D订单退款(c *gin.Context, 参数 *m.PayParams) (err er
 		return nil
 	}
 }
-func (j 微信支付) D订单回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
+func (j 微信支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	defer func() {
-		if err != nil {
+		if err == nil {
 			响应信息 = "success"
 			响应代码 = http.StatusOK
 		} else {
@@ -247,3 +247,44 @@ type 微信回调响应 struct {
 const (
 	AckFail = `<xml><return_code><![CDATA[FAIL]]></return_code></xml>`
 )
+
+func (j 微信支付) D订单退款回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
+	defer func() {
+		if err == nil {
+			响应信息 = "success"
+			响应代码 = http.StatusOK
+		} else {
+			响应信息 = AckFail
+			响应代码 = http.StatusInternalServerError
+		}
+	}()
+	var 局_微信响应 微信回调响应
+	plaintext, err := WXutils.DecryptAES256GCM(
+		参数.Z支付配置s.W微信支付商户v3密钥,
+		局_微信响应.Resource.AssociatedData,
+		局_微信响应.Resource.Nonce, 局_微信响应.Resource.Ciphertext,
+	)
+
+	if err != nil {
+		err = errors.Join(err, errors.New("微信支付退款回调解密失败"))
+		return
+	}
+
+	//{"mchid":"1613740956","out_trade_no":"202305171129350001","transaction_id":"4200001827202305179902405083","out_refund_no":"202305171129350001","refund_id":"50302406042023051734540094143","refund_status":"SUCCESS","success_time":"2023-05-17T14:15:26+08:00","amount":{"total":1,"refund":1,"payer_total":1,"payer_refund":1},"user_received_account":"支付用户零钱"}
+	//fmt.Printf("微信支付退款回调:  %v\n %s\n", 局_微信响应, plaintext)
+
+	局_回调, err := fastjson.Parse(plaintext)
+	if err != nil {
+		err = errors.Join(err, errors.New("微信支付退款回调解析失败"))
+		return
+	}
+
+	if string(局_回调.GetStringBytes("out_trade_no")) == 参数.PayOrder && string(局_回调.GetStringBytes("refund_status")) == "SUCCESS" {
+		err = 参数.E额外信息.Set("退款金额", string(局_回调.GetStringBytes("amount.refund")))
+		err = 参数.E额外信息.Set("退款位置", string(局_回调.GetStringBytes("user_received_account")))
+	} else {
+		err = errors.New("微信支付退款回调失败" + 局_微信响应.Summary)
+		//这里是退款失败的回调
+	}
+	return
+}

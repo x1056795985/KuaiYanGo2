@@ -45,7 +45,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("Cron/Info", 局_Cron.Info)
 		adminRouter.POST("Cron/DeleteBatch", 局_Cron.DeleteBatch)   //批量删除 1全部
 		adminRouter.POST("Cron/UpdateStatus", 局_Cron.UpdateStatus) //更新状态
-		adminRouter.POST("Cron/TestRunId", 局_Cron.Z执行)             //测试运行一次
+		adminRouter.POST("Cron/TestRunId", 局_Cron.Z执行)           //测试运行一次
 	}
 
 	//定时任务日志
@@ -54,6 +54,14 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("LogCronTask/GetList", 局_CronLog.GetList)
 		adminRouter.POST("LogCronTask/Delete", 局_CronLog.Delete)
 		adminRouter.POST("LogCronTask/DeleteBatch", 局_CronLog.DeleteBatch) //批量删除 1全部
+
+	}
+	//定时任务日志
+	局_chart := controller.NewChartController()
+	{
+		adminRouter.POST("Panel/getConsumptionRanking", 局_chart.Q取余额消费排行榜)
+		adminRouter.POST("Panel/getRmbIncreaseRanking", 局_chart.Q取余额增长排行榜)
+		adminRouter.POST("Panel/getNumberIncreaseRanking", 局_chart.Q取积分消费排行榜)
 
 	}
 }
