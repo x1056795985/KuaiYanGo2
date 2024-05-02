@@ -18,7 +18,7 @@ func NewSettingController() *Setting {
 
 // 获取代理在线支付信息
 func (s *Setting) GetPayInfo(c *gin.Context) {
-	data, err := L_setting.Q取代理在线支付信息(c)
+	data, err := L_setting.Q取代理在线支付信息(c, c.GetInt("Uid"))
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return

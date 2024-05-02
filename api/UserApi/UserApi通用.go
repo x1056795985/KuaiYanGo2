@@ -3,10 +3,10 @@ package UserApi
 import (
 	"EFunc/utils"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
 	"server/Service/Captcha"
@@ -19,7 +19,6 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
-	"server/Service/Ser_Pay"
 	"server/Service/Ser_PublicData"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_RMBPayOrder"
@@ -30,6 +29,9 @@ import (
 	"server/api/UserApi/response"
 	"server/global"
 	"server/new/app/logic/common/blacklist"
+	"server/new/app/logic/common/rmbPay"
+	"server/new/app/models/common"
+	"server/new/app/models/constant"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -1237,7 +1239,7 @@ func UserApi_置动态标签(c *gin.Context) {
 	return
 }
 func UserApi_取支付通道状态(c *gin.Context) {
-	局map := Ser_Pay.Pay_取支付通道状态()
+	局map := rmbPay.L_rmbPay.Pay_取支付通道状态()
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 局map)
 	return
 }
@@ -1759,35 +1761,22 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 		return
 	}
 
-	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"AppUserId":%d,"AgentUid":%d,"AgentMoney":%v}`, 局_卡类信息.Id, 局_AppUser.Id, 局_在线信息.AgentUid, utils.Float64到文本(局_卡类信息.AgentMoney, 2))
-
-	var 响应数据 gin.H
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	if 局_支付方式 == "" {
-		response.X响应状态消息(c, response.Status_操作失败, "支付方式不能为空")
-		return
-	}
-	//修改支付显示别名为原名称
-	局_支付方式 = Ser_Pay.Pay_显示名称转原名(局_支付方式)
+	//==============下边为支付数据
+	var 参数 common.PayParams
+	参数.Uid = 局_Uid
+	参数.UidType = 局_Uid类型
+	参数.Type = 局_支付方式
+	参数.ReceivedUid = 局_在线信息.AgentUid
+	参数.Rmb = 局_卡类信息.Money
+	参数.ProcessingType = constant.D订单类型_购卡直冲
+	参数.E额外信息 = gjson.New("{}")
+	err = 参数.E额外信息.Set("AppId", 局_在线信息.LoginAppid)
+	err = 参数.E额外信息.Set("KaClassId", 局_卡类信息.Id)
+	err = 参数.E额外信息.Set("AppUserUid", 局_AppUser.Uid)
+	err = 参数.E额外信息.Set("AgentUid", 局_在线信息.AgentUid)
 
-	fmt.Printf(局_支付方式)
-	switch strings.TrimSpace(局_支付方式) {
-	case "支付宝PC":
-		err, 响应数据 = Ser_Pay.Pay_支付宝Pc_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
-	case "支付宝H5":
-		err, 响应数据 = Ser_Pay.Pay_支付宝H5_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
-	case "支付宝当面付":
-		err, 响应数据 = Ser_Pay.Pay_支付宝当面付_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
-	case "微信支付":
-		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
-	case "小叮当":
-		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
-	case "虎皮椒":
-		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(局_Uid, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), 1, 局_额外数据)
-	default:
-		err = errors.New("充值方式[" + 局_支付方式 + "]不存在")
-	}
-
+	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 	} else {
@@ -1835,35 +1824,22 @@ func UserApi_订单_积分充值(c *gin.Context) {
 		return
 	}
 
-	局_额外数据 := fmt.Sprintf(`{"AppID":%d,"AppUserId":%d}`, AppInfo.AppId, 局_AppUserID)
 	var err error
-	var 响应数据 gin.H
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	if 局_支付方式 == "" {
-		response.X响应状态消息(c, response.Status_操作失败, "支付方式不能为空")
-		return
-	}
-	//修改支付显示别名为原名称
-	局_支付方式 = Ser_Pay.Pay_显示名称转原名(局_支付方式)
+	//==============下边为支付数据
+	var 参数 common.PayParams
+	参数.Uid = 局_Uid
+	参数.UidType = 局_Uid类型
+	参数.Type = 局_支付方式
+	参数.ReceivedUid = 局_在线信息.AgentUid
+	参数.Rmb = 请求json.GetFloat64("Money")
+	参数.ProcessingType = constant.D订单类型_积分充值
+	参数.E额外信息 = gjson.New("{}")
+	err = 参数.E额外信息.Set("AppId", 局_在线信息.LoginAppid)
+	err = 参数.E额外信息.Set("AppUserUid", 局_Uid)
+	err = 参数.E额外信息.Set("AppUserId", 局_AppUserID)
 
-	fmt.Printf(局_支付方式)
-	switch strings.TrimSpace(局_支付方式) {
-	case "支付宝PC":
-		err, 响应数据 = Ser_Pay.Pay_支付宝Pc_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
-	case "支付宝H5":
-		err, 响应数据 = Ser_Pay.Pay_支付宝H5_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
-	case "支付宝当面付":
-		err, 响应数据 = Ser_Pay.Pay_支付宝当面付_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
-	case "微信支付":
-		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
-	case "小叮当":
-		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
-	case "虎皮椒":
-		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(局_Uid, 局_Uid类型, 请求json.GetFloat64("Money"), c.ClientIP(), 2, 局_额外数据)
-	default:
-		err = errors.New("充值方式[" + 局_支付方式 + "]不存在")
-	}
-
+	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "充值方式["+string(请求json.GetStringBytes("PayType"))+"]"+err.Error())
 	} else {
@@ -1900,39 +1876,27 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "非本应用卡类")
 		return
 	}
+
 	if 局_卡类信息.Money <= 0 {
 		response.X响应状态消息(c, response.Status_操作失败, "该卡类用户价格小于0不可购买")
 		return
 	}
 
-	局_额外数据 := fmt.Sprintf(`{"KaClassId":%d,"Ip":"%s","AgentUid":%d,"AgentMoney":%v}`, 局_卡类信息.Id, c.ClientIP(), 局_在线信息.AgentUid, utils.Float64到文本(局_卡类信息.AgentMoney, 2))
-
-	var 响应数据 gin.H
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	if 局_支付方式 == "" {
-		response.X响应状态消息(c, response.Status_操作失败, "支付方式不能为空")
-		return
-	}
-	//修改支付显示别名为原名称
-	局_支付方式 = Ser_Pay.Pay_显示名称转原名(局_支付方式)
+	//==============下边为支付数据
+	var 参数 common.PayParams
+	参数.Uid = 0
+	参数.UidType = 局_Uid类型
+	参数.Type = 局_支付方式
+	参数.ReceivedUid = 局_在线信息.AgentUid
+	参数.Rmb = 局_卡类信息.Money
+	参数.ProcessingType = constant.D订单类型_支付购卡
+	参数.E额外信息 = gjson.New("{}")
+	err = 参数.E额外信息.Set("AppId", AppInfo.AppId)
+	err = 参数.E额外信息.Set("KaClassId", 局_卡类信息.Id)
+	err = 参数.E额外信息.Set("AgentUid", 局_在线信息.AgentUid)
 
-	fmt.Printf(局_支付方式)
-	switch strings.TrimSpace(局_支付方式) {
-	case "支付宝PC":
-		err, 响应数据 = Ser_Pay.Pay_支付宝Pc_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
-	case "支付宝H5":
-		err, 响应数据 = Ser_Pay.Pay_支付宝H5_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
-	case "支付宝当面付":
-		err, 响应数据 = Ser_Pay.Pay_支付宝当面付_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
-	case "微信支付":
-		err, 响应数据 = Ser_Pay.Pay_微信Pc_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
-	case "小叮当":
-		err, 响应数据 = Ser_Pay.Pay_小叮当_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
-	case "虎皮椒":
-		err, 响应数据 = Ser_Pay.Pay_虎皮椒_订单创建(0, 局_Uid类型, 局_卡类信息.Money, c.ClientIP(), Ser_Pay.D订单_处理类型_支付购卡, 局_额外数据)
-	default:
-		err = errors.New("充值方式[" + 局_支付方式 + "]不存在")
-	}
+	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
 
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())

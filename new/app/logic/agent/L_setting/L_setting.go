@@ -9,7 +9,7 @@ import (
 	"server/new/app/models/constant"
 )
 
-func Q取代理在线支付信息(c *gin.Context) (data config.Z在线支付, err error) {
+func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data config.Z在线支付, err error) {
 	var 配置值 = config.Z在线支付{}
 	配置值.Z支付宝单次最大金额 = 2000
 	配置值.Z支付宝当面付单次最大金额 = 2000
@@ -21,7 +21,6 @@ func Q取代理在线支付信息(c *gin.Context) (data config.Z在线支付, er
 	配置值.X小叮当支付类型 = 43
 	配置值.H虎皮椒单次最大金额 = 500
 	data = 配置值
-	局_uid := c.GetInt("Uid")
 	if 局_uid == 0 {
 		err = errors.New("uid错误")
 		return
@@ -33,7 +32,6 @@ func Q取代理在线支付信息(c *gin.Context) (data config.Z在线支付, er
 		}
 		return
 	}
-
 	err = func取值并解析("支付宝PC", &data.Z在线支付_支付宝pc)
 	err = func取值并解析("支付宝H5", &data.Z在线支付_支付宝H5)
 	err = func取值并解析("支付宝当面付", &data.Z在线支付_支付宝当面付)

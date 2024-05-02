@@ -133,9 +133,9 @@ func (j 小叮当) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 func (j 小叮当) D订单退款(c *gin.Context, 参数 *m.PayParams) (err error) {
 	return errors.New("支付类型不支持退款")
 }
-func (j 小叮当) D订单回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
+func (j 小叮当) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	defer func() {
-		if err != nil {
+		if err == nil {
 			响应信息 = "success"
 			响应代码 = http.StatusOK
 		} else {
@@ -178,5 +178,8 @@ func (j 小叮当) D订单回调(c *gin.Context, 参数 *m.PayParams) (响应信
 		err = errors.New(c.PostForm("result"))
 	}
 
+	return
+}
+func (j 小叮当) D订单退款回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	return
 }

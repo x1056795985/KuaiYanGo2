@@ -124,12 +124,11 @@ func (j 虎皮椒) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	return
 }
 func (j 虎皮椒) D订单退款(c *gin.Context, 参数 *m.PayParams) (err error) {
-
 	return errors.New("支付类型不支持退款")
 }
-func (j 虎皮椒) D订单回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
+func (j 虎皮椒) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	defer func() {
-		if err != nil {
+		if err == nil {
 			响应信息 = "success"
 			响应代码 = http.StatusOK
 		} else {
@@ -231,4 +230,7 @@ func (j 虎皮椒) SignHuPiJiao(params map[string]string, appSecret string) stri
 	m.Write([]byte(data))
 	sign := fmt.Sprintf("%x", m.Sum(nil))
 	return sign
+}
+func (j 虎皮椒) D订单退款回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
+	return
 }

@@ -15,7 +15,6 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
-	"server/Service/Ser_Pay"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
 	"server/global"
@@ -360,7 +359,7 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 		}
 		Ser_Log.Log_写积分点数时间日志(局_订单详细信息.User, 局_订单详细信息.Ip, fmt.Sprintf("支付订单:%s充值积分|剩余%v", 局_订单详细信息.PayOrder, 局_软件用户信息.VipNumber), 局_软件用户信息.VipNumber, 局_应用信息.AppId, 1)
 		Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+"充值积分:"+utils.Float64到文本(局_增加积分, 2))
-	case Ser_Pay.D订单_处理类型_支付购卡:
+	case 3:
 		//没有订单信息没有Uid,用户名,需要修改
 		局_fastjson, err2 := fastjson.Parse(局_订单详细信息.Extra)
 		if err2 != nil {
@@ -405,56 +404,4 @@ func Z支付成功_后处理(c *gin.Context, 局_订单详细信息 DB.DB_LogRMB
 		return
 	}
 	Ser_RMBPayOrder.Order更新订单状态(局_订单详细信息.PayOrder, Ser_RMBPayOrder.D订单状态_成功) //修改订单信息为充值成功
-}
-
-// 微信支付支付退款回调 Notify成功后会回调这里;我们可以用来修改订单状态等等
-func PayWx退款Notify(c *gin.Context) {
-	局_支付配置 := setting.Q在线支付配置()
-	var 局_微信响应 微信回调响应
-	err := c.ShouldBindJSON(&局_微信响应)
-	if err != nil {
-		c.String(http.StatusInternalServerError, AckFail)
-		return
-	}
-
-	plaintext, err := WXutils.DecryptAES256GCM(
-		局_支付配置.W微信支付商户v3密钥,
-		局_微信响应.Resource.AssociatedData,
-		局_微信响应.Resource.Nonce, 局_微信响应.Resource.Ciphertext,
-	)
-
-	if err != nil {
-		局_原文, _ := jsoniter.MarshalToString(&局_微信响应)
-		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", "系统", global.X系统信息.B版本号当前, "微信回调"+局_原文+"解密失败:"+err.Error(), c.ClientIP())
-		return
-	}
-
-	//{"mchid":"1613740956","out_trade_no":"202305171129350001","transaction_id":"4200001827202305179902405083","out_refund_no":"202305171129350001","refund_id":"50302406042023051734540094143","refund_status":"SUCCESS","success_time":"2023-05-17T14:15:26+08:00","amount":{"total":1,"refund":1,"payer_total":1,"payer_refund":1},"user_received_account":"支付用户零钱"}
-	fmt.Printf("微信支付退款回调:  %v\n %s\n", 局_微信响应, plaintext)
-
-	局_回调, err := fastjson.Parse(plaintext)
-	if err != nil {
-		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", "系统", global.X系统信息.B版本号当前, "微信回调解析失败:"+plaintext, c.ClientIP())
-		return
-	}
-
-	if string(局_回调.GetStringBytes("refund_status")) == "SUCCESS" {
-		//这里是退款成功 的回调
-		局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(string(局_回调.GetStringBytes("out_trade_no")))
-
-		if ok && 局_订单详细信息.Status == 4 { //有订单且订单信息为退款中
-			Ser_RMBPayOrder.Order更新订单状态(局_订单详细信息.PayOrder, Ser_RMBPayOrder.D订单状态_退款成功)                                                 //修改订单信息为已支付 充值
-			Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+",已退到:"+string(局_回调.GetStringBytes("user_received_account"))) //修改订单信息为已支付 充值
-		}
-	} else {
-		//这里是退款失败的回调
-		局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(string(局_回调.GetStringBytes("out_trade_no")))
-		if ok && 局_订单详细信息.Status == 4 { //有订单且订单信息为退款中
-			Ser_RMBPayOrder.Order更新订单状态(局_订单详细信息.PayOrder, Ser_RMBPayOrder.D订单状态_退款失败)   //修改订单信息为已支付 充值
-			Ser_RMBPayOrder.Order更新订单备注(局_订单详细信息.PayOrder, 局_订单详细信息.Note+局_微信响应.Summary) //修改订单信息为已支付 充值
-		}
-	}
-
-	c.Status(http.StatusOK)
-	return
 }

@@ -15,13 +15,11 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
-	"server/Service/Ser_Pay"
 	"server/Service/Ser_User"
 	"server/api/UserApi/response"
 	"server/global"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/rmbPay"
-	"server/new/app/logic/common/setting"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
 	DB "server/structs/db"
@@ -269,70 +267,6 @@ func UserApi_取用户余额(c *gin.Context) {
 	return
 }
 
-func UserApi_订单_余额充值_支付宝PC支付(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-	if !检测_账密模式专用(c, AppInfo) {
-		return
-	}
-
-	if !检测用户登录在线正常(&局_在线信息) {
-		response.X响应状态(c, response.Status_未登录)
-		return
-	}
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"GetAliPayPC","User":"aaaaaa","Money":0.01,"Time":1684152719,"Status":15959}
-	局_用户名 := string(请求json.GetStringBytes("User"))
-	局_用户Id := Ser_User.User用户名取id(局_用户名)
-	if 局_用户Id == 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
-		return
-	}
-	err, 局_gin_h := Ser_Pay.Pay_支付宝Pc_订单创建(局_用户Id, 1, 请求json.GetFloat64("Money"), c.ClientIP(), 0, "")
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, err.Error())
-		return
-	}
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 局_gin_h)
-	return
-}
-
-func UserApi_订单_余额充值_微信支付支付(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-	if !检测_账密模式专用(c, AppInfo) {
-		return
-	}
-
-	if !setting.Q在线支付配置().W微信支付开关 {
-		response.X响应状态消息(c, response.Status_操作失败, "当前支付方式已关闭")
-		return
-	}
-	if !检测用户登录在线正常(&局_在线信息) {
-		response.X响应状态(c, response.Status_未登录)
-		return
-	}
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"GetWxPayPC","User":"aaaaaa","Money":0.01,"Time":1684152719,"Status":15959}
-
-	局_用户名 := string(请求json.GetStringBytes("User"))
-	局_用户Id := Ser_User.User用户名取id(局_用户名)
-	if 局_用户Id == 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
-		return
-	}
-
-	err, 局_gin_h := Ser_Pay.Pay_微信Pc_订单创建(局_用户Id, 1, 请求json.GetFloat64("Money"), c.ClientIP(), 0, "")
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, err.Error())
-		return
-	}
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 局_gin_h)
-	return
-}
-
 func UserApi_余额购买积分(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
@@ -494,19 +428,12 @@ func UserApi_订单_余额充值(c *gin.Context) {
 
 	var err error
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	if 局_支付方式 == "" {
-		response.X响应状态消息(c, response.Status_操作失败, "支付方式不能为空")
-		return
-	}
-	//修改支付显示别名为原名称
-	局_支付方式 = Ser_Pay.Pay_显示名称转原名(局_支付方式)
-	fmt.Printf(局_支付方式)
-
-	//==============下边为测试数据
+	//==============下边为支付数据
 	var 参数 common.PayParams
 	参数.Uid = 局_Uid
 	参数.UidType = 局_Uid类型
 	参数.Type = 局_支付方式
+	参数.ReceivedUid = 局_在线信息.AgentUid
 	参数.Rmb = 请求json.GetFloat64("Money")
 	参数.ProcessingType = constant.D订单类型_余额充值
 	参数.E额外信息 = gjson.New("{}")
