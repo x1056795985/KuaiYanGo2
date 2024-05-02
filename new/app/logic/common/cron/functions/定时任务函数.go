@@ -61,8 +61,8 @@ func S刷新数据库定时任务(主动 bool) error {
 		//系统自带的
 		infoArr = append(infoArr, db.DB_Cron{Id: -1, Status: 1, IsLog: 2, Type: -1, Name: "在线列表定时注销已过期", Cron: "0 */1 * * * *"})   //每分钟执行一次
 		infoArr = append(infoArr, db.DB_Cron{Id: -2, Status: 1, IsLog: 2, Type: -2, Name: "在线列表定时删除已过期", Cron: "0 */1 * * * *"})   //每分钟执行一次
-		infoArr = append(infoArr, db.DB_Cron{Id: -3, Status: 1, IsLog: 2, Type: -3, Name: "任务池Task数据删除过期", Cron: "0 */1 * * * *"}) //每天0点执行一次
-		infoArr = append(infoArr, db.DB_Cron{Id: -4, Status: 1, IsLog: 2, Type: -3, Name: "支付订单定时关闭待支付订单", Cron: "0 */1 * * * *"}) //每天0点执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -3, Status: 1, IsLog: 2, Type: -3, Name: "任务池Task数据删除过期", Cron: "0 */1 * * * *"}) //每分钟执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -4, Status: 1, IsLog: 2, Type: -4, Name: "定时关闭待支付订单", Cron: "0 */1 * * * *"})     //每分钟执行一次
 
 		hashStr := ""
 		for 索引, _ := range infoArr {

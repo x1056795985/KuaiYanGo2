@@ -1,6 +1,7 @@
 package Ser_Log
 
 import (
+	"EFunc/utils"
 	"fmt"
 	"server/Service/Ser_LinkUser"
 	"server/global"
@@ -32,6 +33,7 @@ func Log_写登录日志(User, IP, Note string, LoginType int) {
 // UserType 0 普通用户  1 2 3 级代理  4  管理员  5 系统自动
 func Log_写卡号操作日志(User, IP, Note string, Ka []string, 卡操作类型, UserType int) {
 	logins := make([]DB.DB_LogKa, 0, len(Ka))
+	卡号批次 := strconv.FormatInt(utils.S时间_取现行时间戳13(), 10)
 	for 索引, ka := range Ka {
 		login := DB.DB_LogKa{
 			Id:       0,
@@ -41,7 +43,7 @@ func Log_写卡号操作日志(User, IP, Note string, Ka []string, 卡操作类�
 			Ka:       ka,
 			Ip:       IP + " " + Qqwry.Ip查信息2(IP),
 			Time:     time.Now().Unix(),
-			Note:     strings.Replace(strings.Replace(Note, "{{卡号}}", ka, -1), "{{卡号索引}}", strconv.Itoa(索引+1), -1),
+			Note:     strings.Replace(strings.Replace(strings.Replace(Note, "{{批次id}}", 卡号批次, -1), "{{卡号}}", ka, -1), "{{卡号索引}}", strconv.Itoa(索引+1), -1),
 		}
 		logins = append(logins, login)
 	}

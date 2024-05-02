@@ -64,6 +64,8 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_用户名或卡号取uid", jS_用户名或卡号取uid)
 	_ = vm.Set("$api_取用户云配置", jS_取用户云配置)
 	_ = vm.Set("$api_置用户云配置", jS_置用户云配置)
+	_ = vm.Set("$api_取缓存", jS_取缓存)
+	_ = vm.Set("$api_置缓存", jS_置缓存)
 	_ = vm.Set("$api_置黑名单", jS_置黑名单)
 
 	return vm
@@ -486,6 +488,29 @@ func jS_取用户云配置(局_在线信息 DB.DB_LinksToken, 配置名称 strin
 	局_值 := Ser_UserConfig.Q取值(局_在线信息.LoginAppid, 局_在线信息.Uid, 配置名称)
 
 	return js对象_通用返回{IsOk: true, Err: "成功", Data: 局_值}
+}
+
+func jS_取缓存(配置名称 string) (ret string) {
+
+	if 配置名称 == "" {
+		return
+	}
+	if 临时数据, ok := global.H缓存.Get("gghsjs_" + 配置名称); ok {
+		ret = 临时数据.(string)
+	}
+	return
+}
+func jS_置缓存(配置名称, 配置值 string, 有效期 int) bool {
+	if 配置名称 == "" {
+		return false
+	}
+	if 配置值 == "" {
+		global.H缓存.Delete("gghsjs_" + 配置名称)
+	} else {
+		global.H缓存.Set("gghsjs_"+配置名称, 配置值, time.Duration(有效期)*time.Second)
+	}
+
+	return true
 }
 
 func jS_用户名或卡号取uid(应用id int, 用户名或卡号 string) int {

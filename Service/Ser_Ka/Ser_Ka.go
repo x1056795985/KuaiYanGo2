@@ -212,7 +212,7 @@ func Ka代理批量购买(卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int,
 	局_ID列表 := builder.String()
 	局_文本 := fmt.Sprintf("代理购卡[%s -> %s],卡号ID{%s},|新余额≈%s", Ser_AppInfo.App取AppName(KaClass详细信息.AppId), KaClass详细信息.Name, 局_ID列表, utils.Float64到文本(新余额, 2))
 	go Ser_Log.Log_写余额日志(局_购卡人信息.User, ip, 局_文本, utils.Float64取负值(局_总计金额))
-	局_文本 = fmt.Sprintf("新制卡号:[%s -> %s],同时间批次({{卡号索引}}/%d)", Ser_AppInfo.App取AppName(卡信息切片[0].AppId), Ser_KaClass.Id取Name(卡信息切片[0].KaClassId), len(卡信息切片))
+	局_文本 = fmt.Sprintf("新制卡号:[%s -> %s],批次id{{批次id}}({{卡号索引}}/%d)", Ser_AppInfo.App取AppName(卡信息切片[0].AppId), Ser_KaClass.Id取Name(卡信息切片[0].KaClassId), len(卡信息切片))
 	go Ser_Log.Log_写卡号操作日志(局_购卡人信息.User, ip, 局_文本, 数组_卡号, 1, Ser_Agent.Q取Id代理级别(局_购卡人信息.Id))
 
 	//开始分利润 20240202 mark处理重构以后改事务
@@ -349,7 +349,7 @@ func Ka代理批量库存购买(卡信息切片 []DB.DB_Ka, 库存Id, 制卡数�
 	for i := 0; i < len(卡信息切片); i++ {
 		数组_卡号 = append(数组_卡号, 卡信息切片[i].Name)
 	}
-	局_文本 := fmt.Sprintf("制卡库存Id:%d,应用:%s,卡类:%s,同时间批次({{卡号索引}}/%d)", 局_库存详情.Id, Ser_AppInfo.App取AppName(卡信息切片[0].AppId), Ser_KaClass.Id取Name(卡信息切片[0].KaClassId), len(卡信息切片))
+	局_文本 := fmt.Sprintf("制卡库存Id:%d,应用:%s,卡类:%s,批次id{{批次id}}({{卡号索引}}/%d)", 局_库存详情.Id, Ser_AppInfo.App取AppName(卡信息切片[0].AppId), Ser_KaClass.Id取Name(卡信息切片[0].KaClassId), len(卡信息切片))
 	go Ser_Log.Log_写卡号操作日志(局_购卡人User, ip, 局_文本, 数组_卡号, 1, Ser_Agent.Q取Id代理级别(购卡人Id))
 	return nil
 }

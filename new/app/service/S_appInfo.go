@@ -23,19 +23,19 @@ func NewAppInfo(c *gin.Context, db *gorm.DB) *AppInfo {
 
 // 增
 func (s *AppInfo) Create(info DB.DB_AppInfo) (row int64, err error) {
-	//创建会自动重新赋值info.Id为新插入的数据id
+	//创建会自动重新赋值info.AppId为新插入的数据AppId
 	tx := s.db.Model(DB.DB_AppInfo{}).Create(&info)
 	return tx.RowsAffected, tx.Error
 }
 
 // 删除 支持 数组,和id
-func (s *AppInfo) Delete(Id interface{}) (影响行数 int64, error error) {
+func (s *AppInfo) Delete(AppId interface{}) (影响行数 int64, error error) {
 	var tx2 *gorm.DB
-	switch k := Id.(type) {
+	switch k := AppId.(type) {
 	case int:
-		tx2 = s.db.Model(DB.DB_AppInfo{}).Where("Id = ?", k).Delete("")
+		tx2 = s.db.Model(DB.DB_AppInfo{}).Where("AppId = ?", k).Delete("")
 	case []int:
-		tx2 = s.db.Model(DB.DB_AppInfo{}).Where("Id IN ?", k).Delete("")
+		tx2 = s.db.Model(DB.DB_AppInfo{}).Where("AppId IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -51,8 +51,8 @@ func (s *AppInfo) GetList(请求 request.List, Status int) (int64, []DB.DB_AppIn
 
 	if 请求.Keywords != "" {
 		switch 请求.Type {
-		case 1: //id
-			tx = tx.Where("Id = ?", 请求.Keywords)
+		case 1: //AppId
+			tx = tx.Where("AppId = ?", 请求.Keywords)
 		case 2: //任务名称
 			tx = tx.Where("Name LIKE ? ", "%"+请求.Keywords+"%")
 		}
@@ -67,9 +67,9 @@ func (s *AppInfo) GetList(请求 request.List, Status int) (int64, []DB.DB_AppIn
 	//处理排序
 	switch 请求.Order {
 	default:
-		tx = tx.Order("Id ASC")
+		tx = tx.Order("AppId ASC")
 	case 2:
-		tx = tx.Order("Id DESC")
+		tx = tx.Order("AppId DESC")
 	}
 	var 局_数组 []DB.DB_AppInfo
 	tx = tx.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组)
@@ -78,8 +78,8 @@ func (s *AppInfo) GetList(请求 request.List, Status int) (int64, []DB.DB_AppIn
 }
 
 // 查
-func (s *AppInfo) Info(id int) (info DB.DB_AppInfo, err error) {
-	tx := s.db.Model(DB.DB_AppInfo{}).Where("Id = ?", id).First(&info)
+func (s *AppInfo) Info(AppId int) (info DB.DB_AppInfo, err error) {
+	tx := s.db.Model(DB.DB_AppInfo{}).Where("AppId = ?", AppId).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -87,8 +87,8 @@ func (s *AppInfo) Info(id int) (info DB.DB_AppInfo, err error) {
 }
 
 // 改
-func (s *AppInfo) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
+func (s *AppInfo) Update(AppId int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(DB.DB_AppInfo{}).Where("id = ?", id).Create(&数据)
+	tx := s.db.Model(DB.DB_AppInfo{}).Where("AppId = ?", AppId).Create(&数据)
 	return tx.RowsAffected, tx.Error
 }

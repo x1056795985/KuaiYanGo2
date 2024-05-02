@@ -12,7 +12,6 @@ type PayParams struct {
 	Y异步回调地址 string
 	T同步回调地址 string
 	E额外信息   *gjson.Json
-	D代收款id  int
 	Z支付配置   []byte
 	Z支付配置s  config.Z在线支付
 }

@@ -34,9 +34,9 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 		is卡号     bool
 		is计点     bool
 	}
+	//第一个查询不用tx 直接用全局即可,后面事务的才用tx
 	db := *global.GVA_DB
 	S_KaClass := service.NewKaClass(c, &db)
-
 	if info.卡类详情, err = S_KaClass.Info(卡类ID); err != nil {
 		err = errors.New("卡类不存在")
 		return
