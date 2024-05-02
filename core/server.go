@@ -48,11 +48,11 @@ func RunWindowsServer() {
 	fmt.Printf("是否有读写文件权限:%v\n", utils2.X系统_权限检测())
 
 	局_计时1 := utils.S时间_取现行时间戳13()
-	_, _ = req.Get(string(utils.B编码_BASE64解码("aHR0cHM6Ly9zZXJ2aWNlLWtuaHhmdjFqLTEyNTE3MDA1MzQuYXAtYmVpamluZy5hcGlnYXRld2F5Lm15cWNsb3VkLmNvbQ==")))
-	局_计时1 = utils.S时间_取现行时间戳13() - 局_计时1
+	_, err := req.Get(string(utils.B编码_BASE64解码("aHR0cHM6Ly9zZXJ2aWNlLWtuaHhmdjFqLTEyNTE3MDA1MzQuYXAtYmVpamluZy5hcGlnYXRld2F5Lm15cWNsb3VkLmNvbQ==")))
+	局_计时1 = utils.S三元(err == nil, utils.S时间_取现行时间戳13()-局_计时1, 9999)
 	局_计时2 := utils.S时间_取现行时间戳13()
-	_, _ = req.Get(string(utils.B编码_BASE64解码("aHR0cHM6Ly9zZXJ2aWNlLTlzdjBvb2h1LTEyNTE3MDA1MzQuaGsuYXBpZ3cudGVuY2VudGNzLmNvbQ==")))
-	局_计时2 = utils.S时间_取现行时间戳13() - 局_计时2
+	_, err = req.Get(string(utils.B编码_BASE64解码("aHR0cHM6Ly9zZXJ2aWNlLTlzdjBvb2h1LTEyNTE3MDA1MzQuaGsuYXBpZ3cudGVuY2VudGNzLmNvbQ==")))
+	局_计时2 = utils.S三元(err == nil, utils.S时间_取现行时间戳13()-局_计时2, 9999)
 	if 局_计时2 < 局_计时1 {
 		//如果香港快就用香港的
 		global.Q快验.C初始化配置(string(utils.B编码_BASE64解码("eyJBcHBXZWIiOiJodHRwczovL3NlcnZpY2Uta25oeGZ2MWotMTI1MTcwMDUzNC5hcC1iZWlqaW5nLmFwaWdhdGV3YXkubXlxY2xvdWQuY29tOjQ0My9BcGk/QXBwSWQ9MTAwMDEiLCJDcnlwdG9LZXlQdWJsaWMiOiItLS0tLUJFR0lOIFBVQkxJQyBLRVktLS0tLVxuTUlHZk1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDM0hib1NYQ0trcUdWaDBsaEt6cFNwaDFYRVxuNUtNYnBtYUhBTzIyNzdnOGtZaVVRRk5XU21PNlZ0RjJlcENKTURleTJjSVZEMk9OUnFZSkxLeWdYbHpkSGtZNlxuQU1Oa3AweTh5elVMQUlUSkgyOTkwbzJTb3VPdzdYQlBPNTN0Nk9URVJSTG92Lzh5YTVMNXJaK1NzM2R4RHNJVFxudkZqd0drYzZ5QlBBVFJKM1N3SURBUUFCXG4tLS0tLUVORCBQVUJMSUMgS0VZLS0tLS1cbiIsIkNyeXB0b1R5cGUiOjN9")))
@@ -71,7 +71,7 @@ func RunWindowsServer() {
 		}()
 	}
 	KuaiYanUpdater.B宝塔_修改项目信息pid()
-	err := global.GVA_Gin.ListenAndServe() //执行到此处会暂停,直到系统退出
+	err = global.GVA_Gin.ListenAndServe() //执行到此处会暂停,直到系统退出
 	if err != nil {
 		global.GVA_LOG.Error(err.Error())
 	}
