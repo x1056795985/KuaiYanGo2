@@ -294,7 +294,7 @@ func (j *rmbPay) D订单回调(c *gin.Context) (响应信息 string, 响应代�
 	参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 
 	orderId := c.Param("order")
-	if orderId == "" {
+	if orderId == "" || orderId == "123456" {
 		for i, _ := range j.已注册通道 {
 			if orderId = j.已注册通道[i].Q取订单id(c, &参数); orderId != "" {
 				break
