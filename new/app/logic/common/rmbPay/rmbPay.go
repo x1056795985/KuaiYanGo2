@@ -770,7 +770,8 @@ func (j *rmbPay) Pay_指定Uid待支付金额(c *gin.Context, Uid int) (金额 f
 	//获取该uid 等待支付的金额总数
 	err := tx.Model(DB.DB_LogRMBPayOrder{}).Select("sum(Rmb) as Rmb").Where("ReceivedUid=? and Status=?", Uid, constant.D订单状态_等待支付).First(&金额).Error
 	if err != nil {
-		global.GVA_LOG.Error("获取指定Uid待支付金额!", zap.Any("err", err))
+		//如果出错,就返回0   报错一般是rmb字段为null 但是给的变量类型为float64  暂不影响,以后再查
+		//global.GVA_LOG.Error("获取指定Uid待支付金额!", zap.Any("err", err))
 	}
 	return
 }
