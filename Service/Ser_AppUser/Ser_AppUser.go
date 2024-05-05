@@ -384,7 +384,7 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 	})
 
 	if err == nil {
-		局_文本 := fmt.Sprintf("删除VipTime小于等于%d且删除卡号:{{卡号}},批次id{{批次id}}({{卡号索引}}/%d)", VipTime, id)
+		局_文本 := fmt.Sprintf("删除VipTime小于等于%d且删除卡号:{{卡号}},批次id:{{批次id}}({{卡号索引}}/%d)", VipTime, id)
 		go Ser_Log.Log_写卡号操作日志(c.GetString("User"), Ip, 局_文本, KaNames, 4, 4)
 	}
 
