@@ -69,7 +69,7 @@ func 编译飞鸟快验() {
 		return
 	}
 	fmt.Println("编译命令执行成功:" + 局_编译名称)
-	cmd = exec.Command("E:/yun/xuhaonan/e/工具/upx-4.0.2-win64/upx.exe", 局_项目路径+"\\"+局_编译名称)
+	cmd = exec.Command("E:\\yun1\\e\\工具\\upx-4.0.2-win64\\upx.exe", 局_项目路径+"\\"+局_编译名称)
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("压缩执行失败:", err)

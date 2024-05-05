@@ -339,7 +339,7 @@ func (a *Api) New(c *gin.Context) {
 
 	response.OkWithDetailed(数组_卡_精简, "制卡成功", c)
 
-	局_文本 := fmt.Sprintf("新制卡号应用:%s,卡类:%s,批次id{{批次id}}({{卡号索引}}/%d)", Ser_AppInfo.App取AppName(数组_卡[0].AppId), Ser_KaClass.Id取Name(数组_卡[0].KaClassId), 请求.Number)
+	局_文本 := fmt.Sprintf("新制卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", Ser_AppInfo.App取AppName(数组_卡[0].AppId), Ser_KaClass.Id取Name(数组_卡[0].KaClassId), 请求.Number)
 	go Ser_Log.Log_写卡号操作日志(用户名, c.ClientIP(), 局_文本, 数组_卡号, 1, 4)
 
 	return
@@ -408,7 +408,7 @@ func (a *Api) BatchKaNameNew(c *gin.Context) {
 
 	response.OkWithDetailed(数组_卡_精简, "导入成功", c)
 
-	局_文本 := fmt.Sprintf("导入卡号应用:%s,卡类:%s,批次id{{批次id}}({{卡号索引}}/%d)", Ser_AppInfo.App取AppName(数组_卡[0].AppId), Ser_KaClass.Id取Name(数组_卡[0].KaClassId), len(数组_卡号))
+	局_文本 := fmt.Sprintf("导入卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", Ser_AppInfo.App取AppName(数组_卡[0].AppId), Ser_KaClass.Id取Name(数组_卡[0].KaClassId), len(数组_卡号))
 	go Ser_Log.Log_写卡号操作日志(用户名, c.ClientIP(), 局_文本, 数组_卡号, 1, 4)
 
 	return
