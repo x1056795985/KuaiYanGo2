@@ -93,6 +93,9 @@ func Uid取User(AppId int, Uid int) string {
 
 func Uid取备注(AppId int, Uid int) string {
 	var 备注 string
+	if AppId < 10000 { //屏蔽掉管理平台代理平台等
+		return ""
+	}
 	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Note").Where("Uid=?", Uid).First(&备注).Error
 
 	return 备注
