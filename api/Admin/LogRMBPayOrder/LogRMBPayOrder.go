@@ -7,6 +7,7 @@ import (
 	"server/global"
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
+	"server/new/app/models/constant"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -186,9 +187,13 @@ func (a *Api) Delete(c *gin.Context) {
 		}
 		影响行数 = db.Where("LOCATE( ?, Note)>0 ", 请求.Keywords).Delete(请求.Id).RowsAffected
 	case 8: //一小时前待支付
-		影响行数 = db.Where("Time <  ?", time.Now().Unix()-3600).Where("Status = 1").Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
+		状态id := []int{
+			constant.D订单状态_等待支付,
+			constant.D订单状态_已关闭,
+		}
+		影响行数 = db.Where("Time <  ?", time.Now().Unix()-3600).Where("Status IN ?", 状态id).Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
 		if db.Error == nil {
-			response.OkWithMessage("删除过期(1小时前)待支付成功,数量"+strconv.FormatInt(影响行数, 10), c)
+			response.OkWithMessage("删除过期(1小时前)待支付和已关闭成功,数量"+strconv.FormatInt(影响行数, 10), c)
 			return
 		}
 	}

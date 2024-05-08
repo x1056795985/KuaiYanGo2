@@ -1696,7 +1696,7 @@ func UserApi_订单_取状态(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "订单不存在")
 	} else {
 		局_响应 := gin.H{"Status": 局_订单详细信息.Status}
-		if 局_卡号 := utils.W文本_取出中间文本(局_订单详细信息.Extra, `"Name":"`, `"`); 局_卡号 != "" {
+		if 局_卡号 := fastjson.GetString([]byte(局_订单详细信息.Extra), "卡号"); 局_卡号 != "" {
 			局_响应["KaName"] = 局_卡号
 		}
 		response.X响应状态带数据(c, c.GetInt("局_成功Status"), 局_响应)
