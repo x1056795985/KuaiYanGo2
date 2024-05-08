@@ -1,7 +1,6 @@
 package WebApi
 
 import (
-	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
 	"server/Service/Ser_RMBPayOrder"
@@ -34,10 +33,9 @@ func Q取支付订单状态(c *gin.Context) {
 	}
 
 	局_响应 := gin.H{"Status": 局_订单详细信息.Status}
-	if 局_卡号 := utils.W文本_取出中间文本(局_订单详细信息.Extra, `"Name":"`, `"`); 局_卡号 != "" {
+	if 局_卡号 := fastjson.GetString([]byte(局_订单详细信息.Extra), "卡号"); 局_卡号 != "" {
 		局_响应["KaName"] = 局_卡号
 	}
-
 	response.OkWithDetailed(局_响应, "获取成功", c)
 	return
 }
