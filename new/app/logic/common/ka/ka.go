@@ -30,9 +30,9 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 		卡类详情     DB.DB_KaClass
 		app用户详情  DB.DB_AppUser
 		user用户详情 DB.DB_User
-		app详情    DB.DB_AppInfo
-		is卡号     bool
-		is计点     bool
+		app详情      DB.DB_AppInfo
+		is卡号       bool
+		is计点       bool
 	}
 	//第一个查询不用tx 直接用全局即可,后面事务的才用tx
 	db := *global.GVA_DB
@@ -97,11 +97,20 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 			} else {
 				//用户类型不同, 根据权重处理
 				var 局_旧用户类型权重, 局_新用户类型权重 DB.DB_UserClass
-				if 局_旧用户类型权重, err = service.NewUserClass(c, tx).Info(info.app用户详情.UserClassId); err != nil {
-					return errors.Join(err, errors.New("读取旧用户类型权重失败"))
+				if info.app用户详情.UserClassId > 0 {
+					if 局_旧用户类型权重, err = service.NewUserClass(c, tx).Info(info.app用户详情.UserClassId); err != nil {
+						return errors.Join(err, errors.New("读取旧用户类型权重失败"))
+					}
+				} else {
+					局_旧用户类型权重.Weight = 1
 				}
-				if 局_新用户类型权重, err = service.NewUserClass(c, tx).Info(info.卡类详情.UserClassId); err != nil {
-					return errors.Join(err, errors.New("读取新用户类型权重失败"))
+
+				if info.卡类详情.UserClassId > 0 {
+					if 局_新用户类型权重, err = service.NewUserClass(c, tx).Info(info.卡类详情.UserClassId); err != nil {
+						return errors.Join(err, errors.New("读取新用户类型权重失败"))
+					}
+				} else {
+					局_新用户类型权重.Weight = 1
 				}
 
 				if info.is计点 {
