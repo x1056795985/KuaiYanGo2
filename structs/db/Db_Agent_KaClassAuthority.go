@@ -12,6 +12,9 @@ const D代理功能_卡号追回 = -7
 const D代理功能_修改用户绑定 = -8
 const D代理功能_转账 = -9
 const D代理功能_代收款 = -10
+const D代理功能_查看归属软件用户 = -11
+const D代理功能_冻结软件用户 = -12
+const D代理功能_解冻软件用户 = -13
 
 type Db_Agent_卡类授权 struct {
 	ID   int    `json:"Id" gorm:"column:Id;primaryKey;comment:Id"`
