@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dop251/goja"
+	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
@@ -101,14 +102,16 @@ func T通用任务包装函数(时间戳 int64, R任务数据 db.DB_Cron) {
 // 具体执行,无抢锁
 func T通用任务执行函数2(时间戳 int64, R任务数据 db.DB_Cron) (string, error) {
 	返回 := ""
+	c := gin.Context{}
+
 	var err error
 	//抢到了任务,开始执行
 	switch R任务数据.Type {
 	case -1: //在线列表定时注销已过期
-		D定时任务_注销已过期的Token()
+		D定时任务_注销已过期的Token(&c)
 		return "", nil
 	case -2: //在线列表定时删除已过期
-		D定时任务_删除已过期的Token()
+		D定时任务_删除已过期的Token(&c)
 		return "", nil
 	case -3: //任务池Task数据删除过期
 		Ser_TaskPool.Task数据删除过期()
@@ -149,25 +152,25 @@ func T通用任务执行函数2(时间戳 int64, R任务数据 db.DB_Cron) (stri
 	return 返回, err
 }
 
-func D定时任务_注销已过期的Token() {
+func D定时任务_注销已过期的Token(c *gin.Context) {
 	if global.GVA_DB == nil {
 		return
 	}
 	tx := *global.GVA_DB
-	s := service.NewLinksTokenService(&tx)
+	s := service.NewLinksToken(c, &tx)
 	err := s.Z注销已过期的Token()
 	if err != nil {
 		global.GVA_LOG.Error("在线列表定时注销已过期失败:" + err.Error())
 	}
 }
 
-func D定时任务_删除已过期的Token() {
+func D定时任务_删除已过期的Token(c *gin.Context) {
 	if global.GVA_DB == nil {
 		return
 	}
 
 	tx := *global.GVA_DB
-	s := service.NewLinksTokenService(&tx)
+	s := service.NewLinksToken(c, &tx)
 	err := s.S删除已过期的Token()
 	if err != nil {
 		global.GVA_LOG.Error("在线列表定时删除已过期失败:" + err.Error())

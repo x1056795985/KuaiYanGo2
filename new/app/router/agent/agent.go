@@ -18,5 +18,7 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("setting/getInfoPay", 局_Setting.GetPayInfo)
 		adminRouter.POST("setting/setInfoPay", 局_Setting.SetPayInfo)
+		adminRouter.POST("setting/setBaseInfo", 局_Setting.SetBaseInfo)
+		adminRouter.POST("setting/getBaseInfo", 局_Setting.GetBaseInfo)
 	}
 }

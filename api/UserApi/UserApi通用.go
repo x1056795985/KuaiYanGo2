@@ -32,6 +32,7 @@ import (
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
+	"server/new/app/service"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -173,14 +174,14 @@ func UserApi_用户登录(c *gin.Context) {
 		//没有这个用户,应该是第一次登录应用,添加进去
 		switch AppInfo.AppType {
 		case 1:
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0, 0, "")
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0, 0, "", 局_在线信息.AgentUid)
 		case 2: //账号限时
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "")
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "", 局_在线信息.AgentUid)
 		case 3:
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_在线信息.AgentUid)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		case 4:
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_在线信息.AgentUid)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		default:
 			//???应该不会到这里
@@ -253,6 +254,22 @@ func UserApi_用户登录(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 		return
 	}
+	//没有归属代理,但是在线信息已经有代理标志了 赋予软件用户归属代理
+	tx := *global.GVA_DB
+	if 局_AppUser.AgentUid == 0 && 局_在线信息.AgentUid != 0 {
+
+		_, err = service.NewAppUser(c, &tx, 局_在线信息.LoginAppid).UpdateUid(局_Uid, map[string]interface{}{"AgentUid": 局_在线信息.AgentUid})
+		if err != nil {
+			response.X响应状态消息(c, response.Status_操作失败, err.Error())
+			return
+		}
+		局_AppUser.AgentUid = 局_在线信息.AgentUid
+	}
+
+	//用户已有归属代理,但是和在线信息代理标志不同,修改代理标志
+	if 局_AppUser.AgentUid != 局_在线信息.AgentUid {
+		_, err = service.NewLinksToken(c, &tx).Update(局_在线信息.Id, map[string]interface{}{"AgentUid": 局_在线信息.AgentUid})
+	}
 
 	//登录成功写日志
 	if 局_老用户 {
@@ -286,6 +303,7 @@ func UserApi_用户登录(c *gin.Context) {
 		"LoginIp":       c.ClientIP(),
 		"RegisterTime":  局_AppUser.RegisterTime,
 		"NewAppUser":    !局_老用户,
+		"AgentUid":      局_AppUser.AgentUid,
 	})
 }
 func UserApi_GetUserIP(c *gin.Context) {
@@ -1911,6 +1929,18 @@ func UserApi_置代理标志(c *gin.Context) {
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	局_代理uid := 请求json.GetInt("AgentUid")
+	局_推广码 := string(请求json.GetStringBytes("PromotionCode")) //如果有推广码 代理id失效
+	if 局_推广码 != "" {
+		tx := *global.GVA_DB
+		局_临时, err := service.NewPromotionCode(c, &tx).Info2(map[string]interface{}{"PromotionCode": 局_推广码})
+		if err == nil {
+			局_代理uid = 局_临时.Id
+		} else {
+			response.X响应状态消息(c, response.Status_操作失败, "推广码错误")
+			return
+		}
+	}
+
 	if Ser_Agent.Q取Id代理级别(局_代理uid) <= 0 {
 		response.X响应状态消息(c, response.Status_操作失败, "AgentUid非代理Uid")
 		return

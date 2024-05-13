@@ -87,8 +87,7 @@ func (s *UserClass) Info(id int) (info DB.DB_UserClass, err error) {
 }
 
 // 改
-func (s *UserClass) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
-
-	tx := s.db.Model(DB.DB_UserClass{}).Where("id = ?", id).Create(&数据)
+func (s *UserClass) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
+	tx := s.db.Model(DB.DB_UserClass{}).Where("Id = ?", Id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
