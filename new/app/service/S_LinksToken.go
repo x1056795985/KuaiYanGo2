@@ -108,3 +108,13 @@ func (s *LinksToken) Update(id int, 数据 map[string]interface{}) (row int64, e
 	tx := s.db.Model(DB.DB_LinksToken{}).Where("Id = ?", id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
+
+// 可指定AppId,0为全部注销
+func (s *LinksToken) Set批量注销Uid数组(UId []int, AppId int, 注销原因 int) (err error) {
+	db := s.db.Model(DB.DB_LinksToken{}).Where("UId IN ? ", UId)
+	if AppId != 0 {
+		db.Where("LoginAppid =? ", AppId)
+	}
+	err = db.Updates(map[string]interface{}{"OutTime": 0, "Status": 2, "LogoutCode": 注销原因}).Error
+	return
+}
