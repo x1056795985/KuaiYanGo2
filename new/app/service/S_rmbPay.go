@@ -47,8 +47,8 @@ func (s *RmbPayService) Info2(where map[string]interface{}) (info DB.DB_LogRMBPa
 	return
 }
 
-func (s *RmbPayService) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
+func (s *RmbPayService) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(DB.DB_LogRMBPayOrder{}).Where("id = ?", id).Create(&数据)
+	tx := s.db.Model(DB.DB_LogRMBPayOrder{}).Where("Id = ?", Id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }

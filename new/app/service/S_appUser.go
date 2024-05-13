@@ -38,8 +38,11 @@ func (s *AppUser) InfoUid(Uid int) (info DB.DB_AppUser, err error) {
 	return
 }
 
-func (s *AppUser) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
-
-	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("id = ?", id).Create(&数据)
+func (s *AppUser) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
+	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Id = ?", Id).Updates(&数据)
+	return tx.RowsAffected, tx.Error
+}
+func (s *AppUser) UpdateUid(Uid int, 数据 map[string]interface{}) (row int64, err error) {
+	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Uid = ?", Uid).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }

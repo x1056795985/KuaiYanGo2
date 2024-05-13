@@ -3,6 +3,7 @@ package Ser_Init
 import (
 	"EFunc/utils"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -110,6 +111,7 @@ func InitDbTables() {
 		newDB.DB_Blacklist{},
 		newDB.DB_Cron{},
 		newDB.DB_Cron_log{},
+		newDB.DB_PromotionCode{},
 	)
 
 	if err != nil {
@@ -123,7 +125,8 @@ func InitDbTables() {
 
 func InitDbTable数据() {
 	db := global.GVA_DB //全局变量赋值到局部
-	数据库兼容旧版本()          //需要先兼容, 迁移配置数据 才能使用setting
+	c := gin.Context{}
+	数据库兼容旧版本(&c) //需要先兼容, 迁移配置数据 才能使用setting
 	局_例子记录 := setting.Q例子写出记录()
 	if db == nil {
 		return
@@ -166,7 +169,7 @@ func InitDbTable数据() {
 		global.GVA_DB.Model(DB.DB_AppInfo{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			_ = Ser_AppInfo.NewApp信息(10001, 1, "演示对接账密限时Rsa交换密匙")
-			Ser_AppUser.New用户信息(10001, 1, "测试绑定", 1, time.Now().Unix(), 11.02, 0, "")
+			Ser_AppUser.New用户信息(10001, 1, "测试绑定", 1, time.Now().Unix(), 11.02, 0, "", 0)
 			卡类ID, _ := Ser_KaClass.KaClass创建New(10001, "天卡", "Y30", 2592000, 2592000, 0.01, 1.01, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10001, "月卡", "Y30", 2592000, 2592000, 0.01, 1.01, 100, 100, 0, 1, 25, 1, 1, 1, 1)
 			卡信息, _ := Ser_Ka.Ka单卡创建(卡类ID, Ser_Admin.Id取User(1), "演示创建", "", 0)
@@ -662,8 +665,9 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 
 }
 
-func 数据库兼容旧版本() {
-	db := global.GVA_DB //全局变量赋值到局部
+func 数据库兼容旧版本(c *gin.Context) {
+
+	db := *global.GVA_DB //全局变量赋值到局部
 	var 局_待处理订单Id数组 []DB.DB_LogRMBPayOrder
 	_ = db.Model(DB.DB_LogRMBPayOrder{}).Where("UidType is NULL ").Find(&局_待处理订单Id数组).Error
 	for _, 局_订单 := range 局_待处理订单Id数组 {
@@ -746,4 +750,24 @@ func 数据库兼容旧版本() {
 
 		fmt.Printf("已处理并兼容用户云配置联合主键问题\n")
 	}
+
+	//2024/05/12  appUser 缺少归属代理id,无法自动创建所以需要兼容处理
+	局_所有应用信息, err := service.NewAppInfo(c, &db).Infos(map[string]interface{}{})
+	for _, v := range 局_所有应用信息 {
+		var 局_字段 []string
+		局_sql := fmt.Sprintf("SELECT column_name FROM information_schema.columns WHERE table_name = 'db_AppUser_%d' AND column_name IN ('AgentUid','Id')", v.AppId)
+
+		err = db.Raw(局_sql).Scan(&局_字段).Error
+		if len(局_字段) == 1 { //正常表应该有两个成员 id,AgentUid 只有一个说明缺少字段
+			局_sql = fmt.Sprintf("ALTER TABLE `db_AppUser_%d` ADD COLUMN `AgentUid` BIGINT(20) NULL DEFAULT 0 COMMENT '归属代理Uid' AFTER `RegisterTime`", v.AppId)
+			err = db.Exec(局_sql).Error
+			if err != nil {
+				fmt.Println("兼容就版本,软件用户表添加AgentUid", err.Error())
+			} else {
+				fmt.Println("兼容就版本,软件用户表成功修添加AgentUid")
+			}
+		}
+
+	}
+
 }
