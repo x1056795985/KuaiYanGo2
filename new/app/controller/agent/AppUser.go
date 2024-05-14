@@ -12,7 +12,6 @@ import (
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_UserClass"
-	"server/Service/Ser_UserConfig"
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/agent/appUser"
@@ -302,16 +301,12 @@ func (C *AppUser) Del批量删除软件用户(c *gin.Context) {
 // save 保存
 func (C *AppUser) Save用户信息(c *gin.Context) {
 	var 请求 struct {
-		AppId      int                `json:"AppId" binging:"required,min=10000"` // Appid 必填
-		AppUser    DB.DB_AppUser      `json:"AppUser"`
-		UserConfig []DB.DB_UserConfig `json:"UserConfig"`
+		AppId  int    `json:"AppId" binging:"required,min=10000"`    // Appid 必填
+		Id     int    `json:"Id" binging:"required,min=1"`           // Appid 必填
+		Status int    `json:"Status" binging:"required,min=1,max=2"` //本应用用户状态 1正常 2冻结
+		Key    string `json:"Key"`                                   // 绑定信息
 	}
 	if !C.ToJSON(c, &请求) {
-		return
-	}
-
-	if 请求.AppUser.Id <= 0 {
-		response.FailWithMessage("Id错误", c)
 		return
 	}
 
@@ -326,7 +321,7 @@ func (C *AppUser) Save用户信息(c *gin.Context) {
 		局_旧用户信息 DB.DB_AppUser
 		AppInfo DB.DB_AppInfo
 	}
-	info.局_旧用户信息, err = service.NewAppUser(c, &tx, 请求.AppId).Info(请求.AppUser.Id)
+	info.局_旧用户信息, err = service.NewAppUser(c, &tx, 请求.AppId).Info(请求.Id)
 	if err != nil {
 		err = errors.New("用户Id不存在")
 		return
@@ -336,24 +331,44 @@ func (C *AppUser) Save用户信息(c *gin.Context) {
 		err = errors.New("AppId不存在")
 		return
 	}
+
+	if info.局_旧用户信息.AgentUid != c.GetInt("Uid") {
+		err = errors.New("权限不足,只能修改自己的归属软件用户")
+		return
+	}
+
+	if info.局_旧用户信息.Status != 请求.Status {
+		if 请求.Status == 1 && !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_解冻软件用户) {
+			err = errors.New("权限不足,请联系上级授权解冻软件用户")
+			return
+		}
+
+		if 请求.Status == 2 && !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_冻结软件用户) {
+			err = errors.New("权限不足,请联系上级授权冻结软件用户")
+			return
+		}
+	}
+
+	if info.局_旧用户信息.Key != 请求.Key {
+		if !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_修改用户绑定) {
+			response.FailWithMessage("权限不足,请联系上级授权修改用户绑定", c)
+			return
+		}
+	}
+
 	//卡号模式 软件用户和卡状态冻结解冻 关联,所以需要事务保证
 	//开启事务执行
 	err = tx.Transaction(func(tx3 *gorm.DB) error {
-		_, err = service.NewAppUser(c, &tx, 请求.AppId).Update(请求.AppUser.Id, map[string]interface{}{
-			"Status":      请求.AppUser.Status,
-			"Key":         请求.AppUser.Key,
-			"VipTime":     请求.AppUser.VipTime,
-			"VipNumber":   请求.AppUser.VipNumber,
-			"Note":        请求.AppUser.Note,
-			"MaxOnline":   请求.AppUser.MaxOnline,
-			"UserClassId": 请求.AppUser.UserClassId,
+		_, err = service.NewAppUser(c, &tx, 请求.AppId).Update(请求.Id, map[string]interface{}{
+			"Status": 请求.Status,
+			"Key":    请求.Key,
 		})
 		if err != nil {
 			return err
 		}
 
 		if info.AppInfo.AppType == 2 || info.AppInfo.AppType == 3 {
-			_, err = service.NewKa(c, tx3).Update(请求.AppUser.Id, map[string]interface{}{"Status": 请求.AppUser.Status})
+			_, err = service.NewKa(c, tx3).Update(请求.Id, map[string]interface{}{"Status": 请求.Status})
 			if err != nil {
 				return err //出错就返回并回滚
 			}
@@ -368,18 +383,10 @@ func (C *AppUser) Save用户信息(c *gin.Context) {
 	response.OkWithMessage("保存成功", c)
 
 	//如果是冻结同时注销在线的uid
-	if 请求.AppUser.Status == 2 {
+	if 请求.Status == 2 {
 		_ = service.NewLinksToken(c, &tx).Set批量注销Uid数组([]int{info.局_旧用户信息.Uid}, 请求.AppId, constant.Z注销_管理员手动注销)
 	}
 
-	//保存用户配置
-	for _, 值 := range 请求.UserConfig {
-		_ = Ser_UserConfig.Z置值(请求.AppId, 请求.AppUser.Uid, 值.Name, 值.Value)
-	}
-
-	if info.局_旧用户信息.VipNumber != 请求.AppUser.VipNumber {
-		go Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Uid取User(请求.AppId, 请求.AppUser.Uid), c.ClientIP(), "管理员ID:"+strconv.Itoa(c.GetInt("Uid"))+"编辑用户信息积分变化:"+Float64到文本(info.局_旧用户信息.VipNumber, 2)+"=>"+Float64到文本(请求.AppUser.VipNumber, 2), 请求.AppUser.VipNumber-info.局_旧用户信息.VipNumber, 请求.AppId, 1)
-	}
 	return
 }
 
@@ -548,5 +555,65 @@ func (C *AppUser) Set批量维护_增减时间点数(c *gin.Context) {
 	for _, 局_id := range 请求.Id {
 		Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+Ser_Admin.Id取User(c.GetInt("Uid"))+"批量增减点数", float64(请求.Status), 请求.AppId, S三元(Ser_AppInfo.App是否为计点(请求.AppId), 2, 3))
 	}
+	return
+}
+
+// save 保存
+func (C *AppUser) Set用户密码(c *gin.Context) {
+	if !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_修改用户密码) {
+		response.FailWithMessage("权限不足,请联系上级授权修改用户密码", c)
+		return
+	}
+
+	var 请求 struct {
+		AppId       int    `json:"AppId" binging:"required,min=10000"` // Appid 必填
+		Id          int    `json:"Id" binging:"required,min=1"`        // Appid 必填
+		NewPassword string `json:"NewPassword"`                        // 新密码
+	}
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+
+	var err error
+	defer func() {
+		if err != nil {
+			response.FailWithMessage(err.Error(), c)
+		}
+	}()
+	tx := *global.GVA_DB
+	var info struct {
+		局_旧用户信息 DB.DB_AppUser
+		AppInfo DB.DB_AppInfo
+	}
+	info.局_旧用户信息, err = service.NewAppUser(c, &tx, 请求.AppId).Info(请求.Id)
+	if err != nil {
+		err = errors.New("用户Id不存在")
+		return
+	}
+	if info.局_旧用户信息.AgentUid != c.GetInt("Uid") {
+		err = errors.New("权限不足,只能修改自己的归属软件用户")
+		return
+	}
+	info.AppInfo, err = service.NewAppInfo(c, &tx).Info(请求.AppId)
+	if err != nil {
+		err = errors.New("AppId不存在")
+		return
+	}
+
+	if info.AppInfo.AppType != 1 && info.AppInfo.AppType != 2 {
+		err = errors.New("只有账号模式应用可修改用户密码")
+		return
+	}
+
+	var msg = ""
+	if !Z正则_校验密码(请求.NewPassword, &msg) {
+		err = errors.New("密码" + msg)
+		return
+	}
+	if _, err = service.NewUser(c, &tx).Update(info.局_旧用户信息.Uid, map[string]interface{}{"PassWord": J校验_取md5_文本(请求.NewPassword, false)}); err != nil {
+		err = errors.Join(err, errors.New("修改失败"))
+		return
+	}
+	response.OkWithMessage("修改成功", c)
 	return
 }
