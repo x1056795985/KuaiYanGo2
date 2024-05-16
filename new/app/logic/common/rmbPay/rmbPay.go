@@ -512,6 +512,10 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 			参数.E额外信息.Get("卡类名称", info.卡类详情.Name)
 			参数.E额外信息.Get("应用", info.app详情.AppName)
 			参数.Note = 参数.Note + "充值卡类ID:" + strconv.Itoa(卡类ID) + ",应用:" + info.app详情.AppName + ",卡类:" + info.卡类详情.Name
+			if info.app用户详情.AgentUid != 0 {
+				参数.E额外信息.Set("AgentUid", info.app用户详情.AgentUid)
+			}
+
 			//判断代理是否有分成,如果有进行处理
 			if err = j.代理分成(c, 参数, info.卡类详情.AgentMoney); err != nil {
 				return err
@@ -557,14 +561,12 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 			参数.Note = 参数.Note + "充值积分:" + Float64到文本(局_增加积分, 2)
 		case constant.D订单类型_支付购卡: //3
 			//没有订单信息没有Uid,用户名,需要修改
-
 			if 参数.E额外信息.Get("KaClassId").Int() == 0 {
 				return errors.New("扩展信息KaClassId不正确")
 			}
 			if info.卡类详情, err = service.NewKaClass(c, tx).Info(参数.E额外信息.Get("KaClassId").Int()); err != nil {
 				return errors.Join(err, errors.New(fmt.Sprintf("卡类:%d取详情失败", 参数.E额外信息.Get("KaClassId").Int())))
 			}
-
 			if info.app详情, err = service.NewAppInfo(c, tx).Info(info.卡类详情.AppId); err != nil {
 				return errors.Join(err, errors.New(fmt.Sprintf("AppID:%d取详情失败", 参数.E额外信息.Get("AppID").Int())))
 			}
@@ -631,7 +633,6 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 		//如果能走到这里说明上面处理成功了, 订单状态改为成功
 		参数.Status = constant.D订单状态_成功
 		参数.Extra = 参数.E额外信息.String()
-
 		err = tx.Model(DB.DB_LogRMBPayOrder{}).
 			Where("Id=?", 参数.Id).
 			Updates(map[string]interface{}{
