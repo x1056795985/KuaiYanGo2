@@ -218,7 +218,8 @@ func jS_用户Id增减积分(局_在线信息 DB.DB_LinksToken, 增减值 float6
 }
 func jS_用户Id增减时间点数(AppId int, 局_在线信息 DB.DB_LinksToken, 增减值 int, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
-	增减值 = utils.Int取绝对值(增减值)
+	//获取增减值的绝对值
+	增减值 = utils.S三元(增减值 > 0, 增减值, -增减值)
 
 	局_AppUserId := Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
 
