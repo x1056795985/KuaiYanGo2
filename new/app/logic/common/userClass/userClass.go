@@ -1,6 +1,8 @@
 package userClass
 
 import (
+	. "EFunc/utils"
+	"github.com/gin-gonic/gin"
 	"server/global"
 	DB "server/structs/db"
 	"strconv"
@@ -27,4 +29,12 @@ func (j *userClass) UserClass取map列表String(Appid int) map[string]string {
 		AppName[strconv.Itoa(int(DB_UserClass[索引].Id))] = DB_UserClass[索引].Name
 	}
 	return AppName
+}
+
+// 只计算,计点请传入点数, 计时请传入剩余时间(viptime-现行时间戳), 自动处理权重=0 也就是未分类
+func (j *userClass) J计算权重值(c *gin.Context, 旧用户类型权重, 新用户类型权重, 剩余时间或点数 int64) (新剩余时间 int64, err error) {
+	旧用户类型权重 = S三元(旧用户类型权重 == 0, 1, 旧用户类型权重)
+	新用户类型权重 = S三元(旧用户类型权重 == 0, 1, 新用户类型权重)
+	新剩余时间 = 剩余时间或点数 * 旧用户类型权重 / 新用户类型权重
+	return
 }

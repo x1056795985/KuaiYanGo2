@@ -30,9 +30,9 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 		卡类详情     DB.DB_KaClass
 		app用户详情  DB.DB_AppUser
 		user用户详情 DB.DB_User
-		app详情      DB.DB_AppInfo
-		is卡号       bool
-		is计点       bool
+		app详情    DB.DB_AppInfo
+		is卡号     bool
+		is计点     bool
 	}
 	//第一个查询不用tx 直接用全局即可,后面事务的才用tx
 	db := *global.GVA_DB
@@ -225,4 +225,220 @@ func (j *ka) Ka单卡创建(c *gin.Context, 卡类id int, 制卡人账号 string
 		卡信息切片.EndTime = 有效期时间戳
 	}
 	return 卡信息切片, tx.Model(DB.DB_Ka{}).Create(&卡信息切片).Error
+}
+
+// 已用充值卡将相应的卡使用者和推荐人强行扣回充值卡面值,可能扣成负数
+func (j *ka) K卡号追回(c *gin.Context, ID int, 代理id int, ip string) (提示 string, err error) {
+	/*var info struct {
+		卡号详情    DB.DB_Ka
+		卡号应用    DB.DB_AppInfo
+		is卡号      bool
+		is计点      bool
+		vipTime名称 string
+		已充值用户  []DB.DB_AppUser
+		操作人详情  DB.DB_User
+	}
+	tx2 := *global.GVA_DB
+	if info.卡号详情, err = service.NewKa(c, &tx2).Info(ID); err != nil {
+		err = errors.Join(err, errors.New("卡号不存在"))
+		return
+	}
+	if info.卡号详情.Num == 0 {
+		return "", errors.New("卡号未使用")
+	}
+	if info.卡号详情.User == "" {
+		return "", errors.New("无已充值用户,但有使用次数,可能手动修改使用次数导致的")
+	}
+
+	//防sb客户放负值 这样操作负值也可以追回
+	if info.卡号详情.VipTime < 0 || info.卡号详情.VipNumber < 0 || info.卡号详情.RMb < 0 {
+		return "", errors.New("追回的卡号,充值的时间点数,积分,rmb,不能为负数,请手动处理")
+	}
+
+	if info.卡号应用, err = service.NewAppInfo(c, &tx2).Info(info.卡号详情.AppId); err != nil {
+		err = errors.Join(err, errors.New("应用不存在")) //概率较小,但是有可能, 比如制卡使用后把应用删除了,然后代理追回卡号
+		return
+	}
+	info.is卡号 = info.卡号应用.AppType == 3 || info.卡号应用.AppType == 4
+	info.is计点 = info.卡号应用.AppType == 2 || info.卡号应用.AppType == 4
+	info.vipTime名称 = S三元(info.is计点, "点数", "时间")
+
+	已用用户数组 := W文本_分割文本(info.卡号详情.User, ",")
+	// 0 无需追回,1成功 2失败
+	局_追回时间点数结果 := make(map[string]int, len(已用用户数组))
+	局_追回积分结果 := make(map[string]int, len(已用用户数组))
+	局_追回余额结果 := make(map[string]int, len(已用用户数组))
+	局_追回推荐人时间点数结果 := make(map[string]int, len(已用用户数组))
+	局_操作人用户名 := Ser_User.Id取User(代理id)
+
+	err = tx2.Transaction(func(tx *gorm.DB) error {
+		for _, 值 := range 已用用户数组 {
+			if 值 == "" {
+				continue //如果值为空,到循环尾
+			}
+
+			var 临时软件用户info DB.DB_AppUser
+			var 临时账号info DB.DB_User
+			var 临时卡号info DB.DB_Ka
+
+			局_应用用户ID := 0
+			if info.is卡号 {
+				if 临时卡号info, err = service.NewKa(c, tx).Info2(map[string]interface{}{"Name": 值}); err != nil {
+					return errors.Join(err, errors.New(值+"已冲卡号不存在"))
+				}
+			} else {
+				if 临时账号info, err = service.NewUser(c, tx).Info2(map[string]interface{}{"User": 值}); err != nil {
+					return errors.Join(err, errors.New("已冲账号不存在"))
+				}
+			}
+			if 临时软件用户info, err = service.NewAppUser(c, tx, info.卡号详情.AppId).InfoUid(S三元(info.is卡号, 临时卡号info.Id, 临时账号info.Id)); err != nil {
+				return errors.Join(err, errors.New(值+"已冲临时软件用户info不存在"))
+			}
+
+			if 局_应用用户ID == 0 {
+				return "", errors.New("应用用户:" + 值 + "不存在")
+			}
+
+			//防sb客户放负值 这样操作负值也可以追回
+			if info.卡号详情 .VipTime != 0 {
+
+				err = Ser_AppUser.Id点数增减_批量(info.卡号详情.AppId, []int{局_应用用户ID}, info.卡号详情.VipTime, false)
+				if err == nil {
+					局_追回时间点数结果[值] = 1
+					if info.is计点 {
+						go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户点数", float64(-info.卡号详情.VipTime), info.卡号详情.AppId, 2)
+					} else {
+						go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户时间", float64(-info.卡号详情.VipTime), info.卡号详情.AppId, 3)
+
+					}
+				} else {
+					局_追回时间点数结果[值] = 2
+				}
+			}
+			if info.卡号详情.VipNumber != 0 {
+				err = Ser_AppUser.Id积分增减_批量(info.卡号详情.AppId, []int{局_应用用户ID}, info.卡号详情.VipNumber, false)
+				go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户积分",  Float64取负值(info.卡号详情.VipNumber), 卡号详情卡号.AppId, 1)
+				if err == nil {
+					局_追回积分结果[值] = 1
+				} else {
+					局_追回积分结果[值] = 2
+				}
+			}
+			if !info.is卡号  && info.卡号详情.RMb != 0 {
+				err = Ser_User.Id余额增减_批量([]int{Ser_User.User用户名取id(值)}, info.卡号详情.RMb, false)
+				if err == nil {
+					go Ser_Log.Log_写余额日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户余额",  Float64取负值(info.卡号详情.RMb))
+					局_追回余额结果[值] = 1
+				} else {
+					局_追回余额结果[值] = 2
+				}
+			}
+		}
+	})
+
+	//追回 推荐人
+	已用推荐人数组 :=  W文本_分割文本(info.卡号详情.InviteUser, ",")
+	for _, 值 := range 已用推荐人数组 {
+		局_应用用户ID := 0
+		if info.is卡号 {
+			局_应用用户ID = Ser_AppUser.K卡号取Id(info.卡号详情.AppId, 值)
+		} else {
+			局_应用用户ID = Ser_AppUser.User取Id(info.卡号详情.AppId, 值)
+		}
+
+		if 局_应用用户ID == 0 {
+			continue
+		}
+		//防sb客户放负值 这样操作负值也可以追回
+		if info.卡号详情.VipTime != 0 {
+			err = Ser_AppUser.Id点数增减_批量(info.卡号详情.AppId, []int{局_应用用户ID}, info.卡号详情.InviteCount, false)
+			if err == nil {
+				if info.is计点 {
+					go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户点数", float64(-info.卡号详情.VipTime), info.卡号详情.AppId, 2)
+				} else {
+					go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户时间", float64(-info.卡号详情.VipTime), info.卡号详情.AppId, 3)
+				}
+				局_追回推荐人时间点数结果[值] = 1
+			} else {
+				局_追回推荐人时间点数结果[值] = 2
+			}
+		}
+	}
+	log := ""
+	局_成功 := ""
+	局_失败 := ""
+	for 值 := range 局_追回时间点数结果 {
+		if 局_追回时间点数结果[值] == 1 {
+			局_成功 += 值 + ","
+		} else if 局_追回时间点数结果[值] == 2 {
+			局_失败 += 值 + ","
+		}
+	}
+	if 局_成功 != "" {
+		log += "追回" + info.卡号详情 + "成功(" + 局_成功 + "),"
+	}
+	if 局_失败 != "" {
+		log += "追回" + 局_点数OR时间 + "失败(" + 局_成功 + "),"
+	}
+
+	局_成功 = ""
+	局_失败 = ""
+	for 值 := range 局_追回积分结果 {
+		if 局_追回积分结果[值] == 1 {
+			局_成功 += 值 + ","
+		} else if 局_追回积分结果[值] == 2 {
+			局_失败 += 值 + ","
+		}
+	}
+	if 局_成功 != "" {
+		log += "追回积分成功(" + 局_成功 + "),"
+	}
+	if 局_失败 != "" {
+		log += "追回积分失败(" + 局_成功 + "),"
+	}
+
+	局_成功 = ""
+	局_失败 = ""
+	for 值 := range 局_追回余额结果 {
+		if 局_追回余额结果[值] == 1 {
+			局_成功 += 值 + ","
+		} else if 局_追回余额结果[值] == 2 {
+			局_失败 += 值 + ","
+		}
+	}
+	if 局_成功 != "" {
+		log += "追回余额成功(" + 局_成功 + "),"
+	}
+	if 局_失败 != "" {
+		log += "追回余额失败(" + 局_成功 + "),"
+	}
+
+	局_成功 = ""
+	局_失败 = ""
+	for 值 := range 局_追回推荐人时间点数结果 {
+		if 局_追回推荐人时间点数结果[值] == 1 {
+			局_成功 += 值 + ","
+		} else if 局_追回推荐人时间点数结果[值] == 2 {
+			局_失败 += 值 + ","
+		}
+	}
+	if 局_成功 != "" {
+		log += "追回推荐人" + 局_点数OR时间 + "成功(" + 局_成功 + "),"
+	}
+	if 局_失败 != "" {
+		log += "追回推荐人" + 局_点数OR时间 + "失败(" + 局_成功 + "),"
+	}
+
+	//重置卡并冻结,删除信息
+	global.GVA_DB.Model(DB.DB_Ka{}).Where("Id = ? ", 卡号详情卡号.Id).Updates(
+		map[string]interface{}{
+			"Status":     2,
+			"User":       "",
+			"Num":        0,
+			"InviteUser": "",
+			"UserTime":   "",
+			"AdminNote":  卡号详情卡号.AdminNote + log,
+		})*/
+
+	return //log, nil
 }
