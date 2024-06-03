@@ -640,6 +640,7 @@ func K卡号追回(ID int, 代理id int, ip string) (提示 string, 错误 error
 
 		//防sb客户放负值 这样操作负值也可以追回
 		if 卡号详情卡号.VipTime != 0 {
+
 			err = Ser_AppUser.Id点数增减_批量(卡号详情卡号.AppId, []int{局_应用用户ID}, 卡号详情卡号.VipTime, false)
 			if err == nil {
 				局_追回时间点数结果[值] = 1
