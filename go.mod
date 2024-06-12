@@ -6,7 +6,7 @@ toolchain go1.22.0
 
 require EFunc v0.0.0
 
-replace EFunc => E:\yun\xuhaonan\project\EFunc
+replace EFunc => E:\yun\project\EFunc
 
 require (
 	github.com/dop251/goja v0.0.0-20230427124612-428fc442ff5f
