@@ -1,7 +1,6 @@
 package Ser_TaskPool
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"server/global"
 	DB "server/structs/db"
@@ -142,8 +141,8 @@ func Task数据删除过期() {
 
 	if global.GVA_DB != nil {
 		//删除超过24小时的任务
-		局_数量 := global.GVA_DB.Model(DB.TaskPool_数据{}).Where("TimeStart<?", time.Now().Unix()-86400).Delete("").RowsAffected
-		fmt.Printf("定时删除已过期24H任务:%v\n", 局_数量)
+		_ = global.GVA_DB.Model(DB.TaskPool_数据{}).Where("TimeStart<?", time.Now().Unix()-86400).Delete("").RowsAffected
+		//fmt.Printf("定时删除已过期24H任务:%v\n", 局_数量)
 	}
 	//24小时
 }
