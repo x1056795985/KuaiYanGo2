@@ -503,7 +503,7 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 
 	AppIdName := Ser_AppInfo.App取map列表String()
 
-	var Name []键值对
+	var Name = make([]键值对, 0, len(AppIdName))
 	局_可操作应用Id := Ser_Agent.Id取代理可操作应用AppId列表(c.GetInt("Uid"))
 	for 索引 := range 局_可操作应用Id {
 		Name = append(Name, 键值对{AppId: 局_可操作应用Id[索引], AppName: AppIdName[strconv.Itoa(局_可操作应用Id[索引])]})

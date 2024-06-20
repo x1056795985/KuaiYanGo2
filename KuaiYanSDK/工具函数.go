@@ -126,8 +126,9 @@ func (k *Api快验_类) 发包并返回解密(post内容 string) string {
 	//耗时 := time.Now().UnixMilli()
 	client := req.C().SetTimeout(60 * time.Second) //.DevMode()
 
-	//腾讯云Api网管 应用认证
-	client.WrapRoundTripFunc(k.腾讯云Api网关认证中间件)
+	//网管 应用认证
+	//client.WrapRoundTripFunc(k.腾讯云Api网关认证中间件)
+	client.WrapRoundTripFunc(k.阿里云Api网关认证中间件)
 	//循环3次 容错处理
 	for I := 0; I < 3; I++ {
 		resp, _ := client.R().
@@ -399,6 +400,23 @@ func (k *Api快验_类) 腾讯云Api网关认证中间件(rt req.RoundTripper) r
 		req.Headers.Set("Content-Type", ContentType)
 		req.Headers.Set("x-date", xDate)
 		req.Headers.Set("Authorization", sign)
+		// 构造请求
+
+		resp, err = rt.RoundTrip(req)
+		// after response
+		// ...
+		return
+	}
+}
+func (k *Api快验_类) 阿里云Api网关认证中间件(rt req.RoundTripper) req.RoundTripFunc {
+	return func(req *req.Request) (resp *req.Response, err error) {
+		if len(k.集_Api网关ApiAppSecret) == 0 || k.集_Api网关ApiAppKey == "" {
+			resp, err = rt.RoundTrip(req)
+			return
+		}
+
+		_ = aliyunSign(req, k.集_Api网关ApiAppKey, string(k.集_Api网关ApiAppSecret))
+
 		// 构造请求
 
 		resp, err = rt.RoundTrip(req)

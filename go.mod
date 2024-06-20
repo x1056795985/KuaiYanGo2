@@ -16,7 +16,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/gogf/gf/v2 v2.5.7
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.6.0
 	github.com/imroc/req/v3 v3.35.1
 	github.com/json-iterator/go v1.1.12
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
@@ -83,6 +83,7 @@ require (
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/quic-go v0.42.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.4 // indirect
+	github.com/sliveryou/aliyun-api-gateway-sign v1.0.5 // indirect
 	github.com/smartwalle/ncrypto v1.0.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
