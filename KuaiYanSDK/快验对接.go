@@ -30,6 +30,11 @@ type Api快验_类 struct {
 	集_Api网关ApiAppSecret                        []byte
 }
 
+func (k *Api快验_类) SetAppWeb(域名 string) bool {
+	k.集_AppWeb = 域名 + string(utils.B编码_BASE64解码("L0FwaT9BcHBJZD0xMDAwMQ=="))
+	return true
+}
+
 // 配置json 可以直接在应用设置里复制
 func (k *Api快验_类) C初始化配置(配置json string) bool {
 	局_fastjson, jsonErr := fastjson.Parse(配置json)
@@ -47,12 +52,12 @@ func (k *Api快验_类) C初始化配置(配置json string) bool {
 	path = path + "/config.json" //设置文件目录   //注意设置 ./config.json  宝塔写文件不会写运行目录 文件会在 /www/server/panel 文件夹
 
 	if strings.Index(utils.W文件_读入文本(path), "\"系统模式\": 1056795985") > 0 {
-		k.集_AppWeb = "http://127.0.0.1:18888/Api?AppId=10001"
+		k.SetAppWeb("http://127.0.0.1:18888")
 		fmt.Printf("超级管理员模式\n")
 	}
 	k.J_CryptoKeyAes = 局_fastjson.GetStringBytes("CryptoKeyAes")
-	k.集_Api网关ApiAppSecret = []byte{55, 50, 74, 103, 53, 79, 68, 79, 118, 49, 115, 82, 118, 115, 107, 81, 90, 100, 101, 57, 57, 73, 51, 110, 75, 114, 52, 104, 102, 51, 51, 121, 54, 53, 50, 57, 81, 115, 99}
-	k.集_Api网关ApiAppKey = `A` + `P` + `I` + `D` + `3` + `u` + `z` + `f` + `b` + `f` + `4` + `p` + `h` + `b` + `g` + `s` + `h` + `a` + `e` + `2` + `y` + `M` + `g` + `0` + `4` + `h` + `1` + `W` + `0` + `s` + `7` + `B` + `p` + `j` + `X` + `q` + `F` + `6` + `4` + `6`
+	k.集_Api网关ApiAppSecret = []byte("204641349")
+	k.集_Api网关ApiAppKey = "gc0Aay7WvmO8X5tzIwTupEVsQ9TXlmJz"
 
 	switch k.集_CryptoType {
 	case 3:
