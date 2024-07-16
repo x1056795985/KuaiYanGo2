@@ -89,8 +89,8 @@ func (s *LogMoney) Info(id int) (info DB.DB_LogMoney, err error) {
 }
 
 // 改
-func (s *LogMoney) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
+func (s *LogMoney) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(DB.DB_LogMoney{}).Where("id = ?", id).Create(&数据)
+	tx := s.db.Model(DB.DB_LogMoney{}).Where("Id = ?", Id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }

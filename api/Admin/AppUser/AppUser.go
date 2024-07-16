@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/Service/Ser_Admin"
+	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
@@ -76,6 +77,7 @@ type 结构请求_GetAppUserList struct {
 	IsLogin       int    `json:"IsLogin"`       //1 在线 2不在线
 	VipTimeStatus int    `json:"VipTimeStatus"` //vip剩余时间状态
 	UserClassId   int    `json:"UserClassId"`   //用户类型Id
+	AgentUid      int    `json:"AgentUid"`      //归属代理id
 }
 
 // GetAppUserList
@@ -184,6 +186,29 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 			局_DB.Where("`Key` like ?", "%"+请求.Keywords+"%")
 		case 5: //软件用户备注
 			局_DB.Where("LOCATE( ?, "+表名_AppUser+".Note)>0 ", 请求.Keywords)
+		case 6: //归属代理id
+			局_代理id := Ser_User.User用户名取id(请求.Keywords)
+			if 局_代理id == 0 {
+				局_代理id, _ = strconv.Atoi(请求.Keywords)
+			}
+			if 局_代理id == 0 {
+				局_代理id = -999
+			}
+			局_DB.Where("AgentUid = ?", 局_代理id)
+		case 7: //归属代理id和子代理
+			局_代理id含子级id := []int{}
+			局_代理id := Ser_User.User用户名取id(请求.Keywords)
+			if 局_代理id == 0 {
+				局_代理id, _ = strconv.Atoi(请求.Keywords)
+			}
+			if 局_代理id != 0 {
+				局_代理id含子级id = Ser_Agent.Q取下级代理数组含子级([]int{局_代理id})
+				局_代理id含子级id = append(局_代理id含子级id, 局_代理id)
+			}
+			if len(局_代理id含子级id) == 0 {
+				局_代理id含子级id = []int{-999}
+			}
+			局_DB.Where("AgentUid IN ?", 局_代理id含子级id)
 		}
 
 	}

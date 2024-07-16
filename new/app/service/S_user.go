@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"server/new/app/models/request"
 	DB "server/structs/db"
+	"strconv"
 )
 
 type User struct {
@@ -86,9 +87,24 @@ func (s *User) Info(id int) (info DB.DB_User, err error) {
 	return
 }
 
+// 查
+func (s *User) Info2(where map[string]interface{}) (info DB.DB_User, err error) {
+	tx := s.db.Model(DB.DB_User{}).Where(where).First(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
 // 改
 func (s *User) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(DB.DB_User{}).Where("id = ?", id).Create(&数据)
+	tx := s.db.Model(DB.DB_User{}).Where("Id = ?", id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
+}
+
+func (s *User) Id取Uid_批量(AppId int, id []int) []int {
+	var Uid []int
+	s.db.Raw("SELECT `Uid` FROM `db_AppUser_"+strconv.Itoa(AppId)+"` WHERE `Id` IN  ? ", id).Scan(&Uid)
+	return Uid
 }
