@@ -94,7 +94,7 @@ func (a *Api) GetLogMoneyList(c *gin.Context) {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
 		return
 	}
-
+	
 	response.OkWithDetailed(结构响应_GetDB_LogMoneyList{DB_LogMoney, 总数}, "获取成功", c)
 	return
 }
