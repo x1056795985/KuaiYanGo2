@@ -53,7 +53,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 		//验证码验证码正确 = 真
 		if !Captcha.H缓存验证码校验实例.Verify(Request.CaptchaId, Request.Captcha, true) {
 			response.FailWithMessage("验证码错误", c)
-			go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "验证码错误:"+Request.Captcha, 4)
+			go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "验证码错误:"+Request.Captcha, 3)
 			return
 		}
 	}
@@ -69,13 +69,13 @@ func (b *BaseApi) Login(c *gin.Context) {
 	// 没查到数据  或  取反(密码正确)
 	if err != nil || !utils.BcryptCheck(Request.Password, DB_user.PassWord) {
 		response.FailWithMessage("账号或密码错误", c)
-		go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "密码错误:"+Request.Password, 4)
+		go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "密码错误:"+Request.Password, 3)
 		return
 	}
 
 	if DB_user.Status != 1 {
 		response.FailWithMessage("用户被禁止登录", c)
-		go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "用户被禁止登录代理平台", 4)
+		go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "用户被禁止登录代理平台", 3)
 		return
 	}
 	var 局_代理级别 = Ser_Agent.Q取Id代理级别(DB_user.Id)
