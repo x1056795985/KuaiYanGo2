@@ -178,10 +178,10 @@ func UserApi_用户登录(c *gin.Context) {
 		case 2: //账号限时
 			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "", 局_在线信息.AgentUid)
 		case 3:
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_在线信息.AgentUid)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		case 4:
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_在线信息.AgentUid)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		default:
 			//???应该不会到这里
@@ -272,7 +272,7 @@ func UserApi_用户登录(c *gin.Context) {
 		局_AppUser.AgentUid = 局_在线信息.AgentUid
 	}
 
-	//用户已有归属代理,但是和在线信息代理标志不同,修改代理标志
+	//用户已有归属代理,但是和在线信息代理标志不同,修改在线代理标志
 	if 局_AppUser.AgentUid != 局_在线信息.AgentUid {
 		_, err = service.NewLinksToken(c, &tx).Update(局_在线信息.Id, map[string]interface{}{"AgentUid": 局_在线信息.AgentUid})
 	}
@@ -1805,24 +1805,30 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 	}
 
 	if 局_AppUser.UserClassId != 0 && 局_卡类信息.NoUserClass == 2 && 局_AppUser.UserClassId != 局_卡类信息.UserClassId {
-		response.X响应状态消息(c, response.Status_操作失败, "禁止购买，充值卡类不相同，请重新选择！")
+		response.X响应状态消息(c, response.Status_操作失败, "禁止购买，充值卡用户类型与当前用户类型不相同，请重新选择！")
+		return
+	}
+
+	var 局_appUser DB.DB_AppUser
+	局_appUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid)
+	if 局_appUser.Uid == 0 {
+		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
 		return
 	}
 
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
 	// ==============下边为支付数据
 	var 参数 common.PayParams
-	参数.Uid = 局_Uid
+	参数.Uid = 局_appUser.Uid
 	参数.UidType = 局_Uid类型
 	参数.Type = 局_支付方式
-	参数.ReceivedUid = 局_在线信息.AgentUid
+	参数.ReceivedUid = 局_appUser.AgentUid
 	参数.Rmb = 局_卡类信息.Money
 	参数.ProcessingType = constant.D订单类型_购卡直冲
 	参数.E额外信息 = gjson.New("{}")
 	err = 参数.E额外信息.Set("AppId", 局_在线信息.LoginAppid)
 	err = 参数.E额外信息.Set("KaClassId", 局_卡类信息.Id)
 	err = 参数.E额外信息.Set("AppUserUid", 局_AppUser.Uid)
-	err = 参数.E额外信息.Set("AgentUid", 局_在线信息.AgentUid)
 
 	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
 	if err != nil {
@@ -1871,15 +1877,21 @@ func UserApi_订单_积分充值(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户未登录过应用,请先操作登录一次")
 		return
 	}
+	var 局_appUser DB.DB_AppUser
+	局_appUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid)
+	if 局_appUser.Uid == 0 {
+		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
+		return
+	}
 
 	var err error
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
 	// ==============下边为支付数据
 	var 参数 common.PayParams
-	参数.Uid = 局_Uid
+	参数.Uid = 局_appUser.Uid
 	参数.UidType = 局_Uid类型
 	参数.Type = 局_支付方式
-	参数.ReceivedUid = 局_在线信息.AgentUid
+	参数.ReceivedUid = 局_appUser.AgentUid
 	参数.Rmb = 请求json.GetFloat64("Money")
 	参数.ProcessingType = constant.D订单类型_积分充值
 	参数.E额外信息 = gjson.New("{}")
@@ -1942,7 +1954,6 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 	参数.E额外信息 = gjson.New("{}")
 	err = 参数.E额外信息.Set("AppId", AppInfo.AppId)
 	err = 参数.E额外信息.Set("KaClassId", 局_卡类信息.Id)
-	err = 参数.E额外信息.Set("AgentUid", 局_在线信息.AgentUid)
 
 	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
 
