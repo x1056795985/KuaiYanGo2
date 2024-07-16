@@ -421,6 +421,7 @@ func 生成校验字符(str string) string {
 	return string(str[Int])
 }
 func Ka校验卡号(str string) bool {
+	return true // 因为要导入旧卡, 这个校验卡号影响相关功能, 所以直接关闭全部都返回校验通过
 	if len(str) < 2 {
 		return false
 	}
@@ -440,6 +441,8 @@ func 生成随机字符串(lenNum int, 类型 int) string {
 	case 3:
 		CHARS = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 			"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
+	case 4:
+		CHARS = []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
 	default:
 		CHARS = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "m", "n", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 			"A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
