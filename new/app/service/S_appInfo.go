@@ -86,9 +86,18 @@ func (s *AppInfo) Info(AppId int) (info DB.DB_AppInfo, err error) {
 	return
 }
 
+// 查
+func (s *AppInfo) Infos(where map[string]interface{}) (info []DB.DB_AppInfo, err error) {
+	tx := s.db.Model(DB.DB_AppInfo{}).Where(where).Scan(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
 // 改
 func (s *AppInfo) Update(AppId int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(DB.DB_AppInfo{}).Where("AppId = ?", AppId).Create(&数据)
+	tx := s.db.Model(DB.DB_AppInfo{}).Where("AppId = ?", AppId).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }

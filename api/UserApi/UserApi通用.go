@@ -32,6 +32,7 @@ import (
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
+	"server/new/app/service"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -173,14 +174,14 @@ func UserApi_用户登录(c *gin.Context) {
 		//没有这个用户,应该是第一次登录应用,添加进去
 		switch AppInfo.AppType {
 		case 1:
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0, 0, "")
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix(), 0, 0, "", 局_在线信息.AgentUid)
 		case 2: //账号限时
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "")
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "", 局_在线信息.AgentUid)
 		case 3:
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), 局_卡.MaxOnline, time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		case 4:
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), 局_卡.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		default:
 			//???应该不会到这里
@@ -247,11 +248,33 @@ func UserApi_用户登录(c *gin.Context) {
 	}
 
 	//登录成功吧数据写入在线信息内
-	err = Ser_LinkUser.Set在线登录信息(局_在线信息.Id, 局_Uid, 局_卡号或用户名, 局_AppUser.Key, string(请求json.GetStringBytes("Tab")), string(请求json.GetStringBytes("AppVer")))
+	tx := *global.GVA_DB
+	data := map[string]interface{}{
+		"Uid":    局_Uid,
+		"User":   局_卡号或用户名,
+		"Key":    局_AppUser.Key,
+		"Tab":    string(请求json.GetStringBytes("Tab")),
+		"AppVer": string(请求json.GetStringBytes("AppVer")),
+	}
+	_, err = service.NewLinksToken(c, &tx).Update(局_在线信息.Id, data)
 	if err != nil {
 		//mark 一个新奇的bug, Tab是ansi编码的中文, go字符串,类型为utf8 获取字节数组string转文本就会导致是乱码,导致修改数据库失败,看来得加参数校验了
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 		return
+	}
+	//没有归属代理,但是在线信息已经有代理标志了 赋予软件用户归属代理
+	if 局_AppUser.AgentUid == 0 && 局_在线信息.AgentUid != 0 {
+		_, err = service.NewAppUser(c, &tx, 局_在线信息.LoginAppid).UpdateUid(局_Uid, map[string]interface{}{"AgentUid": 局_在线信息.AgentUid})
+		if err != nil {
+			response.X响应状态消息(c, response.Status_操作失败, err.Error())
+			return
+		}
+		局_AppUser.AgentUid = 局_在线信息.AgentUid
+	}
+
+	//用户已有归属代理,但是和在线信息代理标志不同,修改代理标志
+	if 局_AppUser.AgentUid != 局_在线信息.AgentUid {
+		_, err = service.NewLinksToken(c, &tx).Update(局_在线信息.Id, map[string]interface{}{"AgentUid": 局_在线信息.AgentUid})
 	}
 
 	//登录成功写日志
@@ -286,7 +309,9 @@ func UserApi_用户登录(c *gin.Context) {
 		"LoginIp":       c.ClientIP(),
 		"RegisterTime":  局_AppUser.RegisterTime,
 		"NewAppUser":    !局_老用户,
+		"AgentUid":      局_AppUser.AgentUid,
 	})
+
 }
 func UserApi_GetUserIP(c *gin.Context) {
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"IP": c.ClientIP()})
@@ -326,7 +351,7 @@ func UserApi_用户减少余额(c *gin.Context) {
 	go Ser_Log.Log_写余额日志(局_User.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("Log"), 新余额), utils.Float64取负值(局_增减值))
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Money": 新余额})
 
-	//用户减少成功,开始判断代理增加  不需要让用户知道,代理是否有分成,所以上面直接返回就行
+	// 用户减少成功,开始判断代理增加  不需要让用户知道,代理是否有分成,所以上面直接返回就行
 	局_代理用户Id := 请求json.GetInt("AgentId")
 	局_代理分成金额Id := 请求json.GetFloat64("AgentMoney")
 	if 局_代理用户Id == 0 || 局_代理分成金额Id <= 0 {
@@ -338,12 +363,12 @@ func UserApi_用户减少余额(c *gin.Context) {
 		return
 	}
 
-	//如果小于于0 就是管理员id给管理员分成,大于0就是用户id
+	// 如果小于于0 就是管理员id给管理员分成,大于0就是用户id
 	if 局_代理用户Id < 0 {
 		局_代理用户Id = -局_代理用户Id
 		局_管理员信息, ok2 := Ser_Admin.Id取详情(局_代理用户Id)
 		if ok2 == false {
-			//管理不存在就不用风控记录了,没什么用
+			// 管理不存在就不用风控记录了,没什么用
 			return
 		}
 		管理员新余额, 管理员err := Ser_Admin.Id余额增减(局_管理员信息.Id, 局_代理分成金额Id, true)
@@ -355,11 +380,11 @@ func UserApi_用户减少余额(c *gin.Context) {
 	} else {
 		局_代理信息, ok2 := Ser_User.Id取详情(局_代理用户Id)
 		if ok2 == false {
-			//用户不存在就不用风控记录了,没什么用
+			// 用户不存在就不用风控记录了,没什么用
 			return
 		}
 		if 局_代理信息.UPAgentId == 0 { //检测代理是否为普通用户,没有上级代理必然是普通用户,如果是普通用户触发风控
-			//如果想检测是否为1级代理,可以改成 局_代理信息.UPAgentId >= 0  1级代理的上级代理,必然是管理员负数
+			// 如果想检测是否为1级代理,可以改成 局_代理信息.UPAgentId >= 0  1级代理的上级代理,必然是管理员负数
 			go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_User.User, c.ClientIP(), fmt.Sprintf("余额减少api,形参分成代理Id(%v)非代理id,可能非法用户尝试篡改应用数据", 局_代理用户Id))
 		} else {
 			代理新余额, 代理err := Ser_User.Id余额增减(局_代理信息.Id, 局_代理分成金额Id, true)
@@ -377,7 +402,7 @@ func UserApi_用户减少点数(c *gin.Context) {
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"UserReduceMoney","VipTime":1.3,"Log":"看你长得帅,扣点钱"}
+	// {"Api":"UserReduceMoney","VipTime":1.3,"Log":"看你长得帅,扣点钱"}
 	if AppInfo.AppType != 2 && AppInfo.AppType != 4 { //检查是不是计点模式
 		response.X响应状态消息(c, response.Status_操作失败, "应用非计点模式不可使用")
 		return
@@ -439,7 +464,7 @@ func UserApi_用户减少积分(c *gin.Context) {
 		return
 	}
 
-	//flosat64 直接
+	// flosat64 直接
 	局_增减值D := decimal.NewFromFloat(局_增减值)
 	局_用户积分D := decimal.NewFromFloat(局_AppUser.VipNumber)
 
@@ -451,7 +476,7 @@ func UserApi_用户减少积分(c *gin.Context) {
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"VipNumber": 局_AppUser.VipNumber})
 	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("%s|剩余%v", 请求json.GetStringBytes("Log"), 局_AppUser.VipNumber), 局_增减值, AppInfo.AppId, 1)
 
-	//用户减少成功,开始判断代理增加  不需要让用户知道,代理是否有分成,所以上面直接返回就行
+	// 用户减少成功,开始判断代理增加  不需要让用户知道,代理是否有分成,所以上面直接返回就行
 	局_代理用户Id := 请求json.GetInt("AgentId")
 	局_代理分成金额Id := 请求json.GetFloat64("AgentMoney")
 	if 局_代理用户Id == 0 || 局_代理分成金额Id <= 0 {
@@ -462,12 +487,12 @@ func UserApi_用户减少积分(c *gin.Context) {
 		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_在线信息.User, c.ClientIP(), fmt.Sprintf("代理%v分成值(%v)大于用户减少余额(%v),可能非法用户尝试篡改应用数据", 局_代理用户Id, 局_代理分成金额Id, 请求json.GetFloat64("Money")))
 		return
 	}
-	//如果小于于0 就是管理员id给管理员分成,大于0就是用户id
+	// 如果小于于0 就是管理员id给管理员分成,大于0就是用户id
 	if 局_代理用户Id < 0 {
 		局_代理用户Id = -局_代理用户Id
 		局_管理员信息, ok2 := Ser_Admin.Id取详情(局_代理用户Id)
 		if ok2 == false {
-			//管理不存在就不用风控记录了,没什么用
+			// 管理不存在就不用风控记录了,没什么用
 			return
 		}
 		管理员新余额, 管理员err := Ser_Admin.Id余额增减(局_管理员信息.Id, 局_代理分成金额Id, true)
@@ -479,11 +504,11 @@ func UserApi_用户减少积分(c *gin.Context) {
 	} else {
 		局_代理信息, ok2 := Ser_User.Id取详情(局_代理用户Id)
 		if ok2 == false {
-			//用户不存在就不用风控记录了,没什么用
+			// 用户不存在就不用风控记录了,没什么用
 			return
 		}
 		if 局_代理信息.UPAgentId == 0 { //检测代理是否为普通用户,没有上级代理必然是普通用户,如果是普通用户触发风控
-			//如果想检测是否为1级代理,可以改成 局_代理信息.UPAgentId >= 0  1级代理的上级代理,必然是管理员负数
+			// 如果想检测是否为1级代理,可以改成 局_代理信息.UPAgentId >= 0  1级代理的上级代理,必然是管理员负数
 			go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_在线信息.User, c.ClientIP(), fmt.Sprintf("积分减少api,形参分成代理Id(%v)非代理id,可能非法用户尝试篡改应用数据", 局_代理用户Id))
 		} else {
 			代理新余额, 代理err := Ser_User.Id余额增减(局_代理信息.Id, 局_代理分成金额Id, true)
@@ -627,6 +652,21 @@ func UserApi_取公共变量(c *gin.Context) {
 		}*/
 	return
 }
+func UserApi_取代理云配置(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	// {"Api":"GetAgentConfig","Name":"配置1"}
+	局_配置名 := string(请求json.GetStringBytes("Name"))
+	局_配置值 := Ser_UserConfig.Q取值(50, 局_在线信息.AgentUid, 局_配置名)
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{局_配置名: 局_配置值})
+	return
+}
 func UserApi_取用户云配置(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
@@ -676,7 +716,7 @@ func UserApi_取应用最新版本(c *gin.Context) {
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"GetAppVersion","Version":"1.3.5","IsVersionAll":true}
+	// {"Api":"GetAppVersion","Version":"1.3.5","IsVersionAll":true}
 	局_可用版本 := utils.W文本_分割文本(AppInfo.AppVer, "\n")
 	if len(局_可用版本) == 0 || AppInfo.AppVer == "" {
 		response.X响应状态消息(c, response.Status_操作失败, "应用未设置版本号或格式不正确")
@@ -709,11 +749,11 @@ func UserApi_取应用最新版本(c *gin.Context) {
 	}
 
 	if len(局_分解版本号) == 1 {
-		//只有大版本号
+		// 只有大版本号
 		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"NewVersion": 局_可用版本[0], "Version": 局_分解版本号最新.大版本号, "IsUpdate": 局_是否更新})
 		return
 	} else {
-		//有大小版本号
+		// 有大小版本号
 		局_小数运算, _ := decimal.NewFromString(局_分解版本号[0] + "." + 局_分解版本号[1])
 		局_双精度版本, _ := 局_小数运算.Float64()
 		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"NewVersion": 局_可用版本[0], "Version": 局_双精度版本, "IsUpdate": 局_是否更新})
@@ -751,7 +791,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"SetAppUserKey","NewKey":"8987657"}
-	//检查是否可以换换绑
+	// 检查是否可以换换绑
 	if AppInfo.VerifyKey != 1 && AppInfo.VerifyKey != 3 { //1和3 可以换绑
 		response.X响应状态消息(c, response.Status_操作失败, "应用禁止更换绑定信息.")
 		return
@@ -796,7 +836,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 		return
 	}
 
-	//检查是否可以绑定相同信息
+	// 检查是否可以绑定相同信息
 	if AppInfo.IsUserKeySame == 2 && Ser_AppUser.B绑定信息是否存在(AppInfo.AppId, 局_信息绑定信息) {
 		response.X响应状态消息(c, response.Status_绑定信息已被其他用户使用, "绑定信息已被其他用户绑定.")
 		return
@@ -811,7 +851,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "读取用户应用信息失败.可能刚注册还没登录成功")
 		return
 	}
-	//如果换绑需要扣点,就执行扣点, 		且原来绑定信息不能为空
+	// 如果换绑需要扣点,就执行扣点, 		且原来绑定信息不能为空
 	if AppInfo.UpKeyData > 0 && 局_AppUser.Key != "" {
 		err := Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(AppInfo.UpKeyData), false)
 		if err != nil {
@@ -846,7 +886,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"SetAppUserKey"}
-	//检查是否可以换换绑
+	// 检查是否可以换换绑
 	if AppInfo.VerifyKey != 1 && AppInfo.VerifyKey != 3 { //1和3 可以换绑
 		response.X响应状态消息(c, response.Status_操作失败, "应用禁止更换绑定信息.")
 		return
@@ -893,7 +933,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 		return
 	}
 
-	//如果换绑需要扣点,就执行扣点
+	// 如果换绑需要扣点,就执行扣点
 	if AppInfo.UpKeyData > 0 {
 		err := Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(AppInfo.UpKeyData), false)
 		if err != nil {
@@ -946,9 +986,11 @@ func UserApi_置新用户消息(c *gin.Context) {
 }
 
 func UserApi_取验证码信息(c *gin.Context) {
-	/*	var AppInfo DB.DB_AppInfo
-		var 局_在线信息 DB.DB_LinksToken
-		Y用户数据信息还原(c, &AppInfo, &局_在线信息)*/
+	/*
+	   var AppInfo DB.DB_AppInfo
+	   var 局_在线信息 DB.DB_LinksToken
+	   Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	*/
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"GetCaptcha","CaptchaType":2}
 
@@ -965,9 +1007,11 @@ func UserApi_取验证码信息(c *gin.Context) {
 }
 
 func UserApi_取短信验证码信息(c *gin.Context) {
-	/*	var AppInfo DB.DB_AppInfo
-		var 局_在线信息 DB.DB_LinksToken
-		Y用户数据信息还原(c, &AppInfo, &局_在线信息)*/
+	/*
+	   var AppInfo DB.DB_AppInfo
+	   var 局_在线信息 DB.DB_LinksToken
+	   Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	*/
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"GetPhoneCaptcha","Phone":"13188888888","User":"13188888888"}
 
@@ -1048,8 +1092,8 @@ func UserApi_取软件用户信息(c *gin.Context) {
 		return
 	}
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"GetAppUserInfo","AppVer":"1.0.15"}
-	//飞鸟快验内部使用, 主要解决用户更新软件后,继承token,但是在线用户信息的版本号没有改变
+	// {"Api":"GetAppUserInfo","AppVer":"1.0.15"}
+	// 飞鸟快验内部使用, 主要解决用户更新软件后,继承token,但是在线用户信息的版本号没有改变
 	局_应用版本 := string(请求json.GetStringBytes("AppVer"))
 	if 局_应用版本 != "" {
 		Ser_LinkUser.Id更新当前版本号(局_在线信息.Id, 局_应用版本)
@@ -1067,6 +1111,7 @@ func UserApi_取软件用户信息(c *gin.Context) {
 		"VipNumber":       局_AppUser.VipNumber,
 		"Status":          局_AppUser.Status,
 		"MaxOnline":       局_AppUser.MaxOnline,
+		"AgentUid":        局_AppUser.AgentUid,
 		"LoginTime":       局_在线信息.LoginTime,
 		"LoginIp":         局_在线信息.Ip,
 		"RegisterTime":    局_AppUser.RegisterTime,
@@ -1146,11 +1191,14 @@ func UserApi_心跳(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "读取用户应用信息失败.")
 		return
 	}
-	if 局_AppUser.VipTime > int64(time.Now().Unix()) {
-		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": 1})
+	Status := 1
+	if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
+		Status = utils.S三元(局_AppUser.VipTime > 0, 1, 3) //'卡号模式大于0'
 	} else {
-		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": 3})
+		Status = utils.S三元(局_AppUser.VipTime > time.Now().Unix(), 1, 3) //账号模式大于当前时间戳
 	}
+
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": Status})
 	return
 }
 
@@ -1186,7 +1234,7 @@ func UserApi_用户登录远程注销(c *gin.Context) {
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"RemoteLogOut","User":"aaaaaa","PassWord":"ssssss","Time":1684069624,"Status":27417}'
+	// {"Api":"RemoteLogOut","User":"aaaaaa","PassWord":"ssssss","Time":1684069624,"Status":27417}'
 	局_id := 0
 	if AppInfo.AppType == 1 || AppInfo.AppType == 2 {
 		局_User, ok := Ser_User.User取详情(string(请求json.GetStringBytes("User")))
@@ -1364,13 +1412,13 @@ func UserApi_置用户类型(c *gin.Context) {
 		return
 	} else {
 		局_现行时间戳 := time.Now().Unix()
-		//用户类型不同, 根据权重处理
+		// 用户类型不同, 根据权重处理
 		if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
 			局_增减时间点数 := 局_App用户.VipTime * 局_旧用户类型.Weight / 局_新用户类型.Weight //转换结果值
 			局_App用户.VipTime = 局_增减时间点数
 		} else {
 			if 局_App用户.VipTime < 局_现行时间戳 {
-				//已经过期了直接赋值新类型 现行时间+新时间就可以了
+				// 已经过期了直接赋值新类型 现行时间+新时间就可以了
 				局_App用户.VipTime = 局_现行时间戳
 			} else {
 				局_App用户.VipTime = 局_App用户.VipTime - 局_现行时间戳                   //先计算还剩多长时间
@@ -1408,7 +1456,7 @@ func UserApi_云函数执行(c *gin.Context) {
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"RunJS","Parameter":"{'a':1}","JsName":"获取用户相关信息","IsGlobal":false,"Time":1684497856,"Status":30873}
+	// {"Api":"RunJS","Parameter":"{'a':1}","JsName":"获取用户相关信息","IsGlobal":false,"Time":1684497856,"Status":30873}
 	var 局_JSid = 0
 	if 请求json.GetBool("IsGlobal") {
 		局_JSid = Ser_PublicJs.Name取Id([]int{Ser_PublicJs.Js类型_公共函数}, string(请求json.GetStringBytes("JsName")))
@@ -1558,7 +1606,7 @@ func UserApi_任务池_任务处理获取(c *gin.Context) {
 	}
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"TaskPoolGetTask","GetTaskNumber":5,"GetTaskTypeId":[1],"Time":1684764215,"Status":18042}
+	// {"Api":"TaskPoolGetTask","GetTaskNumber":5,"GetTaskTypeId":[1],"Time":1684764215,"Status":18042}
 	局_最大数量 := 请求json.GetInt("GetTaskNumber")
 	局_临时 := 请求json.GetArray("GetTaskTypeId")
 	var 局_可获取任务类型ID = make([]int, len(局_临时))
@@ -1678,7 +1726,7 @@ func UserApi_订单_取状态(c *gin.Context) {
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"GetPayOrderStatus","OrderId":"","Time":1684152719,"Status":15959}
+	// {"Api":"GetPayOrderStatus","OrderId":"","Time":1684152719,"Status":15959}
 	局_订单Id := string(请求json.GetStringBytes("OrderId"))
 	if 局_订单Id == "" {
 		response.X响应状态消息(c, response.Status_操作失败, "订单不存在")
@@ -1687,11 +1735,11 @@ func UserApi_订单_取状态(c *gin.Context) {
 
 	局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(局_订单Id)
 	if !ok {
-		//如果失败了,在判断是不是上传的第三方订单号
+		// 如果失败了,在判断是不是上传的第三方订单号
 		局_订单详细信息, ok = Ser_RMBPayOrder.Order取订单详细_第三方订单(局_订单Id)
 	}
 
-	//可能存在未登录充值的情况,所以不检测在线了
+	// 可能存在未登录充值的情况,所以不检测在线了
 	if !ok { //|| 局_订单详细信息.Uid != 局_在线信息.Uid
 		response.X响应状态消息(c, response.Status_操作失败, "订单不存在")
 	} else {
@@ -1762,7 +1810,7 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 	}
 
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	//==============下边为支付数据
+	// ==============下边为支付数据
 	var 参数 common.PayParams
 	参数.Uid = 局_Uid
 	参数.UidType = 局_Uid类型
@@ -1826,7 +1874,7 @@ func UserApi_订单_积分充值(c *gin.Context) {
 
 	var err error
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	//==============下边为支付数据
+	// ==============下边为支付数据
 	var 参数 common.PayParams
 	参数.Uid = 局_Uid
 	参数.UidType = 局_Uid类型
@@ -1883,7 +1931,7 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 	}
 
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	//==============下边为支付数据
+	// ==============下边为支付数据
 	var 参数 common.PayParams
 	参数.Uid = 0
 	参数.UidType = 局_Uid类型
@@ -1911,6 +1959,18 @@ func UserApi_置代理标志(c *gin.Context) {
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	局_代理uid := 请求json.GetInt("AgentUid")
+	局_推广码 := string(请求json.GetStringBytes("PromotionCode")) //如果有推广码 代理id失效
+	if 局_推广码 != "" {
+		tx := *global.GVA_DB
+		局_临时, err := service.NewPromotionCode(c, &tx).Info2(map[string]interface{}{"PromotionCode": 局_推广码})
+		if err == nil {
+			局_代理uid = 局_临时.Id
+		} else {
+			response.X响应状态消息(c, response.Status_操作失败, "推广码错误")
+			return
+		}
+	}
+
 	if Ser_Agent.Q取Id代理级别(局_代理uid) <= 0 {
 		response.X响应状态消息(c, response.Status_操作失败, "AgentUid非代理Uid")
 		return

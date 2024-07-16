@@ -35,8 +35,7 @@ func (s *Ka) Info2(where map[string]interface{}) (info DB.DB_Ka, err error) {
 	return
 }
 
-func (s *Ka) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
-
-	tx := s.db.Model(DB.DB_Ka{}).Where("id = ?", id).Create(&数据)
+func (s *Ka) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
+	tx := s.db.Model(DB.DB_Ka{}).Where("Id = ?", Id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
