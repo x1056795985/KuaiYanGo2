@@ -131,6 +131,8 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 		参数.Z支付配置s = setting.Q在线支付配置()
 		参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 		参数.ReceivedUid = 0
+	} else {
+		参数.ReceivedUid = 0
 	}
 
 	局_通道数据, err = 局_通道.D订单创建(c, &参数)
@@ -504,17 +506,14 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 			if 临时数据, ok = c.Get("info.卡类详情"); ok {
 				info.卡类详情 = 临时数据.(DB.DB_KaClass)
 			}
-			/*			c.Get("info.卡类详情", info.卡类详情)
-						c.Get("info.app用户详情", info.app用户详情)
-						c.Get("info.user用户详情", info.user用户详情)
-						c.Get("info.app详情", info.app详情)*/
+			if text, ok2 := c.Get("info.app用户详情"); ok2 {
+				info.app用户详情 = text.(DB.DB_AppUser)
+			}
 			参数.E额外信息.Get("卡类ID", 卡类ID)
 			参数.E额外信息.Get("卡类名称", info.卡类详情.Name)
 			参数.E额外信息.Get("应用", info.app详情.AppName)
 			参数.Note = 参数.Note + "充值卡类ID:" + strconv.Itoa(卡类ID) + ",应用:" + info.app详情.AppName + ",卡类:" + info.卡类详情.Name
-			if info.app用户详情.AgentUid != 0 {
-				参数.E额外信息.Set("AgentUid", info.app用户详情.AgentUid)
-			}
+			参数.E额外信息.Set("AgentUid", info.app用户详情.AgentUid)
 
 			//判断代理是否有分成,如果有进行处理
 			if err = j.代理分成(c, 参数, info.卡类详情.AgentMoney); err != nil {
@@ -592,7 +591,10 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				Ip:       参数.Ip,
 				Note:     局_文本,
 			})
-
+			if text, ok2 := c.Get("info.app用户详情"); ok2 {
+				info.app用户详情 = text.(DB.DB_AppUser)
+			}
+			参数.E额外信息.Set("AgentUid", info.app用户详情.AgentUid)
 			//判断代理是否有分成,如果有进行处理
 			if err = j.代理分成(c, 参数, info.卡类详情.AgentMoney); err != nil {
 				return err
@@ -671,10 +673,8 @@ func (j *rmbPay) 代理分成(c *gin.Context, 参数 *m.PayParams, AgentMoney fl
 	}
 	//下边这两个可空
 	var AgentUid int
+	AgentUid = 参数.E额外信息.Get("AgentUid").Int()
 
-	if 参数.E额外信息.Get("AgentUid").Int() == 0 {
-		AgentUid = 参数.E额外信息.Get("AgentUid").Int()
-	}
 	if AgentUid > 0 && AgentMoney > 0 {
 		var tx *gorm.DB
 		if tempObj, ok := c.Get("tx"); ok {
