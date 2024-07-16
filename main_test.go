@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -61,7 +62,13 @@ func 编译飞鸟快验() {
 			fmt.Println(out.String())
 		}
 	*/
+	// 设置环境变量
+	env := os.Environ()
+	env = append(env, "GOOS=linux")
+	env = append(env, "GOARCH=amd64")
+	env = append(env, "CGO_ENABLED=0")
 	cmd = exec.Command("go", "build", "-o", 局_编译名称, "main.go")
+	cmd.Env = env
 	cmd.Dir = 局_项目路径
 	err = cmd.Run()
 	if err != nil {
