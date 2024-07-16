@@ -412,6 +412,7 @@ func UserApi_订单_余额充值(c *gin.Context) {
 	局_卡号 := Ser_AppInfo.App是否为卡号(AppInfo.AppId)
 
 	var 局_Uid = 0
+
 	var 局_Uid类型 = 0
 	if 局_卡号 {
 		局_Uid类型 = 2
@@ -420,8 +421,9 @@ func UserApi_订单_余额充值(c *gin.Context) {
 		局_Uid类型 = 1
 		局_Uid = Ser_User.User用户名取id(局_用户名)
 	}
-
-	if 局_Uid == 0 {
+	var 局_appUser DB.DB_AppUser
+	局_appUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid)
+	if 局_appUser.Uid == 0 {
 		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
 		return
 	}
@@ -430,10 +432,10 @@ func UserApi_订单_余额充值(c *gin.Context) {
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
 	//==============下边为支付数据
 	var 参数 common.PayParams
-	参数.Uid = 局_Uid
+	参数.Uid = 局_appUser.Uid
 	参数.UidType = 局_Uid类型
 	参数.Type = 局_支付方式
-	参数.ReceivedUid = 局_在线信息.AgentUid
+	参数.ReceivedUid = 局_appUser.AgentUid
 	参数.Rmb = 请求json.GetFloat64("Money")
 	参数.ProcessingType = constant.D订单类型_余额充值
 	参数.E额外信息 = gjson.New("{}")
