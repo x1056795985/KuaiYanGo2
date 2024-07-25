@@ -75,11 +75,9 @@ func (C *Echart) G高德取天气(c *gin.Context) {
 
 	data, err := L_gaoDe.G高德查询天气(c)
 	if err != nil {
-		return
+		response.FailWithMessage("天气读取失败"+err.Error(), c)
+	} else {
+		response.OkWithDetailed(data, "成功", c)
 	}
 
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
-	}
-	response.OkWithDetailed(data, "成功", c)
 }

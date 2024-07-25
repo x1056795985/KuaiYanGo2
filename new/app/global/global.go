@@ -1,1 +1,5 @@
 package global
+
+func main() {
+
+}

@@ -215,11 +215,11 @@ func D定时任务_执行公共函数(时间戳 int64, R任务数据 db.DB_Cron)
 	}
 
 	局_云函数型参数 = utils.W文本_取出中间文本(R任务数据.RunText, firstChar, firstChar) //获取字符串参数
-	vm := Ser_Js.JS引擎初始化_用户(&DB.DB_AppInfo{}, &DB.DB_LinksToken{})
 	局_js数据, err := Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_公共函数, 局_函数名)
 	if err != nil {
 		return 返回, errors.New("获取全局公共js函数失败:" + err.Error())
 	}
+	vm := Ser_Js.JS引擎初始化_用户(&DB.DB_AppInfo{}, &DB.DB_LinksToken{}, &局_js数据)
 	_, err = vm.RunString(局_js数据.Value)
 	if 局_详细错误, ok := err.(*goja.Exception); ok {
 		return 返回, errors.New("JS代码运行失败:" + 局_详细错误.String())

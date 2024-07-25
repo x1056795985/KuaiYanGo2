@@ -381,6 +381,10 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GenerateAPIEncryptedSDK", App.S生成API加密源码SDK)
 		//在线支付
 		baseRouter.POST("GetInfoPay", App.GetInfo在线支付) // 获取详细信息
+		///mqtt配置
+		baseRouter.POST("GetInfoMQTT", App.GetInfoMQTT配置)
+		baseRouter.POST("SaveInfoMQTT", App.SaveMQTT配置)
+		baseRouter.POST("mqttSendMsg", App.Mqtt发送测试)
 
 		//短信平台配置
 		baseRouter.POST("GetInfoSMS", App.GetInfo短信平台设置)
