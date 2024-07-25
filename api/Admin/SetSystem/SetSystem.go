@@ -9,6 +9,7 @@ import (
 	"server/Service/Captcha"
 	"server/api/middleware"
 	"server/config"
+	"server/new/app/logic/common/mqttClient"
 	"server/new/app/logic/common/setting"
 	"server/structs/Http/response"
 	utils2 "server/utils"
@@ -122,6 +123,64 @@ func (a *Api) GetInfo短信平台设置(c *gin.Context) {
 }
 func (a *Api) GetInfo行为验证码平台设置(c *gin.Context) {
 	response.OkWithDetailed(setting.Q行为验证码平台配置(), "获取成功", c)
+	return
+}
+
+func (a *Api) GetInfoMQTT配置(c *gin.Context) {
+	var 配置 = setting.Q取MQTT配置()
+	配置.L连接状态 = mqttClient.L_mqttClient.Q取连接状态(c)
+	response.OkWithDetailed(配置, "获取成功", c)
+	return
+}
+
+func (a *Api) Mqtt发送测试(c *gin.Context) {
+	var 请求 struct {
+		Z主题 string `json:"主题"`
+		N内容 string `json:"内容"`
+	}
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if !mqttClient.L_mqttClient.Q取连接状态(c) {
+		response.FailWithMessage("请先打开连接状态,并保存", c)
+		return
+	}
+	err = mqttClient.L_mqttClient.F发送消息(c, 请求.Z主题, 请求.N内容)
+	if err == nil {
+		response.OkWithMessage("发送成功", c)
+	} else {
+		response.FailWithMessage(err.Error(), c)
+	}
+	return
+}
+
+// save 保存
+func (a *Api) SaveMQTT配置(c *gin.Context) {
+	var 请求 config.MQTT配置
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	mqttClient.L_mqttClient.D断开(nil)
+	if 请求.L连接状态 {
+		err = mqttClient.L_mqttClient.L连接(nil, 请求.F服务器地址, 请求.F服务器端口, 请求.Y用户名, 请求.M密码)
+		if err != nil {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+	}
+
+	err = setting.Z置MQTT配置(&请求)
+	if err != nil {
+		response.FailWithMessage("保存失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("保存成功", c)
 	return
 }
 

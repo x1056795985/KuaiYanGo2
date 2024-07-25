@@ -145,3 +145,11 @@ type 极验行为验证4 struct {
 	Y验证_ID  string `mapstructure:"验证_ID" json:"验证_ID" `
 	Y验证_KEY string `mapstructure:"验证_KEY" json:"验证_KEY" `
 }
+
+type MQTT配置 struct {
+	L连接状态  bool   `json:"连接状态"`
+	F服务器地址 string `json:"服务器地址"`
+	F服务器端口 int    `json:"服务器端口"`
+	Y用户名   string `json:"用户名"`
+	M密码    string `json:"密码"`
+}

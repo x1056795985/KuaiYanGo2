@@ -19,7 +19,7 @@ type TaskPool_数据 struct {
 	TimeStart  int    `json:"TimeStart" gorm:"column:TimeStart;comment:任务创建时间戳"`
 	TimeEnd    int    `json:"TimeEnd" gorm:"column:TimeEnd;comment:任务结束时间戳"`
 	SubmitData string `json:"SubmitData" gorm:"column:SubmitData;size:8000; comment:生产提交数据"`
-	ReturnData string `json:"ReturnData" gorm:"column:ReturnData;size:8000;;comment:消费返回数据"`
+	ReturnData string `json:"ReturnData" gorm:"column:ReturnData;size:16777215;;comment:消费返回数据"`
 	Status     int    `json:"Status" gorm:"column:Status;comment:任务状态,"` //1 已创建,2任务处理中,3成功,4任务失败
 }
 
@@ -42,6 +42,7 @@ type TaskPool_类型 struct {
 	HookSubmitDataEnd   string `json:"HookSubmitDataEnd" gorm:"column:HookSubmitDataEnd;comment:hook创建入库后函数名"`
 	HookReturnDataStart string `json:"HookReturnDataStart" gorm:"column:HookReturnDataStart;comment:hook执行入库前函数名"`
 	HookReturnDataEnd   string `json:"HookReturnDataEnd" gorm:"column:HookReturnDataEnd;comment:hook执行入库后函数名"`
+	MqttTopicMsg        string `json:"MqttSendMsg" gorm:"column:MqttSendMsg;comment:新任务mqtt通知主题"`
 }
 
 func (TaskPool_类型) TableName() string {

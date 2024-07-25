@@ -29,6 +29,7 @@ import (
 	"server/api/UserApi/response"
 	"server/global"
 	"server/new/app/logic/common/blacklist"
+	"server/new/app/logic/common/mqttClient"
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -1489,7 +1490,7 @@ func UserApi_云函数执行(c *gin.Context) {
 	}
 
 	局_云函数型参数 := string(请求json.GetStringBytes("Parameter"))
-	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息)
+	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
 	_, err = vm.RunString(局_PublicJs.Value)
 	if 局_详细错误, ok := err.(*goja.Exception); ok {
 		response.X响应状态消息(c, response.Status_操作失败, "JS代码运行失败:"+局_详细错误.String())
@@ -1542,8 +1543,13 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "维护中")
 		return
 	}
+	局_任务数据 := ""
+	if 请求json.Get("Parameter").Type().String() == "object" {
+		局_任务数据 = 请求json.Get("Parameter").String()
+	} else {
+		局_任务数据 = string(请求json.GetStringBytes("Parameter"))
+	}
 
-	局_任务数据 := string(请求json.GetStringBytes("Parameter"))
 	if 局_任务类型.HookSubmitDataStart != "" {
 		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
 		if err != nil {
@@ -1564,6 +1570,11 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_操作失败, err.Error())
 			return
 		}
+	}
+	//新任务,使用mqtt通知
+	if 局_任务类型.MqttTopicMsg != "" {
+		局_临时文本 := fmt.Sprintf(`{"taskId":%d,"time":%d}`, 局_任务类型.Id, time.Now().Unix())
+		_ = mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
 	}
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"TaskUuid": 任务Id})
@@ -1591,8 +1602,14 @@ func UserApi_任务池_任务查询(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "任务Uuid错误")
 		return
 	}
+	var mapkv map[string]interface{}
 
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": 局_任务数据.Status, "ReturnData": 局_任务数据.ReturnData, "TimeStart": 局_任务数据.TimeStart, "TimeEnd": 局_任务数据.TimeEnd})
+	//局_任务数据.ReturnData 判断字符串是否为json格式如果是json则解析
+	if json.Unmarshal([]byte(局_任务数据.ReturnData), &mapkv) == nil {
+		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": 局_任务数据.Status, "ReturnData": mapkv, "TimeStart": 局_任务数据.TimeStart, "TimeEnd": 局_任务数据.TimeEnd})
+	} else {
+		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": 局_任务数据.Status, "ReturnData": 局_任务数据.ReturnData, "TimeStart": 局_任务数据.TimeStart, "TimeEnd": 局_任务数据.TimeEnd})
+	}
 	return
 }
 

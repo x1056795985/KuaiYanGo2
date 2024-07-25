@@ -147,7 +147,7 @@ func Task数据删除过期() {
 	//24小时
 }
 
-func Task类型创建(Name, hook函数名创建入库前, hook函数名创建入库后, hook函数名执行入库前, hook函数名执行入库后 string) error {
+func Task类型创建(Name, hook函数名创建入库前, hook函数名创建入库后, hook函数名执行入库前, hook函数名执行入库后, MqttTopicMsg string) error {
 	DB_TaskPool_类型 := DB.TaskPool_类型{
 		Id:                  0,
 		Name:                Name,
@@ -155,6 +155,7 @@ func Task类型创建(Name, hook函数名创建入库前, hook函数名创建入
 		HookSubmitDataEnd:   hook函数名创建入库后,
 		HookReturnDataStart: hook函数名执行入库前,
 		HookReturnDataEnd:   hook函数名执行入库后,
+		MqttTopicMsg:        MqttTopicMsg,
 	}
 	err := global.GVA_DB.Model(DB.TaskPool_类型{}).Create(&DB_TaskPool_类型).Error
 	return err

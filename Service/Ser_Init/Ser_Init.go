@@ -265,7 +265,7 @@ func InitDbTable数据() {
 	if 局_例子记录.Taskpool < 局_例子版本 {
 		global.GVA_DB.Model(DB.TaskPool_类型{}).Count(&局_数量)
 		if 局_数量 == 0 {
-			_ = Ser_TaskPool.Task类型创建("测试任务1", "hook模板_任务创建入库前", "", "", "")
+			_ = Ser_TaskPool.Task类型创建("测试任务1", "hook模板_任务创建入库前", "", "", "", "")
 		}
 		局_例子记录.Taskpool = 局_例子版本
 	}
