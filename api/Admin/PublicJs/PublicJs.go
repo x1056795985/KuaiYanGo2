@@ -331,7 +331,8 @@ func (a *Api) C测试执行(c *gin.Context) {
 	var 局_在线信息 DB.DB_LinksToken
 	局_云函数型参数 := "{}"
 
-	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息)
+	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
+
 	_, err = vm.RunString(局_PublicJs.Value)
 	if 局_详细错误, ok := err.(*goja.Exception); ok {
 		response.FailWithMessage("JS代码运行失败:"+局_详细错误.String(), c)

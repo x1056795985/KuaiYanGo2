@@ -52,7 +52,13 @@ func R任务池_任务处理返回(c *gin.Context) {
 		response.FailWithMessage("该UUID的任务类型Id不存在", c)
 		return
 	}
-	局_任务数据 := string(请求json.GetStringBytes("TaskReturnData"))
+	局_任务数据 := ""
+	if 请求json.Get("TaskReturnData").Type().String() == "object" {
+		局_任务数据 = 请求json.Get("TaskReturnData").String()
+	} else {
+		局_任务数据 = string(请求json.GetStringBytes("TaskReturnData"))
+	}
+
 	局_任务状态 := 请求json.GetInt("TaskStatus")
 	if 局_任务类型.HookReturnDataStart != "" {
 		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataStart, 局_任务数据, 局_任务状态)
@@ -97,7 +103,6 @@ func RunJs(c *gin.Context) {
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Parameter":"{'a':1}","JsName":"获取用户相关信息"}
 	局_耗时 := time.Now().UnixMilli()
-	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息)
 	var 局_PublicJs DB.DB_PublicJs
 	var err error
 	局_PublicJs, err = Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_公共函数, string(请求json.GetStringBytes("JsName")))
@@ -105,6 +110,8 @@ func RunJs(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
+
 	局_云函数型参数 := string(请求json.GetStringBytes("Parameter"))
 	_, err = vm.RunString(局_PublicJs.Value)
 	if 局_详细错误, ok := err.(*goja.Exception); ok {

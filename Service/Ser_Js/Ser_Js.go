@@ -2,13 +2,14 @@ package Ser_Js
 
 // https://blog.csdn.net/wyongqing/article/details/124704136   参考地址
 import (
-	"EFunc/utils"
+	. "EFunc/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
+	"regexp"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
@@ -20,6 +21,7 @@ import (
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserConfig"
 	"server/global"
+	"server/new/app/logic/common/mqttClient"
 	"server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -28,7 +30,7 @@ import (
 	"time"
 )
 
-func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken) *goja.Runtime {
+func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, 局_PublicJs *DB.DB_PublicJs) *goja.Runtime {
 	vm := goja.New() // 创建engine实例
 	_ = vm.Set("$用户在线信息", 在线信息)
 
@@ -67,6 +69,33 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_取缓存", jS_取缓存)
 	_ = vm.Set("$api_置缓存", jS_置缓存)
 	_ = vm.Set("$api_置黑名单", jS_置黑名单)
+	_ = vm.Set("$api_mqtt发送消息", jS_mqtt发送消息)
+
+	//处理载入外部js文件  'import "@/utils/utils";
+	if strings.Index(局_PublicJs.Value, "import '") != -1 || strings.Index(局_PublicJs.Value, `import "`) != -1 {
+		// 导入外部的模块
+		re := regexp.MustCompile(`\n@?import\s+['|"](.*?)['|"]`)
+		result := re.FindAllStringSubmatch(`\n`+局_PublicJs.Value, -1)
+		for i, _ := range result {
+			局_临时文本 := result[i][1]
+			if W文本_取左边(局_临时文本, 4) == `http` {
+				//https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/crypto-js/4.1.1/crypto-js.min.js
+				局_本地路径 := global.GVA_CONFIG.Q取运行目录 + "/云函数/lib/" + W文本_取文本右边(局_临时文本, "//")
+				if !W文件_是否存在(局_本地路径) || W文本_取左边(result[i][0], 1) == "@" {
+					局_js, err2 := req.C().R().Get(局_临时文本)
+					if err2 == nil {
+						_ = M目录_创建(W文件_取父目录(局_本地路径))
+						_ = W文件_写到文件(局_本地路径, 局_js.Bytes())
+					}
+				}
+				局_PublicJs.Value = strings.Replace(局_PublicJs.Value, strings.TrimSpace(result[i][0]), W文件_读入文本(局_本地路径), 1)
+			} else {
+				//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/crypto-js/4.1.1/crypto-js.min.js
+				局_本地路径 := global.GVA_CONFIG.Q取运行目录 + "/云函数/" + 局_临时文本
+				局_PublicJs.Value = strings.Replace(局_PublicJs.Value, strings.TrimSpace(result[i][0]), W文件_读入文本(局_本地路径), 1)
+			}
+		}
+	}
 
 	return vm
 }
@@ -76,7 +105,7 @@ func JS引擎初始化_任务池Hook处理(AppInfo *DB.DB_AppInfo, 在线信息 
 		return "", 局_任务状态, err
 	}
 
-	vm := JS引擎初始化_用户(AppInfo, 在线信息)
+	vm := JS引擎初始化_用户(AppInfo, 在线信息, &局_PublicJs)
 	_ = vm.Set("$拦截原因", "")
 	_ = vm.Set("$任务状态", 局_任务状态)
 	_, err = vm.RunString(局_PublicJs.Value)
@@ -119,7 +148,7 @@ func JS引擎初始化_ApiHook处理(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB
 		return
 	}
 
-	vm := JS引擎初始化_用户(AppInfo, 在线信息)
+	vm := JS引擎初始化_用户(AppInfo, 在线信息, &局_PublicJs)
 	_ = vm.Set("$拦截原因", "")
 	headers := make([]string, 0, len(c.Request.Header))
 	for key, values := range c.Request.Header {
@@ -196,12 +225,12 @@ func jS_取软件用户详情(局_在线信息 DB.DB_LinksToken) DB.DB_AppUser {
 func jS_用户Id增减余额(局_在线信息 DB.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
 
-	新余额, err := Ser_User.Id余额增减(局_在线信息.Uid, utils.Float64取绝对值(增减值), is增加)
+	新余额, err := Ser_User.Id余额增减(局_在线信息.Uid, Float64取绝对值(增减值), is增加)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
 
-	go Ser_Log.Log_写余额日志(局_在线信息.User, 局_在线信息.Ip, 原因+"|新余额≈"+utils.Float64到文本(新余额, 2), 增减值)
+	go Ser_Log.Log_写余额日志(局_在线信息.User, 局_在线信息.Ip, 原因+"|新余额≈"+Float64到文本(新余额, 2), 增减值)
 
 	return js对象_通用返回{IsOk: true, Err: ""}
 }
@@ -209,7 +238,7 @@ func jS_用户Id增减积分(局_在线信息 DB.DB_LinksToken, 增减值 float6
 	is增加 := 增减值 >= 0
 
 	局_AppUserId := Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
-	err := Ser_AppUser.Id积分增减(局_在线信息.LoginAppid, 局_AppUserId, utils.Float64取绝对值(增减值), is增加)
+	err := Ser_AppUser.Id积分增减(局_在线信息.LoginAppid, 局_AppUserId, Float64取绝对值(增减值), is增加)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
@@ -219,7 +248,7 @@ func jS_用户Id增减积分(局_在线信息 DB.DB_LinksToken, 增减值 float6
 func jS_用户Id增减时间点数(AppId int, 局_在线信息 DB.DB_LinksToken, 增减值 int, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
 	//获取增减值的绝对值
-	增减值 = utils.S三元(增减值 > 0, 增减值, -增减值)
+	增减值 = S三元(增减值 > 0, 增减值, -增减值)
 
 	局_AppUserId := Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
 
@@ -271,13 +300,13 @@ func jS_网页访问_GET(Url string, 协议头一行一个 interface{}, Cookies 
 	var 局_协议头数组 []string
 	switch v := 协议头一行一个.(type) {
 	case string:
-		局_协议头数组 = utils.W文本_分割文本(v, "\r")
+		局_协议头数组 = W文本_分割文本(v, "\r")
 	case []string:
 		局_协议头数组 = v
 	}
 	for _, 值 := range 局_协议头数组 {
 		if strings.Index(值, ":") != -1 {
-			request.SetHeader(utils.W文本_取文本左边(值, ":"), utils.W文本_取文本右边(值, ":"))
+			request.SetHeader(W文本_取文本左边(值, ":"), W文本_取文本右边(值, ":"))
 		}
 	}
 
@@ -288,10 +317,10 @@ func jS_网页访问_GET(Url string, 协议头一行一个 interface{}, Cookies 
 
 	局_响应头信息 := ret.HeaderToString()
 
-	局_临时文本数组 := utils.W文本_分割文本(Cookies, ";") //分割传入的文本
+	局_临时文本数组 := W文本_分割文本(Cookies, ";") //分割传入的文本
 	var 局_临时MAP = make(map[string]string)
 	for _, 值 := range 局_临时文本数组 {
-		局_临时MAP[utils.W文本_取文本左边(值, "=")] = utils.W文本_取文本右边(值, "=")
+		局_临时MAP[W文本_取文本左边(值, "=")] = W文本_取文本右边(值, "=")
 	}
 
 	for _, 值 := range ret.Cookies() {
@@ -316,7 +345,7 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, C
 	request := client.R()
 	request.SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.289 Safari/537.36")
 
-	if utils.W文本_是否JSON(post) {
+	if W文本_是否JSON(post) {
 		request.SetHeader("Content-Type", "application/json")
 		request.SetHeader("Accept", "application/json, text/plain, */*")
 	}
@@ -324,14 +353,14 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, C
 	var 局_协议头数组 []string
 	switch v := 协议头一行一个.(type) {
 	case string:
-		局_协议头数组 = utils.W文本_分割文本(v, "\r")
+		局_协议头数组 = W文本_分割文本(v, "\r")
 	case []string:
 		局_协议头数组 = v
 	}
 
 	for _, 值 := range 局_协议头数组 {
 		if strings.Index(值, ":") != -1 {
-			request.SetHeader(utils.W文本_取文本左边(值, ":"), utils.W文本_取文本右边(值, ":"))
+			request.SetHeader(W文本_取文本左边(值, ":"), W文本_取文本右边(值, ":"))
 		}
 	}
 
@@ -342,10 +371,10 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, C
 
 	局_响应头信息 := ret.HeaderToString()
 
-	局_临时文本数组 := utils.W文本_分割文本(Cookies, ";") //分割传入的文本
+	局_临时文本数组 := W文本_分割文本(Cookies, ";") //分割传入的文本
 	var 局_临时MAP = make(map[string]string)
 	for _, 值 := range 局_临时文本数组 {
-		局_临时MAP[utils.W文本_取文本左边(值, "=")] = utils.W文本_取文本右边(值, "=")
+		局_临时MAP[W文本_取文本左边(值, "=")] = W文本_取文本右边(值, "=")
 	}
 
 	for _, 值 := range ret.Cookies() {
@@ -431,6 +460,13 @@ func jS_任务池_任务创建(局_在线信息 DB.DB_LinksToken, 任务类型ID
 			return js对象_通用返回{IsOk: false, Err: err.Error()}
 		}
 	}
+
+	//新任务,使用mqtt通知
+	if 局_任务类型.MqttTopicMsg != "" {
+		局_临时文本 := fmt.Sprintf(`{"taskId":%d,"time":%d}`, 局_任务类型.Id, time.Now().Unix())
+		_ = mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
+	}
+
 	return js对象_通用返回{IsOk: true, Err: "", Data: gin.H{"TaskUuid": 任务Id}}
 
 }
@@ -526,6 +562,16 @@ func jS_置黑名单(AppId int, 黑名单信息, 备注 string) js对象_通用�
 	var S = service.S_Blacklist{}
 	tx := *global.GVA_DB
 	err := S.Create(&tx, db.DB_Blacklist{AppId: AppId, ItemKey: 黑名单信息, Note: 备注})
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	}
+	return js对象_通用返回{IsOk: true, Err: "成功"}
+}
+
+func jS_mqtt发送消息(主题 string, 消息 string) js对象_通用返回 {
+
+	err := mqttClient.L_mqttClient.F发送消息(nil, 主题, 消息)
+
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
