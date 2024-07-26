@@ -594,7 +594,14 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 			if text, ok2 := c.Get("info.app用户详情"); ok2 {
 				info.app用户详情 = text.(DB.DB_AppUser)
 			}
-			参数.E额外信息.Set("AgentUid", info.app用户详情.AgentUid)
+
+			if info.app用户详情.AgentUid != 0 {
+				参数.E额外信息.Set("AgentUid", info.app用户详情.AgentUid)
+			} else {
+				//支付购卡,如果用户没登陆,可能没有用户代理标志,就需要使用在线代理标志
+				参数.E额外信息.Set("AgentUid", 参数.E额外信息.Get("在线信息AgentUid").Int())
+			}
+
 			//判断代理是否有分成,如果有进行处理
 			if err = j.代理分成(c, 参数, info.卡类详情.AgentMoney); err != nil {
 				return err
@@ -603,7 +610,6 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 					info.LogMoney = append(info.LogMoney, 临时数据.([]DB.DB_LogMoney)...)
 				}
 			}
-
 		}
 		//判断是否为代收款
 		if 参数.ReceivedUid > 0 {
