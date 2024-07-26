@@ -440,6 +440,7 @@ func UserApi_订单_余额充值(c *gin.Context) {
 	参数.ProcessingType = constant.D订单类型_余额充值
 	参数.E额外信息 = gjson.New("{}")
 	err = 参数.E额外信息.Set("AppId", AppInfo.AppId)
+	err = 参数.E额外信息.Set("在线信息AgentUid", 局_在线信息.AgentUid)
 
 	响应数据2, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
 	if err != nil {
