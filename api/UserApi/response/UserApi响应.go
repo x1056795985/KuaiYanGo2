@@ -154,7 +154,7 @@ func apiHook之后(c *gin.Context, json明文 string) string {
 		局_hookAfter := ""
 		局_hookAfter = string(JSON.GetStringBytes(Api, "After"))
 		if len(局_hookAfter) == 0 {
-			return 局_hookAfter
+			return json明文
 		}
 
 		json明文, err = Ser_Js.JS引擎初始化_ApiHook处理(&AppInfo, &局_在线信息, 局_hookAfter, json明文, c)

@@ -9,6 +9,7 @@ import (
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
+	"reflect"
 	"regexp"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
@@ -70,6 +71,14 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_置缓存", jS_置缓存)
 	_ = vm.Set("$api_置黑名单", jS_置黑名单)
 	_ = vm.Set("$api_mqtt发送消息", jS_mqtt发送消息)
+
+	_ = vm.Set("$api_编码_BASE64编码", B编码_BASE64编码)
+	_ = vm.Set("$api_编码_BASE64解码", B编码_BASE64解码)
+	_ = vm.Set("$api_字节集_十六进制到字节集", Z字节集_十六进制到字节集)
+	_ = vm.Set("$api_字节集_字节集到十六进制", Z字节集_字节集到十六进制)
+	_ = vm.Set("$api_文本_取文本右边", W文本_取文本右边)
+	_ = vm.Set("$api_文本_取文本左边", W文本_取文本左边)
+	_ = vm.Set("$api_文本_取出中间文本", W文本_取出中间文本)
 
 	//处理载入外部js文件  'import "@/utils/utils";
 	if strings.Index(局_PublicJs.Value, "import '") != -1 || strings.Index(局_PublicJs.Value, `import "`) != -1 {
@@ -297,13 +306,23 @@ func jS_网页访问_GET(Url string, 协议头一行一个 interface{}, Cookies 
 	}
 	request := client.R()
 	request.SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.289 Safari/537.36")
-	var 局_协议头数组 []string
-	switch v := 协议头一行一个.(type) {
-	case string:
-		局_协议头数组 = W文本_分割文本(v, "\r")
-	case []string:
-		局_协议头数组 = v
+	if Cookies != "" {
+		request.SetHeader("Cookie", Cookies)
 	}
+	var 局_协议头数组 []string
+	aa := reflect.TypeOf(协议头一行一个).Kind()
+	if aa == reflect.Array || aa == reflect.Slice {
+		for v := range reflect.ValueOf(协议头一行一个).Len() {
+			index := reflect.ValueOf(协议头一行一个).Index(v)
+			nameValue, ok := index.Interface().(string)
+			if ok {
+				局_协议头数组 = append(局_协议头数组, nameValue)
+			}
+		}
+	} else {
+		局_协议头数组 = W文本_分割文本(协议头一行一个.(string), "\r")
+	}
+
 	for _, 值 := range 局_协议头数组 {
 		if strings.Index(值, ":") != -1 {
 			request.SetHeader(W文本_取文本左边(值, ":"), W文本_取文本右边(值, ":"))
@@ -333,7 +352,7 @@ func jS_网页访问_GET(Url string, 协议头一行一个 interface{}, Cookies 
 			Cookies += key + "=" + val + ";"
 		}
 	}
-	return js对象_网页响应{StatusCode: ret.StatusCode, Cookies: Cookies, Headers: 局_响应头信息, Body: ret.String()}
+	return js对象_网页响应{StatusCode: ret.StatusCode, Cookies: Cookies, Headers: 局_响应头信息, Body: ret.String(), Base64Body: B编码_BASE64编码(ret.Bytes())}
 
 }
 func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
@@ -351,11 +370,17 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, C
 	}
 
 	var 局_协议头数组 []string
-	switch v := 协议头一行一个.(type) {
-	case string:
-		局_协议头数组 = W文本_分割文本(v, "\r")
-	case []string:
-		局_协议头数组 = v
+	aa := reflect.TypeOf(协议头一行一个).Kind()
+	if aa == reflect.Array || aa == reflect.Slice {
+		for v := range reflect.ValueOf(协议头一行一个).Len() {
+			index := reflect.ValueOf(协议头一行一个).Index(v)
+			nameValue, ok := index.Interface().(string)
+			if ok {
+				局_协议头数组 = append(局_协议头数组, nameValue)
+			}
+		}
+	} else {
+		局_协议头数组 = W文本_分割文本(协议头一行一个.(string), "\r")
 	}
 
 	for _, 值 := range 局_协议头数组 {
@@ -363,7 +388,9 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, C
 			request.SetHeader(W文本_取文本左边(值, ":"), W文本_取文本右边(值, ":"))
 		}
 	}
-
+	if Cookies != "" {
+		request.SetHeader("Cookie", Cookies)
+	}
 	ret, err := request.SetBody(post).Post(Url)
 	if err != nil {
 		return js对象_网页响应{StatusCode: 0, Cookies: "", Headers: "", Body: err.Error()}
@@ -387,7 +414,7 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, C
 			Cookies += key + "=" + val + ";"
 		}
 	}
-	return js对象_网页响应{StatusCode: ret.StatusCode, Cookies: Cookies, Headers: 局_响应头信息, Body: ret.String()}
+	return js对象_网页响应{StatusCode: ret.StatusCode, Cookies: Cookies, Headers: 局_响应头信息, Body: ret.String(), Base64Body: B编码_BASE64编码(ret.Bytes())}
 }
 
 type js对象_网页响应 struct {
@@ -395,6 +422,7 @@ type js对象_网页响应 struct {
 	Headers    string `json:"Headers"`
 	Cookies    string `json:"Cookies"`
 	Body       string `json:"Body"`
+	Base64Body string `json:"base64Body"`
 }
 
 // 执行sql查询,支持预处理绑定参数
