@@ -492,9 +492,10 @@ func (a *Api) Set修改状态(c *gin.Context) {
 }
 
 type 结构请求_批量修改状态 struct {
-	Id     []int `json:"Id"`     //用户id数组
-	AppId  int   `json:"AppId"`  //用户id数组
-	Status int   `json:"Status"` //1 解冻 2冻结
+	Id     []int  `json:"Id"`     //用户id数组
+	AppId  int    `json:"AppId"`  //用户id数组
+	Status int    `json:"Status"` //1 解冻 2冻结
+	Note   string `json:"Note"`   //备注
 }
 
 // 批量维护 增减时间点数
@@ -527,9 +528,56 @@ func (a *Api) Set批量维护_增减时间点数(c *gin.Context) {
 	}
 
 	response.OkWithMessage("修改成功", c)
+	if 请求.Note == "" {
+		请求.Note = "无"
+	}
+	for _, 局_id := range 请求.Id {
+		Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+Ser_Admin.Id取User(c.GetInt("Uid"))+"批量增减点数,原因:"+请求.Note, float64(请求.Status), 请求.AppId, utils.S三元(Ser_AppInfo.App是否为计点(请求.AppId), 2, 3))
+	}
+	return
+}
+
+// 批量维护 增减积分
+func (a *Api) Set批量维护_增减积分(c *gin.Context) {
+	var 请求 struct {
+		Id     []int   `json:"Id"`     //用户id数组
+		AppId  int     `json:"AppId"`  //用户id数组
+		Number float64 `json:"Number"` //积分值
+		Note   string  `json:"Note"`   //积分值
+	}
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if 请求.AppId <= 0 {
+		response.FailWithMessage("AppId错误", c)
+		return
+	}
+	if len(请求.Id) == 0 {
+		response.FailWithMessage("Id数组为空", c)
+		return
+	}
+	if 请求.Number > 0 {
+		err = Ser_AppUser.Id积分增减_批量(请求.AppId, 请求.Id, 请求.Number, true)
+	} else {
+		err = Ser_AppUser.Id积分增减_批量(请求.AppId, 请求.Id, utils.Float64取绝对值(请求.Number), false)
+	}
+
+	if err != nil {
+		response.FailWithMessage("修改失败", c)
+		global.GVA_LOG.Error("修改失败:" + err.Error())
+		return
+	}
+
+	response.OkWithMessage("修改成功", c)
+	if 请求.Note == "" {
+		请求.Note = "无"
+	}
 
 	for _, 局_id := range 请求.Id {
-		Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+Ser_Admin.Id取User(c.GetInt("Uid"))+"批量增减点数", float64(请求.Status), 请求.AppId, utils.S三元(Ser_AppInfo.App是否为计点(请求.AppId), 2, 3))
+		Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+Ser_Admin.Id取User(c.GetInt("Uid"))+"批量增减积分原因:"+请求.Note, 请求.Number, 请求.AppId, 1)
 	}
 	return
 }
