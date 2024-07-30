@@ -1,6 +1,7 @@
 package Qqwry
 
 import (
+	"EFunc/utils"
 	"bytes"
 	_ "embed"
 	"encoding/binary"
@@ -20,8 +21,20 @@ var 中国Ip查询库 []byte
 
 // 自动加载数据库文件
 func init() {
-	LoadData(中国Ip查询库)
-	fmt.Printf("纯真IP数据库,已加载到内存\n")
+	if utils.W文件_是否存在("qqwry.dat") {
+		err := LoadFile("qqwry.dat")
+		if err != nil {
+			LoadData(中国Ip查询库)
+			fmt.Printf("本地纯真IP数据库,已加载到内存失败已重新加载内置库\n")
+		} else {
+			fmt.Printf("本地纯真IP数据库,已加载到内存\n")
+		}
+
+	} else {
+		LoadData(中国Ip查询库)
+		fmt.Printf("纯真IP数据库,已加载到内存\n")
+	}
+
 }
 
 var (
