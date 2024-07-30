@@ -319,7 +319,7 @@ func jS_网页访问_GET(Url string, 协议头一行一个 interface{}, Cookies 
 				局_协议头数组 = append(局_协议头数组, nameValue)
 			}
 		}
-	} else {
+	} else if aa == reflect.String {
 		局_协议头数组 = W文本_分割文本(协议头一行一个.(string), "\r")
 	}
 
@@ -379,7 +379,7 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, C
 				局_协议头数组 = append(局_协议头数组, nameValue)
 			}
 		}
-	} else {
+	} else if aa == reflect.String {
 		局_协议头数组 = W文本_分割文本(协议头一行一个.(string), "\r")
 	}
 

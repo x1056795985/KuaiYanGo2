@@ -82,7 +82,6 @@ func S刷新数据库定时任务(主动 bool) error {
 			global.GVA_LOG.Info("已刷新定时任务,新任务hash:" + hashStr)
 			global.H缓存.Set("map集群任务Hash", hashStr, -1) //谁更新数据库任务信息,谁主动更新缓存的hash值
 		}
-
 	}
 	return nil
 }

@@ -110,9 +110,15 @@ func RunJs(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
 
-	局_云函数型参数 := string(请求json.GetStringBytes("Parameter"))
+	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
+	局_云函数型参数 := ""
+	if 请求json.Get("Parameter").Type() == fastjson.TypeObject {
+		局_云函数型参数 = 请求json.Get("Parameter").String()
+	} else {
+		局_云函数型参数 = string(请求json.GetStringBytes("Parameter"))
+	}
+
 	_, err = vm.RunString(局_PublicJs.Value)
 	if 局_详细错误, ok := err.(*goja.Exception); ok {
 		response.FailWithMessage("JS代码运行失败:"+局_详细错误.String(), c)

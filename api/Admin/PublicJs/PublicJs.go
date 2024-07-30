@@ -64,7 +64,7 @@ func (a *Api) GetPublicJsList(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-	fmt.Println(global.GVA_DB)
+	//fmt.Println(global.GVA_DB)
 	局_DB := global.GVA_DB.Model(DB.DB_PublicJs{})
 	// global.GVA_DB.Model(DB.DB_PublicJs{}).Debug()
 	//局_DB.Debug() //debug不能放到上面,会导致where不生效,反正是不行,采坑20240220
