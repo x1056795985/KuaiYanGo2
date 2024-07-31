@@ -1,7 +1,9 @@
 package LogRMBPayOrder
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"server/Service/Ser_Log"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
 	"server/global"
@@ -242,16 +244,18 @@ func (a *Api) New手动充值(c *gin.Context) {
 		response.FailWithMessage("订单创建失败", c)
 		return
 	}
-
-	if _, err = Ser_User.Id余额增减(新订单.Uid, 新订单.Rmb, true); err != nil {
+	var 新余额 float64
+	if 新余额, err = Ser_User.Id余额增减(新订单.Uid, 新订单.Rmb, true); err != nil {
 		response.FailWithMessage("订单创建成功充值用户失败", c)
 		return
 	}
+	Ser_Log.Log_写余额日志(新订单.User, c.ClientIP(), fmt.Sprintf("管理员手动创建支付订单:%s|新余额≈%.2f", 新订单.PayOrder, 新余额), 新订单.Rmb)
 
 	if !Ser_RMBPayOrder.Order更新订单状态(新订单.PayOrder, Ser_RMBPayOrder.D订单状态_成功) {
 		response.FailWithMessage("用户充值成功订单状态更新失败", c)
 		return
 	}
+
 	response.OkWithMessage("操作成功", c)
 	return
 }

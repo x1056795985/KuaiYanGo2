@@ -311,7 +311,7 @@ func UserApi_余额购买积分(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_操作失败, "扣费成功,但是积分增加失败,请联系开发者手动处理")
 		} else {
 			response.X响应状态消息(c, response.Status_操作失败, "购买积分失败,请重试")
-			go Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("购买积分失败:%.2f|新余额≈%.2f", 局_增减积分, 新余额), 局_花费金额)
+			Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("购买积分失败:%.2f|新余额≈%.2f", 局_增减积分, 新余额), 局_花费金额)
 
 		}
 		return
