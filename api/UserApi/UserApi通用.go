@@ -100,6 +100,11 @@ func UserApi_用户登录(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_登录失败, "卡号不存在")
 			return
 		}
+		if 局_卡.Status != 1 {
+			go Ser_Log.Log_写登录日志(局_卡.Name, c.ClientIP(), "卡号已冻结", 局_在线信息.LoginAppid)
+			response.X响应状态消息(c, response.Status_登录失败, "卡号已冻结")
+			return
+		}
 		局_Uid = 局_卡.Id
 		局_卡号或用户名 = 局_卡.Name
 	} else {
@@ -116,7 +121,11 @@ func UserApi_用户登录(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_登录失败, "用户名或密码错误")
 			return
 		}
-
+		if 局_User.Status != 1 {
+			go Ser_Log.Log_写登录日志(局_User.User, c.ClientIP(), "账号已冻结", 局_在线信息.LoginAppid)
+			response.X响应状态消息(c, response.Status_登录失败, "账号已冻结")
+			return
+		}
 		if 局_User.UPAgentId != 0 {
 			go Ser_Log.Log_写登录日志(局_User.User, c.ClientIP(), "代理商请登录代理平台", 局_在线信息.LoginAppid)
 			response.X响应状态消息(c, response.Status_登录失败, "代理商请登录代理平台")
@@ -1182,7 +1191,7 @@ func UserApi_心跳(c *gin.Context) {
 		return
 	}
 
-	if AppInfo.Status == 2 {
+	if AppInfo.Status == 2 { //感觉没什么用,冻结了,直接就token已注销,不会到这里了
 		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": 1})
 		return
 	}
