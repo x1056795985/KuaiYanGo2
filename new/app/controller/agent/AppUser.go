@@ -54,7 +54,7 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 		AppType int `json:"AppType"` //登录平台App名字
 	}
 	tx := *global.GVA_DB
-	err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Find(&DB_AppUser).Error
+	err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Where("AgentUid = ?", c.GetInt("Uid")).Find(&DB_AppUser).Error
 	// 没查到数据
 
 	if err != nil {
@@ -507,7 +507,7 @@ func (C *AppUser) Set修改状态(c *gin.Context) {
 		tx := *global.GVA_DB
 		for _, 值 := range 请求.Id {
 			局_临时用户信息, _ := service.NewAppUser(c, &tx, 请求.AppId).Info(值)
-			if 局_临时用户信息.Uid > 0 {
+			if 局_临时用户信息.Uid > 0 && 局_临时用户信息.AgentUid == c.GetInt("Uid") {
 				局_uid数组 = append(局_uid数组, 局_临时用户信息.Uid)
 			}
 		}

@@ -2,6 +2,7 @@ package KaClass
 
 import (
 	"github.com/gin-gonic/gin"
+	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_UserClass"
 	"server/global"
@@ -216,6 +217,10 @@ func (a *Api) SaveInfo(c *gin.Context) {
 		response.FailWithMessage("保存失败", c)
 		return
 	}
+	if 请求.AgentMoney < 0 {
+		Ser_Agent.D代理授权卡类Id删除(请求.Id)
+	}
+
 	response.OkWithMessage("保存成功", c)
 	return
 }
