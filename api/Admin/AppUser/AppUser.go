@@ -39,8 +39,8 @@ func (a *Api) GetAppUserInfo(c *gin.Context) {
 	}
 
 	var DB_AppUser DB_AppUser2
-
-	err = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Find(&DB_AppUser).Error
+	db := *global.GVA_DB
+	err = db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Find(&DB_AppUser).Error
 	// 没查到数据
 
 	if err != nil {

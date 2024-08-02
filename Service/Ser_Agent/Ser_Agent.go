@@ -103,6 +103,14 @@ func Id取代理可制卡类和可用代理功能列表(代理ID int) ([]int, []
 
 	return 可制卡号, 功能权限
 }
+
+func D代理授权卡类Id删除(kid int) (int64, error) {
+	db := *global.GVA_DB
+	ret := db.Model(DB.Db_Agent_卡类授权{}).Select("Kid").Where("kid=?", kid).Delete("")
+
+	return ret.RowsAffected, ret.Error
+}
+
 func Id取代理可操作应用AppId列表(代理ID int) []int {
 
 	//不能改下边为  var 可制卡号 []int  否则返回的不是空成员数组,而是nil
