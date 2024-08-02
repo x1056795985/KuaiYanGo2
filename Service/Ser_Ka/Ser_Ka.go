@@ -117,6 +117,11 @@ func Ka代理批量购买(卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int,
 		return errors.New("余额不足")
 
 	}
+
+	if 局_总计金额 < 0 {
+		return errors.New("卡类代理价格异常")
+	}
+
 	var 新余额 float64
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 
