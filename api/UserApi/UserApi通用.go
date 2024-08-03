@@ -1546,13 +1546,11 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 	}
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"TaskPoolNew","TaskTypeId":1,"Parameter":"{'a':1}","Time":1684752350,"Status":28986}
-
 	局_任务类型, err := Ser_TaskPool.Task类型读取(请求json.GetInt("TaskTypeId"))
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "任务类型Id不存在")
 		return
 	}
-
 	if 局_任务类型.Status != 1 {
 		response.X响应状态消息(c, response.Status_操作失败, "维护中")
 		return
@@ -1563,7 +1561,6 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 	} else {
 		局_任务数据 = string(请求json.GetStringBytes("Parameter"))
 	}
-
 	if 局_任务类型.HookSubmitDataStart != "" {
 		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
 		if err != nil {
@@ -1571,13 +1568,11 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 			return
 		}
 	}
-
 	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "Task数据创建加入队列失败")
 		return
 	}
-
 	if 局_任务类型.HookSubmitDataEnd != "" {
 		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
 		if err != nil {
@@ -1588,9 +1583,9 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 	//新任务,使用mqtt通知
 	if 局_任务类型.MqttTopicMsg != "" {
 		局_临时文本 := fmt.Sprintf(`{"taskId":%d,"time":%d}`, 局_任务类型.Id, time.Now().Unix())
-		_ = mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
+		//因为有网络通讯单开协程处理,不能卡请求耗时
+		go mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
 	}
-
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"TaskUuid": 任务Id})
 	return
 }

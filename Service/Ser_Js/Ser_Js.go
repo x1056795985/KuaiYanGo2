@@ -492,7 +492,7 @@ func jS_任务池_任务创建(局_在线信息 DB.DB_LinksToken, 任务类型ID
 	//新任务,使用mqtt通知
 	if 局_任务类型.MqttTopicMsg != "" {
 		局_临时文本 := fmt.Sprintf(`{"taskId":%d,"time":%d}`, 局_任务类型.Id, time.Now().Unix())
-		_ = mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
+		go mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
 	}
 
 	return js对象_通用返回{IsOk: true, Err: "", Data: gin.H{"TaskUuid": 任务Id}}
