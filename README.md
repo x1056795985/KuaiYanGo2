@@ -93,10 +93,26 @@
 ## 后期维护
 因为我自己也用这个验证会持续维护bug,用我维护的版本,您只要登录让我知道还有人再用,我就会持续维护bug的,如果真没人用了,可能我就只会维护我自己需要用到的功能了,不想登录的您也可以自己改代码自己维护,已经开源了,想改什么改什么.(注意已经免费开源的,所以不花时间提供任何技术支持)
 
-官网 [url]http://www.fnkuaiyan.cn[/url]
-交流群:668607731
-码云仓库开源地址
-GO后端
-https://gitee.com/anyueyinluo/KuaiYanGo2
+官网 (http://www.fnkuaiyan.cn)
+交流群:668607731    
+码云仓库开源地址  
+GO后端  
+https://gitee.com/anyueyinluo/KuaiYanGo2  
 WEB管理员前端
 https://gitee.com/anyueyinluo/KuaiYanWeb
+## 截图简洁 更多更新情况请查看官网演示站,
+![](./img/1.jpg)
+![](./img/2.jpg)
+![](./img/3.jpg)
+![](./img/4.jpg)
+![](./img/5.jpg)
+![](./img/6.jpg)
+![](./img/7.jpg)
+![](./img/8.jpg)
+![](./img/9.jpg)
+![](./img/10.jpg)
+![](./img/11.jpg)
+![](./img/12.jpg)
+![](./img/13.jpg)
+![](./img/14.jpg)
+
