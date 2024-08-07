@@ -9,7 +9,6 @@ import (
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
-	"reflect"
 	"regexp"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
@@ -23,6 +22,7 @@ import (
 	"server/Service/Ser_UserConfig"
 	"server/global"
 	"server/new/app/logic/common/mqttClient"
+	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -79,6 +79,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_文本_取文本右边", W文本_取文本右边)
 	_ = vm.Set("$api_文本_取文本左边", W文本_取文本左边)
 	_ = vm.Set("$api_文本_取出中间文本", W文本_取出中间文本)
+	_ = vm.Set("$api_生成二维码并转base64", rmbPay.L_rmbPay.S生成二维码并转base64)
 
 	//处理载入外部js文件  'import "@/utils/utils";
 	if strings.Index(局_PublicJs.Value, "import '") != -1 || strings.Index(局_PublicJs.Value, `import "`) != -1 {
@@ -297,7 +298,11 @@ func jS_置公共变量(变量名, 值 string) bool {
 func jS_置在线动态标签(局_在线信息 DB.DB_LinksToken, 新动态标签 string) bool {
 	return Ser_LinkUser.Set动态标签(局_在线信息.Id, 新动态标签) == nil
 }
-func jS_网页访问_GET(Url string, 协议头一行一个 interface{}, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
+func jS_网页访问_GET(Url string, 协议头一行一个 string, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
+
+	if 超时秒数 == 0 {
+		超时秒数 = 15
+	}
 
 	client := req.C().SetTimeout(time.Duration(超时秒数) * time.Second)
 
@@ -310,18 +315,7 @@ func jS_网页访问_GET(Url string, 协议头一行一个 interface{}, Cookies 
 		request.SetHeader("Cookie", Cookies)
 	}
 	var 局_协议头数组 []string
-	aa := reflect.TypeOf(协议头一行一个).Kind()
-	if aa == reflect.Array || aa == reflect.Slice {
-		for v := range reflect.ValueOf(协议头一行一个).Len() {
-			index := reflect.ValueOf(协议头一行一个).Index(v)
-			nameValue, ok := index.Interface().(string)
-			if ok {
-				局_协议头数组 = append(局_协议头数组, nameValue)
-			}
-		}
-	} else if aa == reflect.String {
-		局_协议头数组 = W文本_分割文本(协议头一行一个.(string), "\r")
-	}
+	局_协议头数组 = W文本_分割文本(协议头一行一个, "\r")
 
 	for _, 值 := range 局_协议头数组 {
 		if strings.Index(值, ":") != -1 {
@@ -355,7 +349,10 @@ func jS_网页访问_GET(Url string, 协议头一行一个 interface{}, Cookies 
 	return js对象_网页响应{StatusCode: ret.StatusCode, Cookies: Cookies, Headers: 局_响应头信息, Body: ret.String(), Base64Body: B编码_BASE64编码(ret.Bytes())}
 
 }
-func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
+func jS_网页访问_POST(Url, post string, 协议头一行一个 string, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
+	if 超时秒数 == 0 {
+		超时秒数 = 15
+	}
 	client := req.C().SetTimeout(time.Duration(超时秒数) * time.Second)
 
 	if 代理ip != "" {
@@ -370,18 +367,7 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 interface{}, C
 	}
 
 	var 局_协议头数组 []string
-	aa := reflect.TypeOf(协议头一行一个).Kind()
-	if aa == reflect.Array || aa == reflect.Slice {
-		for v := range reflect.ValueOf(协议头一行一个).Len() {
-			index := reflect.ValueOf(协议头一行一个).Index(v)
-			nameValue, ok := index.Interface().(string)
-			if ok {
-				局_协议头数组 = append(局_协议头数组, nameValue)
-			}
-		}
-	} else if aa == reflect.String {
-		局_协议头数组 = W文本_分割文本(协议头一行一个.(string), "\r")
-	}
+	局_协议头数组 = W文本_分割文本(协议头一行一个, "\r")
 
 	for _, 值 := range 局_协议头数组 {
 		if strings.Index(值, ":") != -1 {
