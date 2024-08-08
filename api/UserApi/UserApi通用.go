@@ -2026,3 +2026,44 @@ func UserApi_置代理标志(c *gin.Context) {
 	response.X响应状态(c, c.GetInt("局_成功Status"))
 	return
 }
+
+// 1.0.277+版本添加可用
+func UserApi_取卡号详情(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	// {"Api":"GetKaInfo","ka":"8987657"}
+	kaInfo, err := Ser_Ka.Ka卡号取详情(string(请求json.GetStringBytes("Ka")))
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, "卡号不存在")
+		return
+	}
+	if kaInfo.AppId != AppInfo.AppId {
+		response.X响应状态消息(c, response.Status_操作失败, "非本应用卡号")
+		return
+	}
+
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{
+		"Name":         kaInfo.Name,
+		"KaClassId":    kaInfo.KaClassId,
+		"UserClassId":  kaInfo.UserClassId,
+		"AppId":        kaInfo.AppId,
+		"VipTime":      kaInfo.VipTime,
+		"VipNumber":    kaInfo.VipNumber,
+		"EndTime":      kaInfo.EndTime,
+		"InviteCount":  kaInfo.InviteCount,
+		"Id":           kaInfo.Id,
+		"Num":          kaInfo.Num,
+		"NumMax":       kaInfo.NumMax,
+		"KaType":       kaInfo.KaType,
+		"Money":        kaInfo.Money,
+		"MaxOnline":    kaInfo.MaxOnline,
+		"NoUserClass":  kaInfo.NoUserClass,
+		"RMb":          kaInfo.RMb,
+		"RegisterTime": kaInfo.RegisterTime,
+		"Status":       kaInfo.Status,
+	})
+	return
+}
