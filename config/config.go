@@ -18,7 +18,8 @@ type Server备用 struct {
 }
 
 type X系统设置 struct {
-	X系统名称      string `mapstructure:"系统名称" json:"系统名称" yaml:"系统名称"` // 系统名称
+	X系统名称      string `mapstructure:"系统名称" json:"系统名称" yaml:"系统名称"`       // 系统名称
+	X系统logo    string `mapstructure:"系统logo" json:"系统logo" yaml:"系统logo"` // 系统名称
 	X系统地址      string `mapstructure:"系统地址" json:"系统地址" yaml:"系统地址"`
 	Y用户API加密盐  string `mapstructure:"用户API加密盐" json:"用户API加密盐" yaml:"用户API加密盐"`
 	G管理员后台Host string `mapstructure:"管理员后台Host" json:"管理员后台Host" yaml:"管理员后台Host"`

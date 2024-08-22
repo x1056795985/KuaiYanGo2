@@ -127,6 +127,9 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	Router.GET("admin", func(context *gin.Context) { //客户经常输入错误,单独注册个路由,跳转正确地址
 		context.Redirect(http.StatusFound, "/Admin")
 	})
+	Router.GET("", func(context *gin.Context) { //客户经常输入错误,单独注册个路由,跳转正确地址
+		context.Redirect(http.StatusFound, "/Admin")
+	})
 	Router根Admin := Router.Group("Admin") //127.0.0.1:18080/  这个后面第一个不需要 / 符号
 	Router根Admin.Use(middleware.IsAdminHost())
 
@@ -149,6 +152,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 				baseRouter.POST("GetTableWidth", base.Table宽度读取)*/
 
 		initDB := Api.Admin.InitDb                 //实现路由的 具体方法位置
+		baseRouter.GET("GetLogo", initDB.GetLogo)  // 初始化数据库
 		baseRouter.POST("InitDB", initDB.InitDB)   // 初始化数据库
 		baseRouter.POST("CheckDB", initDB.CheckDB) // 检测是否需要初始化数据库
 	}

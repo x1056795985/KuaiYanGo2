@@ -67,7 +67,7 @@ func (a *Api) S生成API加密源码SDK(c *gin.Context) {
 	} else {
 		response.OkWithDetailed(
 			响应_S生成API加密源码SDK{
-				Name:       "飞鸟快验APi加密盐值" + 请求.Y用户API加密盐 + ".e",
+				Name:       "AI矩阵兽APi加密盐值" + 请求.Y用户API加密盐 + ".e",
 				Base64Data: base64.StdEncoding.EncodeToString(SDK),
 			}, "生成成功,记得保存配置使功能生效", c)
 	}

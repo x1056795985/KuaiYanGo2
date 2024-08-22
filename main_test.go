@@ -34,7 +34,7 @@ func 编译飞鸟快验() {
 		fmt.Println("保存修改后的源码文件失败:", err)
 		return
 	}
-	局_编译名称 := "飞鸟快验" + 局_新版本号 + ".bin"
+	局_编译名称 := "AI矩阵兽" + 局_新版本号 + ".bin"
 	//设置编译为linux
 	cmd := exec.Command("go", "env", "-w", "GOOS=linux")
 	cmd.Dir = 局_项目路径

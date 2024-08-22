@@ -250,7 +250,7 @@ func InitDbTable数据() {
 				AppId: 1,
 				Type:  1,
 				Name:  "系统名称",
-				Value: "飞鸟快验应用管理后台",
+				Value: "AI矩阵兽后台",
 			})
 		}
 		局_例子记录.DbPublicdata = 局_例子版本

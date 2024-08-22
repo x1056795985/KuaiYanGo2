@@ -206,13 +206,13 @@ func B宝塔_修改项目信息pid() {
 		pid := os.Getpid()
 		err = os.WriteFile(files[0], []byte(strconv.Itoa(pid)), 0644)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("写出pid失败:%v", err.Error()))
+			//global.GVA_LOG.Error(fmt.Sprintf("写出pid失败:%v", err.Error()))
 			return
 		}
-		global.GVA_LOG.Info(fmt.Sprintf("写出pid成功:%v", pid))
+		//global.GVA_LOG.Info(fmt.Sprintf("写出pid成功:%v", pid))
 		return
 	}
-	global.GVA_LOG.Info(fmt.Sprintf("扫描pid文件信息:%v", files))
+	//global.GVA_LOG.Info(fmt.Sprintf("扫描pid文件信息:%v", files))
 	return
 }
 

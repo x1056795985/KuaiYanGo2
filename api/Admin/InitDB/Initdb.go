@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"net/http"
 	"server/Service/Ser_Init"
 	"server/global"
 	"server/new/app/logic/common/setting"
@@ -45,13 +46,15 @@ func (i *DBApi) CheckDB(c *gin.Context) {
 结果:
 	//global.GVA_LOG.Info(message)
 	//响应成功 并传入消息和数据
-	局_系统名称 := "飞鸟快验后台管理"
+	局_系统名称 := "AI矩阵兽后台"
 	局_备案名称 := ""
+	局_系统logo := ""
 	if global.GVA_DB != nil {
 		局_系统名称 = setting.Q系统设置().X系统名称
 		局_备案名称 = setting.Q系统设置().B备案号
+		局_系统logo = setting.Q系统设置().X系统logo
 	}
-	response.OkWithDetailed(gin.H{"needInit": needInit, "ServerName": 局_系统名称, "Filing": 局_备案名称}, message, c)
+	response.OkWithDetailed(gin.H{"needInit": needInit, "ServerName": 局_系统名称, "Filing": 局_备案名称, "系统logo": 局_系统logo}, message, c)
 }
 
 // InitDB
@@ -153,4 +156,28 @@ func init_检测数据库编码格式(db *gorm.DB) (string, error) {
 		return "charset.Value", errors.New("当前数据库编码格式为:" + charset.Value + "不是utf8mb4,请修改后重新初始化,不会修改看官网常见问题,修改数据库编码")
 	}
 	return charset.Value, nil
+}
+
+// CheckDB
+// @Tags     CheckDB
+// @Summary  检测用户数据库
+// @Produce  application/json
+// @Success  200  {object}  response.Response{data=map[string]interface{},msg=string}  "初始化用户数据库"
+// @Router   /init/checkdb [post]
+func (i *DBApi) GetLogo(c *gin.Context) {
+	url := setting.Q系统设置().X系统logo
+	系统地址 := setting.Q系统设置().X系统logo
+	if url == "" {
+		switch c.GetInt("wh") {
+		case 64:
+			url = 系统地址 + "/Admin/src/assets/64.png"
+		case 128:
+			url = 系统地址 + "/Admin/src/assets/128.png"
+		default:
+			url = 系统地址 + "/Admin/src/assets/logo.png"
+		}
+	}
+	//返回重定向新网址
+	c.Redirect(http.StatusMovedPermanently, url)
+
 }
