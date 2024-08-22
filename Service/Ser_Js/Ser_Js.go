@@ -261,6 +261,9 @@ func jS_用户Id增减时间点数(AppId int, 局_在线信息 DB.DB_LinksToken,
 	增减值 = S三元(增减值 > 0, 增减值, -增减值)
 
 	局_AppUserId := Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
+	if 局_AppUserId == 0 {
+		局_AppUserId = Ser_AppUser.Uid取Id(AppId, 局_在线信息.Uid)
+	}
 
 	err := Ser_AppUser.Id点数增减(AppId, 局_AppUserId, int64(增减值), is增加)
 	if err != nil {

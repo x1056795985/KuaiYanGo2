@@ -33,10 +33,15 @@ func (j *mqttClient) L连接(c *gin.Context, 地址 string, 端口 int, 用户�
 	opts.SetUsername(用户名)
 	opts.SetPassword(密码)
 	opts.SetDefaultPublishHandler(j.onMessageReceived)
+	opts.OnConnectionLost = func(a mqtt.Client, b error) {
+		log.Println("MQTT连接断开:" + b.Error())
+	}
+
 	opts.SetAutoReconnect(true)
 	opts.SetOrderMatters(false)
 
 	j.mQTTClient = mqtt.NewClient(opts)
+
 	if token := j.mQTTClient.Connect(); token.Wait() && token.Error() != nil {
 		return errors.New("MQTT连接失败: " + token.Error().Error())
 	}
