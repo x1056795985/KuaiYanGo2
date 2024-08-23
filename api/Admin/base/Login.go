@@ -111,10 +111,11 @@ func (b *BaseApi) Login(c *gin.Context) {
 
 	err = global.GVA_DB.Create(&DB_links_user).Error
 	go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "管理平台登录", 4)
-	快验 := global.X系统信息.D到期时间 < time.Now().Unix()
-	if global.GVA_Viper.GetInt("系统模式") == 1 {
-		快验 = false
-	}
+	快验 := global.Q快验.Q取登录状态() //刷新快验
+	//快验 := global.X系统信息.D到期时间 < time.Now().Unix()
+	//if global.GVA_Viper.GetInt("系统模式") == 1 {
+	//	快验 = false
+	//}
 	response.OkWithDetailed(结构_登录响应{
 		UserInfo: DB_user,
 		Token:    DB_links_user.Token,

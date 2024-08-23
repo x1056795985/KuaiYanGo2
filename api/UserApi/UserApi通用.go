@@ -9,6 +9,8 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"server/Service/Captcha"
 	"server/Service/Ser_Admin"
 	"server/Service/Ser_Agent"
@@ -644,22 +646,100 @@ func UserApi_取公共变量(c *gin.Context) {
 	局_变量名 := string(请求json.GetStringBytes("Name"))
 
 	局_云变量数据, err := Ser_PublicData.P取值2(1, 局_变量名) //1>所以有软件公共读
-	if err != nil || 局_云变量数据.Type > 3 {           //只允许变量  不允许读取云函数
-		response.X响应状态消息(c, response.Status_操作失败, "变量不存在,请到后台应用编辑,添加专属变量")
+	if err != nil || 局_云变量数据.Type > 4 {           //只允许变量  不允许读取云函数
+		response.X响应状态消息(c, response.Status_操作失败, "变量不存在")
 		return
+	}
+	//队列类型的单独处理,加锁读取,避免队列数据被修改
+	if 局_云变量数据.Type == 4 {
+		db := *global.GVA_DB
+		err = db.Transaction(func(tx *gorm.DB) error {
+			err = tx.Model(DB.DB_PublicData{}).
+				Clauses(clause.Locking{Strength: "UPDATE"}).
+				Where("AppId=?", 1).Where("Name=?", 局_变量名).
+				First(&局_云变量数据).Error //加锁再查一次
+			if err != nil {
+				return err
+			}
+			// 使用 SplitN 获取第一行
+			局_临时数组 := strings.SplitN(局_云变量数据.Value, "\n", 2)
+			if len(局_临时数组) == 2 {
+				局_云变量数据.Value = 局_临时数组[1]
+			} else {
+				局_云变量数据.Value = ""
+			}
+			err = tx.Model(DB.DB_PublicData{}).
+				Where("AppId=?", 1).Where("Name=?", 局_变量名).
+				Update("Value", 局_云变量数据.Value).Error //加锁再查一次
+			if err != nil {
+				return err
+			}
+			switch len(局_临时数组) {
+			default:
+				//只要不是0 都使用0作为返回变量,
+				局_云变量数据.Value = 局_临时数组[0]
+			case 0:
+				局_云变量数据.Value = ""
+			}
+			return nil
+		})
+		if err != nil {
+			response.X响应状态消息(c, response.Status_操作失败, err.Error())
+			return
+		}
+
 	}
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{局_变量名: 局_云变量数据.Value})
-	//暂时公共变量直接响应数据 后期看情况
-	/*	if 局_云变量数据.IsVip == 0 || 检测用户登录在线正常(&局_在线信息) {
-			if 局_云变量数据.IsVip > 0 { //只有返回VIP变量时才强制
-				c.Set("RSA强制", true)
-			}
+	return
+}
 
-			response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{局_变量名: 局_云变量数据.Value})
-		} else {
-			response.X响应状态(c, response.Status_未登录)
-		}*/
+func UserApi_置公共变量(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	// {"Api":"GetPublicData","Name":"会员数据a","Value":"aaaaa"}
+	局_变量名 := string(请求json.GetStringBytes("Name"))
+	局_变量值 := string(请求json.GetStringBytes("Value"))
+
+	局_云变量数据, err := Ser_PublicData.P取值2(1, 局_变量名) //1>所以有软件公共读
+	if err != nil || 局_云变量数据.Type > 4 {           //只允许变量  不允许读取云函数
+		response.X响应状态消息(c, response.Status_操作失败, "变量不存在")
+		return
+	}
+	//队列类型的单独处理,加锁读取,避免队列数据被修改
+	db := *global.GVA_DB
+	if 局_云变量数据.Type <= 3 {
+		err = db.Model(DB.DB_PublicData{}).
+			Where("AppId=?", 1).Where("Name=?", 局_变量名).
+			Update("Value", 局_变量值).Error //加锁再查一次
+		if err != nil {
+			response.X响应状态消息(c, response.Status_操作失败, err.Error())
+			return
+		}
+	} else if 局_云变量数据.Type == 4 {
+		err = db.Transaction(func(tx *gorm.DB) error {
+			err = tx.Model(DB.DB_PublicData{}).
+				Clauses(clause.Locking{Strength: "UPDATE"}).
+				Where("AppId=?", 1).Where("Name=?", 局_变量名).
+				First(&局_云变量数据).Error //加锁再查一次
+			if err != nil {
+				return err
+			}
+			局_云变量数据.Value += "\n" + 局_变量值
+			err = tx.Model(DB.DB_PublicData{}).
+				Where("AppId=?", 1).Where("Name=?", 局_变量名).
+				Update("Value", 局_云变量数据.Value).Error //加锁再查一次
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+
+	}
+
+	response.X响应状态(c, c.GetInt("局_成功Status"))
 	return
 }
 func UserApi_取代理云配置(c *gin.Context) {
