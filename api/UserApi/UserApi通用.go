@@ -727,7 +727,10 @@ func UserApi_置公共变量(c *gin.Context) {
 			if err != nil {
 				return err
 			}
-			局_云变量数据.Value += "\n" + 局_变量值
+			if 局_云变量数据.Value != "" {
+				局_云变量数据.Value += "\n"
+			}
+			局_云变量数据.Value += 局_变量值
 			err = tx.Model(DB.DB_PublicData{}).
 				Where("AppId=?", 1).Where("Name=?", 局_变量名).
 				Update("Value", 局_云变量数据.Value).Error //加锁再查一次
