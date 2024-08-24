@@ -442,3 +442,148 @@ func (j *ka) K卡号追回(c *gin.Context, ID int, 代理id int, ip string) (提
 
 	return //log, nil
 }
+
+// 来源AppId int, 卡号, 充值用户, 推荐人, 来源IP string)
+func (j *ka) K卡号充值_事务(c *gin.Context) (err error) {
+	//已优化,事务处理,数据库内直接加减乘除计算字段值,可以并发,不出错
+	var info struct {
+		卡类详情     DB.DB_KaClass
+		app用户详情  DB.DB_AppUser
+		user用户详情 DB.DB_User
+		app详情    DB.DB_AppInfo
+		is卡号     bool
+		is计点     bool
+	}
+	var 卡类ID, 软件用户Uid int
+	//第一个查询不用tx 直接用全局即可,后面事务的才用tx
+	db := *global.GVA_DB
+	S_KaClass := service.NewKaClass(c, &db)
+	if info.卡类详情, err = S_KaClass.Info(卡类ID); err != nil {
+		err = errors.New("卡类不存在")
+		return
+	}
+
+	if info.app用户详情, err = service.NewAppUser(c, &db, info.卡类详情.AppId).InfoUid(软件用户Uid); err != nil {
+		err = errors.New("软件用户不存在")
+		return
+	}
+	if info.app详情, err = service.NewAppInfo(c, &db).Info(info.卡类详情.AppId); err != nil {
+		err = errors.New("应用不存在")
+		return
+	}
+	info.is卡号 = S三元(info.app详情.AppType == 3 || info.app详情.AppType == 4, true, false)
+	info.is计点 = S三元(info.app详情.AppType == 2 || info.app详情.AppType == 4, true, false)
+
+	//检测用户分组是否相同 不相同处理
+	if info.卡类详情.UserClassId == info.app用户详情.UserClassId || info.app用户详情.UserClassId == 0 {
+		//分类相同,或用户为未分类 不处理
+	} else {
+		if info.卡类详情.NoUserClass == 2 {
+			return errors.New("用户类型不同无法充值.")
+		}
+	}
+	//到这里基本就都没问题了,开启事务,增加卡使用次数,更新用户信息就可以了
+	// 开启事务,检测上层是否有事务,如果有直接使用,没有就创建一个
+	var tx *gorm.DB
+	if tempObj, ok := c.Get("tx"); ok {
+		tx = tempObj.(*gorm.DB)
+	} else {
+		db = *global.GVA_DB
+		tx = &db
+	}
+	//在事务中执行数据库操作，使用的是tx变量，不是db。
+	err = tx.Transaction(func(tx *gorm.DB) error {
+		//卡库存减少成功,开始增加客户数据 ,重新加锁读取App用户信息,防止并发数据错误
+		err = tx.Model(DB.DB_AppUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Table("db_AppUser_"+strconv.Itoa(info.卡类详情.AppId)).Where("Uid=?", info.app用户详情.Uid).First(&info.app用户详情).Error
+		if err != nil {
+			return errors.Join(err, errors.New("未注册应用???感觉不可能,之前读取过,请联系管理员"))
+		}
+		//处理新信息
+		客户expr := map[string]interface{}{}
+		客户expr["VipNumber"] = gorm.Expr("VipNumber + ?", info.卡类详情.VipNumber) //积分不会变直接增加即可
+		if info.卡类详情.MaxOnline > 0 {
+			客户expr["MaxOnline"] = info.卡类详情.MaxOnline //最大在线数直接赋值处理即可
+		}
+		局_现行时间戳 := time.Now().Unix()
+		if info.卡类详情.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
+			if info.app用户详情.UserClassId == info.卡类详情.UserClassId {
+				//分类相同,正常处理时间或点数
+				if Ser_AppInfo.App是否为计点(info.卡类详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
+					//如果为计点 或 时间大于现在时间直接加就行了
+					客户expr["VipTime"] = gorm.Expr("VipTime + ?", info.卡类详情.VipTime)
+				} else {
+					//如果为计时 已经过期很久了,直接现行时间戳加卡时间
+					客户expr["VipTime"] = 局_现行时间戳 + info.卡类详情.VipTime
+				}
+			} else {
+				//用户类型不同, 根据权重处理
+				var 局_旧用户类型权重, 局_新用户类型权重 DB.DB_UserClass
+				if info.app用户详情.UserClassId > 0 {
+					if 局_旧用户类型权重, err = service.NewUserClass(c, tx).Info(info.app用户详情.UserClassId); err != nil {
+						return errors.Join(err, errors.New("读取旧用户类型权重失败"))
+					}
+				} else {
+					局_旧用户类型权重.Weight = 1
+				}
+
+				if info.卡类详情.UserClassId > 0 {
+					if 局_新用户类型权重, err = service.NewUserClass(c, tx).Info(info.卡类详情.UserClassId); err != nil {
+						return errors.Join(err, errors.New("读取新用户类型权重失败"))
+					}
+				} else {
+					局_新用户类型权重.Weight = 1
+				}
+
+				if info.is计点 {
+					//转换结果值,转后再增加新类型 值
+					客户expr["VipTime"] = gorm.Expr("VipTime * ? / ? +?", 局_旧用户类型权重.Weight, 局_新用户类型权重.Weight, info.卡类详情.VipTime)
+				} else {
+					if info.app用户详情.VipTime < 局_现行时间戳 {
+						//已经过期了直接赋值新类型 现行时间+新时间就可以了
+						客户expr["VipTime"] = 局_现行时间戳 + info.卡类详情.VipTime
+					} else {
+						//先计算还剩多长时间,剩余时间权重转换转换结果值,+现在时间+卡增减时间
+						客户expr["VipTime"] = gorm.Expr("(VipTime-?) * ? / ? +?", 局_现行时间戳, 局_旧用户类型权重.Weight, 局_新用户类型权重.Weight, 局_现行时间戳+info.卡类详情.VipTime)
+					}
+				}
+				//最后更换类型,防止前面用到卡类id,计算权重转换类型错误
+				客户expr["UserClassId"] = info.卡类详情.UserClassId
+			}
+		}
+		//更新客户数据
+		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡类详情.AppId)).Where("Id = ?", info.app用户详情.Id).Updates(&客户expr).Error
+		if err != nil {
+			return errors.Join(err, errors.New("充值失败,重试"))
+		}
+		//处理账号的RMB增减
+		if !info.is卡号 && info.卡类详情.RMb > 0 {
+			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.app用户详情.Uid).First(&info.user用户详情).Error
+			if err != nil {
+				return errors.Join(err, errors.New("用户账号不存在"))
+			}
+			err = tx.Model(DB.DB_User{}).Where("Id = ?", info.app用户详情.Uid).Update("RMB", gorm.Expr("RMB + ?", info.卡类详情.RMb)).Error
+			if err != nil {
+				return errors.Join(err, errors.New("充值余额时失败,请重试"))
+			}
+			var 局_新余额 float64
+			err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id = ?", info.user用户详情.Id).First(&局_新余额).Error
+			if err != nil {
+				return errors.Join(err, errors.New("充值后读取新余额失败"))
+			}
+			//日志仅写到上下文内,由实际业务处理是否写入日志和修改备注信息
+			c.Set("logMoney", DB.DB_LogMoney{
+				User:  info.user用户详情.User,
+				Ip:    c.ClientIP(),
+				Count: info.卡类详情.RMb,
+				Note:  "应用ID:" + strconv.Itoa(info.卡类详情.AppId) + "卡类Id:" + strconv.Itoa(info.卡类详情.Id) + "充值余额|新余额≈" + Float64到文本(局_新余额, 2),
+			})
+		}
+		return nil
+	})
+	//写到上下文,备用
+	c.Set("info.卡类详情", info.卡类详情)
+	c.Set("info.app用户详情", info.app用户详情)
+	c.Set("info.user用户详情", info.user用户详情)
+	c.Set("info.app详情", info.app详情)
+	return err
+}
