@@ -1,12 +1,15 @@
 package WebApi
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
+	"server/new/app/logic/common/mqttClient"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -137,5 +140,93 @@ func RunJs(c *gin.Context) {
 	}
 	局_return := 局_待执行js函数名(局_云函数型参数)
 	response.OkWithDetailed(局_return, "运行成功,耗时:"+strconv.Itoa(int(time.Now().UnixMilli()-局_耗时)), c)
+	return
+}
+
+func R任务池_任务查询(c *gin.Context) {
+
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	//{ "TaskUuid":"388f3cb1-ee27-4a5c-979d-a17cf3107dcd" }
+
+	局_uuid := string(请求json.GetStringBytes("TaskUuid"))
+	if len(局_uuid) != 36 { //提前筛选,优化
+		response.FailWithMessage("任务Uuid错误", c)
+
+		return
+	}
+	局_任务数据, err := Ser_TaskPool.Task数据读取_单条(局_uuid)
+	if err != nil {
+		response.FailWithMessage("任务Uuid错误", c)
+		return
+	}
+	var mapkv map[string]interface{}
+
+	//局_任务数据.ReturnData 判断字符串是否为json格式如果是json则解析
+	if json.Unmarshal([]byte(局_任务数据.ReturnData), &mapkv) == nil {
+		response.OkWithData(gin.H{"Status": 局_任务数据.Status, "ReturnData": mapkv, "TimeStart": 局_任务数据.TimeStart, "TimeEnd": 局_任务数据.TimeEnd}, c)
+	} else {
+		response.OkWithData(gin.H{"Status": 局_任务数据.Status, "ReturnData": 局_任务数据.ReturnData, "TimeStart": 局_任务数据.TimeStart, "TimeEnd": 局_任务数据.TimeEnd}, c)
+	}
+	return
+}
+
+func R任务池_任务创建(c *gin.Context) {
+	defer func() {
+		if err2 := recover(); err2 != nil {
+			局_GoJa错误, ok := err2.(*goja.Exception)
+			if ok {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:"+局_GoJa错误.String(), c)
+			} else {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:js引擎未返回报错信息", c)
+			}
+			return
+		}
+	}()
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	//{"Api":"TaskPoolNew","TaskTypeId":1,"Parameter":"{'a':1}","Time":1684752350,"Status":28986}
+	局_任务类型, err := Ser_TaskPool.Task类型读取(请求json.GetInt("TaskTypeId"))
+	if err != nil {
+		response.FailWithMessage("任务类型Id不存在", c)
+		return
+	}
+	if 局_任务类型.Status != 1 {
+		response.FailWithMessage("维护中", c)
+		return
+	}
+	局_任务数据 := ""
+	if 请求json.Get("Parameter").Type().String() == "object" {
+		局_任务数据 = 请求json.Get("Parameter").String()
+	} else {
+		局_任务数据 = string(请求json.GetStringBytes("Parameter"))
+	}
+	if 局_任务类型.HookSubmitDataStart != "" {
+		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
+		if err != nil {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+	}
+	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据)
+	if err != nil {
+		response.FailWithMessage("Task数据创建加入队列失败", c)
+		return
+	}
+	if 局_任务类型.HookSubmitDataEnd != "" {
+		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
+		if err != nil {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+	}
+	//新任务,使用mqtt通知
+	if 局_任务类型.MqttTopicMsg != "" {
+		局_临时文本 := fmt.Sprintf(`{"taskId":%d,"time":%d}`, 局_任务类型.Id, time.Now().Unix())
+		//因为有网络通讯单开协程处理,不能卡请求耗时
+		go mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
+	}
+	response.OkWithData(gin.H{"TaskUuid": 任务Id}, c)
 	return
 }

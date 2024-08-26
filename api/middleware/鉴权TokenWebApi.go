@@ -92,6 +92,7 @@ func IsTokenWebApi() gin.HandlerFunc {
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data)) // 关键点 //通过这写回post数据,就可以多次读取了
 
 		c.Set("局_json明文", string(data))
+		c.Set("DB_LinksToken", DB_LinksToken)
 		global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
 		// 继续处理请求
 		c.Next()

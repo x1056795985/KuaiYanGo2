@@ -23,6 +23,7 @@ import (
 	"server/api/Admin/App"
 	"server/config"
 	"server/global"
+	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/setting"
 	newDB "server/new/app/models/db"
 	"server/new/app/service"
@@ -174,7 +175,7 @@ func InitDbTable数据() {
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10001, "月卡", "Y30", 2592000, 2592000, 0.01, 1.01, 100, 100, 0, 1, 25, 1, 1, 1, 1)
 			卡信息, _ := Ser_Ka.Ka单卡创建(卡类ID, Ser_Admin.Id取User(1), "演示创建", "", 0)
 			卡信息, _ = Ser_Ka.Ka单卡创建(卡类ID, Ser_Admin.Id取User(1), "演示创建可追回卡号", "", 0)
-			Ser_Ka.K卡号充值_事务(10001, 卡信息.Name, "test0001", "", "127.0.0.1")
+			ka.L_ka.K卡号充值_事务(&c, 10001, 卡信息.Name, "test0001", "")
 			_ = Ser_AppInfo.NewApp信息(10002, 3, "演示对接卡号限时RSA通讯")
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10002, "天卡", "Y01", 86400, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10002, "周卡", "Y01", 604800, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)

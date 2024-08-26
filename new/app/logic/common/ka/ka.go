@@ -4,10 +4,12 @@ import (
 	. "EFunc/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"server/Service/Ser_AppInfo"
 	"server/global"
+	"server/new/app/logic/common/log"
 	"server/new/app/service"
 	DB "server/structs/db"
 	"strconv"
@@ -227,293 +229,186 @@ func (j *ka) Ka单卡创建(c *gin.Context, 卡类id int, 制卡人账号 string
 	return 卡信息切片, tx.Model(DB.DB_Ka{}).Create(&卡信息切片).Error
 }
 
-// 已用充值卡将相应的卡使用者和推荐人强行扣回充值卡面值,可能扣成负数
-func (j *ka) K卡号追回(c *gin.Context, ID int, 代理id int, ip string) (提示 string, err error) {
-	/*var info struct {
-		卡号详情    DB.DB_Ka
-		卡号应用    DB.DB_AppInfo
-		is卡号      bool
-		is计点      bool
-		vipTime名称 string
-		已充值用户  []DB.DB_AppUser
-		操作人详情  DB.DB_User
-	}
-	tx2 := *global.GVA_DB
-	if info.卡号详情, err = service.NewKa(c, &tx2).Info(ID); err != nil {
-		err = errors.Join(err, errors.New("卡号不存在"))
-		return
-	}
-	if info.卡号详情.Num == 0 {
-		return "", errors.New("卡号未使用")
-	}
-	if info.卡号详情.User == "" {
-		return "", errors.New("无已充值用户,但有使用次数,可能手动修改使用次数导致的")
-	}
-
-	//防sb客户放负值 这样操作负值也可以追回
-	if info.卡号详情.VipTime < 0 || info.卡号详情.VipNumber < 0 || info.卡号详情.RMb < 0 {
-		return "", errors.New("追回的卡号,充值的时间点数,积分,rmb,不能为负数,请手动处理")
-	}
-
-	if info.卡号应用, err = service.NewAppInfo(c, &tx2).Info(info.卡号详情.AppId); err != nil {
-		err = errors.Join(err, errors.New("应用不存在")) //概率较小,但是有可能, 比如制卡使用后把应用删除了,然后代理追回卡号
-		return
-	}
-	info.is卡号 = info.卡号应用.AppType == 3 || info.卡号应用.AppType == 4
-	info.is计点 = info.卡号应用.AppType == 2 || info.卡号应用.AppType == 4
-	info.vipTime名称 = S三元(info.is计点, "点数", "时间")
-
-	已用用户数组 := W文本_分割文本(info.卡号详情.User, ",")
-	// 0 无需追回,1成功 2失败
-	局_追回时间点数结果 := make(map[string]int, len(已用用户数组))
-	局_追回积分结果 := make(map[string]int, len(已用用户数组))
-	局_追回余额结果 := make(map[string]int, len(已用用户数组))
-	局_追回推荐人时间点数结果 := make(map[string]int, len(已用用户数组))
-	局_操作人用户名 := Ser_User.Id取User(代理id)
-
-	err = tx2.Transaction(func(tx *gorm.DB) error {
-		for _, 值 := range 已用用户数组 {
-			if 值 == "" {
-				continue //如果值为空,到循环尾
-			}
-
-			var 临时软件用户info DB.DB_AppUser
-			var 临时账号info DB.DB_User
-			var 临时卡号info DB.DB_Ka
-
-			局_应用用户ID := 0
-			if info.is卡号 {
-				if 临时卡号info, err = service.NewKa(c, tx).Info2(map[string]interface{}{"Name": 值}); err != nil {
-					return errors.Join(err, errors.New(值+"已冲卡号不存在"))
-				}
-			} else {
-				if 临时账号info, err = service.NewUser(c, tx).Info2(map[string]interface{}{"User": 值}); err != nil {
-					return errors.Join(err, errors.New("已冲账号不存在"))
-				}
-			}
-			if 临时软件用户info, err = service.NewAppUser(c, tx, info.卡号详情.AppId).InfoUid(S三元(info.is卡号, 临时卡号info.Id, 临时账号info.Id)); err != nil {
-				return errors.Join(err, errors.New(值+"已冲临时软件用户info不存在"))
-			}
-
-			if 局_应用用户ID == 0 {
-				return "", errors.New("应用用户:" + 值 + "不存在")
-			}
-
-			//防sb客户放负值 这样操作负值也可以追回
-			if info.卡号详情 .VipTime != 0 {
-
-				err = Ser_AppUser.Id点数增减_批量(info.卡号详情.AppId, []int{局_应用用户ID}, info.卡号详情.VipTime, false)
-				if err == nil {
-					局_追回时间点数结果[值] = 1
-					if info.is计点 {
-						go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户点数", float64(-info.卡号详情.VipTime), info.卡号详情.AppId, 2)
-					} else {
-						go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户时间", float64(-info.卡号详情.VipTime), info.卡号详情.AppId, 3)
-
-					}
-				} else {
-					局_追回时间点数结果[值] = 2
-				}
-			}
-			if info.卡号详情.VipNumber != 0 {
-				err = Ser_AppUser.Id积分增减_批量(info.卡号详情.AppId, []int{局_应用用户ID}, info.卡号详情.VipNumber, false)
-				go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户积分",  Float64取负值(info.卡号详情.VipNumber), 卡号详情卡号.AppId, 1)
-				if err == nil {
-					局_追回积分结果[值] = 1
-				} else {
-					局_追回积分结果[值] = 2
-				}
-			}
-			if !info.is卡号  && info.卡号详情.RMb != 0 {
-				err = Ser_User.Id余额增减_批量([]int{Ser_User.User用户名取id(值)}, info.卡号详情.RMb, false)
-				if err == nil {
-					go Ser_Log.Log_写余额日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户余额",  Float64取负值(info.卡号详情.RMb))
-					局_追回余额结果[值] = 1
-				} else {
-					局_追回余额结果[值] = 2
-				}
-			}
-		}
-	})
-
-	//追回 推荐人
-	已用推荐人数组 :=  W文本_分割文本(info.卡号详情.InviteUser, ",")
-	for _, 值 := range 已用推荐人数组 {
-		局_应用用户ID := 0
-		if info.is卡号 {
-			局_应用用户ID = Ser_AppUser.K卡号取Id(info.卡号详情.AppId, 值)
-		} else {
-			局_应用用户ID = Ser_AppUser.User取Id(info.卡号详情.AppId, 值)
-		}
-
-		if 局_应用用户ID == 0 {
-			continue
-		}
-		//防sb客户放负值 这样操作负值也可以追回
-		if info.卡号详情.VipTime != 0 {
-			err = Ser_AppUser.Id点数增减_批量(info.卡号详情.AppId, []int{局_应用用户ID}, info.卡号详情.InviteCount, false)
-			if err == nil {
-				if info.is计点 {
-					go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户点数", float64(-info.卡号详情.VipTime), info.卡号详情.AppId, 2)
-				} else {
-					go Ser_Log.Log_写积分点数时间日志(值, ip, 局_操作人用户名+"追回卡号:"+info.卡号详情.Name+",减少用户时间", float64(-info.卡号详情.VipTime), info.卡号详情.AppId, 3)
-				}
-				局_追回推荐人时间点数结果[值] = 1
-			} else {
-				局_追回推荐人时间点数结果[值] = 2
-			}
-		}
-	}
-	log := ""
-	局_成功 := ""
-	局_失败 := ""
-	for 值 := range 局_追回时间点数结果 {
-		if 局_追回时间点数结果[值] == 1 {
-			局_成功 += 值 + ","
-		} else if 局_追回时间点数结果[值] == 2 {
-			局_失败 += 值 + ","
-		}
-	}
-	if 局_成功 != "" {
-		log += "追回" + info.卡号详情 + "成功(" + 局_成功 + "),"
-	}
-	if 局_失败 != "" {
-		log += "追回" + 局_点数OR时间 + "失败(" + 局_成功 + "),"
-	}
-
-	局_成功 = ""
-	局_失败 = ""
-	for 值 := range 局_追回积分结果 {
-		if 局_追回积分结果[值] == 1 {
-			局_成功 += 值 + ","
-		} else if 局_追回积分结果[值] == 2 {
-			局_失败 += 值 + ","
-		}
-	}
-	if 局_成功 != "" {
-		log += "追回积分成功(" + 局_成功 + "),"
-	}
-	if 局_失败 != "" {
-		log += "追回积分失败(" + 局_成功 + "),"
-	}
-
-	局_成功 = ""
-	局_失败 = ""
-	for 值 := range 局_追回余额结果 {
-		if 局_追回余额结果[值] == 1 {
-			局_成功 += 值 + ","
-		} else if 局_追回余额结果[值] == 2 {
-			局_失败 += 值 + ","
-		}
-	}
-	if 局_成功 != "" {
-		log += "追回余额成功(" + 局_成功 + "),"
-	}
-	if 局_失败 != "" {
-		log += "追回余额失败(" + 局_成功 + "),"
-	}
-
-	局_成功 = ""
-	局_失败 = ""
-	for 值 := range 局_追回推荐人时间点数结果 {
-		if 局_追回推荐人时间点数结果[值] == 1 {
-			局_成功 += 值 + ","
-		} else if 局_追回推荐人时间点数结果[值] == 2 {
-			局_失败 += 值 + ","
-		}
-	}
-	if 局_成功 != "" {
-		log += "追回推荐人" + 局_点数OR时间 + "成功(" + 局_成功 + "),"
-	}
-	if 局_失败 != "" {
-		log += "追回推荐人" + 局_点数OR时间 + "失败(" + 局_成功 + "),"
-	}
-
-	//重置卡并冻结,删除信息
-	global.GVA_DB.Model(DB.DB_Ka{}).Where("Id = ? ", 卡号详情卡号.Id).Updates(
-		map[string]interface{}{
-			"Status":     2,
-			"User":       "",
-			"Num":        0,
-			"InviteUser": "",
-			"UserTime":   "",
-			"AdminNote":  卡号详情卡号.AdminNote + log,
-		})*/
-
-	return //log, nil
-}
-
 // 来源AppId int, 卡号, 充值用户, 推荐人, 来源IP string)
-func (j *ka) K卡号充值_事务(c *gin.Context) (err error) {
-	//已优化,事务处理,数据库内直接加减乘除计算字段值,可以并发,不出错
+func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充值用户, 推荐人 string) (err error) {
 	var info struct {
-		卡类详情     DB.DB_KaClass
+		卡号详情     DB.DB_Ka
 		app用户详情  DB.DB_AppUser
 		user用户详情 DB.DB_User
+		ka用户详情   DB.DB_Ka
 		app详情    DB.DB_AppInfo
 		is卡号     bool
 		is计点     bool
+
+		app用户详情_推荐人  DB.DB_AppUser
+		user用户详情_推荐人 DB.DB_User
+		ka用户详情_推荐人   DB.DB_Ka
+		用户类型_推荐人     DB.DB_UserClass
+		新用户类型_推荐人    DB.DB_UserClass
+
+		logMoney     []DB.DB_LogMoney     //余额日志
+		logVipNumber []DB.DB_LogVipNumber //积分,点数日志
+
 	}
-	var 卡类ID, 软件用户Uid int
 	//第一个查询不用tx 直接用全局即可,后面事务的才用tx
 	db := *global.GVA_DB
-	S_KaClass := service.NewKaClass(c, &db)
-	if info.卡类详情, err = S_KaClass.Info(卡类ID); err != nil {
-		err = errors.New("卡类不存在")
+	S_Ka := service.NewKa(c, &db)
+	if info.卡号详情, err = S_Ka.InfoKa(卡号); err != nil {
+		err = errors.New("卡号不存在")
 		return
 	}
-
-	if info.app用户详情, err = service.NewAppUser(c, &db, info.卡类详情.AppId).InfoUid(软件用户Uid); err != nil {
-		err = errors.New("软件用户不存在")
-		return
+	if info.卡号详情.Status == 2 {
+		return errors.New("卡号已冻结,无法充值")
 	}
-	if info.app详情, err = service.NewAppInfo(c, &db).Info(info.卡类详情.AppId); err != nil {
+	if info.卡号详情.Num >= info.卡号详情.NumMax {
+		//开启事务前检测一次,过滤降低数据库压力
+		return errors.New("卡号已经使用到最大次数")
+	}
+	if info.卡号详情.EndTime != 0 && info.卡号详情.EndTime < time.Now().Unix() {
+		//开启事务前检测一次,过滤降低数据库压力
+		return errors.New("卡号已过有效期")
+	}
+	if 来源AppId != 0 && 来源AppId != info.卡号详情.AppId {
+		return errors.New("不是本应用卡号")
+	}
+	if 充值用户 == 推荐人 {
+		return errors.New("充值用户和推荐人不能相同")
+	}
+	if info.卡号详情.KaType == 2 && W文本_是否包含关键字(info.卡号详情.User, 充值用户+",") {
+		return errors.New("账号已使用本卡号充值过了,请勿重复充值")
+	}
+	if info.app详情, err = service.NewAppInfo(c, &db).Info(info.卡号详情.AppId); err != nil {
 		err = errors.New("应用不存在")
 		return
 	}
 	info.is卡号 = S三元(info.app详情.AppType == 3 || info.app详情.AppType == 4, true, false)
 	info.is计点 = S三元(info.app详情.AppType == 2 || info.app详情.AppType == 4, true, false)
 
+	if !info.is卡号 {
+		info.user用户详情, err = service.NewUser(c, &db).InfoName(充值用户)
+		if err != nil {
+			return errors.New("用户不存在")
+		}
+		if info.ka用户详情.Status == 2 {
+			return errors.New("用户已冻结,无法充值")
+		}
+		info.app用户详情, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.user用户详情.Id)
+	} else {
+		info.ka用户详情, err = service.NewKa(c, &db).InfoKa(充值用户)
+		if err != nil {
+			return errors.New("用户不存在")
+		}
+		if info.ka用户详情.Status == 2 {
+			return errors.New("用户已冻结,无法充值")
+		}
+		info.app用户详情, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.ka用户详情.AppId)
+	}
+	if err != nil {
+		return errors.New("用户未登录过本应用,请先操作登录")
+	}
+	if info.app用户详情.Status == 2 {
+		return errors.New("app用户已冻结,无法充值")
+	}
+
+	if 推荐人 != "" {
+		if !info.is卡号 {
+			info.user用户详情_推荐人, err = service.NewUser(c, &db).InfoName(推荐人)
+			if err != nil {
+				return errors.New("推荐人用户不存在")
+			}
+			if info.user用户详情_推荐人.Status == 2 {
+				return errors.New("推荐人用户已冻结,无法充值")
+			}
+			info.app用户详情_推荐人, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.user用户详情_推荐人.Id)
+		} else {
+			info.ka用户详情_推荐人, err = service.NewKa(c, &db).InfoKa(推荐人)
+			if err != nil {
+				return errors.New("推荐人用户不存在")
+			}
+			if info.ka用户详情_推荐人.Status == 2 {
+				return errors.New("推荐人用户已冻结,无法充值")
+			}
+			info.app用户详情_推荐人, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.ka用户详情_推荐人.AppId)
+		}
+		if err != nil {
+			return errors.New("推荐人用户未登录过本应用,请先操作登录")
+		}
+		if info.app用户详情_推荐人.Status == 2 {
+			return errors.New("推荐人app用户已冻结,无法充值")
+		}
+	}
 	//检测用户分组是否相同 不相同处理
-	if info.卡类详情.UserClassId == info.app用户详情.UserClassId || info.app用户详情.UserClassId == 0 {
+	if info.卡号详情.UserClassId == info.app用户详情.UserClassId || info.app用户详情.UserClassId == 0 {
 		//分类相同,或用户为未分类 不处理
 	} else {
-		if info.卡类详情.NoUserClass == 2 {
+		if info.卡号详情.NoUserClass == 2 {
 			return errors.New("用户类型不同无法充值.")
 		}
 	}
 	//到这里基本就都没问题了,开启事务,增加卡使用次数,更新用户信息就可以了
 	// 开启事务,检测上层是否有事务,如果有直接使用,没有就创建一个
-	var tx *gorm.DB
+	var db2 *gorm.DB
 	if tempObj, ok := c.Get("tx"); ok {
-		tx = tempObj.(*gorm.DB)
+		db2 = tempObj.(*gorm.DB)
 	} else {
 		db = *global.GVA_DB
-		tx = &db
+		db2 = &db
 	}
 	//在事务中执行数据库操作，使用的是tx变量，不是db。
-	err = tx.Transaction(func(tx *gorm.DB) error {
+	err = db2.Transaction(func(tx *gorm.DB) error {
+		//加锁重新读卡信息
+		err = tx.Model(DB.DB_Ka{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id=?", info.卡号详情.Id).First(&info.卡号详情).Error
+		if err != nil {
+			return errors.Join(err, errors.New("卡号不存在"))
+		}
+		if info.卡号详情.Num >= info.卡号详情.NumMax {
+			return errors.Join(err, errors.New("卡号已经使用到最大次数"))
+		}
+		//已用次数+1
+		//RowsAffected用于返回sql执行后影响的行数
+		m := map[string]interface{}{}
+		m["Num"] = gorm.Expr("Num + 1")
+		m["User"] = gorm.Expr("CONCAT(User,?)", 充值用户+",")
+		m["UserTime"] = gorm.Expr("CONCAT(UserTime,?)", strconv.Itoa(int(time.Now().Unix()))+",")
+		m["InviteUser"] = gorm.Expr("CONCAT(InviteUser,?)", 推荐人+",") //空推荐人也增加, 这样才能和用户充值顺序对应
+		rowsAffected := tx.Model(DB.DB_Ka{}).
+			Where("Id = ?", info.卡号详情.Id).Updates(&m).RowsAffected
+		if rowsAffected == 0 {
+			return errors.New("卡号不存在或已经使用到最大次数")
+		}
 		//卡库存减少成功,开始增加客户数据 ,重新加锁读取App用户信息,防止并发数据错误
-		err = tx.Model(DB.DB_AppUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Table("db_AppUser_"+strconv.Itoa(info.卡类详情.AppId)).Where("Uid=?", info.app用户详情.Uid).First(&info.app用户详情).Error
+		err = tx.Model(DB.DB_AppUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Uid=?", info.app用户详情.Uid).First(&info.app用户详情).Error
 		if err != nil {
 			return errors.Join(err, errors.New("未注册应用???感觉不可能,之前读取过,请联系管理员"))
 		}
 		//处理新信息
 		客户expr := map[string]interface{}{}
-		客户expr["VipNumber"] = gorm.Expr("VipNumber + ?", info.卡类详情.VipNumber) //积分不会变直接增加即可
-		if info.卡类详情.MaxOnline > 0 {
-			客户expr["MaxOnline"] = info.卡类详情.MaxOnline //最大在线数直接赋值处理即可
+		if info.卡号详情.VipNumber > 0 {
+			客户expr["VipNumber"] = gorm.Expr("VipNumber + ?", info.卡号详情.VipNumber) //积分不会变直接增加即可
+			info.logVipNumber = append(info.logVipNumber, DB.DB_LogVipNumber{
+				AppId: info.卡号详情.AppId,
+				Count: info.卡号详情.VipNumber,
+				Ip:    c.ClientIP(),
+				Note:  "应用ID:" + strconv.Itoa(info.卡号详情.AppId) + "卡号Id:" + strconv.Itoa(info.卡号详情.Id) + "充值积分",
+				Time:  int(time.Now().Unix()),
+				Type:  1,
+				User:  充值用户,
+			})
+		}
+
+		if info.卡号详情.MaxOnline > 0 {
+			客户expr["MaxOnline"] = info.卡号详情.MaxOnline //最大在线数直接赋值处理即可
 		}
 		局_现行时间戳 := time.Now().Unix()
-		if info.卡类详情.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
-			if info.app用户详情.UserClassId == info.卡类详情.UserClassId {
+		if info.卡号详情.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
+			if info.app用户详情.UserClassId == info.卡号详情.UserClassId {
 				//分类相同,正常处理时间或点数
-				if Ser_AppInfo.App是否为计点(info.卡类详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
+				if Ser_AppInfo.App是否为计点(info.卡号详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
 					//如果为计点 或 时间大于现在时间直接加就行了
-					客户expr["VipTime"] = gorm.Expr("VipTime + ?", info.卡类详情.VipTime)
+					客户expr["VipTime"] = gorm.Expr("VipTime + ?", info.卡号详情.VipTime)
 				} else {
 					//如果为计时 已经过期很久了,直接现行时间戳加卡时间
-					客户expr["VipTime"] = 局_现行时间戳 + info.卡类详情.VipTime
+					客户expr["VipTime"] = 局_现行时间戳 + info.卡号详情.VipTime
 				}
 			} else {
 				//用户类型不同, 根据权重处理
@@ -526,8 +421,8 @@ func (j *ka) K卡号充值_事务(c *gin.Context) (err error) {
 					局_旧用户类型权重.Weight = 1
 				}
 
-				if info.卡类详情.UserClassId > 0 {
-					if 局_新用户类型权重, err = service.NewUserClass(c, tx).Info(info.卡类详情.UserClassId); err != nil {
+				if info.卡号详情.UserClassId > 0 {
+					if 局_新用户类型权重, err = service.NewUserClass(c, tx).Info(info.卡号详情.UserClassId); err != nil {
 						return errors.Join(err, errors.New("读取新用户类型权重失败"))
 					}
 				} else {
@@ -536,32 +431,38 @@ func (j *ka) K卡号充值_事务(c *gin.Context) (err error) {
 
 				if info.is计点 {
 					//转换结果值,转后再增加新类型 值
-					客户expr["VipTime"] = gorm.Expr("VipTime * ? / ? +?", 局_旧用户类型权重.Weight, 局_新用户类型权重.Weight, info.卡类详情.VipTime)
+					客户expr["VipTime"] = gorm.Expr("VipTime * ? / ? +?", 局_旧用户类型权重.Weight, 局_新用户类型权重.Weight, info.卡号详情.VipTime)
+					info.logVipNumber = append(info.logVipNumber, DB.DB_LogVipNumber{
+						User:  info.user用户详情.User,
+						Ip:    c.ClientIP(),
+						Count: info.卡号详情.VipNumber,
+						Note:  "应用ID:" + strconv.Itoa(info.卡号详情.AppId) + "卡号Id:" + strconv.Itoa(info.卡号详情.Id) + "充值点数",
+					})
 				} else {
 					if info.app用户详情.VipTime < 局_现行时间戳 {
 						//已经过期了直接赋值新类型 现行时间+新时间就可以了
-						客户expr["VipTime"] = 局_现行时间戳 + info.卡类详情.VipTime
+						客户expr["VipTime"] = 局_现行时间戳 + info.卡号详情.VipTime
 					} else {
 						//先计算还剩多长时间,剩余时间权重转换转换结果值,+现在时间+卡增减时间
-						客户expr["VipTime"] = gorm.Expr("(VipTime-?) * ? / ? +?", 局_现行时间戳, 局_旧用户类型权重.Weight, 局_新用户类型权重.Weight, 局_现行时间戳+info.卡类详情.VipTime)
+						客户expr["VipTime"] = gorm.Expr("(VipTime-?) * ? / ? +?", 局_现行时间戳, 局_旧用户类型权重.Weight, 局_新用户类型权重.Weight, 局_现行时间戳+info.卡号详情.VipTime)
 					}
 				}
 				//最后更换类型,防止前面用到卡类id,计算权重转换类型错误
-				客户expr["UserClassId"] = info.卡类详情.UserClassId
+				客户expr["UserClassId"] = info.卡号详情.UserClassId
 			}
 		}
 		//更新客户数据
-		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡类详情.AppId)).Where("Id = ?", info.app用户详情.Id).Updates(&客户expr).Error
+		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Id = ?", info.app用户详情.Id).Updates(&客户expr).Error
 		if err != nil {
 			return errors.Join(err, errors.New("充值失败,重试"))
 		}
 		//处理账号的RMB增减
-		if !info.is卡号 && info.卡类详情.RMb > 0 {
+		if !info.is卡号 && info.卡号详情.RMb > 0 {
 			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.app用户详情.Uid).First(&info.user用户详情).Error
 			if err != nil {
 				return errors.Join(err, errors.New("用户账号不存在"))
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", info.app用户详情.Uid).Update("RMB", gorm.Expr("RMB + ?", info.卡类详情.RMb)).Error
+			err = tx.Model(DB.DB_User{}).Where("Id = ?", info.app用户详情.Uid).Update("RMB", gorm.Expr("RMB + ?", info.卡号详情.RMb)).Error
 			if err != nil {
 				return errors.Join(err, errors.New("充值余额时失败,请重试"))
 			}
@@ -571,19 +472,86 @@ func (j *ka) K卡号充值_事务(c *gin.Context) (err error) {
 				return errors.Join(err, errors.New("充值后读取新余额失败"))
 			}
 			//日志仅写到上下文内,由实际业务处理是否写入日志和修改备注信息
-			c.Set("logMoney", DB.DB_LogMoney{
+			info.logMoney = append(info.logMoney, DB.DB_LogMoney{
 				User:  info.user用户详情.User,
 				Ip:    c.ClientIP(),
-				Count: info.卡类详情.RMb,
-				Note:  "应用ID:" + strconv.Itoa(info.卡类详情.AppId) + "卡类Id:" + strconv.Itoa(info.卡类详情.Id) + "充值余额|新余额≈" + Float64到文本(局_新余额, 2),
+				Count: info.卡号详情.RMb,
+				Note:  "应用ID:" + strconv.Itoa(info.卡号详情.AppId) + "卡号Id:" + strconv.Itoa(info.卡号详情.Id) + "充值余额|新余额≈" + Float64到文本(局_新余额, 2),
 			})
 		}
+		//开始处理推荐人
+		if info.卡号详情.InviteCount > 0 && info.app用户详情_推荐人.Id != 0 {
+			//处理新信息
+			推荐人expr := map[string]interface{}{}
+			if info.app用户详情_推荐人.UserClassId == info.卡号详情.UserClassId {
+				//分类相同,正常处理时间或点数
+				if info.is计点 || info.app用户详情_推荐人.VipTime > 局_现行时间戳 {
+					//如果为计点 或 时间大于现在时间直接加就行了
+					推荐人expr["VipTime"] = gorm.Expr("VipTime + ?", info.卡号详情.InviteCount)
+				} else {
+					//如果为计时 已经过期很久了,直接现行时间戳加卡时间
+					推荐人expr["VipTime"] = 局_现行时间戳 + info.卡号详情.InviteCount
+				}
+
+			} else {
+				//用户类型不同, 根据权重处理
+				if info.用户类型_推荐人, err = service.NewUserClass(c, tx).Info(info.app用户详情_推荐人.UserClassId); err != nil {
+					return errors.New("读取推荐人用户类型详情失败,可能已不存在id:" + strconv.Itoa(info.app用户详情_推荐人.UserClassId))
+				}
+				if info.新用户类型_推荐人, err = service.NewUserClass(c, tx).Info(info.卡号详情.UserClassId); err != nil {
+					return errors.New("读取卡号详情UserClassId失败,可能已不存在id:" + strconv.Itoa(info.卡号详情.UserClassId))
+				}
+
+				if info.is计点 {
+					//计算推荐人用户类型的实际点数,
+					//这里有点绕,比如增加1秒,但是这个新用户类型权重为2, 荐人类型权重为1
+					//那么实际新用户类型是推荐人类型的两倍,转换到推荐人类型值应该为2
+					//所以 卡秒数+新用户类型权重=2,在除以推荐人用户类型权重=2
+					局_增减时间点数 := info.卡号详情.InviteCount * info.新用户类型_推荐人.Weight / info.用户类型_推荐人.Weight
+					推荐人expr["VipTime"] = gorm.Expr("VipTime +?", 局_增减时间点数)
+					info.logVipNumber = append(info.logVipNumber, DB.DB_LogVipNumber{
+						User:  info.user用户详情.User,
+						Ip:    c.ClientIP(),
+						Count: Int64到Float64(局_增减时间点数),
+						Note:  "应用ID:" + strconv.Itoa(info.卡号详情.AppId) + "用户:" + 充值用户 + ",使用充值卡号Id:" + strconv.Itoa(info.卡号详情.Id) + ",获得推荐人增加点数",
+					})
+
+				} else {
+					if info.app用户详情_推荐人.VipTime < 局_现行时间戳 {
+						//已经过期了 现行时间+新时间就可以了
+						推荐人expr["VipTime"] = 局_现行时间戳 + info.卡号详情.InviteCount
+					} else {
+						局_增减时间点数 := info.卡号详情.InviteCount * info.新用户类型_推荐人.Weight / info.用户类型_推荐人.Weight
+						//原来的值+推荐人增加点数权重转换结果就好了
+						推荐人expr["VipTime"] = gorm.Expr("VipTime+?", 局_增减时间点数)
+					}
+				}
+			}
+			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Uid = ?", info.app用户详情_推荐人.Uid).Updates(&推荐人expr).Error
+			if err != nil {
+				return errors.Join(err, errors.New("推荐人更新失败"))
+			}
+		}
+
 		return nil
 	})
 	//写到上下文,备用
-	c.Set("info.卡类详情", info.卡类详情)
+	c.Set("info.卡类详情", info.卡号详情)
 	c.Set("info.app用户详情", info.app用户详情)
 	c.Set("info.user用户详情", info.user用户详情)
 	c.Set("info.app详情", info.app详情)
+	if len(info.logMoney) > 0 {
+		//最后写出日志
+		if err = log.L_log.S输出日志(c, info.logMoney); err != nil {
+			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		}
+	}
+
+	if len(info.logVipNumber) > 0 {
+		if err = log.L_log.S输出日志(c, info.logVipNumber); err != nil {
+			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		}
+	}
+
 	return err
 }

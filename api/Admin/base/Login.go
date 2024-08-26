@@ -119,10 +119,9 @@ func (b *BaseApi) Login(c *gin.Context) {
 	response.OkWithDetailed(结构_登录响应{
 		UserInfo: DB_user,
 		Token:    DB_links_user.Token,
-		KuaiYan:  快验,
+		KuaiYan:  !快验,
 	}, "登录成功", c)
 	return
-
 }
 
 // 登录请求结构体

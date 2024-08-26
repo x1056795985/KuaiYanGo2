@@ -11,6 +11,7 @@ import (
 	"server/Service/Ser_UserClass"
 	"server/Service/Ser_UserConfig"
 	"server/global"
+	"server/new/app/logic/common/ka"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -535,7 +536,7 @@ func (a *Api) K卡号充值(c *gin.Context) {
 		return
 	}
 
-	err, _ = Ser_Ka.K卡号充值_事务(0, 请求.Ka, 请求.User, "", c.ClientIP())
+	err = ka.L_ka.K卡号充值_事务(c, 0, 请求.Ka, 请求.User, "")
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
