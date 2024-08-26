@@ -30,6 +30,7 @@ func (s *AppUser) Create(info *DB.DB_AppUser) (row int64, err error) {
 	return tx.RowsAffected, tx.Error
 }
 
+// 业务逻辑操作尽量不用appUserId,容易造成混乱,请使用uid
 func (s *AppUser) Info(id int) (info DB.DB_AppUser, err error) {
 	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Id = ?", id).First(&info)
 	if tx.Error != nil {

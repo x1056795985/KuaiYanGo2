@@ -19,6 +19,7 @@ import (
 	"server/api/UserApi/response"
 	"server/global"
 	"server/new/app/logic/common/blacklist"
+	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -528,7 +529,7 @@ func UserApi_用户注册(c *gin.Context) {
 	if AppInfo.RegisterGiveKaClassId > 0 {
 		局_注册送卡, 局_制卡结果 := Ser_Ka.Ka单卡创建(AppInfo.RegisterGiveKaClassId, "系统自动", "用户注册系统自动制卡赠送充值", "", 0)
 		if 局_制卡结果 == nil {
-			_, _ = Ser_Ka.K卡号充值_事务(AppInfo.AppId, 局_注册送卡.Name, string(请求json.GetStringBytes("User")), "", c.ClientIP())
+			_ = ka.L_ka.K卡号充值_事务(c, AppInfo.AppId, 局_注册送卡.Name, string(请求json.GetStringBytes("User")), "")
 		}
 	}
 

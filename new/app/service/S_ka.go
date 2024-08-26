@@ -26,6 +26,13 @@ func (s *Ka) Info(id int) (info DB.DB_Ka, err error) {
 	}
 	return
 }
+func (s *Ka) InfoKa(Name string) (info DB.DB_Ka, err error) {
+	tx := s.db.Model(DB.DB_Ka{}).Where("Name = ?", Name).First(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
 
 func (s *Ka) Info2(where map[string]interface{}) (info DB.DB_Ka, err error) {
 	tx := s.db.Model(DB.DB_Ka{}).Where(where).First(&info)
