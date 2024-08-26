@@ -770,5 +770,4 @@ func 数据库兼容旧版本(c *gin.Context) {
 		}
 
 	}
-
 }
