@@ -1,6 +1,7 @@
 package PublicData
 
 import (
+	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	Db服务 "server/Service/Ser_AppInfo"
 	"server/Service/Ser_PublicData"
@@ -101,6 +102,7 @@ func (a *Api) GetPublicDataList(c *gin.Context) {
 	for 索引 := range DB_PublicData {
 		//fmt.Printf("Id:%v:%v", strconv.Itoa(DB_PublicData[索引].AppId), AppName[strconv.Itoa(DB_PublicData[索引].AppId)])
 		DB_PublicData[索引].AppName = AppName[strconv.Itoa(DB_PublicData[索引].AppId)]
+		DB_PublicData[索引].Value = utils.S三元(len(DB_PublicData[索引].Value) > 200, utils.W文本_取左边(DB_PublicData[索引].Value, 200)+"...", DB_PublicData[索引].Value)
 	}
 
 	response.OkWithDetailed(结构响应_GetDB_PublicDataList{DB_PublicData, 总数}, "获取成功", c)
@@ -172,7 +174,7 @@ func (a *Api) SaveDB_PublicData信息(c *gin.Context) {
 	err = Ser_PublicData.P置值2(请求)
 
 	if err != nil {
-		response.FailWithMessage("保存失败", c)
+		response.FailWithMessage("保存失败"+err.Error(), c)
 		return
 	}
 	response.OkWithMessage("保存成功", c)
