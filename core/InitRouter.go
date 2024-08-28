@@ -359,13 +359,14 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.Use(middleware.IsTokenAdmin()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
 	{
-		App := Api.Admin.TaskPool                        //实现路由的 具体方法位置
-		baseRouter.POST("GetList", App.GetList2)         // 获取列表
-		baseRouter.POST("New", App.New)                  // 新建信息
-		baseRouter.POST("GetInfo", App.GetInfo)          // 获取详细信息
-		baseRouter.POST("SaveInfo", App.Save)            // 保存详细信息
-		baseRouter.POST("SetStatus", App.Set修改状态)        // 保存详细信息
-		baseRouter.POST("DeleteTaskQueueTid", App.Q清空队列) // 保存详细信息
+		App := Api.Admin.TaskPool                //实现路由的 具体方法位置
+		baseRouter.POST("GetList", App.GetList2) // 获取列表
+		baseRouter.POST("New", App.New)          // 新建信息
+		baseRouter.POST("GetInfo", App.GetInfo)  // 获取详细信息
+		baseRouter.POST("SaveInfo", App.Save)    // 保存详细信息
+		baseRouter.POST("SetStatus", App.Set修改状态)
+		baseRouter.POST("DeleteTaskQueueTid", App.Q清空队列)
+		baseRouter.POST("UuidAddQueue", App.Uuid重新加入队列)
 
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Del批量删除) // 删除信息

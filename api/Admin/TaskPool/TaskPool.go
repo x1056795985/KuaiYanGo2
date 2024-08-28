@@ -395,3 +395,27 @@ func (a *Api) Q清空队列(c *gin.Context) {
 	response.OkWithMessage("清空成功,数量:"+strconv.Itoa(影响行数), c)
 	return
 }
+
+// Uuid重新加入队列
+func (a *Api) Uuid重新加入队列(c *gin.Context) {
+	var 请求 DB.TaskPool_数据_精简
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if len(请求.Uuid) != 36 {
+		response.FailWithMessage("uuid错误", c)
+		return
+	}
+
+	err = Ser_TaskPool.Uuid_添加到队列(请求.Uuid)
+	if err != nil {
+		response.FailWithMessage("重新加入队列失败:"+err.Error(), c)
+		return
+	}
+
+	response.OkWithMessage("操作成功", c)
+	return
+}
