@@ -1,6 +1,7 @@
 package Ser_TaskPool
 
 import (
+	"errors"
 	"github.com/google/uuid"
 	"server/global"
 	DB "server/structs/db"
@@ -182,4 +183,20 @@ func Task类型读取(id int) (DB.TaskPool_类型, error) {
 	var DB_TaskPool_类型 DB.TaskPool_类型
 	err := global.GVA_DB.Model(DB.TaskPool_类型{}).Where("Id=?", id).First(&DB_TaskPool_类型).Error
 	return DB_TaskPool_类型, err
+}
+
+func Uuid_添加到队列(uuid string) error {
+	var TaskPool_数据 DB.TaskPool_数据
+	db := *global.GVA_DB
+
+	err := db.Model(DB.TaskPool_数据{}).Where("uuid=?", uuid).First(&TaskPool_数据).Error
+	if err != nil {
+		return errors.Join(errors.New("未找到任务"), err)
+	}
+	TaskPool_队列 := DB.TaskPool_队列{
+		Uuid: TaskPool_数据.Uuid,
+		Tid:  TaskPool_数据.Tid,
+	}
+	err = db.Model(DB.TaskPool_队列{}).Create(&TaskPool_队列).Error
+	return err
 }
