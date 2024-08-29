@@ -39,7 +39,7 @@ func RunWindowsServer() {
 	//global.GVA_LOG.Info("web 服务器启动成功", zap.String("端口", 端口))
 
 	fmt.Printf(`
-	欢迎使用 AI矩阵兽后台
+	欢迎使用 AI矩阵后台
 	当前版本:v.%s
 	后台端口:%s
 	管理员后台运行地址:http://127.0.0.1%s/Admin

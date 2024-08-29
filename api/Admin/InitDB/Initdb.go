@@ -46,7 +46,7 @@ func (i *DBApi) CheckDB(c *gin.Context) {
 结果:
 	//global.GVA_LOG.Info(message)
 	//响应成功 并传入消息和数据
-	局_系统名称 := "AI矩阵兽后台"
+	局_系统名称 := "AI矩阵后台"
 	局_备案名称 := ""
 	局_系统logo := ""
 	if global.GVA_DB != nil {
