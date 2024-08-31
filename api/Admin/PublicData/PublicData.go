@@ -4,8 +4,8 @@ import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	Db服务 "server/Service/Ser_AppInfo"
-	"server/Service/Ser_PublicData"
 	"server/global"
+	"server/new/app/logic/common/publicData"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -170,12 +170,12 @@ func (a *Api) SaveDB_PublicData信息(c *gin.Context) {
 		return
 	}
 
-	if !Ser_PublicData.Name是否存在(请求.AppId, 请求.Name) {
+	if !publicData.L_publicData.Name是否存在(&gin.Context{}, 请求.AppId, 请求.Name) {
 		response.FailWithMessage("变量不存在", c)
 		return
 	}
-
-	err = Ser_PublicData.P置值2(请求)
+	请求.Time = int(time.Now().Unix())
+	err = publicData.L_publicData.Z置值_原值(c, 请求)
 
 	if err != nil {
 		response.FailWithMessage("保存失败"+err.Error(), c)
@@ -204,13 +204,13 @@ func (a *Api) New(c *gin.Context) {
 		return
 	}
 
-	if Ser_PublicData.Name是否存在(请求.AppId, 请求.Name) {
+	if publicData.L_publicData.Name是否存在(&gin.Context{}, 请求.AppId, 请求.Name) {
 		response.FailWithMessage("变量名已存在", c)
 		return
 	}
 	请求.Time = int(time.Now().Unix())
 	//app_id 没有这个字段排除掉
-	err = Ser_PublicData.C创建(请求)
+	err = publicData.L_publicData.C创建(c, 请求)
 	if err != nil {
 		response.FailWithMessage("添加失败", c)
 		return
@@ -237,7 +237,7 @@ func (a *Api) Set修改vip限制(c *gin.Context) {
 		return
 	}
 
-	err = Ser_PublicData.P批量修改IsVip(请求.AppID, 请求.Name, 请求.IsVip)
+	err = publicData.L_publicData.P批量修改IsVip(c, 请求.AppID, 请求.Name, 请求.IsVip)
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)

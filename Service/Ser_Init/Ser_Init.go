@@ -15,7 +15,6 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
-	"server/Service/Ser_PublicData"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_TaskPool"
@@ -24,6 +23,7 @@ import (
 	"server/config"
 	"server/global"
 	"server/new/app/logic/common/ka"
+	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
 	newDB "server/new/app/models/db"
 	"server/new/app/service"
@@ -241,13 +241,14 @@ func InitDbTable数据() {
 	if 局_例子记录.DbPublicdata < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_PublicData{}).Count(&局_数量)
 		if 局_数量 == 0 {
-			_ = Ser_PublicData.C创建(DB.DB_PublicData{
+
+			_ = publicData.L_publicData.C创建(&gin.Context{}, DB.DB_PublicData{
 				AppId: 1,
 				Type:  3,
 				Name:  "测试逻辑开关",
 				Value: "1",
 			})
-			_ = Ser_PublicData.C创建(DB.DB_PublicData{
+			_ = publicData.L_publicData.C创建(&gin.Context{}, DB.DB_PublicData{
 				AppId: 1,
 				Type:  1,
 				Name:  "系统名称",

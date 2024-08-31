@@ -1,37 +1,101 @@
-package setting
+package publicData
 
 import (
-	"github.com/valyala/fastjson"
+	"EFunc/utils"
+	"errors"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/Service/Ser_PublicData"
-	"server/api/UserApi/response"
 	"server/global"
 	DB "server/structs/db"
 	"strings"
 )
 
-func Q取公共变量(配置名 string, 配置值 interface{}) error {
+var L_publicData publicData
 
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	// {"Api":"GetPublicData","Name":"会员数据a"}
-	局_变量名 := string(请求json.GetStringBytes("Name"))
+func init() {
+	L_publicData = publicData{}
+}
 
-	局_云变量数据, err := Ser_PublicData.P取值2(1, 局_变量名) //1>所以有软件公共读
-	if err != nil || 局_云变量数据.Type > 4 {                 //只允许变量  不允许读取云函数
-		response.X响应状态消息(c, response.Status_操作失败, "变量不存在")
+type publicData struct {
+}
+
+func (j *publicData) Name是否存在(c *gin.Context, AppId int, Name string) bool {
+	var Count int64
+	db := *global.GVA_DB
+	db.Model(DB.DB_PublicData{}).Select("1").Where("Name=?", Name).Where("AppId=?", AppId).Take(&Count)
+	return Count > 0
+}
+
+// 会正确处理队列
+func (j *publicData) Z置值(c *gin.Context, Appid int, 变量名, 变量值 string) (err error) {
+	db := *global.GVA_DB
+	var 局_云变量数据 DB.DB_PublicData
+	err = db.Model(DB.DB_PublicData{}).Where("AppId=?", Appid).Where("Name=?", 变量名).First(&局_云变量数据).Error
+	if err != nil {
+		err = errors.Join(err, errors.New("变量不存在"))
+		return
+	}
+	//队列类型的单独处理,加锁读取,避免队列数据被修改
+	if 局_云变量数据.Type <= 3 {
+		err = db.Model(DB.DB_PublicData{}).
+			Where("AppId=?", Appid).Where("Name=?", 变量名).
+			Update("Value", 变量值).Error
+		if err != nil {
+			return
+		}
+	} else if 局_云变量数据.Type == 4 {
+		err = db.Transaction(func(tx *gorm.DB) error {
+			err = tx.Model(DB.DB_PublicData{}).
+				Clauses(clause.Locking{Strength: "UPDATE"}).
+				Where("AppId=?", Appid).Where("Name=?", 变量名).
+				First(&局_云变量数据).Error //加锁再查一次
+			if err != nil {
+				return err
+			}
+			if 局_云变量数据.Value != "" {
+				局_云变量数据.Value += "\n"
+			}
+			局_云变量数据.Value += 变量值
+			err = tx.Model(DB.DB_PublicData{}).
+				Where("AppId=?", Appid).Where("Name=?", 变量名).
+				Update("Value", 局_云变量数据.Value).Error //更新变量
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return
+		}
+	}
+	return err
+}
+
+func (j *publicData) Z置值_原值(c *gin.Context, PublicData DB.DB_PublicData) error {
+	db := *global.GVA_DB
+	return db.Model(DB.DB_PublicData{}).Select("Value", "IsVip", "Note", "Time").Omit("Type", "AppId", "Name").Where("AppId=?", PublicData.AppId).Where("Name=?", PublicData.Name).Updates(PublicData).Error
+}
+
+func (j *publicData) Q取值(c *gin.Context, Appid int, Name string) string {
+	var value DB.DB_PublicData
+	value, _ = j.Q取值2(c, Appid, Name)
+	return value.Value
+}
+func (j *publicData) Q取值2(c *gin.Context, Appid int, 变量名 string) (返回 DB.DB_PublicData, err error) {
+	db := *global.GVA_DB
+	var 局_云变量数据 DB.DB_PublicData
+	err = db.Model(DB.DB_PublicData{}).Where("AppId=?", Appid).Where("Name=?", 变量名).First(&局_云变量数据).Error
+	if err != nil {
+		err = errors.Join(err, errors.New("变量不存在"))
 		return
 	}
 	//队列类型的单独处理,加锁读取,避免队列数据被修改
 	if 局_云变量数据.Type == 4 {
-		db := *global.GVA_DB
 		err = db.Transaction(func(tx *gorm.DB) error {
 			err = tx.Model(DB.DB_PublicData{}).
 				Clauses(clause.Locking{Strength: "UPDATE"}).
-				Where("AppId=?", 1).Where("Name=?", 局_变量名).
+				Where("AppId=?", 1).Where("Name=?", 变量名).
 				First(&局_云变量数据).Error //加锁再查一次
 			if err != nil {
 				return err
@@ -44,8 +108,8 @@ func Q取公共变量(配置名 string, 配置值 interface{}) error {
 				局_云变量数据.Value = ""
 			}
 			err = tx.Model(DB.DB_PublicData{}).
-				Where("AppId=?", 1).Where("Name=?", 局_变量名).
-				Update("Value", 局_云变量数据.Value).Error //加锁再查一次
+				Where("AppId=?", 1).Where("Name=?", 变量名).
+				Update("Value", 局_云变量数据.Value).Error
 			if err != nil {
 				return err
 			}
@@ -56,14 +120,37 @@ func Q取公共变量(配置名 string, 配置值 interface{}) error {
 			case 0:
 				局_云变量数据.Value = ""
 			}
+
 			return nil
 		})
 		if err != nil {
-			response.X响应状态消息(c, response.Status_操作失败, err.Error())
 			return
 		}
 
 	}
-	return err
 
+	返回 = 局_云变量数据
+	return
+}
+
+func (j *publicData) P批量修改IsVip(c *gin.Context, AppId int, Name []string, IsVip int) error {
+	db := *global.GVA_DB
+	return db.Model(DB.DB_PublicData{}).Where("AppId=?", AppId).Where("Name in ?", Name).Update("IsVip", IsVip).Error
+}
+
+func (j *publicData) C创建(c *gin.Context, PublicData DB.DB_PublicData) error {
+	db := *global.GVA_DB
+	err := db.Model(DB.DB_PublicData{}).Create(&PublicData).Error
+	return err
+}
+func (j *publicData) Q取队列长度(c *gin.Context, Appid int, 变量名 string) (返回 int, err error) {
+	var 局_云变量数据 DB.DB_PublicData
+	db := *global.GVA_DB
+	err = db.Model(DB.DB_PublicData{}).Where("AppId=?", Appid).Where("Name=?", 变量名).First(&局_云变量数据).Error
+	if err != nil {
+		err = errors.Join(err, errors.New("变量不存在"))
+		return
+	}
+	返回 = utils.W文本_取行数(局_云变量数据.Value)
+	return
 }

@@ -18,6 +18,7 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"RunJs":                 {"运行公共js函数", RunJs},
 	"Pay/GetPayOrderStatus": {"取支付订单状态", Q取支付订单状态},
 	"GetPublicData":         {"取公共变量", Q取公共变量},
+	"GetPublicDataLen":      {"取公共变量行数", Q取队列长度},
 	"SetPublicData":         {"置公共变量", Z置公共变量},
 }
 

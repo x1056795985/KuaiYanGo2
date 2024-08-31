@@ -15,13 +15,13 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
-	"server/Service/Ser_PublicData"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserConfig"
 	"server/global"
 	"server/new/app/logic/common/mqttClient"
+	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/db"
 	"server/new/app/service"
@@ -285,16 +285,16 @@ type js对象_通用返回 struct {
 }
 
 func jS_读公共变量(变量名 string) string {
-	return Ser_PublicData.P取值(1, 变量名)
+
+	return publicData.L_publicData.Q取值(&gin.Context{}, 1, 变量名)
 }
 func jS_置公共变量(变量名, 值 string) bool {
 	var err error
-	if Ser_PublicData.Name是否存在(1, 变量名) {
-		err = Ser_PublicData.P置值(1, 变量名, 值)
+	if publicData.L_publicData.Name是否存在(&gin.Context{}, 1, 变量名) {
+		err = publicData.L_publicData.Z置值(&gin.Context{}, 1, 变量名, 值)
 	} else {
-
 		var 局_新公共变量 = DB.DB_PublicData{AppId: 1, Name: 变量名, Value: 值, Type: 1, IsVip: 0, Time: int(time.Now().Unix()), Note: ""}
-		err = global.GVA_DB.Model(DB.DB_PublicData{}).Create(&局_新公共变量).Error
+		err = publicData.L_publicData.C创建(&gin.Context{}, 局_新公共变量)
 	}
 	return err == nil
 }
