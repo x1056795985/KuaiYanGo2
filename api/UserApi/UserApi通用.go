@@ -9,8 +9,6 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"server/Service/Captcha"
 	"server/Service/Ser_Admin"
 	"server/Service/Ser_Agent"
@@ -21,7 +19,6 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
-	"server/Service/Ser_PublicData"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_TaskPool"
@@ -33,6 +30,7 @@ import (
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/mqttClient"
+	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -232,7 +230,7 @@ func UserApi_用户登录(c *gin.Context) {
 				response.X响应状态(c, response.Status_Vip已到期)
 				return
 			}
-		} else {                                         //计时模式
+		} else { //计时模式
 			if 局_AppUser.VipTime <= time.Now().Unix() { // 相等也限制登录, 防止刚注册 时间和过期正好相当
 				go Ser_Log.Log_写登录日志(局_卡号或用户名, c.ClientIP(), "Vip已过期", 局_在线信息.LoginAppid)
 				response.X响应状态(c, response.Status_Vip已到期)
@@ -622,7 +620,7 @@ func UserApi_取应用专属变量(c *gin.Context) {
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"GetPublicData","Name":"会员数据a"}
 	局_变量名 := string(请求json.GetStringBytes("Name"))
-	局_云变量数据, err := Ser_PublicData.P取值2(AppInfo.AppId, 局_变量名)
+	局_云变量数据, err := publicData.L_publicData.Q取值2(c, AppInfo.AppId, 局_变量名)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "变量不存在,请到后台应用编辑,添加专属变量")
 		return
@@ -645,53 +643,13 @@ func UserApi_取公共变量(c *gin.Context) {
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"GetPublicData","Name":"会员数据a"}
 	局_变量名 := string(请求json.GetStringBytes("Name"))
-
-	局_云变量数据, err := Ser_PublicData.P取值2(1, 局_变量名) //1>所以有软件公共读
-	if err != nil || 局_云变量数据.Type > 4 {                 //只允许变量  不允许读取云函数
-		response.X响应状态消息(c, response.Status_操作失败, "变量不存在")
+	取值2, err := publicData.L_publicData.Q取值2(c, 1, 局_变量名)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 		return
 	}
-	//队列类型的单独处理,加锁读取,避免队列数据被修改
-	if 局_云变量数据.Type == 4 {
-		db := *global.GVA_DB
-		err = db.Transaction(func(tx *gorm.DB) error {
-			err = tx.Model(DB.DB_PublicData{}).
-				Clauses(clause.Locking{Strength: "UPDATE"}).
-				Where("AppId=?", 1).Where("Name=?", 局_变量名).
-				First(&局_云变量数据).Error //加锁再查一次
-			if err != nil {
-				return err
-			}
-			// 使用 SplitN 获取第一行
-			局_临时数组 := strings.SplitN(局_云变量数据.Value, "\n", 2)
-			if len(局_临时数组) == 2 {
-				局_云变量数据.Value = 局_临时数组[1]
-			} else {
-				局_云变量数据.Value = ""
-			}
-			err = tx.Model(DB.DB_PublicData{}).
-				Where("AppId=?", 1).Where("Name=?", 局_变量名).
-				Update("Value", 局_云变量数据.Value).Error //加锁再查一次
-			if err != nil {
-				return err
-			}
-			switch len(局_临时数组) {
-			default:
-				//只要不是0 都使用0作为返回变量,
-				局_云变量数据.Value = 局_临时数组[0]
-			case 0:
-				局_云变量数据.Value = ""
-			}
-			return nil
-		})
-		if err != nil {
-			response.X响应状态消息(c, response.Status_操作失败, err.Error())
-			return
-		}
 
-	}
-
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{局_变量名: 局_云变量数据.Value})
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{局_变量名: 取值2.Value, "QueueCount": 取值2})
 	return
 }
 
@@ -703,46 +661,11 @@ func UserApi_置公共变量(c *gin.Context) {
 	// {"Api":"GetPublicData","Name":"会员数据a","Value":"aaaaa"}
 	局_变量名 := string(请求json.GetStringBytes("Name"))
 	局_变量值 := string(请求json.GetStringBytes("Value"))
-
-	局_云变量数据, err := Ser_PublicData.P取值2(1, 局_变量名) //1>所以有软件公共读
-	if err != nil || 局_云变量数据.Type > 4 {                 //只允许变量  不允许读取云函数
-		response.X响应状态消息(c, response.Status_操作失败, "变量不存在")
+	err := publicData.L_publicData.Z置值(c, 1, 局_变量名, 局_变量值)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 		return
 	}
-	//队列类型的单独处理,加锁读取,避免队列数据被修改
-	db := *global.GVA_DB
-	if 局_云变量数据.Type <= 3 {
-		err = db.Model(DB.DB_PublicData{}).
-			Where("AppId=?", 1).Where("Name=?", 局_变量名).
-			Update("Value", 局_变量值).Error //加锁再查一次
-		if err != nil {
-			response.X响应状态消息(c, response.Status_操作失败, err.Error())
-			return
-		}
-	} else if 局_云变量数据.Type == 4 {
-		err = db.Transaction(func(tx *gorm.DB) error {
-			err = tx.Model(DB.DB_PublicData{}).
-				Clauses(clause.Locking{Strength: "UPDATE"}).
-				Where("AppId=?", 1).Where("Name=?", 局_变量名).
-				First(&局_云变量数据).Error //加锁再查一次
-			if err != nil {
-				return err
-			}
-			if 局_云变量数据.Value != "" {
-				局_云变量数据.Value += "\n"
-			}
-			局_云变量数据.Value += 局_变量值
-			err = tx.Model(DB.DB_PublicData{}).
-				Where("AppId=?", 1).Where("Name=?", 局_变量名).
-				Update("Value", 局_云变量数据.Value).Error //加锁再查一次
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-
-	}
-
 	response.X响应状态(c, c.GetInt("局_成功Status"))
 	return
 }
@@ -900,7 +823,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 			response.X响应状态(c, response.Status_未登录)
 			return
 		} else {
-			局_在线信息.User = 局_账号                        //如果出错,写日志时会用到
+			局_在线信息.User = 局_账号                                //如果出错,写日志时会用到
 			if AppInfo.AppType == 3 || AppInfo.AppType == 4 { //是卡号
 				局_Uid = Ser_Ka.Ka卡号取id(AppInfo.AppId, 局_账号)
 				if 局_Uid == 0 {
@@ -993,7 +916,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 			response.X响应状态(c, response.Status_未登录)
 			return
 		} else {
-			局_在线信息.User = 局_账号                        //如果出错,写日志时会用到
+			局_在线信息.User = 局_账号                                //如果出错,写日志时会用到
 			if AppInfo.AppType == 3 || AppInfo.AppType == 4 { //是卡号
 				局_Uid = Ser_Ka.Ka卡号取id(AppInfo.AppId, 局_账号)
 				if 局_Uid == 0 {
@@ -1515,9 +1438,9 @@ func UserApi_置用户类型(c *gin.Context) {
 				// 已经过期了直接赋值新类型 现行时间+新时间就可以了
 				局_App用户.VipTime = 局_现行时间戳
 			} else {
-				局_App用户.VipTime = 局_App用户.VipTime - 局_现行时间戳                             //先计算还剩多长时间
+				局_App用户.VipTime = 局_App用户.VipTime - 局_现行时间戳                   //先计算还剩多长时间
 				局_增减时间点数 := 局_App用户.VipTime * 局_旧用户类型.Weight / 局_新用户类型.Weight //剩余时间 权重转换转换结果值
-				局_App用户.VipTime = 局_现行时间戳 + 局_增减时间点数                                // 现在时间 + 旧权重转换后的新权重时间+卡增减时间
+				局_App用户.VipTime = 局_现行时间戳 + 局_增减时间点数                          // 现在时间 + 旧权重转换后的新权重时间+卡增减时间
 			}
 		}
 		局_App用户.UserClassId = 局_新用户类型.Id //最后更换类型,防止前面用到卡类id,计算权重转换类型错误

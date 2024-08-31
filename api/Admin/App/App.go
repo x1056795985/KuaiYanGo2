@@ -9,16 +9,17 @@ import (
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
-	"server/Service/Ser_PublicData"
 	"server/Service/Ser_PublicJs"
 	"server/api/WebApi"
 	"server/api/middleware"
 	"server/global"
+	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Api struct{}
@@ -235,7 +236,14 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 
 	//===========检查专属变量
 	for _, 专属变量 := range 请求.PublicData {
-		Ser_PublicData.P置值2(专属变量)
+		局_临时, err2 := publicData.L_publicData.Q取值2(c, 专属变量.AppId, 专属变量.Name)
+		if err2 != nil {
+			continue
+		}
+		if 局_临时.Value != 专属变量.Value || 局_临时.IsVip != 专属变量.IsVip || 局_临时.Note != 专属变量.Note || 局_临时.Type != 专属变量.Type {
+			专属变量.Time = int(time.Now().Unix())
+			_ = publicData.L_publicData.Z置值_原值(c, 专属变量)
+		}
 	}
 
 	//================检查apihook函数
