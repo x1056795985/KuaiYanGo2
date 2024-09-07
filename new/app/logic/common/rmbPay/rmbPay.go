@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	App服务 "server/Service/Ser_AppInfo"
 	"server/config"
 	"server/global"
 	"server/new/app/logic/agent/L_setting"
@@ -157,11 +158,15 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 	return
 }
 
-func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 减余额 bool, 备注 string) (err error) {
+func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 bool, 备注 string) (err error) {
 	var info struct {
-		user     DB.DB_User
-		Agent    DB.DB_User
-		LogMoney []DB.DB_LogMoney
+		user         DB.DB_User
+		Agent        DB.DB_User
+		LogMoney     []DB.DB_LogMoney
+		LogVipNumber []DB.DB_LogVipNumber
+		卡类详情         DB.DB_KaClass
+		软件用户详情       DB.DB_AppUser
+		app详情        DB.DB_AppInfo
 	}
 
 	db := *global.GVA_DB
@@ -198,6 +203,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 减余额 boo
 	}
 
 	err = db.Transaction(func(tx *gorm.DB) (err error) {
+
 		//加锁重新查
 		err = tx.Model(DB.DB_LogRMBPayOrder{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Id).First(&参数.DB_LogRMBPayOrder).Error
 		if err != nil {
@@ -209,35 +215,152 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 减余额 boo
 		}
 		参数.Status = constant.D订单状态_退款中
 
-		if 减余额 {
-			if 参数.UidType != 1 {
-				return errors.New("仅用户账号类型订单支持减余额退款")
+		if 追回资产 && 参数.ProcessingType == constant.D订单类型_余额充值 { //追回余额
+			if 参数.UidType == 1 { //只有账号模式的应用,才能扣余额
+				err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Uid).First(&info.user).Error
+				if err != nil {
+					return errors.New("用户不存在,无法减余额")
+				}
+				err = tx.Model(DB.DB_User{}).Where("Id = ?", 参数.Uid).Update("Rmb", gorm.Expr("RMB - ?", 参数.Rmb)).Error
+				if err != nil {
+					return errors.New("减余额失败")
+				}
+				info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+					User:  info.user.User,
+					Time:  int(time.Now().Unix()),
+					Ip:    c.ClientIP(),
+					Count: Float64取负值(参数.Rmb),
+					Note:  fmt.Sprintf("管理员操作退款,订单:%s,扣除用户余额%s|新余额≈%s", 参数.PayOrder, Float64到文本(参数.Rmb, 2), Float64到文本(info.user.Rmb, 2)),
+				})
+			}
+		}
+		if 追回资产 && 参数.ProcessingType == constant.D订单类型_购卡直冲 { //购卡直冲  追回卡类时间余额 积分
+			info.卡类详情, err = service.NewKaClass(c, tx).Info(参数.E额外信息.Get("KaClassId").Int())
+			if err != nil {
+				err = errors.New("追回资产时,发现卡类id" + 参数.E额外信息.Get("KaClassId").String() + "已不存在")
+				return
+			}
+			if 参数.UidType == 1 && info.卡类详情.RMb != 0 { //只有账号模式的应用,才能扣余额
+				err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Uid).First(&info.user).Error
+				if err != nil {
+					return errors.New("追回资产时,发现用户不存在,无法减余额")
+				}
+				err = tx.Model(DB.DB_User{}).Where("Id = ?", 参数.Uid).Update("Rmb", gorm.Expr("RMB - ?", 参数.Rmb)).Error
+				if err != nil {
+					return errors.New("减余额失败")
+				}
+				info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+					User:  info.user.User,
+					Time:  int(time.Now().Unix()),
+					Ip:    c.ClientIP(),
+					Count: Float64取负值(参数.Rmb),
+					Note:  fmt.Sprintf("管理员操作退款,订单:%s,扣除用户余额%s|新余额≈%s", 参数.PayOrder, Float64到文本(参数.Rmb, 2), Float64到文本(info.user.Rmb, 2)),
+				})
 			}
 
-			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Uid).First(&info.user).Error
+			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+参数.E额外信息.Get("AppId").String()).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Uid = ?", 参数.E额外信息.Get("AppUserUid").Int()).First(&info.软件用户详情).Error
 			if err != nil {
-				return errors.New("用户不存在,无法减余额")
+				return errors.New("应用:" + 参数.E额外信息.Get("AppId").String() + "软件用户id" + 参数.E额外信息.Get("AppUserUid").String() + "已不存在")
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", 参数.Uid).Update("Rmb", gorm.Expr("RMB - ?", 参数.Rmb)).Error
+			info.软件用户详情.VipTime -= info.卡类详情.VipTime
+			info.软件用户详情.VipNumber -= info.卡类详情.VipNumber
+			_, err = service.NewAppUser(c, tx, 参数.E额外信息.Get("AppId").Int()).UpdateUid(info.软件用户详情.Uid, map[string]interface{}{
+				"VipTime":   info.软件用户详情.VipTime,
+				"VipNumber": info.软件用户详情.VipNumber,
+			})
 			if err != nil {
-				return errors.New("减余额失败")
+				return err
 			}
-			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Uid).First(&info.user).Error
+			if info.卡类详情.VipTime != 0 {
+				局_is计点 := App服务.App是否为计点(参数.E额外信息.Get("AppId").Int())
+				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+					User:  参数.User,
+					AppId: 参数.E额外信息.Get("AppId").Int(),
+					Type:  S三元(局_is计点, constant.Log_type_点数, constant.Log_type_时间),
+					Time:  int(time.Now().Unix()),
+					Ip:    c.ClientIP(),
+					Count: Float64取负值(Int64到Float64(info.卡类详情.VipTime)),
+					Note:  fmt.Sprintf("管理员操作退款,订单:%s,扣除软件用户"+S三元(局_is计点, "点数", "会员时间"), 参数.PayOrder),
+				})
+			}
+			if info.卡类详情.VipNumber != 0 {
+				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+					User:  参数.User,
+					AppId: 参数.E额外信息.Get("AppId").Int(),
+					Type:  constant.Log_type_积分,
+					Time:  int(time.Now().Unix()),
+					Ip:    c.ClientIP(),
+					Count: Float64取负值(info.卡类详情.VipNumber),
+					Note:  fmt.Sprintf("管理员操作退款,订单:%s,扣除软件用户积分|新积分≈%s", 参数.PayOrder, Float64到文本(info.软件用户详情.VipNumber, 2)),
+				})
+			}
+		}
+		if 追回资产 && 参数.ProcessingType == constant.D订单类型_积分充值 { //追回积分
+			if info.app详情, err = service.NewAppInfo(c, tx).Info(参数.E额外信息.Get("AppId").Int()); err != nil {
+				return errors.Join(err, errors.New(fmt.Sprintf("AppId:%d取详情失败", 参数.E额外信息.Get("AppId").Int())))
+			}
+			局_增加积分 := Float64乘int64(参数.Rmb, int64(info.app详情.RmbToVipNumber))
+			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+参数.E额外信息.Get("AppId").String()).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Uid = ?", 参数.E额外信息.Get("AppUserUid").Int()).First(&info.软件用户详情).Error
 			if err != nil {
-				return errors.New("用户不存在,无法减余额")
+				return errors.New("应用:" + 参数.E额外信息.Get("AppId").String() + "软件用户id" + 参数.E额外信息.Get("AppUserUid").String() + "已不存在")
 			}
-			if info.user.Rmb < 0 {
-				return errors.New("用户余额不足,无法减余额")
+			info.软件用户详情.VipNumber -= 局_增加积分
+			_, err = service.NewAppUser(c, tx, 参数.E额外信息.Get("AppId").Int()).UpdateUid(info.软件用户详情.Uid, map[string]interface{}{
+				"VipNumber": info.软件用户详情.VipNumber,
+			})
+			if err != nil {
+				return errors.Join(err, errors.New("扣除积分失败"))
 			}
 
-			info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
-				User:  info.user.User,
+			info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+				User:  参数.User,
+				AppId: 参数.E额外信息.Get("AppId").Int(),
+				Type:  constant.Log_type_积分,
 				Time:  int(time.Now().Unix()),
 				Ip:    c.ClientIP(),
-				Count: Float64取负值(参数.Rmb),
-				Note:  fmt.Sprintf("管理员操作减余额退款,订单:%s,扣除用户余额%s|新余额≈%s", 参数.PayOrder, Float64到文本(参数.Rmb, 2), Float64到文本(info.user.Rmb, 2)),
+				Count: 局_增加积分,
+				Note:  fmt.Sprintf("管理员操作退款,订单:%s,扣除软件用户积分(积分rmb比例:%d)|新积分≈%s", 参数.PayOrder, info.app详情.RmbToVipNumber, Float64到文本(info.软件用户详情.VipNumber, 2)),
+			})
+
+		}
+
+		if 追回资产 && 参数.ProcessingType == constant.D订单类型_支付购卡 { //追回积分
+			c.Set("tx", tx)
+			err = ka.L_ka.K卡号追回(c, 参数.E额外信息.Get("Id").Int(), c.GetString("User"))
+			if err != nil {
+				return err
+			}
+			if 局_临时, ok2 := c.Get("info.LogVipNumber"); ok2 {
+				info.LogVipNumber = append(info.LogVipNumber, 局_临时.([]DB.DB_LogVipNumber)...)
+			}
+			if 局_临时, ok2 := c.Get("info.LogMoney"); ok2 {
+				info.LogMoney = append(info.LogMoney, 局_临时.([]DB.DB_LogMoney)...)
+			}
+		}
+		//判断是否有代理分成,如果有代理分成,对应扣除
+		for 索引 := range 参数.E额外信息.Len("分成详细") {
+			局_uid := 参数.E额外信息.Get("分成详细." + strconv.Itoa(索引) + ".Uid").Int()
+			局_金额 := 参数.E额外信息.Get("分成详细." + strconv.Itoa(索引) + ".S实际分成金额").Float64()
+			var 代理详情 DB.DB_User
+			代理详情, err = service.NewUser(c, tx).Info(局_uid)
+			if err != nil {
+				return errors.Join(err, errors.New("代理"+代理详情.User+",不存在,无法扣除分成"))
+			}
+			err = tx.Debug().Model(DB.DB_User{}).Where("Id = ?", 局_uid).Update("Rmb", gorm.Expr("RMB - ?", 局_金额)).Error
+
+			if err != nil {
+				return errors.Join(err, errors.New("代理分成用户扣除分成失败"))
+			}
+			代理详情.Rmb = Float64减float64(代理详情.Rmb, 局_金额, 2)
+			info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+				User:  代理详情.User,
+				Time:  int(time.Now().Unix()),
+				Ip:    c.ClientIP(),
+				Count: Float64取负值(局_金额),
+				Note:  fmt.Sprintf("管理员操作用户退款,订单:%s,扣除订单分成%s|新余额≈%s", 参数.PayOrder, Float64到文本(局_金额, 2), Float64到文本(代理详情.Rmb, 2)),
 			})
 		}
+
 		参数.Status = constant.D订单状态_退款成功
 		参数.E额外信息.Set("退款时间", time.Now().Format("2006-01-02 15:04:05"))
 		参数.Extra = 参数.E额外信息.String()
@@ -280,7 +403,11 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 减余额 boo
 	})
 	//最后写出日志
 	if err == nil {
+		c.Set("tx", &db)
 		if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
+			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		}
+		if err = log.L_log.S输出日志(c, info.LogVipNumber); err != nil {
 			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
 		}
 	}
@@ -525,12 +652,12 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 			}
 		case constant.D订单类型_积分充值: //2
 
-			if 参数.E额外信息.Get("AppID").Int() == 0 {
-				return errors.New("订单id:%s,扩展信息AppID不正确")
+			if 参数.E额外信息.Get("AppId").Int() == 0 {
+				return errors.New("订单id:%s,扩展信息AppId不正确")
 			}
 
-			if info.app详情, err = service.NewAppInfo(c, tx).Info(参数.E额外信息.Get("AppID").Int()); err != nil {
-				return errors.Join(err, errors.New(fmt.Sprintf("AppID:%d取详情失败", 参数.E额外信息.Get("AppID").Int())))
+			if info.app详情, err = service.NewAppInfo(c, tx).Info(参数.E额外信息.Get("AppId").Int()); err != nil {
+				return errors.Join(err, errors.New(fmt.Sprintf("AppId:%d取详情失败", 参数.E额外信息.Get("AppId").Int())))
 			}
 
 			if 参数.E额外信息.Get("AppUserUid").Int() == 0 {
@@ -567,7 +694,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				return errors.Join(err, errors.New(fmt.Sprintf("卡类:%d取详情失败", 参数.E额外信息.Get("KaClassId").Int())))
 			}
 			if info.app详情, err = service.NewAppInfo(c, tx).Info(info.卡类详情.AppId); err != nil {
-				return errors.Join(err, errors.New(fmt.Sprintf("AppID:%d取详情失败", 参数.E额外信息.Get("AppID").Int())))
+				return errors.Join(err, errors.New(fmt.Sprintf("AppId:%d取详情失败", 参数.E额外信息.Get("AppId").Int())))
 			}
 
 			info.卡号详情, err = ka.L_ka.Ka单卡创建(c, info.卡类详情.Id, "系统自动", "支付购卡订单ID:"+参数.PayOrder, "", 0)
@@ -714,7 +841,8 @@ func (j *rmbPay) 代理分成(c *gin.Context, 参数 *m.PayParams, AgentMoney fl
 				})
 			}
 		}
-		// 分成结束==============
+		// 分成结束============== 记录分成情况, 后续退款对应扣除
+		参数.E额外信息.Set("分成详细", 代理分成数据)
 	}
 	if info.LogMoney != nil {
 		c.Set("LogMoney", info.LogMoney)

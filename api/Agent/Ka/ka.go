@@ -216,8 +216,7 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 		return
 	}
 
-	提示, err := Ser_Ka.K卡号追回(请求.Id[0], c.GetInt("Uid"), c.ClientIP())
-
+	err = ka.L_ka.K卡号追回(c, 请求.Id[0], c.GetString("User"))
 	if err != nil {
 		response.FailWithMessage("追回失败:"+err.Error(), c)
 		return
@@ -227,7 +226,7 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 	局_信息 := "操作卡号管理:代理追回卡号:" + 局_卡号详情.Name
 	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_卡号详情.Name, DB.D代理功能_卡号追回, c.ClientIP(), 局_信息)
 
-	response.OkWithMessage(提示, c)
+	response.OkWithMessage("操作成功", c)
 	return
 }
 

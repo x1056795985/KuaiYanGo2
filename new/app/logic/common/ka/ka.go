@@ -3,6 +3,7 @@ package ka
 import (
 	. "EFunc/utils"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -10,6 +11,8 @@ import (
 	"server/Service/Ser_AppInfo"
 	"server/global"
 	"server/new/app/logic/common/log"
+	"server/new/app/logic/common/userClass"
+	"server/new/app/models/constant"
 	"server/new/app/service"
 	DB "server/structs/db"
 	"strconv"
@@ -550,6 +553,227 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 	if len(info.logVipNumber) > 0 {
 		if err = log.L_log.S输出日志(c, info.logVipNumber); err != nil {
 			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		}
+	}
+
+	return err
+}
+
+// 已用充值卡将相应的卡使用者和推荐人强行扣回充值卡面值,可能扣成负数
+func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error) {
+	var info struct {
+		卡号详情         DB.DB_Ka
+		卡号应用         DB.DB_AppInfo
+		is卡号         bool
+		is计点         bool
+		vipTime名称    string
+		已充值用户        []DB.DB_AppUser
+		操作人详情        DB.DB_User
+		LogMoney     []DB.DB_LogMoney
+		LogVipNumber []DB.DB_LogVipNumber
+	}
+	// 开启事务,检测上层是否有事务,如果有直接使用,没有就创建一个
+	var db *gorm.DB
+	if tempObj, ok := c.Get("tx"); ok {
+		db = tempObj.(*gorm.DB)
+	} else {
+		db2 := *global.GVA_DB
+		db = &db2
+	}
+	if info.卡号详情, err = service.NewKa(c, db).Info(Id); err != nil {
+		err = errors.Join(err, errors.New("卡号不存在"))
+		return
+	}
+	if info.卡号详情.Num == 0 {
+		return errors.New("卡号未使用")
+	}
+	if info.卡号详情.User == "" {
+		return errors.New("无已充值用户,但有使用次数,可能手动修改使用次数导致的")
+	}
+
+	//防sb客户放负值
+	if info.卡号详情.VipTime < 0 || info.卡号详情.VipNumber < 0 || info.卡号详情.RMb < 0 {
+		return errors.New("追回的卡号,充值的时间点数,积分,rmb,不能为负数,请手动处理")
+	}
+
+	if info.卡号应用, err = service.NewAppInfo(c, db).Info(info.卡号详情.AppId); err != nil {
+		err = errors.Join(err, errors.New("应用不存在")) //概率较小,但是有可能, 比如制卡使用后把应用删除了,然后代理追回卡号
+		return
+	}
+	info.is卡号 = info.卡号应用.AppType == 3 || info.卡号应用.AppType == 4
+	info.is计点 = info.卡号应用.AppType == 2 || info.卡号应用.AppType == 4
+	info.vipTime名称 = S三元(info.is计点, "点数", "时间")
+
+	已用用户数组 := W文本_分割文本(info.卡号详情.User, ",")
+	已用推荐人数组 := W文本_分割文本(info.卡号详情.InviteUser, ",")
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		//tx = tx.Debug()
+		for 索引, 值 := range 已用用户数组 {
+			if 值 == "" {
+				continue //如果值为空,到循环尾
+			}
+
+			var 临时软件用户info DB.DB_AppUser
+			var 临时账号info DB.DB_User
+			var 临时卡号info DB.DB_Ka
+
+			if info.is卡号 {
+				tempTx := tx.Model(DB.DB_Ka{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时卡号info, "Name = ?", 值)
+				if tempTx.Error != nil {
+					return errors.Join(tempTx.Error, errors.New(值+"已充卡号不存在"))
+				}
+			} else {
+				tempTx := tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时账号info, "User = ?", 值)
+				if tempTx.Error != nil {
+					return errors.Join(tempTx.Error, errors.New("已充账号不存在"))
+				}
+			}
+			tempTx := tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Clauses(clause.Locking{Strength: "UPDATE"}).
+				First(&临时软件用户info, "Uid = ?", S三元(info.is卡号, 临时卡号info.Id, 临时账号info.Id))
+			if tempTx.Error != nil {
+				return errors.Join(tempTx.Error, errors.New(值+"已充软件用户info不存在"))
+			}
+			临时软件用户info.VipNumber = Float64减float64(临时软件用户info.VipNumber, info.卡号详情.VipNumber, 2)
+
+			局_临时整数, err2 := userClass.L_userClass.J计算权重值2(c, info.卡号详情.UserClassId, 临时软件用户info.UserClassId, info.卡号详情.VipTime)
+			if err2 != nil {
+				return errors.Join(tempTx.Error, errors.New(值+"计算权重值失败"))
+			}
+			临时软件用户info.VipTime -= 局_临时整数
+			update := map[string]interface{}{
+				"VipTime":   临时软件用户info.VipTime,
+				"VipNumber": 临时软件用户info.VipNumber,
+			}
+			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Id = ?", 临时软件用户info.Id).
+				Updates(&update).Error
+			if err != nil {
+				return errors.Join(err, errors.New("修改uid:"+strconv.Itoa(临时软件用户info.Uid)+"软件用户信息失败"))
+			}
+			if info.卡号详情.VipTime != 0 {
+				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+					User:  S三元(info.is卡号, 临时卡号info.Name, 临时账号info.User),
+					AppId: info.卡号详情.AppId,
+					Type:  S三元(info.is计点, constant.Log_type_点数, constant.Log_type_时间),
+					Time:  int(time.Now().Unix()),
+					Ip:    c.ClientIP(),
+					Count: Int64到Float64(info.卡号详情.VipTime),
+					Note:  fmt.Sprintf(操作人+"操作追回id:%d,卡号:%s,扣除卡号充值"+info.vipTime名称+",用户类型id:卡号%d->用户%d", info.卡号详情.Id, info.卡号详情.Name, info.卡号详情.UserClassId, 临时软件用户info.UserClassId),
+				})
+			}
+			if info.卡号详情.VipNumber != 0 {
+				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+					User:  S三元(info.is卡号, 临时卡号info.Name, 临时账号info.User),
+					AppId: info.卡号详情.AppId,
+					Type:  constant.Log_type_积分,
+					Time:  int(time.Now().Unix()),
+					Ip:    c.ClientIP(),
+					Count: Float64取负值(info.卡号详情.VipNumber),
+					Note:  fmt.Sprintf(操作人+"操作追回id:%d,卡号:%s,扣除卡号充值积分|新积分≈%s", info.卡号详情.Id, info.卡号详情.Name, Float64到文本(临时软件用户info.VipNumber, 2)),
+				})
+			}
+
+			if info.is卡号 {
+				//	卡号没什么可变更的
+			} else {
+				//余额只需要改RMB
+				if info.卡号详情.RMb != 0 {
+					临时账号info.Rmb = Float64减float64(临时账号info.Rmb, info.卡号详情.RMb, 2)
+					tempTx = tx.Model(DB.DB_User{}).Where("Id = ?", 临时账号info.Id).
+						Update("Rmb", 临时账号info.Rmb)
+					if tempTx.Error != nil {
+						return errors.Join(tempTx.Error, errors.New("修改id:"+strconv.Itoa(临时账号info.Id)+"用户Rmb信息失败"))
+					}
+					info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+						User:  临时账号info.User,
+						Time:  int(time.Now().Unix()),
+						Ip:    c.ClientIP(),
+						Count: Float64取负值(info.卡号详情.RMb),
+						Note:  fmt.Sprintf(操作人+"操作追回id:%d,卡号:%s,扣除卡号充值余额%s|新余额≈%s", info.卡号详情.Id, info.卡号详情.Name, Float64到文本(info.卡号详情.RMb, 2), Float64到文本(临时账号info.Rmb, 2)),
+					})
+				}
+			}
+
+			//开始处理推荐人增加的时间点数
+			if 索引 >= len(已用推荐人数组) {
+				continue
+			}
+			值 = 已用推荐人数组[索引]
+			if 值 == "" {
+				continue
+			}
+			// First 传入的如果带主键id会自动增加这个条件
+			临时账号info = DB.DB_User{}
+			临时卡号info = DB.DB_Ka{}
+			临时软件用户info = DB.DB_AppUser{}
+			if info.is卡号 {
+				tempTx = tx.Model(DB.DB_Ka{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时卡号info, "Name = ?", 值)
+				if tempTx.Error != nil {
+					return errors.Join(tempTx.Error, errors.New("推荐人["+值+"]卡号不存在"))
+				}
+			} else {
+				tempTx = tx.Debug().Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时账号info, "User = ?", 值)
+				if tempTx.Error != nil {
+					return errors.Join(tempTx.Error, errors.New("推荐人["+值+"]账号不存在"))
+				}
+			}
+			tempTx = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).
+				Clauses(clause.Locking{Strength: "UPDATE"}).
+				First(&临时软件用户info, "Uid = ?", S三元(info.is卡号, 临时卡号info.Id, 临时账号info.Id))
+			if tempTx.Error != nil {
+				return errors.Join(tempTx.Error, errors.New(值+"推荐人软件用户info不存在"))
+			}
+			局_临时整数, err2 = userClass.L_userClass.J计算权重值2(c, info.卡号详情.UserClassId, 临时软件用户info.UserClassId, info.卡号详情.InviteCount)
+			if err2 != nil {
+				return errors.Join(tempTx.Error, errors.New(值+"计算推荐人权重值失败"))
+			}
+			临时软件用户info.VipTime -= 局_临时整数
+			update = map[string]interface{}{
+				"VipTime": 临时软件用户info.VipTime,
+			}
+			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Id = ?", 临时软件用户info.Id).
+				Updates(&update).Error
+			if err != nil {
+				return errors.Join(err, errors.New("修改推荐人uid:"+strconv.Itoa(临时软件用户info.Uid)+"软件用户信息失败"))
+			}
+			if info.卡号详情.VipTime != 0 {
+				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+					User:  S三元(info.is卡号, 临时卡号info.Name, 临时账号info.User),
+					AppId: info.卡号详情.AppId,
+					Type:  S三元(info.is计点, constant.Log_type_点数, constant.Log_type_时间),
+					Time:  int(time.Now().Unix()),
+					Ip:    c.ClientIP(),
+					Count: Int64到Float64(info.卡号详情.VipTime),
+					Note:  fmt.Sprintf(操作人+"操作追回id:%d,卡号:%s,扣除卡号推荐人充值"+S三元(info.is计点, "点数", "时间"), info.卡号详情.Id, info.卡号详情.Name),
+				})
+			}
+
+		}
+		//重置卡并冻结,删除信息
+		err = tx.Model(DB.DB_Ka{}).Where("Id = ? ", info.卡号详情.Id).Updates(
+			map[string]interface{}{
+				"Status":     2,
+				"User":       "",
+				"Num":        0,
+				"InviteUser": "",
+				"UserTime":   "",
+				"AdminNote":  info.卡号详情.AdminNote + "已被追回,历史充值用户:" + info.卡号详情.User + ",推荐人用户:" + info.卡号详情.InviteUser,
+			}).Error
+		return err
+	})
+
+	if err == nil {
+		//如果是上层传递的,就返回日志,否则直接输出
+		if _, ok := c.Get("tx"); ok {
+			c.Set("info.LogVipNumber", info.LogVipNumber)
+			c.Set("info.LogMoney", info.LogMoney)
+		} else {
+			if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
+				global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			}
+			if err = log.L_log.S输出日志(c, info.LogVipNumber); err != nil {
+				global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			}
 		}
 	}
 

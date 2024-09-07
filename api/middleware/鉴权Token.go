@@ -175,7 +175,7 @@ func IsAgentHost() gin.HandlerFunc {
 		局_host := setting.Q系统设置().D代理后台Host
 		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
 			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行
-			if c.Request.Method == "GET" && c.Request.Host[:10] == "127.0.0.1:" {
+			if c.Request.Method == "GET" && len(c.Request.Host) >= 10 && c.Request.Host[:10] == "127.0.0.1:" {
 				c.Next()
 				return
 			}

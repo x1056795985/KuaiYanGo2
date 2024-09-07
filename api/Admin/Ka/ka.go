@@ -13,6 +13,7 @@ import (
 	"server/Service/Ser_UserClass"
 	"server/Service/Ser_UserConfig"
 	"server/global"
+	"server/new/app/logic/common/ka"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -260,14 +261,14 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 		response.FailWithMessage("Id数组暂时只支持1个成员数,后续扩展中", c)
 		return
 	}
-	提示, err := Ser_Ka.K卡号追回(请求.Id[0], -c.GetInt("Uid"), c.ClientIP())
+
+	err = ka.L_ka.K卡号追回(c, 请求.Id[0], c.GetString("User"))
 
 	if err != nil {
 		response.FailWithMessage("追回失败:"+err.Error(), c)
 		return
 	}
-
-	response.OkWithMessage(提示, c)
+	response.OkWithMessage("操作成功", c)
 	return
 }
 
@@ -322,7 +323,7 @@ func (a *Api) New(c *gin.Context) {
 		局_用户类型名称 = 局_用户类型.Name
 	}
 	数组_卡_精简 := make([]DB_Ka_精简, 请求.Number) //make初始化,有3个元素的切片, len和cap都为3
-	数组_卡号 := make([]string, 请求.Number)     //make初始化,有3个元素的切片, len和cap都为3
+	数组_卡号 := make([]string, 请求.Number)        //make初始化,有3个元素的切片, len和cap都为3
 	for 索引 := range 数组_卡_精简 {
 		数组_卡号[索引] = 数组_卡[索引].Name
 		数组_卡_精简[索引].Name = 数组_卡[索引].Name
@@ -389,7 +390,7 @@ func (a *Api) BatchKaNameNew(c *gin.Context) {
 	}
 
 	数组_卡_精简 := make([]DB_Ka_精简, len(数组_卡)) //make初始化,有3个元素的切片, len和cap都为3
-	数组_卡号 := make([]string, len(数组_卡))     //make初始化,有3个元素的切片, len和cap都为3
+	数组_卡号 := make([]string, len(数组_卡))        //make初始化,有3个元素的切片, len和cap都为3
 
 	for 索引 := range 数组_卡_精简 {
 		数组_卡号[索引] = 数组_卡[索引].Name
@@ -424,7 +425,7 @@ type DB_Ka_精简 struct {
 	UserClassName string  `json:"UserClassName"`
 	Num           int     `json:"Num" gorm:"column:Num;comment:可以充值次数"`
 	MaxOnline     int     `json:"MaxOnline" gorm:"column:MaxOnline;comment:最大在线数"` //修改可以修改App最大在线数量
-	RegisterTime  int     `json:"RegisterTime" `                                   //制卡时间
+	RegisterTime  int     `json:"RegisterTime" `                                        //制卡时间
 }
 
 // 批量修改状态
