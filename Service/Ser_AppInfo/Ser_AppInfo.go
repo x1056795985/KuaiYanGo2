@@ -180,7 +180,7 @@ func NewApp信息(AppId, AppType int, AppName string) error {
 	err := global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
 	// 没查到数据
 	if count != 0 {
-		return errors.New("AppID已存在")
+		return errors.New("AppId已存在")
 	}
 
 	if AppType > 4 || AppType < 1 {
