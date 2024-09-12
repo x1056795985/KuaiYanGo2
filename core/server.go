@@ -46,9 +46,9 @@ func RunWindowsServer() {
 	代理后台运行地址:http://127.0.0.1%s/Agent
 `, global.X系统信息.B版本号当前, 端口, 端口, 端口)
 	fmt.Printf("是否有读写文件权限:%v\n", utils2.X系统_权限检测())
-	global.Q快验.C初始化配置(string(utils.B编码_BASE64解码("eyJBcHBXZWIiOiJodHRwczovL2t5YXBpLjl3OTkuY24vQXBpP0FwcElkPTEwMDAxIiwiQ3J5cHRvS2V5UHVibGljIjoiLS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS1cbk1JR2ZNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0R05BRENCaVFLQmdRQzNIYm9TWENLa3FHVmgwbGhLenBTcGgxWEVcbjVLTWJwbWFIQU8yMjc3ZzhrWWlVUUZOV1NtTzZWdEYyZXBDSk1EZXkyY0lWRDJPTlJxWUpMS3lnWGx6ZEhrWTZcbkFNTmtwMHk4eXpVTEFJVEpIMjk5MG8yU291T3c3WEJQTzUzdDZPVEVSUkxvdi84eWE1TDVyWitTczNkeERzSVRcbnZGandHa2M2eUJQQVRSSjNTd0lEQVFBQlxuLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tXG4iLCJDcnlwdG9UeXBlIjozfQ==")))
+	global.Q快验.C初始化配置(string(utils.B编码_BASE64解码("eyJBcHBXZWIiOiJodHRwOi8va3lhcGkuOXc5OS5jbi9BcGk/QXBwSWQ9MTAwMDEiLCJDcnlwdG9LZXlQdWJsaWMiOiItLS0tLUJFR0lOIFBVQkxJQyBLRVktLS0tLVxuTUlHZk1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDM0hib1NYQ0trcUdWaDBsaEt6cFNwaDFYRVxuNUtNYnBtYUhBTzIyNzdnOGtZaVVRRk5XU21PNlZ0RjJlcENKTURleTJjSVZEMk9OUnFZSkxLeWdYbHpkSGtZNlxuQU1Oa3AweTh5elVMQUlUSkgyOTkwbzJTb3VPdzdYQlBPNTN0Nk9URVJSTG92Lzh5YTVMNXJaK1NzM2R4RHNJVFxudkZqd0drYzZ5QlBBVFJKM1N3SURBUUFCXG4tLS0tLUVORCBQVUJMSUMgS0VZLS0tLS1cbiIsIkNyeXB0b1R5cGUiOjN9")))
 
-	ret, err := req.Get(string(utils.B编码_BASE64解码("aHR0cHM6Ly9hcGl3Zy45dzk5LmNu")))
+	ret, err := req.C().EnableInsecureSkipVerify().R().Get(string(utils.B编码_BASE64解码("aHR0cHM6Ly9hcGl3Zy45dzk5LmNu")))
 
 	if err == nil && ret.GetHeader("X-Ca-Error-Code") != "" {
 		//需要放在这里,不然无法执行 //初始化取token,放中间件内了,可以自验证

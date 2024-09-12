@@ -92,7 +92,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 				//https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/crypto-js/4.1.1/crypto-js.min.js
 				局_本地路径 := global.GVA_CONFIG.Q取运行目录 + "/云函数/lib/" + W文本_取文本右边(局_临时文本, "//")
 				if !W文件_是否存在(局_本地路径) || W文本_取左边(result[i][0], 1) == "@" {
-					局_js, err2 := req.C().R().Get(局_临时文本)
+					局_js, err2 := req.C().EnableInsecureSkipVerify().R().Get(局_临时文本)
 					if err2 == nil {
 						_ = M目录_创建(W文件_取父目录(局_本地路径))
 						_ = W文件_写到文件(局_本地路径, 局_js.Bytes())
@@ -307,7 +307,7 @@ func jS_网页访问_GET(Url string, 协议头一行一个 string, Cookies strin
 		超时秒数 = 15
 	}
 
-	client := req.C().SetTimeout(time.Duration(超时秒数) * time.Second)
+	client := req.C().EnableInsecureSkipVerify().SetTimeout(time.Duration(超时秒数) * time.Second).EnableForceHTTP1()
 
 	if 代理ip != "" {
 		client.SetProxyURL(代理ip)
@@ -356,7 +356,7 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 string, Cookie
 	if 超时秒数 == 0 {
 		超时秒数 = 15
 	}
-	client := req.C().SetTimeout(time.Duration(超时秒数) * time.Second)
+	client := req.C().EnableInsecureSkipVerify().SetTimeout(time.Duration(超时秒数) * time.Second)
 
 	if 代理ip != "" {
 		client.SetProxyURL(代理ip)

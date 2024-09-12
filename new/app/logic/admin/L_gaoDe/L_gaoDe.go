@@ -22,13 +22,13 @@ func G高德查询天气(c *gin.Context) (data2 string, err error) {
 		return
 	}
 
-	result, err2 := req.C().R().Get("https://restapi.amap.com/v3/ip?ip=" + S三元(c.ClientIP() == "127.0.0.1", global.Q快验.Q取用户IP(), c.ClientIP()) + "&key=" + key)
+	result, err2 := req.C().EnableInsecureSkipVerify().R().Get("https://restapi.amap.com/v3/ip?ip=" + S三元(c.ClientIP() == "127.0.0.1", global.Q快验.Q取用户IP(), c.ClientIP()) + "&key=" + key)
 	if err2 != nil {
 		return "", err2
 	}
 	data2 = fastjson.GetString(result.Bytes(), "adcode")
 
-	result, err2 = req.C().R().Get("https://restapi.amap.com/v3/weather/weatherInfo?key=" + key + "&extensions=base&city=" + data2)
+	result, err2 = req.C().EnableInsecureSkipVerify().R().Get("https://restapi.amap.com/v3/weather/weatherInfo?key=" + key + "&extensions=base&city=" + data2)
 	if err2 != nil {
 		return "", err2
 	}
