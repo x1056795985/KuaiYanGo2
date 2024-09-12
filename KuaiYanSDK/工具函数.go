@@ -124,7 +124,7 @@ type Result struct {
 func (k *Api快验_类) 发包并返回解密(post内容 string) string {
 	var 局_返回 string
 	//耗时 := time.Now().UnixMilli()
-	client := req.C().SetTimeout(60 * time.Second) //.DevMode()
+	client := req.C().SetTimeout(60 * time.Second).EnableInsecureSkipVerify() //.DevMode()
 
 	//网管 应用认证
 	//client.WrapRoundTripFunc(k.腾讯云Api网关认证中间件)

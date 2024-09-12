@@ -177,7 +177,7 @@ func D定时任务_删除已过期的Token(c *gin.Context) {
 }
 
 func D定时任务_http请求(时间戳 int64, R任务数据 db.DB_Cron) (string, error) {
-	client := req.C() // Use C() to create a client.
+	client := req.C().EnableInsecureSkipVerify() // Use C() to create a client.
 	resp, err := client.R().Get(R任务数据.RunText)
 	返回 := ""
 	if err != nil {
