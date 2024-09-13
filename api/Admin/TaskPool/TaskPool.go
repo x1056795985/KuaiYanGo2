@@ -10,6 +10,7 @@ import (
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
+	"strings"
 )
 
 type Api struct{}
@@ -108,9 +109,10 @@ func (a *Api) GetList2(c *gin.Context) {
 	sql := `
   SELECT  db_TaskPoolType.*,
            (SELECT  COUNT(*) FROM db_TaskPoolQueue WHERE  db_TaskPoolQueue.Tid =db_TaskPoolType.Id) AS QueueCount,
-          (SELECT  COUNT(*) FROM db_TaskPoolData WHERE  db_TaskPoolData.Tid =db_TaskPoolType.Id) AS TaskCount
+          (SELECT  COUNT(*) FROM db_TaskPoolData WHERE  db_TaskPoolData.Tid =db_TaskPoolType.Id AND TimeStart>"{时间戳}") AS TaskCount
     FROM db_TaskPoolType
 `
+	sql = strings.Replace(sql, `"{时间戳}"`, strconv.Itoa(int(utils.S时间_取现行时间戳()-86400)), 1)
 
 	// 添加条件
 	if 请求.Keywords != "" {
