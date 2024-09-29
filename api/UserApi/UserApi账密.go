@@ -519,7 +519,8 @@ func UserApi_用户注册(c *gin.Context) {
 	}
 
 	//没有这个用户,应该是第一次登录应用,添加进去
-	err = Ser_AppUser.New用户信息(AppInfo.AppId, Ser_User.User用户名取id(string(请求json.GetStringBytes("User"))), string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_VipNumber, 0, 0, "", 局_在线信息.AgentUid)
+	局_Uid := Ser_User.User用户名取id(string(请求json.GetStringBytes("User")))
+	err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 局_VipNumber, 0, 0, "", 局_在线信息.AgentUid)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_SQl错误, "New用户信息内部错误,用户注册成功,注册软件用户失败"+err.Error())
 		return
@@ -527,10 +528,11 @@ func UserApi_用户注册(c *gin.Context) {
 
 	// 注册送卡
 	if AppInfo.RegisterGiveKaClassId > 0 {
-		局_注册送卡, 局_制卡结果 := Ser_Ka.Ka单卡创建(AppInfo.RegisterGiveKaClassId, "系统自动", "用户注册系统自动制卡赠送充值", "", 0)
-		if 局_制卡结果 == nil {
-			_ = ka.L_ka.K卡号充值_事务(c, AppInfo.AppId, 局_注册送卡.Name, string(请求json.GetStringBytes("User")), "")
-		}
+		_ = ka.L_ka.K卡类直冲_事务(c, AppInfo.RegisterGiveKaClassId, 局_Uid)
+		//局_注册送卡, 局_制卡结果 := Ser_Ka.Ka单卡创建(AppInfo.RegisterGiveKaClassId, "系统自动", "用户注册系统自动制卡赠送充值", "", 0)
+		//if 局_制卡结果 == nil {
+		//	_ = ka.L_ka.K卡号充值_事务(c, AppInfo.AppId, 局_注册送卡.Name, string(请求json.GetStringBytes("User")), "")
+		//}
 	}
 
 	response.X响应状态消息(c, c.GetInt("局_成功Status"), "注册成功")
