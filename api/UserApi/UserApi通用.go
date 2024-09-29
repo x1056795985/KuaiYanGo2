@@ -206,10 +206,11 @@ func UserApi_用户登录(c *gin.Context) {
 		}
 		// 注册送卡  只有 账号模式才使用
 		if AppInfo.RegisterGiveKaClassId > 0 && (AppInfo.AppType == 1 || AppInfo.AppType == 2) {
-			局_注册送卡, 局_制卡结果 := Ser_Ka.Ka单卡创建(AppInfo.RegisterGiveKaClassId, "系统自动", "用户注册系统自动制卡赠送充值", "", 0)
-			if 局_制卡结果 == nil {
-				_ = ka.L_ka.K卡号充值_事务(c, AppInfo.AppId, 局_注册送卡.Name, 局_卡号或用户名, "")
-			}
+			_ = ka.L_ka.K卡类直冲_事务(c, AppInfo.RegisterGiveKaClassId, 局_Uid)
+			//局_注册送卡, 局_制卡结果 := Ser_Ka.Ka单卡创建(AppInfo.RegisterGiveKaClassId, "系统自动", "用户注册系统自动制卡赠送充值", "", 0)
+			//if 局_制卡结果 == nil {
+			//	_ = ka.L_ka.K卡号充值_事务(c, AppInfo.AppId, 局_注册送卡.Name, 局_卡号或用户名, "")
+			//}
 		}
 
 		局_AppUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid) //充值之后重新读取一遍
