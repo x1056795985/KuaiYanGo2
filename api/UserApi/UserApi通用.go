@@ -1739,9 +1739,13 @@ func UserApi_卡号充值(c *gin.Context) {
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"UseKa","User":"aaaaaa","Ka":"aaaaaa","InviteUser":"aaaaaa","Time":1684071722,"Status":41016}
+	局_用户 := string(请求json.GetStringBytes("User"))
+	if 局_用户 == "" && 局_在线信息.Uid > 0 { //如果获取不到就充值在线用户
+		局_用户 = 局_在线信息.User
+	}
 	局_卡号 := strings.TrimSpace(string(请求json.GetStringBytes("Ka")))
 	局_推荐人 := strings.TrimSpace(string(请求json.GetStringBytes("InviteUser")))
-	err := ka.L_ka.K卡号充值_事务(c, AppInfo.AppId, 局_卡号, string(请求json.GetStringBytes("User")), 局_推荐人)
+	err := ka.L_ka.K卡号充值_事务(c, AppInfo.AppId, 局_卡号, 局_用户, 局_推荐人)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 		return
