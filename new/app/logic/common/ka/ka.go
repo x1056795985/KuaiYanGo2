@@ -304,7 +304,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		if info.ka用户详情.Status == 2 {
 			return errors.New("用户已冻结,无法充值")
 		}
-		info.app用户详情, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.ka用户详情.AppId)
+		info.app用户详情, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.ka用户详情.Id)
 	}
 	if err != nil {
 		return errors.New("用户未登录过本应用,请先操作登录")
@@ -331,7 +331,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 			if info.ka用户详情_推荐人.Status == 2 {
 				return errors.New("推荐人用户已冻结,无法充值")
 			}
-			info.app用户详情_推荐人, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.ka用户详情_推荐人.AppId)
+			info.app用户详情_推荐人, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.ka用户详情_推荐人.Id)
 		}
 		if err != nil {
 			return errors.New("推荐人用户未登录过本应用,请先操作登录")
