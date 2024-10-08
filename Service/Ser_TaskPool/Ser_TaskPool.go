@@ -187,13 +187,19 @@ func Task类型读取(id int) (DB.TaskPool_类型, error) {
 
 func Uuid_添加到队列(uuid string) error {
 	var TaskPool_数据 DB.TaskPool_数据
+	var TaskPool_队列 DB.TaskPool_队列
 	db := *global.GVA_DB
+	//先判断任务是否已经在队列之中
 
+	db.Model(DB.TaskPool_队列{}).Where("Uuid=?", uuid).First(&TaskPool_队列)
+	if TaskPool_队列.Tid != 0 {
+		return errors.New("uuid已存在队列之中")
+	}
 	err := db.Model(DB.TaskPool_数据{}).Where("uuid=?", uuid).First(&TaskPool_数据).Error
 	if err != nil {
-		return errors.Join(errors.New("未找到任务"), err)
+		return errors.New("uuid任务不存在")
 	}
-	TaskPool_队列 := DB.TaskPool_队列{
+	TaskPool_队列 = DB.TaskPool_队列{
 		Uuid: TaskPool_数据.Uuid,
 		Tid:  TaskPool_数据.Tid,
 	}

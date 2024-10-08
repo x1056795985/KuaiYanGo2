@@ -71,6 +71,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_置缓存", jS_置缓存)
 	_ = vm.Set("$api_置黑名单", jS_置黑名单)
 	_ = vm.Set("$api_mqtt发送消息", jS_mqtt发送消息)
+	_ = vm.Set("$api_任务池Uuid添加到队列", jS_任务池Uuid添加到队列)
 
 	_ = vm.Set("$api_编码_BASE64编码", B编码_BASE64编码)
 	_ = vm.Set("$api_编码_BASE64解码", B编码_BASE64解码)
@@ -589,6 +590,15 @@ func jS_mqtt发送消息(主题 string, 消息 string) js对象_通用返回 {
 
 	err := mqttClient.L_mqttClient.F发送消息(nil, 主题, 消息)
 
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	}
+	return js对象_通用返回{IsOk: true, Err: "成功"}
+}
+
+func jS_任务池Uuid添加到队列(uuid string) js对象_通用返回 {
+
+	err := Ser_TaskPool.Uuid_添加到队列(uuid)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
