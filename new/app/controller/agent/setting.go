@@ -84,11 +84,13 @@ func (s *Setting) GetBaseInfo(c *gin.Context) {
 // 获取代理云配置
 func (s *Setting) GetAgentUserConfig(c *gin.Context) {
 	tx := *global.GVA_DB
-	infos, err := service.NewUserConfig(c, &tx).Infos(map[string]interface{}{
+	var infos []DB.DB_UserConfig
+	var err error
+	infos, err = service.NewUserConfig(c, &tx).Infos(map[string]interface{}{
 		"Uid":   c.GetInt("Uid"),
 		"AppId": 50,
 	})
-	if err != nil {
+	if err != nil && err.Error() != "record not found" {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
