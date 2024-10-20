@@ -1,25 +1,24 @@
 package utils
 
 import (
+	"EFunc/utils"
 	"crypto"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"math/big"
-	"strings"
 )
 
-func Rsa私钥签名(base64后明文 string, RSA私钥 string) string {
+func Rsa私钥签名(明文 string, RSA私钥 string) string {
 
 	pemKey := []byte(RSA私钥)
 
-	data := []byte(base64后明文)
+	data := []byte(明文)
 	hashMd5 := md5.Sum(data)
 	hashed := hashMd5[:]
 	block, _ := pem.Decode(pemKey)
@@ -32,7 +31,46 @@ func Rsa私钥签名(base64后明文 string, RSA私钥 string) string {
 	}
 	// 感觉和私钥加密区别实际就是 hash 参数有区别, 如果没这个参数就是私钥加密明文,如果有这个参数就是私钥加密 hash(明文)
 	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.MD5, hashed)
-	return strings.ToUpper(hex.EncodeToString(signature))
+	//return strings.ToUpper(hex.EncodeToString(signature)) hex过长,所以选择base64
+	//2688fef23ac239b50bef486bc5c53b700910a2bcfd9ab5159a19586fc77afcb35835f2b8630fcdabd95c89f3f4231c623bccf006d7cce97f57bafb4f5c3cb8cbdf38d59e608444eaffeecf96bb30d987117c409ab50a668f3e637d19e488cb82edb39fc3bde50cdd64494d2e8907b4cd91a8921e00ecb7c2ec36faf312db7589
+	//Joj+8jrCObUL70hrxcU7cAkQorz9mrUVmhlYb8d6/LNYNfK4Yw/Nq9lcifP0IxxiO8zwBtfM6X9XuvtPXDy4y9841Z5ghETq/+7Plrsw2YcRfECatQpmjz5jfRnkiMuC7bOfw73lDN1kSU0uiQe0zZGokh4A7LfC7Db68xLbdYk=
+	return utils.B编码_BASE64编码(signature)
+
+}
+
+// Rsa公钥验签
+func Rsa公钥验签(明文 string, base64签名 string, RSA公钥 string) bool {
+	pemKey := []byte(RSA公钥)
+
+	data := []byte(明文)
+	hashMd5 := md5.Sum(data)
+	hashed := hashMd5[:]
+
+	// 解码签名
+	signature := utils.B编码_BASE64解码(base64签名)
+	if len(signature) == 0 {
+		return false
+	}
+
+	block, _ := pem.Decode(pemKey)
+	if block == nil {
+		return false
+	}
+
+	publicKeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return false
+	}
+
+	publicKey := publicKeyInterface.(*rsa.PublicKey)
+
+	// 验签
+	err = rsa.VerifyPKCS1v15(publicKey, crypto.MD5, hashed, signature)
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 // RSA公钥私钥产生

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
@@ -72,6 +73,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_置黑名单", jS_置黑名单)
 	_ = vm.Set("$api_mqtt发送消息", jS_mqtt发送消息)
 	_ = vm.Set("$api_任务池Uuid添加到队列", jS_任务池Uuid添加到队列)
+	_ = vm.Set("$api_Jwt生成", jS_Jwt生成)
 
 	_ = vm.Set("$api_编码_BASE64编码", B编码_BASE64编码)
 	_ = vm.Set("$api_编码_BASE64解码", B编码_BASE64解码)
@@ -80,6 +82,8 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_文本_取文本右边", W文本_取文本右边)
 	_ = vm.Set("$api_文本_取文本左边", W文本_取文本左边)
 	_ = vm.Set("$api_文本_取出中间文本", W文本_取出中间文本)
+	_ = vm.Set("$api_时间_取现行时间戳", S时间_取现行时间戳())
+	_ = vm.Set("$api_时间_取现行时间戳13", S时间_取现行时间戳13())
 	_ = vm.Set("$api_生成二维码并转base64", rmbPay.L_rmbPay.S生成二维码并转base64)
 
 	//处理载入外部js文件  'import "@/utils/utils";
@@ -603,4 +607,27 @@ func jS_任务池Uuid添加到队列(uuid string) js对象_通用返回 {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
 	return js对象_通用返回{IsOk: true, Err: "成功"}
+}
+func jS_Jwt生成(JSON数据, 签名密钥 string) js对象_通用返回 {
+	if JSON数据 == "" {
+		return js对象_通用返回{IsOk: false, Err: "签名数据不正确"}
+	}
+	if 签名密钥 == "" {
+		return js对象_通用返回{IsOk: false, Err: "签名密钥不正确"}
+	}
+	jwtMap := jwt.MapClaims{}
+
+	err := json.Unmarshal([]byte(JSON数据), &jwtMap) //必定是json 不然中间件就报错参数错误了
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: "JSON数据异常" + err.Error()}
+	}
+	// 创建一个JWT的Token对象
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtMap)
+	// 使用密钥进行签名
+	signedToken, err := token.SignedString([]byte(签名密钥))
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	} else {
+		return js对象_通用返回{IsOk: true, Err: "成功", Data: signedToken}
+	}
 }

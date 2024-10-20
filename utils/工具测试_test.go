@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"server/Service/KuaiYanUpdater"
 	"server/utils/Qqwry"
 	"strconv"
 	"strings"
@@ -43,7 +42,8 @@ KQA2DDRtFvgodMDSwwIDAQAB
 `
 
 func Test_启动子程序(t *testing.T) {
-	KuaiYanUpdater.B宝塔_修改项目信息()
+	//KuaiYanUpdater.B宝塔_修改项目信息()
+	Rsa加解密测试()
 	fmt.Println("执行完毕")
 }
 
@@ -83,6 +83,8 @@ func Rsa加解密测试() {
 
 	局_明文 = "测试专用明文"
 	base64密文 = Rsa私钥签名(局_明文, 测试Rsa私钥)
+
+	print(Rsa公钥验签(局_明文, base64密文, 测试Rsa公钥))
 
 	局_明文 = "测试专用明文"
 	base64密文 = RSA私钥加密([]byte(测试Rsa私钥), []byte(局_明文))
