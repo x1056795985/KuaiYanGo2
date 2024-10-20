@@ -4,6 +4,7 @@ import (
 	"EFunc/utils"
 	"encoding/json"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -2074,5 +2075,61 @@ func UserApi_取卡号详情(c *gin.Context) {
 		"RegisterTime": kaInfo.RegisterTime,
 		"Status":       kaInfo.Status,
 	})
+	return
+}
+
+// 1.0.310+版本添加可用
+func UserApi_取jwtToken(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	局_AppUser, ok := Ser_AppUser.Uid取详情(AppInfo.AppId, 局_在线信息.Uid)
+	if !ok {
+		response.X响应状态消息(c, response.Status_操作失败, "读取用户应用信息失败.")
+		return
+	}
+	var 局_UserClass DB.DB_UserClass
+	局_UserClass, _ = Ser_UserClass.Id取详情(AppInfo.AppId, 局_AppUser.UserClassId)
+	jwtMap := jwt.MapClaims{}
+	_ = json.Unmarshal([]byte(c.GetString("局_json明文")), &jwtMap) //必定是json 不然中间件就报错参数错误了
+	//提交的数据都加入到内容里,方便hookAPi
+
+	鉴权密钥 := []byte(AppInfo.CryptoKeyPrivate)
+	if 局_临时鉴权密钥, ok2 := jwtMap["Key"]; ok2 {
+		鉴权密钥 = []byte(局_临时鉴权密钥.(string))
+	}
+	delete(jwtMap, "Api")
+	delete(jwtMap, "Key")
+	delete(jwtMap, "Time")
+	delete(jwtMap, "Status")
+
+	//这个数据放后面,需要覆盖本地端的数据,防止伪造
+	jwtMap["iat"] = time.Now().Unix() // 发布时间
+	jwtMap["Uid"] = 局_AppUser.Uid
+	jwtMap["User"] = 局_在线信息.User
+	jwtMap["Key"] = 局_AppUser.Key
+	jwtMap["VipTime"] = 局_AppUser.VipTime
+	jwtMap["VipNumber"] = 局_AppUser.VipNumber
+	jwtMap["MaxOnline"] = 局_AppUser.MaxOnline
+	jwtMap["AgentUid"] = 局_AppUser.AgentUid
+	jwtMap["UserClassId"] = 局_AppUser.UserClassId
+	jwtMap["UserClassName"] = 局_UserClass.Name
+	jwtMap["UserClassMark"] = 局_UserClass.Mark
+	jwtMap["UserClassWeight"] = 局_UserClass.Weight
+	// 创建一个JWT的Token对象
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtMap)
+
+	// 使用密钥进行签名
+
+	signedToken, err := token.SignedString(鉴权密钥)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, "生成JWT失败.")
+		return
+	}
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Jwt": signedToken})
 	return
 }

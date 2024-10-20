@@ -98,6 +98,7 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"SetUserConfig":       {"置用户云配置", UserApi.UserApi_置用户云配置, true},
 	"SetAgentUid":         {"置代理标识", UserApi.UserApi_置代理标志, true},
 	"GetKaInfo":           {"取卡号详情", UserApi.UserApi_取卡号详情, true},
+	"GetJwtToken":         {"取jwt令牌", UserApi.UserApi_取jwtToken, true},
 
 	//快验Api
 	"KyApiSendSms":           {"快验发送验证码短信", UserApi.KyApiSendSms, false},
