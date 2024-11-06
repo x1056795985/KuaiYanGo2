@@ -56,7 +56,7 @@ func (a *Api) GetLogList(c *gin.Context) {
 				response.FailWithMessage("代理账号错误", c)
 				return
 			}
-			局_DB.Where("AgentUid  = ? ", 请求.Keywords)
+			局_DB.Where("AgentUid  = ? ", 局_代理Uid)
 		case 2: //用户user
 
 			局_DB.Where("AppUser like  ?", "%"+请求.Keywords+"%")

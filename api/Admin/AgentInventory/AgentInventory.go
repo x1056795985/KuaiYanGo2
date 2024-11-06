@@ -319,6 +319,10 @@ func 转换为代理树2(代理列表 []*Node, 上级ID int) []*Node {
 		if _, ok := memo[v.UPAgentId]; ok {
 			memo[v.UPAgentId].Children = append(memo[v.UPAgentId].Children, memo[v.Id])
 		} else {
+			// 确保 memo[v.UPAgentId] 不为 nil
+			if memo[v.UPAgentId] == nil {
+				memo[v.UPAgentId] = &Node{Children: []*Node{}}
+			}
 			memo[v.UPAgentId] = &Node{Children: []*Node{memo[v.Id]}}
 		}
 	}

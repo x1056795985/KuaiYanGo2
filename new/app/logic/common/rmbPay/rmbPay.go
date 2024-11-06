@@ -625,7 +625,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 			}
 			if 临时数据, ok = c.Get("logMoney"); ok { //判断是否有rmb充值的日志
 				info.LogMoney = append(info.LogMoney, 临时数据.(DB.DB_LogMoney))
-				info.LogMoney[len(info.LogMoney)].Note = "购卡直冲支付订单:" + 参数.PayOrder + info.LogMoney[len(info.LogMoney)].Note
+				info.LogMoney[len(info.LogMoney)-1].Note = "购卡直冲支付订单:" + 参数.PayOrder + info.LogMoney[len(info.LogMoney)-1].Note
 			}
 			if 临时数据, ok = c.Get("info.app详情"); ok {
 				info.app详情 = 临时数据.(DB.DB_AppInfo)

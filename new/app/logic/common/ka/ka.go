@@ -242,6 +242,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		app详情    DB.DB_AppInfo
 		is卡号     bool
 		is计点     bool
+		ip       string
 
 		app用户详情_推荐人  DB.DB_AppUser
 		user用户详情_推荐人 DB.DB_User
@@ -252,6 +253,13 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		logMoney     []DB.DB_LogMoney     //余额日志
 		logVipNumber []DB.DB_LogVipNumber //积分,点数日志
 
+	}
+	if c != nil {
+		info.ip = c.ClientIP()
+		// 继续处理
+	} else {
+		info.ip = "未知"
+		// 处理 `gin.Context` 为 `nil` 的情况
 	}
 	//第一个查询不用tx 直接用全局即可,后面事务的才用tx
 	db := *global.GVA_DB
@@ -391,7 +399,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 			info.logVipNumber = append(info.logVipNumber, DB.DB_LogVipNumber{
 				AppId: info.卡号详情.AppId,
 				Count: info.卡号详情.VipNumber,
-				Ip:    c.ClientIP(),
+				Ip:    info.ip,
 				Note:  "应用ID:" + strconv.Itoa(info.卡号详情.AppId) + "卡号Id:" + strconv.Itoa(info.卡号详情.Id) + "充值积分",
 				Time:  int(time.Now().Unix()),
 				Type:  1,
@@ -437,7 +445,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 					客户expr["VipTime"] = gorm.Expr("VipTime * ? / ? +?", 局_旧用户类型权重.Weight, 局_新用户类型权重.Weight, info.卡号详情.VipTime)
 					info.logVipNumber = append(info.logVipNumber, DB.DB_LogVipNumber{
 						User:  info.user用户详情.User,
-						Ip:    c.ClientIP(),
+						Ip:    info.ip,
 						Count: info.卡号详情.VipNumber,
 						Note:  "应用ID:" + strconv.Itoa(info.卡号详情.AppId) + "卡号Id:" + strconv.Itoa(info.卡号详情.Id) + "充值点数",
 					})
@@ -477,7 +485,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 			//日志仅写到上下文内,由实际业务处理是否写入日志和修改备注信息
 			info.logMoney = append(info.logMoney, DB.DB_LogMoney{
 				User:  info.user用户详情.User,
-				Ip:    c.ClientIP(),
+				Ip:    info.ip,
 				Count: info.卡号详情.RMb,
 				Note:  "应用ID:" + strconv.Itoa(info.卡号详情.AppId) + "卡号Id:" + strconv.Itoa(info.卡号详情.Id) + "充值余额|新余额≈" + Float64到文本(局_新余额, 2),
 			})
@@ -514,7 +522,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 					推荐人expr["VipTime"] = gorm.Expr("VipTime +?", 局_增减时间点数)
 					info.logVipNumber = append(info.logVipNumber, DB.DB_LogVipNumber{
 						User:  info.user用户详情.User,
-						Ip:    c.ClientIP(),
+						Ip:    info.ip,
 						Count: Int64到Float64(局_增减时间点数),
 						Note:  "应用ID:" + strconv.Itoa(info.卡号详情.AppId) + "用户:" + 充值用户 + ",使用充值卡号Id:" + strconv.Itoa(info.卡号详情.Id) + ",获得推荐人增加点数",
 					})
