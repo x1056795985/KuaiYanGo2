@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"server/Service/Ser_AppInfo"
+	"server/Service/Ser_User"
 	"server/global"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/userClass"
@@ -410,6 +411,15 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		if info.卡号详情.MaxOnline > 0 {
 			客户expr["MaxOnline"] = info.卡号详情.MaxOnline //最大在线数直接赋值处理即可
 		}
+
+		//卡号充值时,如果充值的用户没有归属代理,则自动设置该卡号的制卡人为归属代理
+		if info.app用户详情.AgentUid == 0 {
+			局_制卡人uid := Ser_User.User用户名取id(info.卡号详情.RegisterUser)
+			if 局_制卡人uid >= 0 {
+				客户expr["AgentUid"] = 局_制卡人uid
+			}
+		}
+
 		局_现行时间戳 := time.Now().Unix()
 		if info.卡号详情.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
 			if info.app用户详情.UserClassId == info.卡号详情.UserClassId {
