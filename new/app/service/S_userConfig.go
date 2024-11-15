@@ -69,7 +69,7 @@ func (s *UserConfig) Info2(where map[string]interface{}) (info DB.DB_UserConfig,
 
 // 查
 func (s *UserConfig) Infos(where map[string]interface{}) (info []DB.DB_UserConfig, err error) {
-	tx := s.db.Model(DB.DB_UserConfig{}).Where(where).First(&info)
+	tx := s.db.Model(DB.DB_UserConfig{}).Where(where).Find(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
