@@ -323,7 +323,7 @@ func (a *Api) New(c *gin.Context) {
 		局_用户类型名称 = 局_用户类型.Name
 	}
 	数组_卡_精简 := make([]DB_Ka_精简, 请求.Number) //make初始化,有3个元素的切片, len和cap都为3
-	数组_卡号 := make([]string, 请求.Number)        //make初始化,有3个元素的切片, len和cap都为3
+	数组_卡号 := make([]string, 请求.Number)     //make初始化,有3个元素的切片, len和cap都为3
 	for 索引 := range 数组_卡_精简 {
 		数组_卡号[索引] = 数组_卡[索引].Name
 		数组_卡_精简[索引].Name = 数组_卡[索引].Name
@@ -390,7 +390,7 @@ func (a *Api) BatchKaNameNew(c *gin.Context) {
 	}
 
 	数组_卡_精简 := make([]DB_Ka_精简, len(数组_卡)) //make初始化,有3个元素的切片, len和cap都为3
-	数组_卡号 := make([]string, len(数组_卡))        //make初始化,有3个元素的切片, len和cap都为3
+	数组_卡号 := make([]string, len(数组_卡))     //make初始化,有3个元素的切片, len和cap都为3
 
 	for 索引 := range 数组_卡_精简 {
 		数组_卡号[索引] = 数组_卡[索引].Name
@@ -425,7 +425,7 @@ type DB_Ka_精简 struct {
 	UserClassName string  `json:"UserClassName"`
 	Num           int     `json:"Num" gorm:"column:Num;comment:可以充值次数"`
 	MaxOnline     int     `json:"MaxOnline" gorm:"column:MaxOnline;comment:最大在线数"` //修改可以修改App最大在线数量
-	RegisterTime  int     `json:"RegisterTime" `                                        //制卡时间
+	RegisterTime  int     `json:"RegisterTime" `                                   //制卡时间
 }
 
 // 批量修改状态
@@ -561,9 +561,7 @@ func (a *Api) Set批量维护_删除用户(c *gin.Context) {
 		response.FailWithMessage("维护类型错误", c)
 		return
 	case 1: //删除耗尽次数
-
-		局_row, err = Ser_Ka.S删除耗尽次数卡号(请求.AppId)
-
+		局_row, err = ka.L_ka.S删除耗尽次数卡号(c, 请求.AppId)
 	}
 
 	if err != nil {

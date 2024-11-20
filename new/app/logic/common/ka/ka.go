@@ -797,3 +797,91 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 
 	return err
 }
+
+// 删除已耗尽次数卡号
+func (j *ka) S删除耗尽次数卡号(c *gin.Context, AppId int) (数量 int64, err error) {
+	var info struct {
+		卡号详情  []DB.DB_Ka
+		删除id  []int
+		app详情 DB.DB_AppInfo
+		is卡号  bool
+		is计点  bool
+		ip    string
+		LogKa []DB.DB_LogKa //卡号
+	}
+	info.ip = "未知" // 处理 `gin.Context` 为 `nil` 的情况
+	if c != nil {
+		info.ip = c.ClientIP()
+	}
+	db := *global.GVA_DB
+	db.Where("Num = NumMax ").Where("AppId= ? ", AppId).Find(&info.卡号详情)
+	if info.卡号详情 == nil || len(info.卡号详情) == 0 {
+		return 0, nil
+	}
+	if info.app详情, err = service.NewAppInfo(c, &db).Info(AppId); err != nil {
+		err = errors.New("应用不存在")
+		return
+	}
+	info.is卡号 = S三元(info.app详情.AppType == 3 || info.app详情.AppType == 4, true, false)
+	info.is计点 = S三元(info.app详情.AppType == 2 || info.app详情.AppType == 4, true, false)
+
+	if !info.is卡号 {
+		for _, v := range info.卡号详情 {
+			info.删除id = append(info.删除id, v.Id)
+		}
+	} else {
+		局_已过期卡号id := []int{}
+		for _, v := range info.卡号详情 {
+			局_已过期卡号id = append(局_已过期卡号id, v.Id)
+		}
+		局_vipTime := time.Now().Unix()
+		if info.is计点 {
+			局_vipTime = 0
+		}
+		//这些卡号Uid 且未过期的
+		局_排除Id := []int{}
+		db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).
+			Where("Uid IN ?", 局_已过期卡号id).
+			Where("VipTime > ?", 局_vipTime).
+			Select("Uid").
+			Find(&局_排除Id)
+		for _, v := range 局_已过期卡号id {
+			if !S数组_整数是否存在(局_排除Id, v) {
+				info.删除id = append(info.删除id, v)
+			}
+		}
+
+	}
+	if len(info.删除id) == 0 {
+		return 0, nil
+	}
+
+	数量, err = service.NewKa(c, &db).Delete(info.删除id)
+	if err == nil && 数量 > 0 {
+		局_临时数组 := make([]DB.DB_Ka, 0, len(info.卡号详情))
+		for v := range len(info.卡号详情) {
+			if S数组_整数是否存在(info.删除id, info.卡号详情[v].Id) {
+				局_临时数组 = append(局_临时数组, info.卡号详情[v])
+			}
+		}
+		局_时间 := time.Now().Unix()
+		for i, v := range 局_临时数组 {
+			局_文本 := fmt.Sprintf("批量删除耗尽卡号批次id:%d(%d/%d),卡号id:%d,卡类id:%d", 局_时间, i+1, len(局_临时数组), v.Id, v.KaClassId)
+			info.LogKa = append(info.LogKa, DB.DB_LogKa{
+				User:     c.GetString("User"),
+				UserType: constant.Log_卡操作用户_管理员,
+				Ka:       v.Name,
+				KaType:   constant.Log_卡操作_删,
+				Time:     局_时间,
+				Ip:       info.ip,
+				Note:     局_文本,
+			})
+		}
+		//最后写出日志
+		if err = log.L_log.S输出日志(c, info.LogKa); err != nil {
+			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		}
+	}
+
+	return
+}

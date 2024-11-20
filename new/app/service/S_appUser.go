@@ -38,6 +38,7 @@ func (s *AppUser) Info(id int) (info DB.DB_AppUser, err error) {
 	}
 	return
 }
+
 func (s *AppUser) InfoUid(Uid int) (info DB.DB_AppUser, err error) {
 
 	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Uid = ?", Uid).First(&info)
@@ -47,6 +48,14 @@ func (s *AppUser) InfoUid(Uid int) (info DB.DB_AppUser, err error) {
 	return
 }
 
+func (s *AppUser) Infos(where map[string]interface{}) (info []DB.DB_AppUser, err error) {
+	info = make([]DB.DB_AppUser, 0)
+	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(s.appid)).Where(where).Find(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
 func (s *AppUser) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
 	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Id = ?", Id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
