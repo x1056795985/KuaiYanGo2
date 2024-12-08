@@ -312,6 +312,15 @@ func (a *Api) Save用户信息(c *gin.Context) {
 		response.FailWithMessage("AppId请输>=10000的整数", c)
 		return
 	}
+	if 请求.AppId < 10000 {
+		response.FailWithMessage("AppId请输>=10000的整数", c)
+		return
+	}
+
+	if 请求.AppUser.AgentUid != 0 && Ser_Agent.Q取Id代理级别(请求.AppUser.AgentUid) == 0 {
+		response.FailWithMessage("归属代理id不正确", c)
+		return
+	}
 
 	if 请求.AppUser.Id <= 0 {
 		response.FailWithMessage("Id错误", c)
@@ -338,6 +347,7 @@ func (a *Api) Save用户信息(c *gin.Context) {
 			"Note":        请求.AppUser.Note,
 			"MaxOnline":   请求.AppUser.MaxOnline,
 			"UserClassId": 请求.AppUser.UserClassId,
+			"AgentUid":    请求.AppUser.AgentUid,
 		}).Error
 		if err != nil {
 			return err
@@ -579,6 +589,45 @@ func (a *Api) Set批量维护_增减积分(c *gin.Context) {
 	for _, 局_id := range 请求.Id {
 		Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+Ser_Admin.Id取User(c.GetInt("Uid"))+"批量增减积分原因:"+请求.Note, 请求.Number, 请求.AppId, 1)
 	}
+	return
+}
+
+// 批量维护 置云配置
+func (a *Api) Set批量维护_置云配置(c *gin.Context) {
+	var 请求 struct {
+		Uids  []int  `json:"Uids"`  //用户id数组
+		AppId int    `json:"AppId"` //用户id数组
+		Name  string `json:"Name"`  //云配置名称
+		Value string `json:"Value"` //云配置值
+	}
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if 请求.AppId <= 0 {
+		response.FailWithMessage("AppId错误", c)
+		return
+	}
+	if len(请求.Uids) == 0 {
+		response.FailWithMessage("Uid数组为空", c)
+		return
+	}
+	if utils.W文本_删首尾空(请求.Name) == "" {
+		response.FailWithMessage("云配置名称不能为空", c)
+		return
+	}
+
+	//保存用户配置
+	err = Ser_UserConfig.P批量置值2(请求.AppId, 请求.Uids, 请求.Name, 请求.Value)
+
+	if err != nil {
+		response.FailWithMessage("修改失败", c)
+		global.GVA_LOG.Error("修改失败:" + err.Error())
+		return
+	}
+	response.OkWithMessage("修改成功", c)
 	return
 }
 

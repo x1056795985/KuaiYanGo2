@@ -74,7 +74,7 @@ func (j *publicData) Z置值(c *gin.Context, Appid int, 变量名, 变量值 str
 
 func (j *publicData) Z置值_原值(c *gin.Context, PublicData DB.DB_PublicData) error {
 	db := *global.GVA_DB
-	return db.Model(DB.DB_PublicData{}).Select("Value", "IsVip", "Note", "Time").Omit("Type", "AppId", "Name").Where("AppId=?", PublicData.AppId).Where("Name=?", PublicData.Name).Updates(PublicData).Error
+	return db.Model(DB.DB_PublicData{}).Select("Value", "IsVip", "Note", "Time", "Sort").Omit("Type", "AppId", "Name").Where("AppId=?", PublicData.AppId).Where("Name=?", PublicData.Name).Updates(PublicData).Error
 }
 
 func (j *publicData) Q取值(c *gin.Context, Appid int, Name string) string {

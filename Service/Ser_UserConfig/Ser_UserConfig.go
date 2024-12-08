@@ -64,5 +64,23 @@ func P批量取值(Appid int) []DB.DB_UserConfig {
 }
 
 func P批量置值(DB_PublicData []DB.DB_UserConfig) error {
+
 	return global.GVA_DB.Model(DB.DB_UserConfig{}).Save(DB_PublicData).Error
+}
+
+func P批量置值2(Appid int, Uid []int, Name string, Value string) error {
+	if Value == "" {
+		return global.GVA_DB.Model(DB.DB_UserConfig{}).Where("AppId=?", Appid).Where("Uid IN ?", Uid).Where("Name=?", Name).Delete("").Error
+	}
+
+	var 局_数据 []DB.DB_UserConfig
+	局_数据 = make([]DB.DB_UserConfig, len(Uid))
+	for i, v := range Uid {
+		局_数据[i].AppId = Appid
+		局_数据[i].Uid = v
+		局_数据[i].Name = Name
+		局_数据[i].Value = Value
+	}
+
+	return global.GVA_DB.Model(DB.DB_UserConfig{}).Save(局_数据).Error
 }

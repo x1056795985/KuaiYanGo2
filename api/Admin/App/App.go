@@ -240,8 +240,12 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 		if err2 != nil {
 			continue
 		}
-		if 局_临时.Value != 专属变量.Value || 局_临时.IsVip != 专属变量.IsVip || 局_临时.Note != 专属变量.Note || 局_临时.Type != 专属变量.Type {
-			专属变量.Time = int(time.Now().Unix())
+		if 局_临时.Value != 专属变量.Value || 局_临时.IsVip != 专属变量.IsVip || 局_临时.Note != 专属变量.Note || 局_临时.Type != 专属变量.Type || 局_临时.Sort != 专属变量.Sort {
+			//只有值改变了才修改时间戳
+			if 局_临时.Value != 专属变量.Value {
+				专属变量.Time = int(time.Now().Unix())
+			}
+
 			_ = publicData.L_publicData.Z置值_原值(c, 专属变量)
 		}
 	}

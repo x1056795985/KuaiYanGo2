@@ -245,6 +245,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetStatus", App.Set修改状态)      // 修改状态
 		baseRouter.POST("SetBatchAddVipTime", App.Set批量维护_增减时间点数)
 		baseRouter.POST("SetBatchAddVipNumber", App.Set批量维护_增减积分)
+		baseRouter.POST("SetBatchSetUserConfig", App.Set批量维护_置云配置)
 		baseRouter.POST("SetBatchUserClass", App.Set批量维护_修改用户类型)
 		baseRouter.POST("SetBatchAllUserVipTime", App.P批量_全部用户增减时间点数)
 
