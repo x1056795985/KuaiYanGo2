@@ -347,22 +347,30 @@ func (a *Api) NewApp信息(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
-
-	err = Ser_AppInfo.NewApp信息(请求.AppId, 请求.AppType, 请求.AppName)
+	if 请求.CopyAppId == 0 {
+		err = Ser_AppInfo.NewApp信息(请求.AppId, 请求.AppType, 请求.AppName)
+	} else {
+		err = Ser_AppInfo.CopyApp信息(请求.AppId, 请求.AppType, 请求.AppName, 请求.CopyAppId)
+	}
 
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 	} else {
-		response.OkWithMessage("添加成功", c)
+		if 请求.CopyAppId == 0 {
+			response.OkWithMessage("添加成功", c)
+		} else {
+			response.OkWithMessage("复制成功", c)
+		}
 	}
 
 	return
 }
 
 type 请求_NewApp struct {
-	AppId   int    `json:"AppId" gorm:"column:AppId;primarykey"` // id
-	AppName string `json:"AppName" gorm:"column:AppName;comment:应用名称"`
-	AppType int    `json:"AppType"  gorm:"column:AppType;default:1;comment:软件类型"` //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
+	AppId     int    `json:"AppId" gorm:"column:AppId;primarykey"` // id
+	AppName   string `json:"AppName" gorm:"column:AppName;comment:应用名称"`
+	AppType   int    `json:"AppType"  gorm:"column:AppType;default:1;comment:软件类型"` //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
+	CopyAppId int    `json:"CopyAppId"`                                             //要复制的appId
 }
 
 // GetAppIdMax 取最大appid值

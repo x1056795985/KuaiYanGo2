@@ -4,6 +4,7 @@ import (
 	"EFunc/utils"
 	"errors"
 	"github.com/songzhibin97/gkit/tools/rand_string"
+	"gorm.io/gorm"
 	"server/Service/Ser_KaClass"
 	"server/global"
 	DB "server/structs/db"
@@ -168,8 +169,8 @@ func NewApp信息(AppId, AppType int, AppName string) error {
 	if AppId <= 10000 {
 		return errors.New("AppId请输>10000的整数")
 	}
-	if utf8.RuneCountInString(AppName) < 4 || utf8.RuneCountInString(AppName) > 18 {
-		return errors.New("应用名称长度必须大于4小于18")
+	if utf8.RuneCountInString(AppName) < 2 || utf8.RuneCountInString(AppName) > 18 {
+		return errors.New("应用名称长度必须大于2小于18")
 	}
 	msg := ""
 	if !utils.Z正则_校验代理用户名(AppName, &msg) {
@@ -271,4 +272,96 @@ func NewApp信息(AppId, AppType int, AppName string) error {
 	}
 
 	return nil
+}
+
+// NewApp信息
+func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
+	if AppId <= 10000 {
+		return errors.New("AppId请输>10000的整数")
+	}
+	if utf8.RuneCountInString(AppName) < 2 || utf8.RuneCountInString(AppName) > 18 {
+		return errors.New("应用名称长度必须大于2小于18")
+	}
+	msg := ""
+	if !utils.Z正则_校验代理用户名(AppName, &msg) {
+		return errors.New("应用名称" + msg)
+	}
+
+	var count int64
+	err := global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
+	// 没查到数据
+	if count != 0 {
+		return errors.New("AppId已存在")
+	}
+
+	if AppType > 4 || AppType < 1 {
+		return errors.New("应用类型错误")
+	}
+
+	var NewApp DB.DB_AppInfo
+	var 数组_卡类列表 []DB.DB_KaClass
+	var 数组_用户类型列表 []DB.DB_UserClass
+	err = global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId = ?", CopyAppId).First(&NewApp).Error
+	if err != nil {
+		return errors.New("复制应用不存在")
+	}
+	NewApp.AppId = AppId
+	NewApp.AppType = AppType
+	NewApp.AppName = AppName
+	NewApp.AppWeb = `/Api?AppId=` + strconv.Itoa(AppId)
+	NewApp.CryptoKeyAes = rand_string.RandomLetter(24) //aes cbc 192长度固定24
+	err, 公钥base64, 私钥base64 := utils2.GetRsaKey()
+	if err != nil {
+		global.GVA_LOG.Error("新建app创建Rsa密匙失败:" + err.Error())
+	}
+	NewApp.CryptoKeyPublic = 公钥base64
+	NewApp.CryptoKeyPrivate = 私钥base64
+
+	err = global.GVA_DB.Model(DB.DB_KaClass{}).Where("AppId = ?", CopyAppId).Find(&数组_卡类列表).Error
+	err = global.GVA_DB.Model(DB.DB_UserClass{}).Where("AppId = ?", CopyAppId).Find(&数组_用户类型列表).Error
+	//数据准备完毕,开启事务进行复制应用
+	db := *global.GVA_DB
+	err = db.Transaction(func(tx *gorm.DB) (err error) {
+		for i1, v := range 数组_用户类型列表 {
+			v.Id = 0
+			v.AppId = AppId
+			err = tx.Model(DB.DB_UserClass{}).Create(&v).Error
+			if err != nil {
+				return errors.Join(err, errors.New("用户类型复制失败"))
+			}
+			for 索引, _ := range 数组_卡类列表 {
+				if 数组_用户类型列表[i1].Id == 数组_卡类列表[索引].UserClassId { //如果是旧的用户id==卡类用户id就修改为当前用户类型id
+					数组_卡类列表[索引].UserClassId = v.Id
+				}
+			}
+		}
+
+		局_注册送卡id := 0
+		for 索引, v := range 数组_卡类列表 {
+			v.Id = 0
+			v.AppId = AppId
+			err = tx.Model(DB.DB_KaClass{}).Create(&v).Error
+			if err != nil {
+				return err
+			}
+			if 数组_卡类列表[索引].Id == NewApp.RegisterGiveKaClassId {
+				局_注册送卡id = v.Id
+			}
+		}
+		NewApp.RegisterGiveKaClassId = 局_注册送卡id //注册赠送卡类的id 要重新设置
+
+		err = tx.Model(DB.DB_AppInfo{}).Create(&NewApp).Error
+		if err != nil {
+			return errors.Join(err, errors.New("app复制失败"))
+		}
+
+		//应用添加完毕 创建这个应用的用户表
+		err = tx.Set("gorm:table_options", "ENGINE=InnoDB").Table("db_AppUser_" + strconv.Itoa(NewApp.AppId)).AutoMigrate(&DB.DB_AppUser{})
+		if err != nil {
+			return errors.Join(err, errors.New("用户表创建失败,请删除该应用重新创建"))
+		}
+		return
+	})
+
+	return err
 }
