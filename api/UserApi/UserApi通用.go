@@ -94,6 +94,11 @@ func UserApi_用户登录(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_黑名单信息, "绑定信息为黑名单信息")
 		return
 	}
+	if 局_在线信息.Uid != 0 {
+		response.X响应状态消息(c, response.Status_操作失败, "已登陆,无需重复登陆")
+		return
+	}
+
 	var 局_卡号或用户名 = strings.TrimSpace(string(请求json.GetStringBytes("UserOrKa")))
 	if AppInfo.AppType == 3 || AppInfo.AppType == 4 {
 		//卡号

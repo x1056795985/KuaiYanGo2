@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"server/Service/Ser_Agent"
 	App服务 "server/Service/Ser_AppInfo"
 	"server/config"
 	"server/global"
@@ -831,7 +832,10 @@ func (j *rmbPay) 代理分成(c *gin.Context, 参数 *m.PayParams, AgentMoney fl
 				if err != nil {
 					return errors.Join(err, errors.New(strconv.Itoa(d.Uid)+"新余额读取失败"))
 				}
-				str := fmt.Sprintf("用户%s订单ID:%s,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", j.Map订单类型[参数.ProcessingType], 参数.PayOrder, Float64到文本(d.S实际分成金额, 2), Float64到文本(AgentMoney, 2), d.F分成百分比, d.F分给下级百分比, Float64到文本(局_新余额, 2))
+				局_临时文本1 := S三元(Ser_Agent.Id功能权限检测(d.Uid, DB.D代理功能_查看归属软件用户), 参数.User, "")
+				局_临时文本2 := S三元(Ser_Agent.Id功能权限检测(d.Uid, DB.D代理功能_查看归属软件用户), 参数.Note, "")
+				str := fmt.Sprintf("用户%s%s%s订单ID:%s,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_临时文本1, j.Map订单类型[参数.ProcessingType], 局_临时文本2, 参数.PayOrder, Float64到文本(d.S实际分成金额, 2), Float64到文本(AgentMoney, 2), d.F分成百分比, d.F分给下级百分比, Float64到文本(局_新余额, 2))
+
 				info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
 					User:  d.User,
 					Time:  int(time.Now().Unix()),
