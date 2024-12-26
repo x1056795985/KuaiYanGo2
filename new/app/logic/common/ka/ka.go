@@ -538,11 +538,11 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 					})
 
 				} else {
+					局_增减时间点数 := info.卡号详情.InviteCount * info.新用户类型_推荐人.Weight / info.用户类型_推荐人.Weight
 					if info.app用户详情_推荐人.VipTime < 局_现行时间戳 {
 						//已经过期了 现行时间+新时间就可以了
-						推荐人expr["VipTime"] = 局_现行时间戳 + info.卡号详情.InviteCount
+						推荐人expr["VipTime"] = 局_现行时间戳 + 局_增减时间点数
 					} else {
-						局_增减时间点数 := info.卡号详情.InviteCount * info.新用户类型_推荐人.Weight / info.用户类型_推荐人.Weight
 						//原来的值+推荐人增加点数权重转换结果就好了
 						推荐人expr["VipTime"] = gorm.Expr("VipTime+?", 局_增减时间点数)
 					}
