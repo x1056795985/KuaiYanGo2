@@ -153,3 +153,12 @@ type MQTT配置 struct {
 	Y用户名   string `json:"用户名"`
 	M密码    string `json:"密码"`
 }
+type Y云存储配置 struct {
+	D当前选择    int      `mapstructure:"当前选择" json:"当前选择" `
+	Q七牛云对象存储 Q七牛云对象存储 `mapstructure:"七牛云对象存储" json:"七牛云对象存储" `
+}
+type Q七牛云对象存储 struct {
+	AccessKey string `mapstructure:"AccessKey" json:"AccessKey" `
+	SecretKey string `mapstructure:"SecretKey" json:"SecretKey" `
+	Bucket    string `mapstructure:"Bucket" json:"Bucket" ` //空间名称
+}

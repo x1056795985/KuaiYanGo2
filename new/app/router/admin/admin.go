@@ -64,5 +64,11 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("Panel/getNumberIncreaseRanking", 局_chart.Q取积分消费排行榜)
 		adminRouter.POST("Panel/gaodeWeather", 局_chart.G高德取天气)
 	}
-
+	//云存储
+	局_云存储 := controller.NewCloudStorageController()
+	{
+		adminRouter.POST("LogCloudStorage/GetList", 局_云存储.GetList)
+		//adminRouter.POST("LogCronTask/Delete", 局_云存储.Delete)
+		//adminRouter.POST("LogCronTask/DeleteBatch", 局_云存储.DeleteBatch) //批量删除 1全部
+	}
 }

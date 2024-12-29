@@ -166,3 +166,20 @@ func Q取MQTT配置() config.MQTT配置 {
 	}
 	return 配置值
 }
+func Z云存储配置(配置值 *config.Y云存储配置) error {
+	return Z文本("云存储配置", 配置值)
+}
+
+func Q云存储配置() config.Y云存储配置 {
+	var 配置名 = "云存储配置"
+	//这里可以配置默认值,读取失败比如没有值会返回默认值
+	var 配置值 = config.Y云存储配置{
+		D当前选择: 2,
+	}
+
+	局_临时配置值, err := Q获取配置[config.Y云存储配置](配置名)
+	if err == nil {
+		配置值 = 局_临时配置值
+	}
+	return 配置值
+}

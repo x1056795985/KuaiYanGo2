@@ -126,6 +126,11 @@ func (a *Api) GetInfo行为验证码平台设置(c *gin.Context) {
 	return
 }
 
+func (a *Api) GetInfo云存储设置(c *gin.Context) {
+	response.OkWithDetailed(setting.Q云存储配置(), "获取成功", c)
+	return
+}
+
 func (a *Api) GetInfoMQTT配置(c *gin.Context) {
 	var 配置 = setting.Q取MQTT配置()
 	配置.L连接状态 = mqttClient.L_mqttClient.Q取连接状态(c)
@@ -242,6 +247,24 @@ func (a *Api) Save行为验证码平台设置(c *gin.Context) {
 		return
 	}
 	err = setting.Z行为验证码平台配置(&请求)
+	if err != nil {
+		response.FailWithMessage("保存失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("保存成功", c)
+	return
+}
+
+// save 保存
+func (a *Api) Save云存储设置(c *gin.Context) {
+	var 请求 config.Y云存储配置
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	err = setting.Z云存储配置(&请求)
 	if err != nil {
 		response.FailWithMessage("保存失败:"+err.Error(), c)
 		return

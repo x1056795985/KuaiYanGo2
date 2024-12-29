@@ -136,6 +136,7 @@ func (C *Blacklist) GetList(c *gin.Context) {
 	总数, dataList, err = S.GetList(&tx, 请求.List, 请求.AppId)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	response.OkWithDetailed(GetList{List: dataList, Count: 总数}, "操作成功", c)
 	return

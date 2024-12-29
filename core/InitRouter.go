@@ -395,6 +395,8 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("TestSendSMS", App.F发送短信平台测试)
 		baseRouter.POST("GetInfoCaptcha2", App.GetInfo行为验证码平台设置)
 		baseRouter.POST("SaveInfoCaptcha2", App.Save行为验证码平台设置)
+		baseRouter.POST("GetInfoCloudStorage", App.GetInfo云存储设置)
+		baseRouter.POST("SaveInfoCloudStorage", App.Save云存储设置)
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("SaveInfoSystem", App.Save信息System)
 			baseRouter.POST("SaveInfoPay", App.Save信息在线支付) // 保存详细信息
