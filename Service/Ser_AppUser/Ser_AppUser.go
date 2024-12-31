@@ -489,13 +489,17 @@ func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号�
 	if 注册时间结束 > 0 {
 		db = db.Where("ai.RegisterTime < ?", 注册时间结束)
 	}
-	if len(UserClassId) >= 0 { //0 是未分类
+	if len(UserClassId) > 0 {
 		db = db.Where("ai.UserClassId IN ?", UserClassId)
 	}
 
 	var 局_id数组 []int
 	db.Find(&局_id数组)
 	if len(局_id数组) > 0 {
+		//如果是增加时间 Number 先给过期的修改为当前时间戳
+		if Number > 0 {
+			global.GVA_DB.Debug().Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Where("VipTime < ?", time.Now().Unix()).Update("VipTime", time.Now().Unix())
+		}
 		影响行数 = global.GVA_DB.Debug().Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", gorm.Expr("VipTime + ?", Number)).RowsAffected
 		var 局_id数组文本 string
 		for _, num := range 局_id数组 {
