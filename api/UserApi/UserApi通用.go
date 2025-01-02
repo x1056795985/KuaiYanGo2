@@ -610,14 +610,7 @@ func UserApi_取新版本下载地址(c *gin.Context) {
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
-	if strings.Index(AppInfo.UrlDownload, "{{AppVer}}") != -1 && AppInfo.AppVer != "" {
-		局_可用版本 := utils.W文本_分割文本(AppInfo.AppVer, "\n")
-		if len(局_可用版本) > 0 {
-			AppInfo.UrlDownload = strings.Replace(AppInfo.UrlDownload, "{{AppVer}}", 局_可用版本[0], -1)
-		}
-
-	}
-	AppInfo.UrlDownload = strings.Replace(AppInfo.UrlDownload, "{{AppName}}", AppInfo.AppName, -1)
+	AppInfo.UrlDownload = Ser_AppInfo.App下载更新地址变量处理(AppInfo)
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AppUpDataJson": AppInfo.UrlDownload})
 	return

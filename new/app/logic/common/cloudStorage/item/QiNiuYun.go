@@ -41,20 +41,26 @@ func (j *Q七牛云) C初始化数据(配置 config.Y云存储配置) bool {
 	return j.配置.AccessKey != "" && j.配置.SecretKey != ""
 }
 
-func (j *Q七牛云) H获取文件列表(c *gin.Context, 路径前缀 string, 分隔符 string) (列表 []common.W文件对象详情, err error) {
+func (j *Q七牛云) H获取文件列表(c *gin.Context, 前缀 string, 分隔符 string) (列表 []common.W文件对象详情, err error) {
 	//删除左边的  /
-	路径前缀 = strings.TrimLeft(j.配置.RootPath+路径前缀, "/")
+	路径前缀 := strings.TrimLeft(j.配置.RootPath+前缀, "/")
 	局_标志 := ""
 	var list = make([]common.W文件对象详情, 0, 100)
 	var objectInfo objects.ObjectDetails
 	iter := j.bucket.List(c, &objects.ListObjectsOptions{Prefix: 路径前缀, Marker: 局_标志, Delimiter: 分隔符})
 	defer iter.Close()
+	局_目录信息 := ""
 	for iter.Next(&objectInfo) {
-		//跳过目录自身//只获取子级目录 1次是目录, 0次是文件
-		if objectInfo.Name == 路径前缀 || strings.Count(W文本_取文本右边(objectInfo.Name, 路径前缀), "/") >= 2 {
+		if objectInfo.Name == 路径前缀 { //跳过目录自身
 			continue
 		}
-		if strings.Count(W文本_取文本右边(objectInfo.Name, 路径前缀), "/") >= 1 && strings.Count(W文本_取文本右边(objectInfo.Name, 路径前缀), ".") >= 1 {
+		局_临时目录 := W文本_取出中间文本(objectInfo.Name, j.配置.RootPath+前缀, "/")
+		if 局_临时目录 != "" && strings.Index(局_目录信息, "\n"+前缀+局_临时目录+"/") == -1 {
+			局_目录信息 += "\n" + 局_临时目录 + "/"
+		}
+
+		//只获取子级目录 1次是目录, 0次是文件
+		if W文本_取右边(objectInfo.Name, 1) == "/" || strings.Count(W文本_取文本右边(objectInfo.Name, 路径前缀), "/") >= 1 {
 			continue
 		}
 
@@ -63,13 +69,29 @@ func (j *Q七牛云) H获取文件列表(c *gin.Context, 路径前缀 string, �
 			Path:   objectInfo.Name[len(j.配置.RootPath):],
 			MD5:    Z字节集_字节集到十六进制(objectInfo.MD5[:]),
 			Size:   objectInfo.Size,
-			Type:   S三元(W文本_取右边(objectInfo.Name, 1) == "/", 1, 2),
+			Type:   2,
 			UpTime: objectInfo.UploadedAt.Unix(),
 		})
 	}
 	if err = iter.Error(); err != nil {
 		return
 	}
+	//开始处理 直属子级目录
+	局_目录信息_数组 := strings.Split(局_目录信息, "\n")
+	for _, 目录 := range 局_目录信息_数组 {
+		if 目录 == "" {
+			continue
+		}
+		list = append(list, common.W文件对象详情{
+			Name:   W文本_取文本左边(目录, "/"),
+			Path:   前缀 + 目录,
+			MD5:    "d41d8cd98f00b204e9800998ecf8427e",
+			Size:   0,
+			Type:   1,
+			UpTime: 0,
+		})
+	}
+
 	列表 = list
 	return
 }

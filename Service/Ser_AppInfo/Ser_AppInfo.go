@@ -3,10 +3,14 @@ package Ser_AppInfo
 import (
 	"EFunc/utils"
 	"errors"
+	"github.com/gin-gonic/gin"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"gorm.io/gorm"
+	"regexp"
 	"server/Service/Ser_KaClass"
 	"server/global"
+	"server/new/app/logic/common/cloudStorage"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -69,14 +73,7 @@ func App取App详情(Appid int) (AppName DB.DB_AppInfo) {
 func App取App最新下载地址Json(Appid int) (下载地址 string) {
 	var DB_AppInfo DB.DB_AppInfo
 	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId=?", Appid).First(&DB_AppInfo).Error
-	下载地址 = DB_AppInfo.UrlDownload
-	if strings.Index(DB_AppInfo.UrlDownload, "{{AppVer}}") != -1 && DB_AppInfo.AppVer != "" {
-		局_可用版本 := utils.W文本_分割文本(DB_AppInfo.AppVer, "\n")
-		if len(局_可用版本) > 0 {
-			下载地址 = strings.Replace(DB_AppInfo.UrlDownload, "{{AppVer}}", 局_可用版本[0], -1)
-		}
-	}
-
+	下载地址 = App下载更新地址变量处理(DB_AppInfo)
 	return 下载地址
 }
 func AppId是否存在(AppId int) bool {
@@ -364,4 +361,39 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 	})
 
 	return err
+}
+
+func App下载更新地址变量处理(DB_AppInfo DB.DB_AppInfo) string {
+	局_新文本 := DB_AppInfo.UrlDownload
+
+	局_新文本 = strings.Replace(局_新文本, "{{AppName}}", DB_AppInfo.AppName, -1)
+
+	if strings.Index(局_新文本, "{{AppVer}}") != -1 && DB_AppInfo.AppVer != "" {
+		局_可用版本 := utils.W文本_分割文本(DB_AppInfo.AppVer, "\n")
+		if len(局_可用版本) > 0 {
+			局_新文本 = strings.Replace(局_新文本, "{{AppVer}}", 局_可用版本[0], -1)
+		}
+	}
+
+	//{{(.*?)\((.*?)\)}}  正则匹配指令,  子匹配1为指令名 子匹配2为参数
+	if strings.Index(局_新文本, "{{") != -1 { //判断是否还有变量
+		re := regexp.MustCompile(`{{(.*?)\((.*?)\)}}`)
+		result := re.FindAllStringSubmatch(局_新文本, -1)
+		for i, _ := range result {
+			局_完整文本 := result[i][0]
+			局_指令名 := result[i][1]
+			局_参数 := utils.W文本_分割文本(result[i][2], ",")
+			switch 局_指令名 {
+			case "云存储_取外链":
+				if len(局_参数) == 2 {
+					下载地址, err := cloudStorage.L_云存储.Q取外链地址(&gin.Context{}, strings.Trim(局_参数[0], "'"), gconv.Int64(局_参数[1]))
+					if err == nil {
+						局_新文本 = strings.Replace(局_新文本, 局_完整文本, 下载地址, -1)
+					}
+				}
+			}
+		}
+	}
+
+	return 局_新文本
 }

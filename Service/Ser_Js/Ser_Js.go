@@ -76,6 +76,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_任务池Uuid添加到队列", jS_任务池Uuid添加到队列)
 	_ = vm.Set("$api_Jwt生成", jS_Jwt生成)
 	_ = vm.Set("$api_云存储_取外链", jS_云存储_取外链)
+	_ = vm.Set("$api_云存储_取文件上传授权", jS_云存储_取文件上传授权)
 
 	_ = vm.Set("$api_编码_BASE64编码", B编码_BASE64编码)
 	_ = vm.Set("$api_编码_BASE64解码", B编码_BASE64解码)
@@ -637,6 +638,14 @@ func jS_Jwt生成(JSON数据, 签名密钥 string) js对象_通用返回 {
 
 func jS_云存储_取外链(path string, 有效时间 int64) js对象_通用返回 {
 	下载地址, err := cloudStorage.L_云存储.Q取外链地址(&gin.Context{}, path, 有效时间)
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	} else {
+		return js对象_通用返回{IsOk: true, Err: "成功", Data: 下载地址}
+	}
+}
+func jS_云存储_取文件上传授权(path string) js对象_通用返回 {
+	下载地址, err := cloudStorage.L_云存储.Q取文件上传授权(&gin.Context{}, path)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	} else {
