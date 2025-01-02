@@ -1,7 +1,7 @@
 package cloudStorage
 
 import (
-	系统错误 "errors"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"server/config"
 	"server/new/app/logic/common/cloudStorage/item"
@@ -34,12 +34,14 @@ func (j *Item) Q取通道(序号 int) (存储接口 StorageItem, err error) {
 	}
 	switch 序号 {
 	default:
-		return nil, 系统错误.New("序号错误")
+		return nil, errors.New("序号错误")
 	case 2:
 		存储接口 = &item.Q七牛云{}
 	}
+	if !存储接口.C初始化数据(setting.Q云存储配置()) {
+		err = errors.New("云存储配置初始化失败,请检查系统设置->云存储配置->[" + 存储接口.Q取云存储名称() + "]参数配置是否正确")
+	}
 
-	存储接口.C初始化数据(setting.Q云存储配置())
 	return
 
 }

@@ -38,7 +38,7 @@ func (j *Q七牛云) C初始化数据(配置 config.Y云存储配置) bool {
 		Options: http_client.Options{Credentials: mac},
 	})
 	j.bucket = objectsManager.Bucket(j.配置.Bucket)
-	return j.配置.AccessKey != "" && j.配置.SecretKey != ""
+	return j.配置.AccessKey != "" && j.配置.SecretKey != "" && j.配置.Bucket != ""
 }
 
 func (j *Q七牛云) H获取文件列表(c *gin.Context, 前缀 string, 分隔符 string) (列表 []common.W文件对象详情, err error) {
