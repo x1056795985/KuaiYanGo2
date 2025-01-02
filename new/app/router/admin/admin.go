@@ -67,8 +67,12 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	//云存储
 	局_云存储 := controller.NewCloudStorageController()
 	{
-		adminRouter.POST("LogCloudStorage/GetList", 局_云存储.GetList)
-		//adminRouter.POST("LogCronTask/Delete", 局_云存储.Delete)
-		//adminRouter.POST("LogCronTask/DeleteBatch", 局_云存储.DeleteBatch) //批量删除 1全部
+		adminRouter.POST("CloudStorage/GetBaseInfo", 局_云存储.GetBaseInfo)
+		adminRouter.POST("CloudStorage/GetList", 局_云存储.GetList)
+		adminRouter.POST("CloudStorage/GetUpToken", 局_云存储.GetUpToken)
+		adminRouter.POST("CloudStorage/MoveTo", 局_云存储.MoveTo)
+		adminRouter.POST("CloudStorage/Delete", 局_云存储.Delete)
+		adminRouter.POST("CloudStorage/Download", 局_云存储.Download)
+		adminRouter.POST("CloudStorage/GetDownloadUrl", 局_云存储.GetDownloadUrl)
 	}
 }

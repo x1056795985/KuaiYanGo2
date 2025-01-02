@@ -1,8 +1,9 @@
 package setting
 
 import (
-	"EFunc/utils"
+	. "EFunc/utils"
 	jsoniter "github.com/json-iterator/go"
+	"net/url"
 	"server/config"
 	"server/global"
 	"server/new/app/service"
@@ -34,7 +35,7 @@ func Q获取配置[T any](配置名 string) (T, error) {
 		}
 	}
 
-	计时 := utils.S时间_取现行时间戳13()
+	计时 := S时间_取现行时间戳13()
 
 	tx := *global.GVA_DB
 	db := service.S_Setting{}
@@ -42,7 +43,7 @@ func Q获取配置[T any](配置名 string) (T, error) {
 	if err == nil {
 		err = jsoniter.Unmarshal([]byte(jsonStr), &配置值)
 	}
-	计时 = utils.S时间_取现行时间戳13() - 计时
+	计时 = S时间_取现行时间戳13() - 计时
 
 	if 计时 > 100 { //大于10毫秒 就缓存, 否则不用   本地数据库测试 2毫秒  这么快基本不用缓存
 		global.H缓存.Set("config."+配置名, 配置值, time.Duration(计时)*time.Second) //最少缓存10秒
@@ -167,6 +168,13 @@ func Q取MQTT配置() config.MQTT配置 {
 	return 配置值
 }
 func Z云存储配置(配置值 *config.Y云存储配置) error {
+	//处理一下七牛云外链域名只取域名部分
+
+	aa, err := url.Parse(配置值.Q七牛云对象存储.W外链域名)
+	if err == nil && aa.Host != "" {
+		配置值.Q七牛云对象存储.W外链域名 = aa.Host
+	}
+
 	return Z文本("云存储配置", 配置值)
 }
 

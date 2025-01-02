@@ -21,6 +21,7 @@ import (
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserConfig"
 	"server/global"
+	"server/new/app/logic/common/cloudStorage"
 	"server/new/app/logic/common/mqttClient"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/rmbPay"
@@ -74,6 +75,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_mqtt发送消息", jS_mqtt发送消息)
 	_ = vm.Set("$api_任务池Uuid添加到队列", jS_任务池Uuid添加到队列)
 	_ = vm.Set("$api_Jwt生成", jS_Jwt生成)
+	_ = vm.Set("$api_云存储_取外链", jS_云存储_取外链)
 
 	_ = vm.Set("$api_编码_BASE64编码", B编码_BASE64编码)
 	_ = vm.Set("$api_编码_BASE64解码", B编码_BASE64解码)
@@ -85,6 +87,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_时间_取现行时间戳", S时间_取现行时间戳())
 	_ = vm.Set("$api_时间_取现行时间戳13", S时间_取现行时间戳13())
 	_ = vm.Set("$api_生成二维码并转base64", rmbPay.L_rmbPay.S生成二维码并转base64)
+	//
 
 	//处理载入外部js文件  'import "@/utils/utils";
 	if strings.Index(局_PublicJs.Value, "import '") != -1 || strings.Index(局_PublicJs.Value, `import "`) != -1 {
@@ -629,5 +632,14 @@ func jS_Jwt生成(JSON数据, 签名密钥 string) js对象_通用返回 {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	} else {
 		return js对象_通用返回{IsOk: true, Err: "成功", Data: signedToken}
+	}
+}
+
+func jS_云存储_取外链(path string, 有效时间 int64) js对象_通用返回 {
+	下载地址, err := cloudStorage.L_云存储.Q取外链地址(&gin.Context{}, path, 有效时间)
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	} else {
+		return js对象_通用返回{IsOk: true, Err: "成功", Data: 下载地址}
 	}
 }
