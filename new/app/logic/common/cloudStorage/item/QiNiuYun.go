@@ -111,7 +111,27 @@ func (j *Q七牛云) Q取文件上传授权(c *gin.Context, 要上传的路径 s
 		return common.W文件上传凭证{}, err
 	}
 
-	return common.W文件上传凭证{Path: keyToOverwrite, Type: 2, Url: "http://upload.qiniup.com", UpToken: upToken}, nil
+	//up-cn-east-2.qiniup.com
+	// 初始化 BucketManager
+	Cfg, _ := j.Q基础信息2(c)
+
+	局_上传地址 := ""
+	switch Cfg.BucketInfo.Zone {
+	case "z0":
+		局_上传地址 = "http://upload.qiniup.com"
+	case "z1":
+		局_上传地址 = "http://upload-z1.qiniup.com"
+	case "z2":
+		局_上传地址 = "http://upload-z2.qiniup.com"
+	case "na0":
+		局_上传地址 = "http://upload-na0.qiniup.com"
+	case "as0":
+		局_上传地址 = "http://upload-as0.qiniup.com"
+	default:
+		局_上传地址 = "http://upload.qiniup.com" // 默认地址
+	}
+
+	return common.W文件上传凭证{Path: keyToOverwrite, Type: 2, Url: 局_上传地址, UpToken: upToken}, nil
 }
 
 // 移动文件也是重命名文件
@@ -237,6 +257,7 @@ func (j *Q七牛云) Q基础信息(c *gin.Context) (响应json信息 string, err
 }
 func (j *Q七牛云) Q基础信息2(c *gin.Context) (基础信息 struct {
 	Cfg        storage.Config // 创建配置对象.
+	BucketInfo storage.BucketInfo
 	DomainInfo []storage.DomainInfo
 }, err error) {
 	var mac *qbox.Mac
@@ -244,6 +265,7 @@ func (j *Q七牛云) Q基础信息2(c *gin.Context) (基础信息 struct {
 
 	// 初始化 BucketManager
 	bucketManager := storage.NewBucketManager(mac, &基础信息.Cfg)
+	基础信息.BucketInfo, err = bucketManager.GetBucketInfo(j.配置.Bucket)
 	// 获取域名列表
 	基础信息.DomainInfo, err = bucketManager.ListBucketDomains(j.配置.Bucket)
 	return
