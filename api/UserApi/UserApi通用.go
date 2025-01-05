@@ -1,7 +1,7 @@
 package UserApi
 
 import (
-	"EFunc/utils"
+	. "EFunc/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
@@ -29,6 +29,7 @@ import (
 	"server/api/UserApi/response"
 	"server/global"
 	"server/new/app/logic/common/blacklist"
+	"server/new/app/logic/common/cloudStorage"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/mqttClient"
 	"server/new/app/logic/common/publicData"
@@ -196,11 +197,11 @@ func UserApi_用户登录(c *gin.Context) {
 			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "", 局_在线信息.AgentUid)
 		case 3:
 			//卡号模式如果没有置入代理标识,制卡人就是归属代理
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), utils.S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, utils.S三元(局_在线信息.AgentUid == 0, Ser_User.User用户名取id(局_卡.RegisterUser), 局_在线信息.AgentUid))
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, S三元(局_在线信息.AgentUid == 0, Ser_User.User用户名取id(局_卡.RegisterUser), 局_在线信息.AgentUid))
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		case 4:
 			//卡号模式如果没有置入代理标识,制卡人就是归属代理
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), utils.S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, utils.S三元(局_在线信息.AgentUid == 0, Ser_User.User用户名取id(局_卡.RegisterUser), 局_在线信息.AgentUid))
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, S三元(局_在线信息.AgentUid == 0, Ser_User.User用户名取id(局_卡.RegisterUser), 局_在线信息.AgentUid))
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		default:
 			//???应该不会到这里
@@ -368,7 +369,7 @@ func UserApi_用户减少余额(c *gin.Context) {
 		return
 	}
 
-	go Ser_Log.Log_写余额日志(局_User.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("Log"), 新余额), utils.Float64取负值(局_增减值))
+	go Ser_Log.Log_写余额日志(局_User.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("Log"), 新余额), Float64取负值(局_增减值))
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Money": 新余额})
 
 	// 用户减少成功,开始判断代理增加  不需要让用户知道,代理是否有分成,所以上面直接返回就行
@@ -451,7 +452,7 @@ func UserApi_用户减少点数(c *gin.Context) {
 
 	局_AppUser.VipTime -= 局_增减值
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"VipTime": 局_AppUser.VipTime})
-	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("%s|剩余%v", 请求json.GetStringBytes("Log"), 局_AppUser.VipNumber), utils.Float64取负值(float64(局_增减值)), AppInfo.AppId, 2)
+	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("%s|剩余%v", 请求json.GetStringBytes("Log"), 局_AppUser.VipNumber), Float64取负值(float64(局_增减值)), AppInfo.AppId, 2)
 	return
 }
 func UserApi_用户减少积分(c *gin.Context) {
@@ -736,13 +737,13 @@ func UserApi_取应用最新版本(c *gin.Context) {
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	// {"Api":"GetAppVersion","Version":"1.3.5","IsVersionAll":true}
-	局_可用版本 := utils.W文本_分割文本(AppInfo.AppVer, "\n")
+	局_可用版本 := W文本_分割文本(AppInfo.AppVer, "\n")
 	if len(局_可用版本) == 0 || AppInfo.AppVer == "" {
 		response.X响应状态消息(c, response.Status_操作失败, "应用未设置版本号或格式不正确")
 		return
 	}
 
-	局_分解版本号 := utils.W文本_分割文本(局_可用版本[0], ".")
+	局_分解版本号 := W文本_分割文本(局_可用版本[0], ".")
 	局_分解版本号最新 := 版本号_分解(局_可用版本[0])
 	局_版本号当前 := string(请求json.GetStringBytes("Version"))
 
@@ -882,7 +883,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 			if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
 				局_type = 2
 			}
-			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, utils.D到数值(-AppInfo.UpKeyData), AppInfo.AppId, 局_type)
+			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, D到数值(-AppInfo.UpKeyData), AppInfo.AppId, 局_type)
 
 		}
 	} else {
@@ -964,7 +965,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 			if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
 				局_type = 2
 			}
-			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, utils.D到数值(-AppInfo.UpKeyData), AppInfo.AppId, 局_type)
+			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, D到数值(-AppInfo.UpKeyData), AppInfo.AppId, 局_type)
 		}
 	}
 
@@ -1055,8 +1056,8 @@ func UserApi_取短信验证码信息(c *gin.Context) {
 		}
 	}
 
-	局_验证码 := utils.W文本_取随机字符串_数字(6)
-	局_验证码ID := "Note" + utils2.Md5String(局_手机号)[:16] + utils.W文本_取随机字符串(15)
+	局_验证码 := W文本_取随机字符串_数字(6)
+	局_验证码ID := "Note" + utils2.Md5String(局_手机号)[:16] + W文本_取随机字符串(15)
 
 	err := Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, 局_手机号)
 	if err != nil {
@@ -1212,9 +1213,9 @@ func UserApi_心跳(c *gin.Context) {
 	}
 	Status := 1
 	if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
-		Status = utils.S三元(局_AppUser.VipTime > 0, 1, 3) //'卡号模式大于0'
+		Status = S三元(局_AppUser.VipTime > 0, 1, 3) //'卡号模式大于0'
 	} else {
-		Status = utils.S三元(局_AppUser.VipTime > time.Now().Unix(), 1, 3) //账号模式大于当前时间戳
+		Status = S三元(局_AppUser.VipTime > time.Now().Unix(), 1, 3) //账号模式大于当前时间戳
 	}
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": Status})
@@ -1500,8 +1501,8 @@ func UserApi_云函数执行(c *gin.Context) {
 		response.X响应状态(c, response.Status_未登录)
 		return
 	}
-	if utils.W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
-		局_PublicJs.Value = string(utils.W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
+	if W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
+		局_PublicJs.Value = string(W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
 	} else {
 		response.X响应状态消息(c, response.Status_操作失败, "js文件读取失败可能被删除")
 		return
@@ -2131,5 +2132,33 @@ func UserApi_取jwtToken(c *gin.Context) {
 		return
 	}
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Jwt": signedToken})
+	return
+}
+
+// 1.0.325+版本添加可用
+func UserApi_云存储_取文件上传授权(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	// {"Api":"GetCloudStorageUploadToken","Path":"8987657"}
+	path := strings.TrimSpace(string(请求json.GetStringBytes("Path")))
+
+	if path == "" || strings.Index(path, ".") == -1 || W文本_取右边(path, 1) == "/" {
+		response.X响应状态消息(c, response.Status_操作失败, "暂不支持该文件类型")
+		return
+	}
+	取文件上传授权, err := cloudStorage.L_云存储.Q取文件上传授权(c, path)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, err.Error())
+		return
+	}
+
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 取文件上传授权)
 	return
 }
