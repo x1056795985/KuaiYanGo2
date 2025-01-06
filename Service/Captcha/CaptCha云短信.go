@@ -328,7 +328,9 @@ func Q七牛云_sms发送短信验证码(模板变量 []string, 接收短信手�
 		局_Sms七牛云.SignatureID,
 		局_Sms七牛云.TemplateID,
 		[]string{接收短信手机号},
-		map[string]interface{}{"{code}": 模板变量[0]},
+		map[string]interface{}{
+			"code": 模板变量[0],
+		},
 	})
 	if err != nil {
 		return err
