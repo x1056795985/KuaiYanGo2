@@ -101,7 +101,7 @@ func InitDbTables() {
 		//任务池数据库
 		DB.TaskPool_类型{},
 		DB.TaskPool_队列{},
-		DB.TaskPool_数据{},
+		DB.DB_TaskPoolData{},
 		//	代理相关
 		DB.Db_Agent_Level{},
 		DB.Db_Agent_卡类授权{},
@@ -771,4 +771,7 @@ func 数据库兼容旧版本(c *gin.Context) {
 		}
 
 	}
+	//2025/01/05  修改webAppid=3 的 uid 为id 方便业务判断在线逻辑  任务池用的人比较少 基本无影响
+	//err = db.Model(DB.DB_LinksToken{}).Where("LoginAppid = ?", 3).Where("Uid = ?", 0).Update("Uid", gorm.Expr("id")).Error
+	//fmt.Println(err.Error())
 }

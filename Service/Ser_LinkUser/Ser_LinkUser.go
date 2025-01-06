@@ -5,6 +5,7 @@ import (
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"gorm.io/gorm"
 	"server/global"
+	"server/new/app/models/constant"
 	DB "server/structs/db"
 	"server/utils/Qqwry"
 	"strings"
@@ -60,9 +61,12 @@ func NewWebApiToken(OutTIme int, Key, Tab string) (DB.DB_LinksToken, error) {
 	DB_links_user.OutTime = OutTIme
 	DB_links_user.LastTime = DB_links_user.LoginTime
 	DB_links_user.Token = DB_links_user.User
-	DB_links_user.LoginAppid = 3
+	DB_links_user.LoginAppid = constant.APPID_WebApi
 	DB_links_user.CryptoKeyAes = "" //通讯key
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Create(&DB_links_user).Error
+	//因为有业务(任务池提交任务,获取任务列表)需要通过uid 判断是否为登陆状态,所以uid 必须大于0 这里直接设置为id
+	global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_links_user.Id).Update("Uid", DB_links_user.Id)
+
 	return DB_links_user, err
 }
 

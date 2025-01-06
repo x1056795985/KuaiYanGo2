@@ -36,6 +36,8 @@ import (
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
+	"server/new/app/models/request"
+	response2 "server/new/app/models/response"
 	"server/new/app/service"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -1578,7 +1580,7 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 			return
 		}
 	}
-	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据)
+	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据, 局_在线信息.LoginAppid, 局_在线信息.Uid)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "Task数据创建加入队列失败")
 		return
@@ -1632,6 +1634,33 @@ func UserApi_任务池_任务查询(c *gin.Context) {
 	return
 }
 
+func UserApi_任务池_取任务列表(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) { //强制登录才可以,不用检测ISVip了 必须登录
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+
+	//{"Api":"TaskPoolGetData","Page":1,"Order":1,"Size":30,"Tid":1,"Time":1684761030,"Status":12622}
+	db := *global.GVA_DB
+	var 请求 = request.List{
+		Page:     请求json.GetInt("Page"),
+		Size:     请求json.GetInt("Size"),
+		Type:     0,
+		Keywords: "",
+		Order:    请求json.GetInt("Order"), // 0 倒序 1 正序
+	}
+	i, list, err := service.NewTaskPoolData(c, &db).GetList(请求, 请求json.GetInt("Tid"), 局_在线信息.LoginAppid, 局_在线信息.Uid)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, err.Error())
+		return
+	}
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), response2.GetList{List: list, Count: i})
+	return
+}
 func UserApi_任务池_任务处理获取(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
@@ -1649,7 +1678,7 @@ func UserApi_任务池_任务处理获取(c *gin.Context) {
 	for 索引, _ := range 局_临时 {
 		局_可获取任务类型ID[索引], _ = 局_临时[索引].Int()
 	}
-	局_任务UUID := Ser_TaskPool.Task队列弹出任务(局_可获取任务类型ID, 局_最大数量)
+	局_任务UUID := Ser_TaskPool.Task队列弹出任务(局_可获取任务类型ID, 局_最大数量, 局_在线信息.LoginAppid, 局_在线信息.Uid)
 	var 局_已获取任务数据 []DB.TaskPool_数据_精简
 	if len(局_任务UUID) > 0 {
 		局_已获取任务数据 = Ser_TaskPool.Task数据读取_数组(局_任务UUID)

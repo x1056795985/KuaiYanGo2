@@ -475,7 +475,7 @@ func jS_任务池_任务创建(局_在线信息 DB.DB_LinksToken, 任务类型ID
 		}
 	}
 
-	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据)
+	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据, 局_在线信息.LoginAppid, 局_在线信息.Uid)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: "Task数据创建加入队列失败"}
 	}

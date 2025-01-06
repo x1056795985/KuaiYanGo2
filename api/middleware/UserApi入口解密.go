@@ -92,6 +92,7 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"RunJS":                      {"云函数执行", UserApi.UserApi_云函数执行, true},
 	"TaskPoolNewData":            {"任务池_任务创建", UserApi.UserApi_任务池_任务创建, true},
 	"TaskPoolGetData":            {"任务池_任务查询", UserApi.UserApi_任务池_任务查询, true},
+	"TaskPoolGetDataList":        {"任务池_取任务列表", UserApi.UserApi_任务池_取任务列表, true},
 	"TaskPoolGetTask":            {"任务池_任务处理获取", UserApi.UserApi_任务池_任务处理获取, true},
 	"TaskPoolSetTask":            {"任务池_任务处理返回", UserApi.UserApi_任务池_任务处理返回, true},
 	"GetUserConfig":              {"取用户云配置", UserApi.UserApi_取用户云配置, true},

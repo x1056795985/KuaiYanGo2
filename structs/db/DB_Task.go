@@ -12,18 +12,22 @@ func (TaskPool_队列) TableName() string {
 	return "db_TaskPoolQueue" //任务队列
 }
 
-type TaskPool_数据 struct {
+type DB_TaskPoolData struct {
 	Uuid string `json:"uuid" gorm:"column:uuid;size:36;primarykey;"`
 	//LId        int    `json:"LId" gorm:"column:LId;comment:在线id,只允许相同的查询任务"` 直接用UUid,不可能重复的除了获取者别人也猜不到ID
-	Tid        int    `json:"Tid" gorm:"column:Tid;comment:对应的任务类型Id"`
-	TimeStart  int    `json:"TimeStart" gorm:"column:TimeStart;comment:任务创建时间戳"`
-	TimeEnd    int    `json:"TimeEnd" gorm:"column:TimeEnd;comment:任务结束时间戳"`
-	SubmitData string `json:"SubmitData" gorm:"column:SubmitData;size:8000; comment:生产提交数据"`
-	ReturnData string `json:"ReturnData" gorm:"column:ReturnData;size:16777215;;comment:消费返回数据"`
-	Status     int    `json:"Status" gorm:"column:Status;comment:任务状态,"` //1 已创建,2任务处理中,3成功,4任务失败
+	Tid         int    `json:"Tid" gorm:"column:Tid;comment:对应的任务类型Id"`
+	TimeStart   int    `json:"TimeStart" gorm:"column:TimeStart;comment:任务创建时间戳"`
+	TimeEnd     int    `json:"TimeEnd" gorm:"column:TimeEnd;comment:任务结束时间戳"`
+	SubmitData  string `json:"SubmitData" gorm:"column:SubmitData;size:8000; comment:生产提交数据"`
+	ReturnData  string `json:"ReturnData" gorm:"column:ReturnData;size:16777215;comment:消费返回数据"`
+	Status      int    `json:"Status" gorm:"column:Status;comment:任务状态,"` //1 已创建,2任务处理中,3成功,4任务失败
+	SubmitAppId int    `json:"SubmitAppId" gorm:"column:SubmitAppId;comment:生产者AppID"`
+	SubmitUid   int    `json:"SubmitUid" gorm:"column:SubmitUid;comment:生产者Uid"`
+	ReturnAppId int    `json:"ReturnAppId" gorm:"column:ReturnAppId;comment:消费者AppId"`
+	ReturnUid   int    `json:"ReturnUid" gorm:"column:ReturnUid;comment:消费者Uid,或在线id"`
 }
 
-func (TaskPool_数据) TableName() string {
+func (DB_TaskPoolData) TableName() string {
 	return "db_TaskPoolData" //任务数据
 }
 

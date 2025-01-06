@@ -17,6 +17,14 @@ import (
 )
 
 func R任务池_任务处理获取(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+
+	if 局_在线信息.Status != 1 { //强制登录才可以,不用检测ISVip了 必须登录
+		response.FailWithMessage("未登录", c)
+		return
+	}
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"GetTaskNumber":5,"GetTaskTypeId":[1]}
 	局_最大数量 := 请求json.GetInt("GetTaskNumber")
@@ -25,7 +33,7 @@ func R任务池_任务处理获取(c *gin.Context) {
 	for 索引, _ := range 局_临时 {
 		局_可获取任务类型ID[索引], _ = 局_临时[索引].Int()
 	}
-	局_任务UUID := Ser_TaskPool.Task队列弹出任务(局_可获取任务类型ID, 局_最大数量)
+	局_任务UUID := Ser_TaskPool.Task队列弹出任务(局_可获取任务类型ID, 局_最大数量, 局_在线信息.LoginAppid, 局_在线信息.Uid)
 	var 局_已获取任务数据 []DB.TaskPool_数据_精简
 	if len(局_任务UUID) > 0 {
 		局_已获取任务数据 = Ser_TaskPool.Task数据读取_数组(局_任务UUID)
@@ -39,6 +47,7 @@ func R任务池_任务处理获取(c *gin.Context) {
 func R任务池_任务处理返回(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"TaskUuid":"f2e87ec0-4e0a-404d-a374-124d553a5a35","TaskStatus":3,"TaskReturnData":"BB6CB5C68DF4652941CAF652A366F2D8","Time":1684769068}
@@ -102,7 +111,7 @@ func RunJs(c *gin.Context) {
 	}()
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Parameter":"{'a':1}","JsName":"获取用户相关信息"}
 	局_耗时 := time.Now().UnixMilli()
@@ -209,7 +218,7 @@ func R任务池_任务创建(c *gin.Context) {
 			return
 		}
 	}
-	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据)
+	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据, 局_在线信息.LoginAppid, 局_在线信息.Uid)
 	if err != nil {
 		response.FailWithMessage("Task数据创建加入队列失败", c)
 		return
