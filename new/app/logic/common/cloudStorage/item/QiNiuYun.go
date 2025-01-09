@@ -118,21 +118,21 @@ func (j *Q七牛云) Q取文件上传授权(c *gin.Context, 要上传的路径 s
 	局_上传地址 := ""
 	switch Cfg.BucketInfo.Zone {
 	case "z0":
-		局_上传地址 = "http://upload.qiniup.com"
+		局_上传地址 = "https://upload.qiniup.com"
 	case "cn-east-2":
-		局_上传地址 = "http://upload-cn-east-2.qiniup.com"
+		局_上传地址 = "https://upload-cn-east-2.qiniup.com"
 	case "z1":
-		局_上传地址 = "http:///upload-z1.qiniup.com"
+		局_上传地址 = "https:///upload-z1.qiniup.com"
 	case "z2":
-		局_上传地址 = "http://upload-z2.qiniup.com"
+		局_上传地址 = "https://upload-z2.qiniup.com"
 	case "na0":
-		局_上传地址 = "http://upload-na0.qiniup.com"
+		局_上传地址 = "https://upload-na0.qiniup.com"
 	case "as0":
-		局_上传地址 = "http://upload-as0.qiniup.com"
+		局_上传地址 = "https://upload-as0.qiniup.com"
 	case "ap-northeast-1":
-		局_上传地址 = "http://upload-ap-northeast-1.qiniup.com"
+		局_上传地址 = "https://upload-ap-northeast-1.qiniup.com"
 	default:
-		局_上传地址 = "http://pload-" + Cfg.BucketInfo.Zone + ".qiniup.com" // 默认地址
+		局_上传地址 = "https://pload-" + Cfg.BucketInfo.Zone + ".qiniup.com" // 默认地址
 	} //up-cn-east-2.qiniup.com   cn-east-2
 
 	return common.W文件上传凭证{Path: keyToOverwrite, Type: 2, Url: 局_上传地址, UpToken: upToken}, nil
