@@ -255,8 +255,11 @@ func jS_用户Id增减余额(局_在线信息 DB.DB_LinksToken, 增减值 float6
 }
 func jS_用户Id增减积分(局_在线信息 DB.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
-
-	局_AppUserId := Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
+	//如果有uid 则直接用uid 如果没有uid 通过用户名获取
+	局_AppUserId := 局_在线信息.Uid
+	if 局_在线信息.Uid == 0 {
+		局_AppUserId = Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
+	}
 	err := Ser_AppUser.Id积分增减(局_在线信息.LoginAppid, 局_AppUserId, Float64取绝对值(增减值), is增加)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}

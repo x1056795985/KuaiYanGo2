@@ -373,6 +373,13 @@ func (a *Api) Save用户信息(c *gin.Context) {
 	}
 
 	response.OkWithMessage("保存成功", c)
+
+	//判断是否修改了AgentUid 如果不同修改在线信息
+	if 局_旧用户信息.AgentUid != 请求.AppUser.AgentUid {
+		tx := *global.GVA_DB
+		err = tx.Model(DB.DB_LinksToken{}).Where("LoginAppid = ?", 请求.AppId).Where("Uid = ?", 局_旧用户信息.Uid).Updates(&map[string]interface{}{"AgentUid": 请求.AppUser.AgentUid}).Error
+	}
+
 	//保存用户配置
 	for _, 值 := range 请求.UserConfig {
 		_ = Ser_UserConfig.Z置值(请求.AppId, 请求.AppUser.Uid, 值.Name, 值.Value)

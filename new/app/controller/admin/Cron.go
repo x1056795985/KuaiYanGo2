@@ -35,6 +35,7 @@ func (C *Cron) Create(c *gin.Context) {
 	var 请求 struct {
 		Name    string `json:"Name" binding:"required"`
 		Status  int    `json:"Status" binding:"required"`
+		IsLog   int    `json:"IsLog" binding:"required"`
 		Cron    string `json:"Cron" binding:"required"`
 		Type    int    `json:"Type" binding:"required" zh:"类型"`
 		RunText string `json:"RunText" binding:"required,min=1,max=1000" zh:"运行数据"`
@@ -51,7 +52,8 @@ func (C *Cron) Create(c *gin.Context) {
 	}
 	var S = service.S_Cron{}
 	tx := *global.GVA_DB
-	err := S.Create(&tx, db.DB_Cron{Name: 请求.Name, Status: 请求.Status, Type: 请求.Type, Cron: 请求.Cron, RunText: 请求.RunText, Note: 请求.Note})
+	err := S.Create(&tx, db.DB_Cron{Name: 请求.Name, Status: 请求.Status, IsLog: 请求.IsLog, Type: 请求.Type, Cron: 请求.Cron, RunText: 请求.RunText, Note: 请求.Note})
+
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 	}
