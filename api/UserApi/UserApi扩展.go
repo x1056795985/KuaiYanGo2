@@ -17,6 +17,7 @@ import (
 	response2 "server/new/app/models/response"
 	"server/new/app/service"
 	DB "server/structs/db"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -128,8 +129,7 @@ func UserApi_任务池_取任务列表(c *gin.Context) {
 		return
 	}
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-
-	//{"Api":"TaskPoolGetData","Page":1,"Order":1,"Size":30,"Tid":1,"Time":1684761030,"Status":12622}
+	//{"Api":"TaskPoolGetDataList","Page":1,"Order":1,"Size":30,"Tid":1,"Time":1684761030,"Status":12622}
 	db := *global.GVA_DB
 	var 请求 = request.List{
 		Page:     请求json.GetInt("Page"),
@@ -248,6 +248,25 @@ func UserApi_任务池_任务处理返回(c *gin.Context) {
 	response.X响应状态(c, c.GetInt("局_成功Status"))
 	return
 }
+func UserApi_任务池_取类型状态(c *gin.Context) {
+	/*	var AppInfo DB.DB_AppInfo
+		var 局_在线信息 DB.DB_LinksToken
+		Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+		if !检测用户登录在线正常(&局_在线信息) { //强制登录才可以,不用检测ISVip了 必须登录
+			response.X响应状态(c, response.Status_未登录)
+			return
+		}*/
+
+	//{"Api":"TaskPoolGetTypeStatus","Time":1684769068}
+	var DB_TaskPool_类型 []DB.TaskPool_类型
+	_ = global.GVA_DB.Model(DB.TaskPool_类型{}).Select("Id,Status").Find(&DB_TaskPool_类型).Error
+	var 局_map = make(map[string]int, len(DB_TaskPool_类型))
+	for _, v := range DB_TaskPool_类型 {
+		局_map["id"+strconv.Itoa(v.Id)] = v.Status
+	}
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 局_map)
+	return
+}
 
 // 1.0.325+版本添加可用
 func UserApi_云存储_取文件上传授权(c *gin.Context) {
@@ -260,7 +279,7 @@ func UserApi_云存储_取文件上传授权(c *gin.Context) {
 	}
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	// {"Api":"GetCloudStorageUploadToken","Path":"8987657"}
+	// {"Api":"GetUploadToken","Path":"8987657"}
 	path := strings.TrimSpace(string(请求json.GetStringBytes("Path")))
 
 	if path == "" || strings.Index(path, ".") == -1 || W文本_取右边(path, 1) == "/" {

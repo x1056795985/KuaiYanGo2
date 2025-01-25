@@ -44,17 +44,17 @@ func (s *TaskPoolData) Delete(Uuid interface{}) (影响行数 int64, error error
 
 // 获取列表
 func (s *TaskPoolData) GetList(请求 request.List, Tid, SubmitAppId, SubmitUid int) (int64, []db.DB_TaskPoolData, error) {
-	tx := s.db
+	tx := s.db.Model(db.DB_TaskPoolData{})
 	if Tid > 0 {
 		tx = tx.Where("Tid = ?", Tid)
 	}
 
 	if SubmitUid > 0 {
-		tx = tx.Where("SubmitAppId = ?", Tid)
+		tx = tx.Where("SubmitUid = ?", SubmitUid)
 	}
 
 	if SubmitAppId > 0 {
-		tx = tx.Where("SubmitAppId = ?", Tid)
+		tx = tx.Where("SubmitAppId = ?", SubmitAppId)
 	}
 
 	if 请求.Keywords != "" {

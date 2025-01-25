@@ -148,7 +148,7 @@ func Task数据删除过期() {
 
 	if global.GVA_DB != nil {
 		//删除超过24小时的任务
-		_ = global.GVA_DB.Model(DB.DB_TaskPoolData{}).Where("TimeStart<?", time.Now().Unix()-(86400*7)).Delete("").RowsAffected
+		_ = global.GVA_DB.Model(DB.DB_TaskPoolData{}).Where("TimeStart<?", time.Now().Unix()-(86400*30)).Delete("").RowsAffected
 		//fmt.Printf("定时删除已过期24H任务:%v\n", 局_数量)
 	}
 	//24小时

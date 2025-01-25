@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/new/app/router/admin"
 	"server/new/app/router/agent"
-	"server/new/app/router/webapi"
+	"server/new/app/router/webApi2"
 )
 
 // 总路由
@@ -23,7 +23,7 @@ func RouterInit(gin *gin.RouterGroup) *gin.RouterGroup {
 	routerAgent := agent.AllRouter{}
 	routerAgent.InitAgentRouter(Router) //初始化Agent路由
 
-	routerWebApi := webApi.AllRouter{}
+	routerWebApi := webApi2.AllRouter{}
 	routerWebApi.InitWebApiRouter(Router) //初始化WEBAPi路由
 
 	return gin

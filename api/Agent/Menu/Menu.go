@@ -101,7 +101,12 @@ func (a *Api) Q取支付通道状态(c *gin.Context) {
 	response.OkWithData(局map, c)
 	return
 }
+func (a *Api) Q取支付通道状态2(c *gin.Context) {
+	局_arr := rmbPay.L_rmbPay.Pay_取支付通道状态2()
 
+	response.OkWithData(局_arr, c)
+	return
+}
 func (a *Api) Y余额充值(c *gin.Context) {
 	var 请求 结构请求_余额充值
 	err := c.ShouldBindJSON(&请求)

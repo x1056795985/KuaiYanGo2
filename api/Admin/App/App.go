@@ -15,6 +15,7 @@ import (
 	"server/global"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
+	"server/new/app/router/webApi2"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -484,8 +485,13 @@ func (a *Api) Get全部WebAPi(c *gin.Context) {
 		{"NewKa", "新制卡号"},
 		{"GetKaInfo", "取卡号详细信息"},
 	}*/
-	局_path数组 := make([][]string, 0, len(WebApi.J集_UserAPi路由))
+
+	局_path数组 := make([][]string, 0, len(WebApi.J集_UserAPi路由)+len(webApi2.J集_UserAPi路由2))
 	for 键名, 键值 := range WebApi.J集_UserAPi路由 {
+		局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
+	}
+	//追加新版接口
+	for 键名, 键值 := range webApi2.J集_UserAPi路由2 {
 		局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
 	}
 	response.OkWithDetailed(局_path数组, "获取成功", c)

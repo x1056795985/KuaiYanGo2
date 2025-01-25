@@ -3,6 +3,7 @@ package admin
 import (
 	"github.com/gin-gonic/gin"
 	"server/api/middleware"
+	"server/global"
 	controller "server/new/app/controller/admin"
 )
 
@@ -69,10 +70,23 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("CloudStorage/GetBaseInfo", 局_云存储.GetBaseInfo)
 		adminRouter.POST("CloudStorage/GetList", 局_云存储.GetList)
-		adminRouter.POST("CloudStorage/GetUpToken", 局_云存储.GetUpToken)
 		adminRouter.POST("CloudStorage/MoveTo", 局_云存储.MoveTo)
-		adminRouter.POST("CloudStorage/Delete", 局_云存储.Delete)
 		adminRouter.POST("CloudStorage/Download", 局_云存储.Download)
 		adminRouter.POST("CloudStorage/GetDownloadUrl", 局_云存储.GetDownloadUrl)
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
+			adminRouter.POST("CloudStorage/GetUpToken", 局_云存储.GetUpToken)
+			adminRouter.POST("CloudStorage/Delete", 局_云存储.Delete)
+		}
+	}
+
+	//工具 apk加验证
+	局_ApkTools := controller.NewApkToolsController()
+	{
+		adminRouter.POST("ApkTools/GetList", 局_ApkTools.GetList)
+		adminRouter.POST("ApkTools/GetTaskIdStatus", 局_ApkTools.GetTaskIdStatus)
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
+			adminRouter.POST("ApkTools/GetUploadToken", 局_ApkTools.GetUploadToken)
+			adminRouter.POST("ApkTools/CreateApkAddFNKYTask", 局_ApkTools.CreateApkAddFNKYTask)
+		}
 	}
 }

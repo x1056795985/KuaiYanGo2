@@ -897,6 +897,40 @@ func (j *rmbPay) Pay_取支付通道状态() gin.H {
 	return 局map
 }
 
+type 支付通道 struct {
+	Id     int    `json:"Id"`
+	Name   string `json:"Name"`
+	Status bool   `json:"Status"`
+}
+
+func (j *rmbPay) Pay_取支付通道状态2() []支付通道 {
+	支付配置 := setting.Q在线支付配置()
+	if &支付配置 == nil {
+		return nil // 或者返回一个空切片
+	}
+
+	支付通道映射 := map[int]struct {
+		开关   bool
+		默认名称 string
+		显示名称 string
+	}{
+		1: {支付配置.Z支付宝开关, "支付宝PC", 支付配置.Z支付宝显示名称},
+		2: {支付配置.Z支付宝当面付开关, "支付宝当面付", 支付配置.Z支付宝当面付显示名称},
+		3: {支付配置.Z支付宝H5开关, "支付宝H5", 支付配置.Z支付宝H5显示名称},
+		4: {支付配置.W微信支付开关, "微信支付", 支付配置.W微信支付显示名称},
+		5: {支付配置.X小叮当支付开关, "小叮当", 支付配置.X小叮当支付显示名称},
+		6: {支付配置.H虎皮椒支付开关, "虎皮椒", 支付配置.H虎皮椒支付显示名称},
+	}
+
+	结果 := make([]支付通道, 0, len(支付通道映射))
+	for id, info := range 支付通道映射 {
+		名称 := S三元(info.显示名称 == "", info.默认名称, info.显示名称)
+		结果 = append(结果, 支付通道{Id: id, Name: 名称, Status: info.开关})
+	}
+
+	return 结果
+}
+
 func (j *rmbPay) Pay_指定Uid待支付金额(c *gin.Context, Uid int) (金额 float64) {
 	// 开启事务,检测上层是否有事务,如果有直接使用,没有就创建一个
 	var tx *gorm.DB

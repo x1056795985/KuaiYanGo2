@@ -1255,3 +1255,43 @@ func (k *Api快验_类) Z置代理标志(AgentUid int) bool {
 	}
 	return true
 }
+
+func (k *Api快验_类) Y云存储_取文件上传授权(响应任务信息 *string, Path string) bool {
+	请求json := make(map[string]interface{}, 10)
+	请求json["Api"] = "GetUploadToken"
+	请求json["Path"] = Path
+	响应json, ok := k.通讯(请求json)
+	if !ok { // 直接返回即可,错误原因 在 发包并返回解密 已经有了
+		return false
+	}
+	*响应任务信息 = 响应json.GetObject("Data").String()
+	return true
+}
+
+func (k *Api快验_类) R任务池_取任务列表(响应任务信息 *string, Page, Order, Size, Tid int) bool {
+	请求json := make(map[string]interface{}, 10)
+	请求json["Api"] = "TaskPoolGetDataList"
+	请求json["Page"] = Page
+	请求json["Order"] = Order
+	请求json["Size"] = Size
+	请求json["Tid"] = Tid
+
+	//'{"Api":"TaskPoolGetDataList","Page":1,"Order":1,"Size":30,"Tid":1,"Time":1684761030,"Status":12622}'
+	响应json, ok := k.通讯(请求json)
+	if !ok { // 直接返回即可,错误原因 在 发包并返回解密 已经有了
+		return false
+	}
+	*响应任务信息 = 响应json.GetObject("Data").String()
+	return true
+}
+
+func (k *Api快验_类) R任务池_取任务状态(响应任务信息 *string) bool {
+	请求json := make(map[string]interface{}, 10)
+	请求json["Api"] = "TaskPoolGetTypeStatus"
+	响应json, ok := k.通讯(请求json)
+	if !ok { // 直接返回即可,错误原因 在 发包并返回解密 已经有了
+		return false
+	}
+	*响应任务信息 = 响应json.GetObject("Data").String()
+	return true
+}

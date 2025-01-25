@@ -603,6 +603,7 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.GET("GetAgentInfo", MenuApi.GetAgentInfo) // 获取用户信息
 	baseRouter.POST("OutLogin", MenuApi.OutLogin)
 	baseRouter.POST("GetPayStatus", MenuApi.Q取支付通道状态)
+	baseRouter.POST("GetPayStatus2", MenuApi.Q取支付通道状态2)
 	baseRouter.POST("GetPayPC", MenuApi.Y余额充值)
 	baseRouter.POST("GetPayOrderStatus", MenuApi.Q取余额充值订单状态)
 
