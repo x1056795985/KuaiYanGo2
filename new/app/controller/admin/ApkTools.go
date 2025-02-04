@@ -135,6 +135,7 @@ func (C *ApkTools) GetList(c *gin.Context) {
 			AppId:       局_任务提交.Get("AppId").Int(),
 			AppName:     Ser_AppInfo.AppId取应用名称(局_任务提交.Get("AppId").Int()),
 			DownloadUrl: 局_任务结果.Get("Url").String(),
+			Err:         局_任务结果.Get("msg").String(),
 		})
 	}
 
@@ -153,6 +154,7 @@ type list_item struct {
 	AppId       int    `json:"AppId"`
 	AppName     string `json:"AppName"`
 	DownloadUrl string `json:"DownloadUrl"`
+	Err         string `json:"Err"`
 }
 
 // 获取任务池状态
