@@ -61,18 +61,20 @@ func (C *ApkTools) CreateApkAddFNKYTask(c *gin.Context) {
 		FileName string `json:"fileName" binding:"required"`
 		AppId    int    `json:"AppId" binding:"required"`
 		Q签名方式    int    `json:"签名方式" binding:"required"`
+		Activity string `json:"Activity"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
 	}
 
 	var 响应任务Uuid string
-	var aaa = make(gin.H, 5)
+	var aaa = make(gin.H, 6)
 
 	aaa["Path"] = 请求.Path
 	aaa["FileName"] = 请求.FileName
 	aaa["AppId"] = 请求.AppId
 	aaa["签名方式"] = 请求.Q签名方式
+	aaa["Activity"] = 请求.Activity
 
 	局_Appinfo := Ser_AppInfo.App取App详情(请求.AppId)
 	局_系统地址 := setting.Q系统设置().X系统地址
@@ -98,7 +100,6 @@ func (C *ApkTools) CreateApkAddFNKYTask(c *gin.Context) {
 	}
 	response.OkWithDetailed(响应任务Uuid, "操作成功", c)
 	return
-
 }
 
 func (C *ApkTools) GetList(c *gin.Context) {
