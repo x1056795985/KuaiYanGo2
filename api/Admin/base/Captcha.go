@@ -47,6 +47,36 @@ func (b *BaseApi) Captcha(c *gin.Context) {
 	}, "验证码获取成功", c)
 
 }
+func (b *BaseApi) Captcha2(c *gin.Context) {
+	// 判断验证码是否开启
+	openCaptcha := global.GVA_CONFIG.Captcha.OpenCaptcha               // 是否开启防爆次数
+	openCaptchaTimeOut := global.GVA_CONFIG.Captcha.OpenCaptchaTimeOut // 缓存超时时间
+	key := c.ClientIP()                                                //获取客户端ip
+	v, ok := global.H缓存.Get(key)                                       //获取
+	if !ok {
+		global.H缓存.Set(key, 1, time.Second*time.Duration(openCaptchaTimeOut))
+	}
+
+	var oc bool
+	if openCaptcha == 0 || openCaptcha < interfaceToInt(v) {
+		oc = true
+	}
+
+	验证码id, Base64验证码图片, err := Captcha.Captcha_取点选验证码()
+	if err != nil {
+		global.GVA_LOG.Error("验证码获取失败!", zap.Error(err))
+		response.FailWithMessage("验证码获取失败", c)
+		return
+	}
+
+	response.OkWithDetailed(sysCaptchaResponse{
+		CaptchaId:     验证码id,
+		PicPath:       Base64验证码图片,
+		CaptchaLength: global.GVA_CONFIG.Captcha.KeyLong,
+		OpenCaptcha:   oc,
+	}, "验证码获取成功", c)
+
+}
 
 // 验证码api  data
 type sysCaptchaResponse struct {

@@ -144,6 +144,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	{
 		base := Api.Admin.Base
 		baseRouter.POST("Captcha", base.Captcha)
+		baseRouter.POST("Captcha2", base.Captcha2)
 		baseRouter.POST("Login", base.Login)
 		/*		baseRouter.POST("SetTableWidth", base.Table宽度保存)
 				baseRouter.POST("GetTableWidth", base.Table宽度读取)*/

@@ -57,7 +57,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 	// j校验验证码
 	if j校验验证码 {
 		//验证码验证码正确 = 真
-		if !Captcha.H缓存验证码校验实例.Verify(Request.CaptchaId, Request.Captcha, true) {
+		if !Captcha.Captcha_Verify点选(Request.CaptchaId, Request.Captcha, true) {
 			response.FailWithMessage("验证码错误", c)
 			go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "验证码错误:"+Request.Captcha, 4)
 			return
