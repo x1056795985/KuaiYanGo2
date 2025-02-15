@@ -164,3 +164,6 @@ type Q七牛云对象存储 struct {
 	Bucket    string `  json:"Bucket" `   //空间名称
 	RootPath  string `  json:"rootPath" ` //根文件夹
 }
+type Y用户消息配置 struct {
+	MsgTypeList string `  json:"MsgTypeList" `
+}

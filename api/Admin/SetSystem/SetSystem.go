@@ -272,3 +272,26 @@ func (a *Api) Save云存储设置(c *gin.Context) {
 	response.OkWithMessage("保存成功", c)
 	return
 }
+
+func (a *Api) Get用户消息配置(c *gin.Context) {
+	response.OkWithDetailed(setting.Q用户消息配置(), "获取成功", c)
+	return
+}
+
+// save 保存
+func (a *Api) Save用户消息配置(c *gin.Context) {
+	var 请求 config.Y用户消息配置
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	err = setting.Z用户消息配置(&请求)
+	if err != nil {
+		response.FailWithMessage("保存失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("保存成功", c)
+	return
+}

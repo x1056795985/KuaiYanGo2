@@ -143,7 +143,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter := Router根Admin.Group("/base")
 	{
 		base := Api.Admin.Base
-		baseRouter.POST("Captcha", base.Captcha)
+		//baseRouter.POST("Captcha", base.Captcha)
 		baseRouter.POST("Captcha2", base.Captcha2)
 		baseRouter.POST("Login", base.Login)
 		/*		baseRouter.POST("SetTableWidth", base.Table宽度保存)
@@ -398,9 +398,12 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SaveInfoCaptcha2", App.Save行为验证码平台设置)
 		baseRouter.POST("GetInfoCloudStorage", App.GetInfo云存储设置)
 		baseRouter.POST("SaveInfoCloudStorage", App.Save云存储设置)
+		baseRouter.POST("GetUserMsgConfig", App.Get用户消息配置)
+
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("SaveInfoSystem", App.Save信息System)
 			baseRouter.POST("SaveInfoPay", App.Save信息在线支付) // 保存详细信息
+			baseRouter.POST("SaveUserMsgConfig", App.Save用户消息配置)
 		}
 	}
 	//登录日志===========================================

@@ -191,3 +191,20 @@ func Q云存储配置() config.Y云存储配置 {
 	}
 	return 配置值
 }
+
+func Z用户消息配置(配置值 *config.Y用户消息配置) error {
+	return Z文本("用户消息配置", 配置值)
+}
+
+func Q用户消息配置() config.Y用户消息配置 {
+	var 配置名 = "用户消息配置"
+	var 配置值 = config.Y用户消息配置{
+		MsgTypeList: "",
+	}
+
+	局_临时配置值, err := Q获取配置[config.Y用户消息配置](配置名)
+	if err == nil {
+		配置值 = 局_临时配置值
+	}
+	return 配置值
+}
