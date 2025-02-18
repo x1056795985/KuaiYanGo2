@@ -990,7 +990,7 @@ func UserApi_置新用户消息(c *gin.Context) {
 		return
 	}
 	局_消息类型 := 请求json.GetInt("MsgType")
-	if 局_消息类型 < 1 || 局_消息类型 > 3 {
+	if 局_消息类型 < 1 || 局_消息类型 == 4 {
 		response.X响应状态消息(c, response.Status_操作失败, "消息类型不正确")
 		return
 	}
@@ -1200,7 +1200,7 @@ func UserApi_心跳(c *gin.Context) {
 		return
 	}
 
-	if AppInfo.Status == 2 { //感觉没什么用,冻结了,直接就token已注销,不会到这里了
+	if AppInfo.Status == 2 { //应用免费模式直接返回 会员状态1
 		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Status": 1})
 		return
 	}
@@ -1210,9 +1210,9 @@ func UserApi_心跳(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "读取用户应用信息失败.")
 		return
 	}
-	Status := 1
-	if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
-		Status = S三元(局_AppUser.VipTime > 0, 1, 3) //'卡号模式大于0'
+	Status := 1                                       //1 正常  3 vip过期
+	if AppInfo.AppType == 2 || AppInfo.AppType == 4 { //计点
+		Status = S三元(局_AppUser.VipTime > 0, 1, 3) //'计点模式大于0'
 	} else {
 		Status = S三元(局_AppUser.VipTime > time.Now().Unix(), 1, 3) //账号模式大于当前时间戳
 	}
