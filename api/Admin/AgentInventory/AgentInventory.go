@@ -326,6 +326,10 @@ func 转换为代理树2(代理列表 []*Node, 上级ID int) []*Node {
 			memo[v.UPAgentId] = &Node{Children: []*Node{memo[v.Id]}}
 		}
 	}
-	return memo[上级ID].Children
+	// 安全返回
+	if parent, ok := memo[上级ID]; ok {
+		return parent.Children
+	}
+	return []*Node{}
 
 }

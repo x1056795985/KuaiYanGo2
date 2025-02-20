@@ -89,9 +89,12 @@ func Aes解密_cbc192(加密数据 []byte, key string) string {
 	return Aes解密_cbc192字节集(加密数据, []byte(key))
 }
 func Aes解密_cbc192字节集(加密数据 []byte, key []byte) string {
-	if len(key) != 24 || len(加密数据) < 16 { //mark 还会报panic   len(src)%x.blockSize != 0   src=加密数据  没明白什么意思,感觉还是数据问题以后在解决
+
+	//mark 还会报panic   len(src)%x.blockSize != 0   src=加密数据  没明白什么意思,//20250220感觉还是数据问题以后在解决//还是deepseek优秀,一下就找到原因了
+	if len(key) != 24 || len(加密数据) == 0 || len(加密数据)%aes.BlockSize != 0 {
 		return ""
 	}
+
 	k := key[:24]
 	// 分组秘钥
 	block, _ := aes.NewCipher(k)
@@ -146,7 +149,6 @@ func PKCS7UnPadding(origData []byte) []byte {
 	}
 	unpadding := int(origData[length-1])
 	if length-unpadding < 0 {
-		fmt.Printf("AESPKCS7UnPadding 数据异常:%v", origData)
 		fmt.Printf("AESPKCS7UnPadding 数据异常:%s", origData)
 		return origData
 	}
