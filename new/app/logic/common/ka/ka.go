@@ -255,12 +255,11 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		logVipNumber []DB.DB_LogVipNumber //积分,点数日志
 
 	}
-	if c != nil {
-		info.ip = c.ClientIP()
-		// 继续处理
+
+	if c == nil || c.Request == nil {
+		info.ip = "未知" // 处理 `gin.Context` 为 `nil` 的情况
 	} else {
-		info.ip = "未知"
-		// 处理 `gin.Context` 为 `nil` 的情况
+		info.ip = c.ClientIP() //有可能报错 如果c 不是外部请求过来的
 	}
 	//第一个查询不用tx 直接用全局即可,后面事务的才用tx
 	db := *global.GVA_DB

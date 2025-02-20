@@ -121,8 +121,8 @@ func (i *DBApi) InitDB(c *gin.Context) {
 	global.GVA_Viper.Set("Mysql.LogMode", "error")
 	global.GVA_Viper.WriteConfig()
 
-	Ser_Init.InitDbTables()  //自动创建迁移表
-	Ser_Init.InitDbTable数据() //自动创建数据
+	Ser_Init.InitDbTables(c)  //自动创建迁移表
+	Ser_Init.InitDbTable数据(c) //自动创建数据
 
 	global.GVA_Viper.SetConfigFile(global.GVA_CONFIG.Q取运行目录 + "/config.json")
 	global.GVA_Viper.SetConfigType("json")

@@ -66,7 +66,7 @@ func InitGormMysql() *gorm.DB {
 
 // InitDbTables
 
-func InitDbTables() {
+func InitDbTables(c *gin.Context) {
 	db := global.GVA_DB //全局变量赋值到局部
 
 	//gorm:table_options 设置创建表强制为InnoDB引擎, 因为MyISAM不支持事务,回滚会失效所以要修改成InnoDB引擎,
@@ -120,14 +120,13 @@ func InitDbTables() {
 		os.Exit(0)                                                //结束程序
 	}
 	//global.GVA_LOG.Info("register table success(创建表成功)") //日志消息 表创建成功
-	InitDbTable数据() //初始化数据
+	InitDbTable数据(c) //初始化数据
 
 }
 
-func InitDbTable数据() {
+func InitDbTable数据(c *gin.Context) {
 	db := global.GVA_DB //全局变量赋值到局部
-	c := gin.Context{}
-	数据库兼容旧版本(&c) //需要先兼容, 迁移配置数据 才能使用setting
+	数据库兼容旧版本(c)         //需要先兼容, 迁移配置数据 才能使用setting
 	局_例子记录 := setting.Q例子写出记录()
 	if db == nil {
 		return
@@ -175,7 +174,7 @@ func InitDbTable数据() {
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10001, "月卡", "Y30", 2592000, 2592000, 0.01, 1.01, 100, 100, 0, 1, 25, 1, 1, 1, 1)
 			卡信息, _ := Ser_Ka.Ka单卡创建(卡类ID, Ser_Admin.Id取User(1), "演示创建", "", 0)
 			卡信息, _ = Ser_Ka.Ka单卡创建(卡类ID, Ser_Admin.Id取User(1), "演示创建可追回卡号", "", 0)
-			ka.L_ka.K卡号充值_事务(&c, 10001, 卡信息.Name, "test0001", "")
+			ka.L_ka.K卡号充值_事务(c, 10001, 卡信息.Name, "test0001", "")
 			_ = Ser_AppInfo.NewApp信息(10002, 3, "演示对接卡号限时RSA通讯")
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10002, "天卡", "Y01", 86400, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10002, "周卡", "Y01", 604800, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)

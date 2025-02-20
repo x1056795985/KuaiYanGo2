@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/cache/local_cache"
 	"go.uber.org/zap"
 	"os"
@@ -53,7 +54,9 @@ func main() {
 	global.GVA_DB = Ser_Init.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
 
 	if global.GVA_DB != nil { //如果数据库不为空
-		Ser_Init.InitDbTables() // 如果数据库连接成功就初始化表  //不在这里了,只能由 InitMysql 初始化
+		c := gin.Context{}
+		c.ClientIP()
+		Ser_Init.InitDbTables(&c) // 如果数据库连接成功就初始化表  //不在这里了,只能由 InitMysql 初始化
 
 		// 程序结束前关闭数据库链接
 		db, _ := global.GVA_DB.DB()
