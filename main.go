@@ -55,7 +55,6 @@ func main() {
 
 	if global.GVA_DB != nil { //如果数据库不为空
 		c := gin.Context{}
-		c.ClientIP()
 		Ser_Init.InitDbTables(&c) // 如果数据库连接成功就初始化表  //不在这里了,只能由 InitMysql 初始化
 
 		// 程序结束前关闭数据库链接
