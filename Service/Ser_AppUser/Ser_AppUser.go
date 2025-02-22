@@ -249,7 +249,7 @@ func Id积分增减(AppId, Id int, 增减值 float64, is增加 bool) error {
 		//增加直接处理就可以了,不用事务
 		err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipNumber", gorm.Expr("VipNumber + ?", 增减值)).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(int(Id)) + "Id积分增加失败:" + err.Error())
+			global.GVA_LOG.Error(strconv.Itoa(Id) + "Id积分增加失败:" + err.Error())
 			return err
 		}
 		return nil
