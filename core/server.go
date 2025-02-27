@@ -53,6 +53,7 @@ func RunWindowsServer() {
 	if err == nil && ret.GetHeader("X-Ca-Error-Code") != "" {
 		//需要放在这里,不然无法执行 //初始化取token,放中间件内了,可以自验证
 		global.Q快验.SetAppWeb(string(utils.B编码_BASE64解码("aHR0cHM6Ly9hcGl3Zy45dzk5LmNu")))
+		global.Q快验.J集_连接方式 = 1
 	}
 
 	if global.GVA_DB != nil {

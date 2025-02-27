@@ -32,9 +32,9 @@ func (s *TaskPoolData) Create(info db.DB_TaskPoolData) (row int64, err error) {
 func (s *TaskPoolData) Delete(Uuid interface{}) (影响行数 int64, error error) {
 	var tx2 *gorm.DB
 	switch k := Uuid.(type) {
-	case int:
+	case string:
 		tx2 = s.db.Model(db.DB_TaskPoolData{}).Where("Uuid = ?", k).Delete("")
-	case []int:
+	case []string:
 		tx2 = s.db.Model(db.DB_TaskPoolData{}).Where("Uuid IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
@@ -63,6 +63,8 @@ func (s *TaskPoolData) GetList(请求 request.List, Tid, SubmitAppId, SubmitUid 
 			tx = tx.Where("SubmitData LIKE ? ", "%"+请求.Keywords+"%")
 		case 2: //ReturnData
 			tx = tx.Where("ReturnData LIKE ? ", "%"+请求.Keywords+"%")
+		case 3: //UUID
+			tx = tx.Where("uuid = ? ", 请求.Keywords)
 		}
 	}
 	var 总数 int64

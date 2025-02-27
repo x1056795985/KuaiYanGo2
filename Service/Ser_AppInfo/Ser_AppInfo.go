@@ -152,7 +152,7 @@ func App修改信息(AppInfo DB.DB_AppInfo) error {
 		"Captcha",
 		"RegisterGiveKa",
 		"ApiHook",
-	).Omit("AppType", "AppWeb")
+	).Omit("AppType", "AppWeb", "Sort")
 
 	err := db.Where("AppId= ?", AppInfo.AppId).Updates(AppInfo).Error
 	if err == nil { //如果修改成功删除缓存

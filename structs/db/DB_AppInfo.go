@@ -29,6 +29,7 @@ type DB_AppInfo struct {
 	RmbToVipNumber     int    `json:"RmbToVipNumber"  gorm:"column:RmbToVipNumber;default:1;comment:1人民币换多少积分"`
 	Captcha            string `json:"Captcha"  gorm:"column:Captcha;size:1000;comment:需要验证码的接口"`
 	ApiHook            string `json:"ApiHook"  gorm:"column:ApiHook;size:1000;comment:Api接口Hook函数"`
+	Sort               int64  `json:"Sort" gorm:"column:Sort;default:0;comment:排序权重; "`
 }
 
 func (DB_AppInfo) TableName() string {

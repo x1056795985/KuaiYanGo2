@@ -28,6 +28,7 @@ type Api快验_类 struct {
 	集_验证码类型                                    int
 	集_Api网关ApiAppKey                           string
 	集_Api网关ApiAppSecret                        []byte
+	J集_连接方式                                    int
 }
 
 func (k *Api快验_类) SetAppWeb(域名 string) bool {

@@ -89,9 +89,9 @@ func (a *Api) GetAppList(c *gin.Context) {
 	局_DB := global.GVA_DB.Model(DB.DB_AppInfo{})
 
 	if 请求.Order == 1 {
-		局_DB.Order("AppId ASC")
+		局_DB.Order("Sort DESC, AppId ASC")
 	} else {
-		局_DB.Order("AppId DESC")
+		局_DB.Order("Sort DESC, AppId,DESC")
 	}
 
 	if 请求.Status == 1 || 请求.Status == 2 || 请求.Status == 3 {
@@ -135,6 +135,7 @@ type DB_AppInfo_简化 struct {
 	AppVer           string `json:"AppVer"  gorm:"column:AppVer;default:1.0.0;comment:软件版本"`
 	CryptoType       int    `json:"CryptoType"  gorm:"column:CryptoType;default:1;comment:加密类型"` //加密类型 0: 明文 1des加密)
 	AppType          int    `json:"AppType"  gorm:"column:AppType;default:1;comment:软件类型"`
+	Sort             int64  `json:"Sort" gorm:"column:Sort;default:0;comment:排序权重; "`
 }
 
 // Del批量删除App

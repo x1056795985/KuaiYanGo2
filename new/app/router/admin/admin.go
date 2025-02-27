@@ -89,4 +89,15 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 			adminRouter.POST("ApkTools/CreateApkAddFNKYTask", 局_ApkTools.CreateApkAddFNKYTask)
 		}
 	}
+	//应用管理
+	局_AppInfo := controller.NewAppInfoController()
+	{
+		adminRouter.POST("App/SetAppSort", 局_AppInfo.SetAppSort)
+	}
+	//任务数据
+	局_TaskPoolData := controller.NewTaskPoolDataController()
+	{
+		adminRouter.POST("TaskPoolData/GetList", 局_TaskPoolData.GetList)
+		adminRouter.POST("TaskPoolData/Delete", 局_TaskPoolData.Delete)
+	}
 }

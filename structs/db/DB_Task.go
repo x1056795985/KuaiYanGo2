@@ -13,8 +13,7 @@ func (TaskPool_队列) TableName() string {
 }
 
 type DB_TaskPoolData struct {
-	Uuid string `json:"uuid" gorm:"column:uuid;size:36;primarykey;"`
-	//LId        int    `json:"LId" gorm:"column:LId;comment:在线id,只允许相同的查询任务"` 直接用UUid,不可能重复的除了获取者别人也猜不到ID
+	Uuid        string `json:"uuid" gorm:"column:uuid;size:36;primarykey;"`
 	Tid         int    `json:"Tid" gorm:"column:Tid;comment:对应的任务类型Id"`
 	TimeStart   int    `json:"TimeStart" gorm:"column:TimeStart;comment:任务创建时间戳"`
 	TimeEnd     int    `json:"TimeEnd" gorm:"column:TimeEnd;comment:任务结束时间戳"`
