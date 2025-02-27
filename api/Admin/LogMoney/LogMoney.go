@@ -76,6 +76,8 @@ func (a *Api) GetLogMoneyList(c *gin.Context) {
 			局_DB.Where("LOCATE( ?, Note)>0 ", 请求.Keywords)
 		case 3: //ip
 			局_DB.Where("Ip = ? ", 请求.Keywords)
+		case 4:
+			局_DB.Where("Count = ? ", 请求.Keywords) //金额
 		}
 	}
 

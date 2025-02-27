@@ -91,6 +91,8 @@ func (a *Api) GetLogList2(c *gin.Context) {
 			局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.PayOrder)>0 ", 请求.Keywords)
 		case 5: //支付通道订单编号
 			局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.PayOrder2)>0 ", 请求.Keywords)
+		case 6: //金额
+			局_DB.Where("db_Log_RMBPayOrder.Rmb = ? ", 请求.Keywords)
 		}
 	}
 
