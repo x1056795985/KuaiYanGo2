@@ -12,7 +12,7 @@ type AllRouter struct {
 
 func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	// 跨域，如需跨域可以打开下面的注释
-	adminRouter := router.Group("Admin")
+	adminRouter := router.Group(global.GVA_Viper.GetString("管理入口"))
 	adminRouter.Use(middleware.IsTokenAdmin()) //加载中间件
 
 	局_Setting := controller.NewSettingController()

@@ -26,6 +26,7 @@ import (
 	"server/global"
 	"server/new/app/router"
 	"server/structs/Http/response"
+	"strings"
 )
 
 // InitRouters 初始化总路由
@@ -34,7 +35,6 @@ func InitRouters() *gin.Engine {
 
 	if !(global.GVA_Viper.GetInt("系统模式") == 1056795985) {
 		gin.DefaultWriter = ioutil.Discard //禁止控制台输出
-
 	}
 
 	Router := gin.Default() //返回路由实例
@@ -124,10 +124,15 @@ func T统一恐慌恢复() gin.HandlerFunc {
 // admin路由 menu 需要鉴权  menu
 func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 
-	Router.GET("admin", func(context *gin.Context) { //客户经常输入错误,单独注册个路由,跳转正确地址
-		context.Redirect(http.StatusFound, "/Admin")
-	})
-	Router根Admin := Router.Group("Admin") //127.0.0.1:18080/  这个后面第一个不需要 / 符号
+	局_管理入口 := global.GVA_Viper.GetString("管理入口")
+	//客户经常输入错误,单独注册个路由,跳转正确地址
+	if strings.ToLower(局_管理入口) != 局_管理入口 {
+		Router.GET(strings.ToLower(局_管理入口), func(context *gin.Context) {
+			context.Redirect(http.StatusFound, "/"+局_管理入口)
+		})
+	}
+
+	Router根Admin := Router.Group(局_管理入口) //127.0.0.1:18080/  这个后面第一个不需要 / 符号
 	Router根Admin.Use(middleware.IsAdminHost())
 
 	//打包静态VueAdmin文件============================
@@ -572,17 +577,21 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 // Agent路由 menu 需要鉴权  menu
 func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 
-	Router.GET("agent", func(context *gin.Context) { //客户经常输入错误,单独注册个路由,跳转正确地址
-		context.Redirect(http.StatusFound, "/Agent")
-	})
+	局_代理入口 := global.GVA_Viper.GetString("代理入口")
+	//客户经常输入错误,单独注册个路由,跳转正确地址
+	if strings.ToLower(局_代理入口) != 局_代理入口 {
+		Router.GET(strings.ToLower(局_代理入口), func(context *gin.Context) {
+			context.Redirect(http.StatusFound, "/"+局_代理入口)
+		})
+	}
 
-	Router根Agent := Router.Group("Agent") //127.0.0.1:18080/  这个后面第一个不需要 / 符号
+	Router根Agent := Router.Group(局_代理入口) //127.0.0.1:18080/  这个后面第一个不需要 / 符号
 	//Router根Agent.Use(middleware.AA())
 	Router根Agent.Use(middleware.IsAgentHost())
 
 	Router根Agent.Use(middleware.IsAgent是否关闭())
 
-	//打包静态VueAdmin文件============================
+	//打包静态VueAgent文件============================
 	html := VueAgent.NewHtmlHandler()
 	Router根Agent.StaticFS("/assets", http.FS(VueAgentAssets.Assets))
 	Router根Agent.GET("/", html.Index)

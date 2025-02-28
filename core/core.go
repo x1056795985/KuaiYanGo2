@@ -44,6 +44,8 @@ func InitViper() *viper.Viper {
 
 	v := viper.New()
 	//写入默认值
+	v.SetDefault("管理入口", "Admin")
+	v.SetDefault("代理入口", "Agent")
 	v.SetDefault("Port", 18888)
 	v.SetDefault("系统模式", 0)
 	//==================验证码默认配置
