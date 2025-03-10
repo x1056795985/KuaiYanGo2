@@ -16,7 +16,7 @@ import (
 	"os"
 )
 
-func main() {
+func testaa() {
 	testCurl()
 	return
 	// 演示IP，生产环境中请替换为提取到的代理信息

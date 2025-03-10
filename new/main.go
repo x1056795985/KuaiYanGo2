@@ -1,10 +1,14 @@
 package new
 
 import (
-	_ "server/new/app/global"
-	. "server/new/app/init"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha256"
+	"fmt"
+	"log"
 )
 
 func Main() {
-	InitMqttClient()
+	TestEcc()
 }
