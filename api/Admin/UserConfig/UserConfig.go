@@ -94,6 +94,8 @@ func (a *Api) GetList(c *gin.Context) {
 	}
 
 	var AppName = Ser_AppInfo.App取map列表String()
+	AppName["50"] = "代理云配置"
+
 	var AdminIdNameMap = make(map[int]string) //cache 优化防止多次读库
 	for 索引 := range DB_PublicData {
 		//fmt.Printf("Id:%v:%v", strconv.Itoa(DB_PublicData[索引].AppId), AppName[strconv.Itoa(DB_PublicData[索引].AppId)])
