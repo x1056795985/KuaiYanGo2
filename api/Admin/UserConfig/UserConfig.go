@@ -2,6 +2,7 @@ package UserConfig
 
 import (
 	"github.com/gin-gonic/gin"
+	"server/Service/Ser_Admin"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_UserConfig"
@@ -93,9 +94,20 @@ func (a *Api) GetList(c *gin.Context) {
 	}
 
 	var AppName = Ser_AppInfo.App取map列表String()
+	var AdminIdNameMap = make(map[int]string) //cache 优化防止多次读库
 	for 索引 := range DB_PublicData {
 		//fmt.Printf("Id:%v:%v", strconv.Itoa(DB_PublicData[索引].AppId), AppName[strconv.Itoa(DB_PublicData[索引].AppId)])
 		DB_PublicData[索引].AppName = AppName[strconv.Itoa(DB_PublicData[索引].AppId)]
+		if DB_PublicData[索引].AppId == 1 { //管理平台单独处理
+			if AdminIdNameMap[DB_PublicData[索引].Uid] == "" {
+				AdminIdNameMap[DB_PublicData[索引].Uid] = Ser_Admin.Id取User(DB_PublicData[索引].Uid)
+			}
+
+			DB_PublicData[索引].User = AdminIdNameMap[DB_PublicData[索引].Uid]
+			DB_PublicData[索引].Uid = -DB_PublicData[索引].Uid
+
+		}
+
 	}
 
 	response.OkWithDetailed(结构响应_GetDB_PublicDataList{DB_PublicData, 总数}, "获取成功", c)

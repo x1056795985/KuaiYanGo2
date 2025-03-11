@@ -215,6 +215,10 @@ func jS_log(call goja.FunctionCall) goja.Value {
 
 func jS_用户Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_User {
 	var 局_用户详情 DB.DB_User
+	if 局_在线信息.Uid == 0 {
+		局_在线信息.Uid = Ser_User.User用户名取id(局_在线信息.User)
+	}
+
 	局_用户详情, ok := Ser_User.Id取详情(局_在线信息.Uid)
 	if ok {
 		return 局_用户详情
@@ -227,6 +231,10 @@ func jS_程序_延时(毫秒数 int64) bool {
 }
 func jS_卡号Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_Ka {
 	var 局_卡详情 DB.DB_Ka
+	if 局_在线信息.Uid == 0 {
+		局_在线信息.Uid = Ser_Ka.Ka卡号取id(局_在线信息.LoginAppid, 局_在线信息.User)
+	}
+
 	局_卡详情, err := Ser_Ka.Id取详情(局_在线信息.Uid)
 	if err != nil {
 		return 局_卡详情
@@ -235,6 +243,10 @@ func jS_卡号Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_Ka {
 }
 func jS_取软件用户详情(局_在线信息 DB.DB_LinksToken) DB.DB_AppUser {
 	var 局_详情 DB.DB_AppUser
+	if 局_在线信息.Uid == 0 {
+		局_在线信息.Uid = Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
+	}
+
 	局_详情, ok := Ser_AppUser.Uid取详情(局_在线信息.LoginAppid, 局_在线信息.Uid)
 	if ok {
 		return 局_详情
@@ -243,7 +255,9 @@ func jS_取软件用户详情(局_在线信息 DB.DB_LinksToken) DB.DB_AppUser {
 }
 func jS_用户Id增减余额(局_在线信息 DB.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
-
+	if 局_在线信息.Uid == 0 {
+		局_在线信息.Uid = Ser_User.User用户名取id(局_在线信息.User)
+	}
 	新余额, err := Ser_User.Id余额增减(局_在线信息.Uid, Float64取绝对值(增减值), is增加)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
