@@ -39,7 +39,9 @@ func App取map列表String() map[string]string {
 
 	var DB_AppInfo []DB.DB_AppInfo
 	var 总数 int64
+
 	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppId", "AppName").Count(&总数).Find(&DB_AppInfo).Error
+	//.Order("Sort DESC, AppId ASC")  排序没啥用, 后面也会被排序
 	var AppName = make(map[string]string, 总数+2)
 	AppName["1"] = "管理平台"
 	AppName["2"] = "代理平台"
@@ -47,7 +49,7 @@ func App取map列表String() map[string]string {
 
 	//吧 id 和 app名字 放入map
 	for 索引 := range DB_AppInfo {
-		AppName[strconv.Itoa(int(DB_AppInfo[索引].AppId))] = DB_AppInfo[索引].AppName
+		AppName[strconv.Itoa(DB_AppInfo[索引].AppId)] = DB_AppInfo[索引].AppName
 	}
 
 	return AppName

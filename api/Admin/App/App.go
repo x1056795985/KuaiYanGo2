@@ -18,6 +18,7 @@ import (
 	"server/new/app/router/webApi2"
 	"server/structs/Http/response"
 	DB "server/structs/db"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -91,7 +92,7 @@ func (a *Api) GetAppList(c *gin.Context) {
 	if 请求.Order == 1 {
 		局_DB.Order("Sort DESC, AppId ASC")
 	} else {
-		局_DB.Order("Sort DESC, AppId,DESC")
+		局_DB.Order("Sort DESC, AppId DESC")
 	}
 
 	if 请求.Status == 1 || 请求.Status == 2 || 请求.Status == 3 {
@@ -411,7 +412,10 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 		临时Int, _ = strconv.Atoi(Key)
 		Name = append(Name, 键值对{AppId: 临时Int, AppName: AppIdName[Key]})
 	}
-
+	// 对 Name 数组 按键值对.Id 进行升序排序
+	sort.Slice(Name, func(i, j int) bool {
+		return Name[i].AppId < Name[j].AppId
+	})
 	response.OkWithDetailed(响应_AppIdNameList{AppIdName, Name}, "获取成功", c)
 	return
 }

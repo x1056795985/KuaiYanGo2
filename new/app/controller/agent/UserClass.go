@@ -5,6 +5,7 @@ import (
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/userClass"
 	"server/structs/Http/response"
+	"sort"
 	"strconv"
 )
 
@@ -34,6 +35,10 @@ func (C *UserClass) GetIdNameList(c *gin.Context) {
 		临时Int, _ = strconv.Atoi(Key)
 		Name = append(Name, 键值对{Id: 临时Int, Name: IdName[Key]})
 	}
+	// 对 Name 数组 按键值对.Id 进行升序排序
+	sort.Slice(Name, func(i, j int) bool {
+		return Name[i].Id < Name[j].Id
+	})
 
 	response.OkWithDetailed(响应_AppIdNameList{IdName, Name}, "获取成功", c)
 	return
@@ -46,5 +51,5 @@ type 键值对 struct {
 
 type 响应_AppIdNameList struct {
 	Map   map[string]string `json:"Map"`
-	Array []键值对          `json:"Array"`
+	Array []键值对             `json:"Array"`
 }

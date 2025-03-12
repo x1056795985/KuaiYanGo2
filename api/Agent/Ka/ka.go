@@ -14,6 +14,7 @@ import (
 	"server/new/app/logic/common/ka"
 	"server/structs/Http/response"
 	DB "server/structs/db"
+	"sort"
 	"strconv"
 )
 
@@ -508,7 +509,10 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 	for 索引 := range 局_可操作应用Id {
 		Name = append(Name, 键值对{AppId: 局_可操作应用Id[索引], AppName: AppIdName[strconv.Itoa(局_可操作应用Id[索引])]})
 	}
-
+	// 对 Name 数组 按键值对.Id 进行升序排序
+	sort.Slice(Name, func(i, j int) bool {
+		return Name[i].AppId < Name[j].AppId
+	})
 	response.OkWithDetailed(响应_AppIdNameList{AppIdName, Name}, "获取成功", c)
 	return
 }
