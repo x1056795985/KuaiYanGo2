@@ -73,6 +73,7 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"GetCaptchaApiList":      {"取开启验证码接口", UserApi.UserApi_取开启验证码接口, true},
 
 	"GetTab":            {"取动态标签", UserApi.UserApi_取动态标签, true},
+	"GetRegisterGiveKa": {"取注册送卡", UserApi.UserApi_取注册送卡, true},
 	"SetTab":            {"置动态标签", UserApi.UserApi_置动态标签, true},
 	"GetPayOrderStatus": {"订单_取状态", UserApi.UserApi_订单_取状态, true},
 	"PayKaUsa":          {"订单_购卡直冲", UserApi.UserApi_订单_购卡直冲, true},

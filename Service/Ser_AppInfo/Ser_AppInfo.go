@@ -199,11 +199,12 @@ func NewApp信息(AppId, AppType int, AppName string) error {
 *`
 	NewApp.RegisterGiveKaClassId = 0
 	if NewApp.AppType <= 2 {
-		新卡类ID, err2 := Ser_KaClass.KaClass创建New(int(NewApp.AppId), "注册送卡", "ZC", 0, 0, 0, 0, -1, -1, 0, 1, 25, 1, 1, 1, 0)
-		if err2 != nil {
-			global.GVA_LOG.Error("创建App时创建注册送卡类失败," + err.Error())
-		}
-		NewApp.RegisterGiveKaClassId = 新卡类ID //注册赠送卡类的id
+		NewApp.RegisterGiveKaClassId, err = Ser_KaClass.KaClass创建New(NewApp.AppId, "注册送卡", "ZC", 0, 0, 0, 0, -1, -1, 0, 1, 25, 1, 1, 1, 0)
+	} else {
+		NewApp.RegisterGiveKaClassId, err = Ser_KaClass.KaClass创建New(NewApp.AppId, "注册送卡", "ZC", 0, 0, 0, 0, -1, -1, 0, 1, 25, 1, 1, 1, 0)
+	}
+	if err != nil {
+		global.GVA_LOG.Error("创建App时创建注册送卡类失败," + err.Error())
 	}
 
 	NewApp.VerifyKey = 1     //绑定模式

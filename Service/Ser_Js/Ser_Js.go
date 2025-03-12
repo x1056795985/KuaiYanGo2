@@ -52,6 +52,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_用户Id取详情", jS_用户Id取详情)
 	_ = vm.Set("$api_卡号Id取详情", jS_卡号Id取详情)
 	_ = vm.Set("$api_取软件用户详情", jS_取软件用户详情)
+	_ = vm.Set("$api_在线注销", jS_在线注销)
 
 	_ = vm.Set("$api_用户Id增减余额", jS_用户Id增减余额)
 	_ = vm.Set("$api_用户Id增减积分", jS_用户Id增减积分)
@@ -252,6 +253,24 @@ func jS_取软件用户详情(局_在线信息 DB.DB_LinksToken) DB.DB_AppUser {
 	}
 	return 局_详情
 }
+func jS_在线注销(局_在线信息 DB.DB_LinksToken) js对象_通用返回 {
+	var err error
+	if 局_在线信息.Id != 0 {
+		err = Ser_LinkUser.Set批量注销([]int{局_在线信息.Id}, Ser_LinkUser.Z注销_管理员手动注销)
+	} else if 局_在线信息.Uid != 0 {
+		err = Ser_LinkUser.Set批量注销Uid(局_在线信息.Uid, Ser_LinkUser.Z注销_管理员手动注销)
+	} else if 局_在线信息.User != "" {
+		err = Ser_LinkUser.Set批量注销User数组([]string{局_在线信息.User}, Ser_LinkUser.Z注销_管理员手动注销)
+	} else {
+		err = errors.New("在线信息缺少,Id,Uid,User,任意一个参数")
+	}
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	}
+	return js对象_通用返回{IsOk: true, Err: "注销成功"}
+
+}
+
 func jS_用户Id增减余额(局_在线信息 DB.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
 	if 局_在线信息.Uid == 0 {
