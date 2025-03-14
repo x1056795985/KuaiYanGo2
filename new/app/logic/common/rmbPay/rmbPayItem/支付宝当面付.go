@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/smartwalle/alipay/v3"
 	"net/http"
+	"server/new/app/logic/agent/L_setting"
 	"server/new/app/logic/common/rmbPay"
 	m "server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -139,7 +140,16 @@ func (j 支付宝当面付) D订单支付回调(c *gin.Context, 参数 *m.PayPar
 	}()
 
 	var 局_支付配置 m.Z在线支付_支付宝当面付
-	err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
+	if 参数.ReceivedUid == 0 {
+		err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
+	} else {
+		局_临时, err2 := L_setting.Q取代理在线支付信息(c, 参数.ReceivedUid)
+		if err2 != nil {
+			err = errors.Join(errors.New("Q取代理在线支付信息"), err2)
+			return
+		}
+		局_支付配置 = 局_临时.Z在线支付_支付宝当面付
+	}
 
 	var privateKey = 局_支付配置.Z支付宝当面付商户私钥 // 必须，上一步中使用 RSA签名验签工具 生成的私钥
 	client, err := alipay.New(局_支付配置.Z支付宝当面付商户ID, privateKey, true)

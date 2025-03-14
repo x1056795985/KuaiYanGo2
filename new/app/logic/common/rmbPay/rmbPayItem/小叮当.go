@@ -9,6 +9,7 @@ import (
 	"github.com/imroc/req/v3"
 	"net/http"
 	"net/url"
+	"server/new/app/logic/agent/L_setting"
 	"server/new/app/logic/common/rmbPay"
 	m "server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -145,7 +146,16 @@ func (j 小叮当) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响
 	}()
 
 	var 局_支付配置 m.Z在线支付_小叮当
-	err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
+	if 参数.ReceivedUid == 0 {
+		err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
+	} else {
+		局_临时, err2 := L_setting.Q取代理在线支付信息(c, 参数.ReceivedUid)
+		if err2 != nil {
+			err = errors.Join(errors.New("Q取代理在线支付信息"), err2)
+			return
+		}
+		局_支付配置 = 局_临时.Z在线支付_小叮当
+	}
 
 	//order_no=123456&subject=&pay_type=43&money=10.00&realmoney=10.00&result=success&xddpay_order=654321&app_id=10088&extra=abc
 	局_sign := fmt.Sprintf("order_no=%s&subject=%s&pay_type=%s&money=%s&realmoney=%s&result=success&xddpay_order=%s&app_id=%s&extra=%s&",

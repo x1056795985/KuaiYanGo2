@@ -11,6 +11,7 @@ import (
 	"server/config"
 	"server/new/app/logic/common/mqttClient"
 	"server/new/app/logic/common/setting"
+	m "server/new/app/models/common"
 	"server/structs/Http/response"
 	utils2 "server/utils"
 )
@@ -100,7 +101,7 @@ func (a *Api) GetInfo在线支付(c *gin.Context) {
 
 // save 保存
 func (a *Api) Save信息在线支付(c *gin.Context) {
-	var 请求 config.Z在线支付
+	var 请求 m.Z在线支付
 	err := c.ShouldBindJSON(&请求)
 	//解析失败
 	if err != nil {

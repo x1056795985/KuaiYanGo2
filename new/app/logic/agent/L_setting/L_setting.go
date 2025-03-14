@@ -5,12 +5,12 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_UserConfig"
-	"server/config"
+	m "server/new/app/models/common"
 	"server/new/app/models/constant"
 )
 
-func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data config.Z在线支付, err error) {
-	var 配置值 = config.Z在线支付{}
+func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data m.Z在线支付, err error) {
+	var 配置值 = m.Z在线支付{}
 	配置值.Z支付宝单次最大金额 = 2000
 	配置值.Z支付宝当面付单次最大金额 = 2000
 	配置值.Z支付宝H5单次最大金额 = 2000
@@ -32,7 +32,7 @@ func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data config.Z在
 		}
 		return
 	}
-	err = func取值并解析("支付宝PC", &data.Z在线支付_支付宝pc)
+	err = func取值并解析("支付宝PC", &data.Z在线支付_支付宝PC)
 	err = func取值并解析("支付宝H5", &data.Z在线支付_支付宝H5)
 	err = func取值并解析("支付宝当面付", &data.Z在线支付_支付宝当面付)
 	err = func取值并解析("支付宝H5", &data.Z在线支付_支付宝H5)
@@ -42,7 +42,7 @@ func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data config.Z在
 	return
 }
 
-func Z置代理在线支付信息(c *gin.Context, 在线支付 config.Z在线支付) (err error) {
+func Z置代理在线支付信息(c *gin.Context, 在线支付 m.Z在线支付) (err error) {
 
 	局_uid := c.GetInt("Uid")
 	if 局_uid == 0 {
@@ -58,7 +58,7 @@ func Z置代理在线支付信息(c *gin.Context, 在线支付 config.Z在线支
 		return err2
 	}
 
-	err = func序列化并置值("支付宝PC", &在线支付.Z在线支付_支付宝pc)
+	err = func序列化并置值("支付宝PC", &在线支付.Z在线支付_支付宝PC)
 	err = func序列化并置值("支付宝H5", &在线支付.Z在线支付_支付宝H5)
 	err = func序列化并置值("支付宝当面付", &在线支付.Z在线支付_支付宝当面付)
 	err = func序列化并置值("支付宝H5", &在线支付.Z在线支付_支付宝H5)

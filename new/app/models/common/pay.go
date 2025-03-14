@@ -2,10 +2,18 @@ package common
 
 import (
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"server/config"
 	DB "server/structs/db"
 )
 
+type Z在线支付 struct {
+	J禁止退款        bool `mapstructure:"禁止退款" json:"禁止退款" yaml:"禁止退款"`
+	Z在线支付_支付宝PC       //id 1
+	Z在线支付_支付宝当面付      //id 2
+	Z在线支付_支付宝H5       //id 3
+	Z在线支付_微信支付        //id 4
+	Z在线支付_小叮当         //id 5
+	Z在线支付_虎皮椒         //id 6
+}
 type PayParams struct {
 	DB.DB_LogRMBPayOrder
 	S商品名称   string
@@ -13,7 +21,7 @@ type PayParams struct {
 	T同步回调地址 string
 	E额外信息   *gjson.Json
 	Z支付配置   []byte
-	Z支付配置s  config.Z在线支付
+	Z支付配置s  Z在线支付
 }
 
 // 通用通道返回数据

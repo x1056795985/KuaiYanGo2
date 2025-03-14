@@ -12,6 +12,7 @@ import (
 	WXutils "github.com/wechatpay-apiv3/wechatpay-go/utils"
 	"log"
 	"net/http"
+	"server/new/app/logic/agent/L_setting"
 	"server/new/app/logic/common/rmbPay"
 	m "server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -192,7 +193,17 @@ func (j 微信支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (
 	}()
 
 	var 局_支付配置 m.Z在线支付_微信支付
-	err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
+	if 参数.ReceivedUid == 0 {
+		err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
+	} else {
+		局_临时, err2 := L_setting.Q取代理在线支付信息(c, 参数.ReceivedUid)
+		if err2 != nil {
+			err = errors.Join(errors.New("Q取代理在线支付信息"), err2)
+			return
+		}
+		局_支付配置 = 局_临时.Z在线支付_微信支付
+	}
+
 	var 局_微信响应 微信回调响应
 	err = c.ShouldBindJSON(&局_微信响应)
 	if err != nil {

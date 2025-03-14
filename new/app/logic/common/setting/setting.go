@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"server/config"
 	"server/global"
+	m "server/new/app/models/common"
 	"server/new/app/service"
 	"time"
 )
@@ -94,13 +95,13 @@ func Q行为验证码平台配置() config.X行为验证码平台配置 {
 	return 配置值
 }
 
-func Z在线支付配置(配置值 *config.Z在线支付) error {
+func Z在线支付配置(配置值 *m.Z在线支付) error {
 	return Z文本("在线支付配置", 配置值)
 }
 
-func Q在线支付配置() config.Z在线支付 {
+func Q在线支付配置() m.Z在线支付 {
 	var 配置名 = "在线支付配置"
-	var 配置值 = config.Z在线支付{}
+	var 配置值 = m.Z在线支付{}
 	配置值.Z支付宝单次最大金额 = 2000
 	配置值.Z支付宝当面付单次最大金额 = 2000
 	配置值.Z支付宝H5单次最大金额 = 2000
@@ -110,7 +111,7 @@ func Q在线支付配置() config.Z在线支付 {
 	配置值.X小叮当单次最大金额 = 500
 	配置值.X小叮当支付类型 = 43
 
-	局_临时配置值, err := Q获取配置[config.Z在线支付](配置名)
+	局_临时配置值, err := Q获取配置[m.Z在线支付](配置名)
 	if err == nil {
 		配置值 = 局_临时配置值
 	}

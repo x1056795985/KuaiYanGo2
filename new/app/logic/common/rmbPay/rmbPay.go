@@ -12,7 +12,6 @@ import (
 	"gorm.io/gorm/clause"
 	"server/Service/Ser_Agent"
 	App服务 "server/Service/Ser_AppInfo"
-	"server/config"
 	"server/global"
 	"server/new/app/logic/agent/L_setting"
 	"server/new/app/logic/common/agent"
@@ -116,7 +115,7 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 
 	if 参数.ReceivedUid > 0 && agent.L_agent.Id功能权限检测(c, 参数.ReceivedUid, DB.D代理功能_代收款) {
 		var 局代理Info DB.DB_User
-		var 代理在线支付信息 config.Z在线支付
+		var 代理在线支付信息 m.Z在线支付
 		if 局代理Info, err = service.NewUser(c, &tx).Info(参数.ReceivedUid); err == nil {
 			if 代理在线支付信息, err = L_setting.Q取代理在线支付信息(c, 参数.ReceivedUid); err == nil {
 				if 局代理Info.Rmb > 参数.Rmb+L_rmbPay.Pay_指定Uid待支付金额(c, 参数.ReceivedUid) {
@@ -191,7 +190,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 	}
 	//判断是否为代收款如果是代收款读取代收用户id
 	if 参数.ReceivedUid > 0 {
-		参数.Z支付配置s = config.Z在线支付{} //重新清零数据防止下边读取失败,依然使用系统配置
+		参数.Z支付配置s = m.Z在线支付{} //重新清零数据防止下边读取失败,依然使用系统配置
 		if 参数.Z支付配置s, err = L_setting.Q取代理在线支付信息(c, 参数.ReceivedUid); err == nil {
 			参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 		}

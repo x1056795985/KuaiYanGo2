@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"server/new/app/logic/agent/L_setting"
 	"server/new/app/logic/common/rmbPay"
 	m "server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -138,7 +139,17 @@ func (j 虎皮椒) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响
 	}()
 
 	var 局_支付配置 m.Z在线支付_虎皮椒
-	err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
+	if 参数.ReceivedUid == 0 {
+		err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
+	} else {
+		局_临时, err2 := L_setting.Q取代理在线支付信息(c, 参数.ReceivedUid)
+		if err2 != nil {
+			err = errors.Join(errors.New("Q取代理在线支付信息"), err2)
+			return
+		}
+		局_支付配置 = 局_临时.Z在线支付_虎皮椒
+	}
+
 	data, err := ioutil.ReadAll(c.Request.Body)
 
 	//trade_order_id=202401052126060001&total_fee=0.01&transaction_id=4200001926202401054012972507&open_order_id=20241873681&order_title=%E7%94%A8%E6%88%B7%3Aaaaaaa_%E8%B4%AD%E5%8D%A1%E7%9B%B4%E5%86%B2&status=OD&nonce_str=4217541016&time=1704461215&appid=201906157675&hash=9bdfdb7f14a8bf0db85139a17e6b9372

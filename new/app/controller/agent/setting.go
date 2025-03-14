@@ -2,10 +2,10 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/config"
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/agent/L_setting"
+	m "server/new/app/models/common"
 	"server/new/app/models/db"
 	"server/new/app/service"
 	"server/structs/Http/response"
@@ -34,7 +34,7 @@ func (s *Setting) GetPayInfo(c *gin.Context) {
 
 // 置代理在线支付信息
 func (s *Setting) SetPayInfo(c *gin.Context) {
-	var 请求 config.Z在线支付
+	var 请求 m.Z在线支付
 	if !s.ToJSON(c, &请求) {
 		return
 	}
