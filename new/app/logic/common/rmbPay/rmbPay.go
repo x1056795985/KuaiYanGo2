@@ -453,6 +453,7 @@ func (j *rmbPay) D订单回调(c *gin.Context) (响应信息 string, 响应代�
 
 	响应信息, 响应代码, err = 局_通道.D订单支付回调(c, &参数)
 	if err != nil {
+		global.GVA_LOG.Error("订单回调失败!", zap.Any("err", err))
 		return
 	}
 	err = 参数.E额外信息.Set("回调时间", time.Now().Unix())

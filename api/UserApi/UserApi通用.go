@@ -75,6 +75,7 @@ type 请求响应_Data_GetToken struct {
 	IP           string `json:"IP"`
 }
 
+// 登陆
 func UserApi_用户登录(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
@@ -219,9 +220,8 @@ func UserApi_用户登录(c *gin.Context) {
 			//}
 		}
 
-		局_AppUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid) //充值之后重新读取一遍
 	}
-
+	局_AppUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid) //充值之后重新读取一遍
 	if 局_AppUser.Status == 2 {
 		go Ser_Log.Log_写登录日志(局_卡号或用户名, c.ClientIP(), "已冻结无法登录", 局_在线信息.LoginAppid)
 		response.X响应状态(c, response.Status_已冻结无法登录)
@@ -292,7 +292,8 @@ func UserApi_用户登录(c *gin.Context) {
 
 	//用户已有归属代理,但是和在线信息代理标志不同,修改在线代理标志
 	if 局_AppUser.AgentUid != 局_在线信息.AgentUid {
-		_, err = service.NewLinksToken(c, &tx).Update(局_在线信息.Id, map[string]interface{}{"AgentUid": 局_在线信息.AgentUid})
+		_, err = service.NewLinksToken(c, &tx).Update(局_在线信息.Id, map[string]interface{}{"AgentUid": 局_AppUser.AgentUid})
+		局_在线信息.AgentUid = 局_AppUser.AgentUid
 	}
 
 	//登录成功写日志
