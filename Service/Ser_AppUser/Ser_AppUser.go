@@ -31,6 +31,22 @@ func User或卡号取Id(AppId int, user string) int {
 	return id
 }
 
+func User或卡号取Uid(AppId int, user string) int {
+	var id int
+
+	if Ser_AppInfo.App是否为卡号(AppId) {
+		// 执行合并后的SQL语句
+		global.GVA_DB.Raw("SELECT `Id` FROM `db_Ka` WHERE `Name` = ? LIMIT 1", user).Scan(&id)
+
+	} else {
+		// 执行合并后的SQL语句
+		global.GVA_DB.Raw("SELECT `Id` FROM `db_User` WHERE `User` = ? LIMIT 1", user).Scan(&id)
+
+	}
+
+	return id
+}
+
 func K卡号取Id(AppId int, user string) int {
 	var id = 0
 	global.GVA_DB.Raw("SELECT `Id` FROM `db_AppUser_"+strconv.Itoa(AppId)+"` WHERE `Uid` = (SELECT `Id` FROM `db_Ka` WHERE `Name` = ?) LIMIT 1", user).Scan(&id)

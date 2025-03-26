@@ -245,7 +245,7 @@ func jS_卡号Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_Ka {
 func jS_取软件用户详情(局_在线信息 DB.DB_LinksToken) DB.DB_AppUser {
 	var 局_详情 DB.DB_AppUser
 	if 局_在线信息.Uid == 0 {
-		局_在线信息.Uid = Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, 局_在线信息.User)
+		局_在线信息.Uid = Ser_AppUser.User或卡号取Uid(局_在线信息.LoginAppid, 局_在线信息.User)
 	}
 	局_详情, ok := Ser_AppUser.Uid取详情(局_在线信息.LoginAppid, 局_在线信息.Uid)
 	if ok {

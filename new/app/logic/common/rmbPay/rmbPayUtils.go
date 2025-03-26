@@ -75,23 +75,13 @@ func (j *rmbPay) Z支付订单回调关键字转换(回调地址 string, 参数 
 	return ReturnURL
 }
 
-func (j *rmbPay) Pay_显示名称转原名(参数 *common.PayParams, 显示名称 string) string {
-	局_支付配置 := 参数.Z支付配置s
-	//修改支付显示别名为原名称
-	switch 显示名称 {
-	case 局_支付配置.Z支付宝显示名称:
-		return "支付宝PC"
-	case 局_支付配置.Z支付宝H5显示名称:
-		return "支付宝H5"
-	case 局_支付配置.Z支付宝当面付显示名称:
-		return "支付宝当面付"
-	case 局_支付配置.W微信支付显示名称:
-		return "微信支付"
-	case 局_支付配置.X小叮当支付显示名称:
-		return "小叮当"
-	case 局_支付配置.H虎皮椒支付显示名称:
-		return "虎皮椒"
-	default:
-		return 显示名称
+func (j *rmbPay) Pay_显示名称转原名(显示名称 string) string {
+	局_数组 := j.Pay_取支付通道基本信息()
+
+	for i := range 局_数组 {
+		if 局_数组[i].Alias == 显示名称 {
+			return 局_数组[i].Name
+		}
 	}
+	return 显示名称
 }

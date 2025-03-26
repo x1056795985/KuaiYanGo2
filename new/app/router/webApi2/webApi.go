@@ -24,6 +24,7 @@ func (r *AllRouter) InitWebApiRouter(router *gin.RouterGroup) {
 	{
 		//http://anyueyinluo.w1.luyouxia.net/payNotify/240426223543000001
 		webApiRouter.POST("/payNotify/:order", 局_NotifyController.PayNotify)   //通用支付回调
+		webApiRouter.GET("/payNotify/:order", 局_NotifyController.PayNotify)    //通用支付回调
 		webApiRouter.POST("/payNotify2/:order", 局_NotifyController.PayNotify2) //通用退款回调
 	}
 	//兼容旧版小叮当 因为服务器已配置

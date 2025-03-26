@@ -28,12 +28,12 @@ func (a *Api) GetInfoSystem(c *gin.Context) {
 var 快验网络验证对接易模块 []byte
 
 type 请求_S生成API加密源码SDK struct {
-	Y用户API加密盐 string `mapstructure:"用户API加密盐" json:"用户API加密盐" yaml:"用户API加密盐"`
-	Type      string `mapstructure:"Type" json:"Type" yaml:"Type"` //"E"  易源码
+	Y用户API加密盐 string `mapstructure:"用户API加密盐" json:"用户API加密盐" `
+	Type      string `mapstructure:"Type" json:"Type" ` //"E"  易源码
 }
 type 响应_S生成API加密源码SDK struct {
-	Name       string `mapstructure:"Name" json:"Name" yaml:"Name"`
-	Base64Data string `mapstructure:"Base64Data" json:"Base64Data" yaml:"Base64Data"` //"E"  易源码
+	Name       string `mapstructure:"Name" json:"Name" `
+	Base64Data string `mapstructure:"Base64Data" json:"Base64Data" ` //"E"  易源码
 }
 
 func (a *Api) S生成API加密源码SDK(c *gin.Context) {

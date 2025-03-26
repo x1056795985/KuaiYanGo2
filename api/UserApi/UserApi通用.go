@@ -438,13 +438,13 @@ func UserApi_用户减少点数(c *gin.Context) {
 		return
 	}
 	if 局_AppUser.VipTime < 局_增减值 {
-		response.X响应状态消息(c, response.Status_操作失败, "积分不足")
+		response.X响应状态消息(c, response.Status_操作失败, "点数不足")
 		return
 	}
 
 	err := Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, 局_增减值, false)
 	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, err.Error()) //基本就是积分不足
+		response.X响应状态消息(c, response.Status_操作失败, err.Error()) //基本就是点数不足
 		return
 	}
 

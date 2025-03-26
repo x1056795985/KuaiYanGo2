@@ -71,7 +71,7 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 	参数.Z支付配置s = setting.Q在线支付配置()
 	参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 
-	参数.Type = j.Pay_显示名称转原名(&参数, 参数.Type)
+	参数.Type = j.Pay_显示名称转原名(参数.Type)
 
 	局_通道, ok := j.已注册通道[参数.Type]
 	if !ok {
@@ -856,79 +856,42 @@ func (j *rmbPay) 代理分成(c *gin.Context, 参数 *m.PayParams, AgentMoney fl
 }
 
 func (j *rmbPay) Pay_取支付通道状态() gin.H {
-	局_支付配置 := setting.Q在线支付配置()
-	局map := gin.H{}
+	局_数组 := j.Pay_取支付通道基本信息()
+	局map := make(gin.H, len(局_数组))
 
-	if 局_支付配置.Z支付宝显示名称 != "" {
-		局map[局_支付配置.Z支付宝显示名称] = 局_支付配置.Z支付宝开关
-	} else {
-		局map["支付宝PC"] = 局_支付配置.Z支付宝开关
+	for _, v := range 局_数组 {
+		if v.Alias != "" {
+			局map[v.Alias] = v.Status
+		} else {
+			局map[v.Name] = v.Status
+		}
 	}
-
-	if 局_支付配置.Z支付宝当面付显示名称 != "" {
-		局map[局_支付配置.Z支付宝当面付显示名称] = 局_支付配置.Z支付宝当面付开关
-	} else {
-		局map["支付宝当面付"] = 局_支付配置.Z支付宝当面付开关
-	}
-	if 局_支付配置.Z支付宝H5显示名称 != "" {
-		局map[局_支付配置.Z支付宝H5显示名称] = 局_支付配置.Z支付宝H5开关
-	} else {
-		局map["支付宝H5"] = 局_支付配置.Z支付宝H5开关
-	}
-
-	if 局_支付配置.W微信支付显示名称 != "" {
-		局map[局_支付配置.W微信支付显示名称] = 局_支付配置.W微信支付开关
-	} else {
-		局map["微信支付"] = 局_支付配置.W微信支付开关
-	}
-
-	if 局_支付配置.X小叮当支付显示名称 != "" {
-		局map[局_支付配置.X小叮当支付显示名称] = 局_支付配置.X小叮当支付开关
-	} else {
-		局map["小叮当"] = 局_支付配置.X小叮当支付开关
-	}
-
-	if 局_支付配置.H虎皮椒支付显示名称 != "" {
-		局map[局_支付配置.H虎皮椒支付显示名称] = 局_支付配置.H虎皮椒支付开关
-	} else {
-		局map["虎皮椒"] = 局_支付配置.H虎皮椒支付开关
-	}
-
 	return 局map
 }
 
-type 支付通道 struct {
+type 支付通道基本信息 struct {
 	Id     int    `json:"Id"`
 	Name   string `json:"Name"`
-	Status bool   `json:"Status"`
+	Alias  string `json:"Alias"`  //显示名称
+	Status bool   `json:"Status"` //开关
+	RMB    int    `json:"RMB"`    //最大金额
 }
 
-func (j *rmbPay) Pay_取支付通道状态2() []支付通道 {
+func (j *rmbPay) Pay_取支付通道基本信息() []支付通道基本信息 {
 	支付配置 := setting.Q在线支付配置()
 	if &支付配置 == nil {
-		return nil // 或者返回一个空切片
+		return []支付通道基本信息{}
 	}
-
-	支付通道映射 := map[int]struct {
-		开关   bool
-		默认名称 string
-		显示名称 string
-	}{
-		1: {支付配置.Z支付宝开关, "支付宝PC", 支付配置.Z支付宝显示名称},
-		2: {支付配置.Z支付宝当面付开关, "支付宝当面付", 支付配置.Z支付宝当面付显示名称},
-		3: {支付配置.Z支付宝H5开关, "支付宝H5", 支付配置.Z支付宝H5显示名称},
-		4: {支付配置.W微信支付开关, "微信支付", 支付配置.W微信支付显示名称},
-		5: {支付配置.X小叮当支付开关, "小叮当", 支付配置.X小叮当支付显示名称},
-		6: {支付配置.H虎皮椒支付开关, "虎皮椒", 支付配置.H虎皮椒支付显示名称},
+	支付通道列表 := []支付通道基本信息{
+		{Id: 1, Name: "支付宝PC", Alias: 支付配置.Z支付宝显示名称, Status: 支付配置.Z支付宝开关, RMB: 支付配置.Z支付宝单次最大金额},
+		{Id: 2, Name: "支付宝当面付", Alias: 支付配置.Z支付宝当面付显示名称, Status: 支付配置.Z支付宝当面付开关, RMB: 支付配置.Z支付宝单次最大金额},
+		{Id: 3, Name: "支付宝H5", Alias: 支付配置.Z支付宝H5显示名称, Status: 支付配置.Z支付宝H5开关, RMB: 支付配置.Z支付宝单次最大金额},
+		{Id: 4, Name: "微信支付", Alias: 支付配置.W微信支付显示名称, Status: 支付配置.W微信支付开关, RMB: 支付配置.W微信支付单次最大金额},
+		{Id: 5, Name: "小叮当", Alias: 支付配置.X小叮当支付显示名称, Status: 支付配置.X小叮当支付开关, RMB: 支付配置.X小叮当单次最大金额},
+		{Id: 6, Name: "虎皮椒", Alias: 支付配置.H虎皮椒支付显示名称, Status: 支付配置.H虎皮椒支付开关, RMB: 支付配置.H虎皮椒单次最大金额},
+		{Id: 7, Name: "易支付", Alias: 支付配置.Y易支付显示名称, Status: 支付配置.Y易支付开关, RMB: 支付配置.Y易支付最大金额},
 	}
-
-	结果 := make([]支付通道, 0, len(支付通道映射))
-	for id, info := range 支付通道映射 {
-		名称 := S三元(info.显示名称 == "", info.默认名称, info.显示名称)
-		结果 = append(结果, 支付通道{Id: id, Name: 名称, Status: info.开关})
-	}
-
-	return 结果
+	return 支付通道列表
 }
 
 func (j *rmbPay) Pay_指定Uid待支付金额(c *gin.Context, Uid int) (金额 float64) {

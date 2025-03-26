@@ -102,7 +102,7 @@ func (a *Api) Q取支付通道状态(c *gin.Context) {
 	return
 }
 func (a *Api) Q取支付通道状态2(c *gin.Context) {
-	局_arr := rmbPay.L_rmbPay.Pay_取支付通道状态2()
+	局_arr := rmbPay.L_rmbPay.Pay_取支付通道基本信息()
 
 	response.OkWithData(局_arr, c)
 	return

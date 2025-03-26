@@ -3,46 +3,47 @@ package config
 import m "server/new/app/models/common"
 
 type Server struct {
-	AgentUid int     `mapstructure:"duid" json:"duid"`                      //代理uid
-	Port     int     `mapstructure:"Port" json:"Port" yaml:"Port"`          // 端口值
-	Zap      Zap     `mapstructure:"zap" json:"zap" yaml:"zap"`             //日志配置
-	Captcha  Captcha `mapstructure:"captcha" json:"captcha" yaml:"captcha"` //验证码配置
+	AgentUid int     `mapstructure:"duid" json:"duid"`        //代理uid
+	Port     int     `mapstructure:"Port" json:"Port" `       // 端口值
+	Zap      Zap     `mapstructure:"zap" json:"zap" `         //日志配置
+	Captcha  Captcha `mapstructure:"captcha" json:"captcha" ` //验证码配置
 	Q取运行目录   string
 	// gorm
-	Mysql Mysql `mapstructure:"mysql" json:"mysql" yaml:"mysql"`
+	Mysql Mysql `mapstructure:"mysql" json:"mysql" `
 }
 type Server备用 struct {
-	X系统设置      X系统设置      `mapstructure:"系统设置" json:"系统设置" yaml:"系统设置"`                // 系统名称
-	Z在线支付      m.Z在线支付    `mapstructure:"在线支付" json:"在线支付" yaml:"在线支付"`                // 系统名称
-	D短信平台配置    D短信平台配置    `mapstructure:"短信平台配置" json:"短信平台配置" yaml:"短信平台配置"`          // 短信配置
-	X行为验证码平台配置 X行为验证码平台配置 `mapstructure:"行为验证码平台配置" json:"行为验证码平台配置" yaml:"行为验证码平台配置"` // 短信配置
-	Captcha    Captcha    `mapstructure:"captcha" json:"captcha" yaml:"captcha"`       //验证码配置
+	X系统设置      X系统设置      `mapstructure:"系统设置" json:"系统设置" `           // 系统名称
+	Z在线支付      m.Z在线支付    `mapstructure:"在线支付" json:"在线支付" `           // 系统名称
+	D短信平台配置    D短信平台配置    `mapstructure:"短信平台配置" json:"短信平台配置" `       // 短信配置
+	X行为验证码平台配置 X行为验证码平台配置 `mapstructure:"行为验证码平台配置" json:"行为验证码平台配置" ` // 短信配置
+	Captcha    Captcha    `mapstructure:"captcha" json:"captcha" `     //验证码配置
 }
 
 type X系统设置 struct {
-	X系统名称      string `mapstructure:"系统名称" json:"系统名称" yaml:"系统名称"` // 系统名称
-	X系统地址      string `mapstructure:"系统地址" json:"系统地址" yaml:"系统地址"`
-	Y用户API加密盐  string `mapstructure:"用户API加密盐" json:"用户API加密盐" yaml:"用户API加密盐"`
-	G管理员后台Host string `mapstructure:"管理员后台Host" json:"管理员后台Host" yaml:"管理员后台Host"`
-	WebApiHost string `mapstructure:"WebApiHost" json:"WebApiHost" yaml:"WebApiHost"`
-	D代理后台Host  string `mapstructure:"代理后台Host" json:"代理后台Host" yaml:"代理后台Host"`
-	X系统开关      bool   `mapstructure:"系统开关" json:"系统开关" yaml:"系统开关"`
-	X系统关闭提示    string `mapstructure:"系统关闭提示" json:"系统关闭提示" yaml:"系统关闭提示"`
-	Y用户中心开关    bool   `mapstructure:"用户中心开关" json:"用户中心开关" yaml:"用户中心开关"`
-	D代理中心开关    bool   `mapstructure:"代理中心开关" json:"代理中心开关" yaml:"代理中心开关"`
-	D代理中心关闭提示  string `mapstructure:"代理中心关闭提示" json:"代理中心关闭提示" yaml:"代理中心关闭提示"`
-	//W系统模式      int    `mapstructure:"系统模式" json:"系统模式" yaml:"系统模式"` // 0  正常用户 1 演示模式     1056795985 调试模式
-	B备案号 string `mapstructure:"备案号" json:"备案号" yaml:"备案号"`
+	X系统名称      string `mapstructure:"系统名称" json:"系统名称" ` // 系统名称
+	X系统地址      string `mapstructure:"系统地址" json:"系统地址" `
+	Y用户API加密盐  string `mapstructure:"用户API加密盐" json:"用户API加密盐" `
+	G管理员后台Host string `mapstructure:"管理员后台Host" json:"管理员后台Host" `
+	WebApiHost string `mapstructure:"WebApiHost" json:"WebApiHost" `
+	D代理后台Host  string `mapstructure:"代理后台Host" json:"代理后台Host" `
+	X系统开关      bool   `mapstructure:"系统开关" json:"系统开关" `
+	X系统关闭提示    string `mapstructure:"系统关闭提示" json:"系统关闭提示" `
+	Y用户中心开关    bool   `mapstructure:"用户中心开关" json:"用户中心开关" `
+	D代理中心开关    bool   `mapstructure:"代理中心开关" json:"代理中心开关" `
+	D代理中心关闭提示  string `mapstructure:"代理中心关闭提示" json:"代理中心关闭提示" `
+	//W系统模式      int    `mapstructure:"系统模式" json:"系统模式" ` // 0  正常用户 1 演示模式     1056795985 调试模式
+	B备案号 string `mapstructure:"备案号" json:"备案号" `
 }
 
 type Z在线支付 struct {
-	J禁止退款          bool `mapstructure:"禁止退款" json:"禁止退款" yaml:"禁止退款"`
+	J禁止退款          bool `mapstructure:"禁止退款" json:"禁止退款" `
 	m.Z在线支付_支付宝PC       //id 1
 	m.Z在线支付_支付宝当面付      //id 2
 	m.Z在线支付_支付宝H5       //id 3
 	m.Z在线支付_微信支付        //id 4
 	m.Z在线支付_小叮当         //id 5
 	m.Z在线支付_虎皮椒         //id 6
+	m.Z在线支付_易支付         //id 6
 }
 
 type D短信平台配置 struct {

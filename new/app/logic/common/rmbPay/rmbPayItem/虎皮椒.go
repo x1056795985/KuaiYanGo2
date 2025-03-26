@@ -69,7 +69,7 @@ func (j 虎皮椒) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 		"total_fee":      utils.Float64到文本(参数.Rmb, 2),
 		"title":          参数.S商品名称,
 		"notify_url":     参数.Y异步回调地址,
-		"return_url":     局_支付配置.H虎皮椒同步回调url,
+		"return_url":     rmbPay.L_rmbPay.Z支付订单回调关键字转换(局_支付配置.H虎皮椒同步回调url, 参数),
 		"wap_name":       参数.S商品名称,
 		"callback_url":   "",
 		"time":           strconv.FormatInt(time.Now().Unix(), 10),
