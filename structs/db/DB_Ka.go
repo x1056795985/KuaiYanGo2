@@ -6,8 +6,8 @@ type DB_Ka struct {
 	KaClassId    int     `json:"KaClassId" gorm:"column:KaClassId;comment:卡类id"`
 	Name         string  `json:"Name" gorm:"column:Name;comment:卡号;size:191;uniqueIndex:AppidName"`
 	Status       int     `json:"Status" gorm:"column:Status;default:1;comment:卡号状态"` // 1正常 2冻结
-	RegisterUser string  `json:"RegisterUser" gorm:"column:RegisterUser;size:200;comment:制卡人账号"`
-	RegisterTime int     `json:"RegisterTime" gorm:"column:RegisterTime;comment:制卡时间戳"`
+	RegisterUser string  `json:"RegisterUser" gorm:"column:RegisterUser;size:180;comment:制卡人账号"`
+	RegisterTime int64   `json:"RegisterTime" gorm:"column:RegisterTime;comment:制卡时间戳"`
 	AdminNote    string  `json:"AdminNote" gorm:"column:AdminNote;size:1000;comment:管理员备注"`
 	AgentNote    string  `json:"AgentNote" gorm:"column:AgentNote;size:1000;comment:代理备注"`
 	VipTime      int64   `json:"VipTime" gorm:"column:VipTime;comment:增减时间秒数或点数"`
@@ -24,6 +24,7 @@ type DB_Ka struct {
 	NumMax       int     `json:"NumMax" gorm:"column:NumMax;comment:最大可用次数"`
 	User         string  `json:"User" gorm:"column:User;size:1000;comment:充值用户User"` //不要id 还需要转换
 	UserTime     string  `json:"UserTime" gorm:"column:UserTime;size:1000;comment:充值用户时间戳数组 1,2,3,4,5"`
+	UseTime      int64   `json:"UseTime" gorm:"column:UseTime;default:0;comment:使用时间戳"`
 	InviteUser   string  `json:"InviteUser" gorm:"column:InviteUser;size:1000;comment:邀请人用户名"`
 	EndTime      int64   `json:"EndTime" gorm:"column:EndTime;comment:最后可用日期戳"` //9999999999为无限制,如果是时间戳,就有限制了
 }

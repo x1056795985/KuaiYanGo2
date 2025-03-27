@@ -322,7 +322,7 @@ type DB_Ka_精简 struct {
 	UserClassName string  `json:"UserClassName"`
 	Num           int     `json:"Num" gorm:"column:Num;comment:可以充值次数"`
 	MaxOnline     int     `json:"MaxOnline" gorm:"column:MaxOnline;comment:最大在线数"` //修改可以修改App最大在线数量
-	RegisterTime  int     `json:"RegisterTime" `                                   //制卡时间
+	RegisterTime  int64   `json:"RegisterTime" `                                   //制卡时间
 }
 
 type 结构请求_库存制卡 struct {

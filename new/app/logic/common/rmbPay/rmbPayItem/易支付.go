@@ -97,7 +97,7 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	values.Set("notify_url", 参数.Y异步回调地址)
 	values.Set("out_trade_no", 参数.PayOrder)
 	values.Set("pid", 局_支付配置.Y易支付商户ID)
-	values.Set("return_url", rmbPay.L_rmbPay.Z支付订单回调关键字转换(参数.Y异步回调地址, 参数))
+	values.Set("return_url", rmbPay.L_rmbPay.Z支付订单回调关键字转换(局_支付配置.Y易支付同步回调url, 参数))
 	values.Set("type", 局_支付配置.Y易支付支付方式)
 	values.Set("sitename", 参数.S商品名称)
 
@@ -147,6 +147,7 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	//<script>window.location.href='/Pay/console?trade_no=Y2025032602391019226';</script>
 	//<script>window.location.href='/Pay/console?trade_no=Y2025032602472053282';</script>
 	//{"code":1,"msg":"","trade_no":"20250326195924890686","payurl":"","qrcode":"https://yz.mmlwo.cn/api/pay/toapp/20250326195924890686","urlscheme":"alipays://platformapi/startapp?appId=20000067\u0026url=https%3A%2F%2Frender.alipay.com%2Fp%2Fs%2Fi%3Fscheme%3Dalipays%253A%252F%252Fplatformapi%252Fstartapp%253FappId%253D20000180%2526url%253Dhttps%25253A%25252F%25252Fyz.mmlwo.cn%25252Fapi%25252Fpay%25252Ftoapp%25252F20250326195924890686","money":"0.02"}
+	//{"success":true,"msg":"","code":1,"trade_no":"499059861254979584","payurl":"https://alipaypage3glj1qtw0xz4.zhifu.fm.it88168.com/pay?orderNo=499059861254979584","qrcode":null,"extend_params":null}
 	//判断是否为json
 	if strings.HasPrefix(局_请求结果.String(), "{") {
 		局_json := gjson.New(局_请求结果.String())
@@ -154,6 +155,7 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 			err = errors.New("支付地址获取失败:" + 局_请求结果.String())
 			return
 		}
+
 		if 局_json.Get("qrcode").String() != "" {
 			response = m.Request{
 				Status:       1,
@@ -170,7 +172,7 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 				PayQRCode:    局_json.Get("qrcode").String(),
 				PayQRCodePNG: rmbPay.L_rmbPay.S生成二维码并转base64(局_json.Get("qrcode").String()),
 			}
-		} else {
+		} else { //二开后的格式太多了,返回给客户自己处理吧
 			response = m.Request{
 				Status:       1,
 				PayURL:       "",

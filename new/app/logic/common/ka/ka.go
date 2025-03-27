@@ -208,7 +208,7 @@ func (j *ka) Ka单卡创建(c *gin.Context, 卡类id int, 制卡人账号 string
 	卡信息切片.KaClassId = info.卡类信息.Id
 	卡信息切片.Status = 1
 	卡信息切片.RegisterUser = 制卡人账号
-	卡信息切片.RegisterTime = int(time.Now().Unix())
+	卡信息切片.RegisterTime = time.Now().Unix()
 	卡信息切片.AdminNote = 管理员备注
 	卡信息切片.AgentNote = 代理备注
 	卡信息切片.VipTime = info.卡类信息.VipTime
@@ -225,6 +225,7 @@ func (j *ka) Ka单卡创建(c *gin.Context, 卡类id int, 制卡人账号 string
 	卡信息切片.NumMax = info.卡类信息.Num
 	卡信息切片.User = ""
 	卡信息切片.UserTime = ""
+	卡信息切片.UseTime = 0
 	卡信息切片.InviteUser = ""
 	卡信息切片.EndTime = 9999999999
 	if 有效期时间戳 != 0 {
@@ -381,6 +382,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		m["Num"] = gorm.Expr("Num + 1")
 		m["User"] = gorm.Expr("CONCAT(User,?)", 充值用户+",")
 		m["UserTime"] = gorm.Expr("CONCAT(UserTime,?)", strconv.Itoa(int(time.Now().Unix()))+",")
+		m["UseTime"] = time.Now().Unix()
 		m["InviteUser"] = gorm.Expr("CONCAT(InviteUser,?)", 推荐人+",") //空推荐人也增加, 这样才能和用户充值顺序对应
 		rowsAffected := tx.Model(DB.DB_Ka{}).
 			Where("Id = ?", info.卡号详情.Id).Updates(&m).RowsAffected
@@ -774,6 +776,7 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 				"Num":        0,
 				"InviteUser": "",
 				"UserTime":   "",
+				"UseTime":    0,
 				"AdminNote":  info.卡号详情.AdminNote + "已被追回,历史充值用户:" + info.卡号详情.User + ",推荐人用户:" + info.卡号详情.InviteUser,
 			}).Error
 		return err

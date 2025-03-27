@@ -116,7 +116,6 @@ type 结构请求_GetKaList struct {
 }
 
 // GetKaList
-// 获取用户信息列表
 func (a *Api) GetKaList(c *gin.Context) {
 	var 请求 结构请求_GetKaList
 	//{"AppId":2,"Type":2,"Size":10,"Page":1,"Status":1,"keywords":"1"}
@@ -425,7 +424,7 @@ type DB_Ka_精简 struct {
 	UserClassName string  `json:"UserClassName"`
 	Num           int     `json:"Num" gorm:"column:Num;comment:可以充值次数"`
 	MaxOnline     int     `json:"MaxOnline" gorm:"column:MaxOnline;comment:最大在线数"` //修改可以修改App最大在线数量
-	RegisterTime  int     `json:"RegisterTime" `                                   //制卡时间
+	RegisterTime  int64   `json:"RegisterTime" `                                   //制卡时间
 }
 
 // 批量修改状态

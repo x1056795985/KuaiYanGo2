@@ -100,4 +100,9 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("TaskPoolData/GetList", 局_TaskPoolData.GetList)
 		adminRouter.POST("TaskPoolData/Delete", 局_TaskPoolData.Delete)
 	}
+	//代理账号
+	局_AgentUser := controller.NewAgentUserController()
+	{
+		adminRouter.POST("Agent/GetKaSalesStatistics", 局_AgentUser.GetKaSalesStatistics)
+	}
 }

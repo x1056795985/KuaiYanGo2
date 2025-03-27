@@ -13,4 +13,5 @@ type Test struct {
 	Taskpool         int `json:"taskpool_类型"`
 	User             int `json:"user"`
 	Cron             int `json:"Cron"`
+	KaUseTime        int `json:"KaUseTime"`
 }

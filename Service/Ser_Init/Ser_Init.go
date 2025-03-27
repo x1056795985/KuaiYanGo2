@@ -324,6 +324,16 @@ func InitDbTable数据(c *gin.Context) {
 		局_例子记录.Cron = 局_例子版本
 	}
 	//-============================================结束==========================
+	//检查 卡号列表,执行修改旧卡的卡号使用时间
+	局_例子版本 = 1
+	if 局_例子记录.KaUseTime < 局_例子版本 {
+		局_sql := "UPDATE `db_ka`  SET `UseTime` = CAST(LEFT(`UserTime`, 10) AS UNSIGNED)  WHERE `UserTime` IS NOT NULL AND `UserTime` != '' and UseTime=0"
+
+		global.GVA_LOG.Info("兼容执行修改旧卡的卡号时间,执行数量:" + strconv.Itoa(int(global.GVA_DB.Exec(局_sql).RowsAffected)))
+
+		局_例子记录.KaUseTime = 局_例子版本
+	}
+
 	err := setting.Z例子写出记录(&局_例子记录)
 	if err != nil {
 		return
