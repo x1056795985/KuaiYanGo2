@@ -1,6 +1,7 @@
 package Ka
 
 import (
+	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
@@ -44,7 +45,11 @@ func (a *Api) GetInfo(c *gin.Context) {
 		return
 	}
 	局_在线信息 := 局_接口.(DB.DB_LinksToken)
-	if DB_Ka.RegisterUser != 局_在线信息.User {
+
+	局_制卡人数组 := Ser_Agent.Q取下级代理数组_user([]int{c.GetInt("Uid")})
+	局_制卡人数组 = append(局_制卡人数组, 局_在线信息.User)
+
+	if !S数组_是否存在(局_制卡人数组, DB_Ka.RegisterUser) {
 		response.FailWithMessage("权限不足,只能读取自己制卡信息", c)
 		return
 	}
@@ -68,6 +73,7 @@ type 结构请求_GetKaList struct {
 	Type         int      `json:"Type"`         // 关键字类型  1 id 2 用户名 3绑定信息 4 动态标签
 	Keywords     string   `json:"Keywords"`     // 关键字
 	Order        int      `json:"Order"`        // 0 倒序 1 正序
+	Child        int      `json:"Child"`        // 0 不含子级 1 含子级
 }
 
 // GetKaList
@@ -94,8 +100,12 @@ func (a *Api) GetKaList(c *gin.Context) {
 
 	var DB_Ka []DB.DB_Ka
 	var 总数 int64
+	var 局_制卡人数组 = []string{局_在线信息.User}
+	if 请求.Child == 1 {
+		局_制卡人数组 = append(Ser_Agent.Q取下级代理数组_user([]int{c.GetInt("Uid")}), 局_在线信息.User)
+	}
 
-	局_DB := global.GVA_DB.Model(DB.DB_Ka{}).Where("RegisterUser=?", 局_在线信息.User) //直接限制只允许读取制卡人为自己的卡号
+	局_DB := global.GVA_DB.Model(DB.DB_Ka{}).Where("RegisterUser IN ?", 局_制卡人数组) //直接限制只允许读取制卡人为自己的卡号
 	if 请求.AppId != 0 {
 		局_DB.Where("AppId = ?", 请求.AppId)
 	}
@@ -168,7 +178,7 @@ func (a *Api) GetKaList(c *gin.Context) {
 		}
 	}
 
-	response.OkWithDetailed(结构响应_GetKaList{DB_Ka, 总数, AppType, UserClass, KaClass2}, "获取成功", c)
+	response.OkWithDetailed(结构响应_GetKaList{DB_Ka, 总数, AppType, UserClass, KaClass2, 局_在线信息.User}, "获取成功", c)
 	return
 }
 
@@ -178,6 +188,7 @@ type 结构响应_GetKaList struct {
 	AppType   int                 `json:"AppType"`   //
 	UserClass map[int]string      `json:"UserClass"` //
 	KaClass   map[int]结构响应_卡类名称价格 `json:"KaClass"`   //
+	User      string              `json:"User"`
 }
 type 结构响应_卡类名称价格 struct {
 	KaClassName string  `json:"KaClassName"` //
@@ -206,6 +217,12 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 	}
 	if !Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_卡号追回) {
 		response.FailWithMessage("权限不足,无卡号追回权限,请联系上级授权", c)
+		return
+	}
+	//限制制卡人,只能操作自己的卡号
+	//读取该卡号的制卡人信息
+	if !Ser_Ka.Id检测制卡人(请求.Id, c.GetString("User")) {
+		response.FailWithMessage("只能操作制卡人为本人的卡号", c)
 		return
 	}
 
@@ -402,6 +419,12 @@ func (a *Api) Set修改状态(c *gin.Context) {
 		response.FailWithMessage(局_权限文本, c)
 		return
 	}
+	//限制制卡人,只能操作自己的卡号
+	//读取该卡号的制卡人信息
+	if !Ser_Ka.Id检测制卡人(请求.Id, c.GetString("User")) {
+		response.FailWithMessage("只能操作制卡人为本人的卡号", c)
+		return
+	}
 
 	err = Ser_Ka.Ka修改状态_同步卡号模式软件用户(请求.Id, 请求.Status)
 
@@ -442,6 +465,13 @@ func (a *Api) G更换卡号(c *gin.Context) {
 		response.FailWithMessage("无卡号更换功能权限,请联系上级授权", c)
 		return
 	}
+	//限制制卡人,只能操作自己的卡号
+	//读取该卡号的制卡人信息
+	if !Ser_Ka.Id检测制卡人([]int{请求.Id}, c.GetString("User")) {
+		response.FailWithMessage("只能操作制卡人为本人的卡号", c)
+		return
+	}
+
 	局_旧卡号详情, _ := Ser_Ka.Id取详情(请求.Id)
 	err = Ser_Ka.Ka更换卡号(请求.Id, c.GetInt("Uid"), c.ClientIP())
 
@@ -476,6 +506,13 @@ func (a *Api) Set修改代理备注(c *gin.Context) {
 		response.FailWithMessage("Id数组为空", c)
 		return
 	}
+	//限制制卡人,只能操作自己的卡号
+	//读取该卡号的制卡人信息
+	if !Ser_Ka.Id检测制卡人(请求.Id, c.GetString("User")) {
+		response.FailWithMessage("只能操作制卡人为本人的卡号", c)
+		return
+	}
+
 	局_接口, ok := c.Get("局_在线信息")
 	if !ok {
 		response.FailWithMessage("读取缓存在线信息失败", c)
@@ -544,7 +581,6 @@ func (a *Api) K卡号充值(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-
 	response.OkWithMessage("充值成功", c)
 	return
 }

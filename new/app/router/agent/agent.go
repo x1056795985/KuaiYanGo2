@@ -39,4 +39,10 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 	{
 		agentRouter.POST("UserClass/GetIdNameList", 局_UserClass.GetIdNameList) // 获取列表
 	}
+
+	//代理账号
+	局_AgentUser := controller.NewAgentUserController()
+	{
+		agentRouter.POST("Agent/GetKaSalesStatistics", 局_AgentUser.GetKaSalesStatistics)
+	}
 }

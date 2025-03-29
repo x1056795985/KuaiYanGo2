@@ -471,10 +471,8 @@ func Ka修改状态(id []int, status int) error {
 // 卡号模式关联 软件用户,同时冻结解冻,用户模式不关联  冻结会注销在线
 func Ka修改状态_同步卡号模式软件用户(id []int, status int) error {
 	局_db := global.GVA_DB
-	//获取所有卡号id对应的应用id
-	局_sql := `
-SELECT DISTINCT AppId  FROM db_App_Info  WHERE AppId IN (SELECT DISTINCT AppId  FROM db_Ka  WHERE Id IN ?) AND AppType IN (3,4)
-`
+	局_sql := `SELECT DISTINCT AppId  FROM db_App_Info  WHERE AppId IN (SELECT DISTINCT AppId  FROM db_Ka  WHERE Id IN ?) AND AppType IN (3,4)`
+
 	var 局数组_卡号Appid []int
 	局_db = 局_db.Raw(局_sql, id).Scan(&局数组_卡号Appid)
 	//如果卡号id数组内没有卡号类型应用id,直接执行就可以,
@@ -623,6 +621,15 @@ func Id取制卡人(Id int) string {
 	var 制卡人 string
 	global.GVA_DB.Model(DB.DB_Ka{}).Select("RegisterUser").Where("Id=?", Id).First(&制卡人)
 	return 制卡人
+}
+func Id检测制卡人(Id []int, 制卡人 string) bool {
+	var 实际制卡人 []string
+	global.GVA_DB.Model(DB.DB_Ka{}).Distinct("RegisterUser").Where("Id IN ?", Id).Find(&制卡人)
+	if len(制卡人) == 1 && 制卡人 == 实际制卡人[0] {
+		return true
+	}
+
+	return false
 }
 func Id取卡号(Id int) string {
 	var 卡号 string

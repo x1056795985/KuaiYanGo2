@@ -215,6 +215,15 @@ func Q取下级代理数组(上级ID []int) []int {
 	global.GVA_DB.Model(DB.Db_Agent_Level{}).Select("Uid").Where("UPAgentId IN ?", 上级ID).Where("Level=1").Find(&下级代理)
 	return 下级代理
 }
+
+func Q取下级代理数组_user(上级ID []int) []string {
+	var 局_制卡人数组 = []string{}
+	局_数组_uid := Q取下级代理数组(上级ID)
+	global.GVA_DB.Model(DB.DB_User{}).Select("User").Where("Id IN ?", 局_数组_uid).Find(&局_制卡人数组)
+	return 局_制卡人数组
+
+}
+
 func Q取下级代理数组含子级(上级ID []int) []int {
 	var 下级代理 = []int{}
 	global.GVA_DB.Model(DB.Db_Agent_Level{}).Select("Uid").Where("UPAgentId IN ?", 上级ID).Find(&下级代理)
@@ -269,7 +278,6 @@ func Q取全部代理功能ID_MAP() map[int]string {
 	局_map[DB.D代理功能_冻结软件用户] = "冻结软件用户"
 	局_map[DB.D代理功能_解冻软件用户] = "解冻软件用户"
 	局_map[DB.D代理功能_修改用户密码] = "修改用户密码"
-
 	return 局_map
 }
 
