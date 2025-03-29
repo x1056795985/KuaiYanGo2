@@ -7,6 +7,7 @@ import (
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
+	App服务 "server/Service/Ser_AppInfo"
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
@@ -64,6 +65,7 @@ func S刷新数据库定时任务(主动 bool) error {
 		infoArr = append(infoArr, db.DB_Cron{Id: -2, Status: 1, IsLog: 2, Type: -2, Name: "在线列表定时删除已过期", Cron: "0 */1 * * * *"})   //每分钟执行一次
 		infoArr = append(infoArr, db.DB_Cron{Id: -3, Status: 1, IsLog: 2, Type: -3, Name: "任务池Task数据删除过期", Cron: "0 */1 * * * *"}) //每分钟执行一次
 		infoArr = append(infoArr, db.DB_Cron{Id: -4, Status: 1, IsLog: 2, Type: -4, Name: "定时关闭待支付订单", Cron: "0 */1 * * * *"})     //每分钟执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -5, Status: 1, IsLog: 2, Type: -5, Name: "删除已过期唯一积分记录", Cron: "0 0 0 * * ?"})     //每天0点执行一次
 
 		hashStr := ""
 		for 索引, _ := range infoArr {
@@ -117,6 +119,9 @@ func T通用任务执行函数2(时间戳 int64, R任务数据 db.DB_Cron) (stri
 		return "", nil
 	case -4: //关闭超时订单
 		err = L_pay.G关闭超时订单()
+		return "", err
+	case -5: //删除已过期唯一积分记录
+		D定时任务_删除已过期唯一积分记录(&c)
 		return "", err
 	case 1: //1,http请求,2公共js函数,3 SQL 4 shell"`
 		返回, err = D定时任务_http请求(时间戳, R任务数据)
@@ -236,4 +241,27 @@ func D定时任务_执行公共函数(时间戳 int64, R任务数据 db.DB_Cron)
 	返回 = fmt.Sprintf("%v", 局_待执行js函数名(局_云函数型参数)) //不管是什么类型,直接转文本
 
 	return 返回, nil
+}
+func D定时任务_删除已过期唯一积分记录(c *gin.Context) {
+	if global.GVA_DB == nil {
+		return
+	}
+
+	tx := *global.GVA_DB
+	局_全部应用 := App服务.AppInfo取map列表Int()
+
+	for key, _ := range 局_全部应用 {
+		if key <= 10000 { //过滤掉其他的
+			continue
+		}
+		s := service.NewUniqueNumLog(c, &tx, key)
+		局_数量, err := s.Delete已过期()
+		if err != nil {
+			global.GVA_LOG.Error("删除已过期唯一积分记录失败:" + err.Error())
+		}
+		if 局_数量 > 0 {
+			global.GVA_LOG.Info("删除已过期唯一积分记录:" + strconv.Itoa(int(局_数量)))
+		}
+	}
+
 }

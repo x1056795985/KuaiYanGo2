@@ -13,6 +13,7 @@ import (
 	"server/api/WebApi"
 	"server/api/middleware"
 	"server/global"
+	"server/new/app/logic/common/appInfo"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
 	"server/new/app/router/webApi2"
@@ -351,7 +352,7 @@ func (a *Api) NewApp信息(c *gin.Context) {
 		return
 	}
 	if 请求.CopyAppId == 0 {
-		err = Ser_AppInfo.NewApp信息(请求.AppId, 请求.AppType, 请求.AppName)
+		err = appInfo.L_appInfo.NewApp信息(c, 请求.AppId, 请求.AppType, 请求.AppName)
 	} else {
 		err = Ser_AppInfo.CopyApp信息(请求.AppId, 请求.AppType, 请求.AppName, 请求.CopyAppId)
 	}

@@ -22,9 +22,11 @@ import (
 	"server/api/Admin/App"
 	"server/config"
 	"server/global"
+	"server/new/app/logic/common/appInfo"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
+	DB2 "server/new/app/models/db"
 	newDB "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -168,14 +170,14 @@ func InitDbTable数据(c *gin.Context) {
 	if 局_例子记录.DbAppinfo < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_AppInfo{}).Count(&局_数量)
 		if 局_数量 == 0 {
-			_ = Ser_AppInfo.NewApp信息(10001, 1, "演示对接账密限时Rsa交换密匙")
+			_ = appInfo.L_appInfo.NewApp信息(c, 10001, 1, "演示对接账密限时Rsa交换密匙")
 			Ser_AppUser.New用户信息(10001, 1, "测试绑定", 1, time.Now().Unix(), 11.02, 0, "", 0)
 			卡类ID, _ := Ser_KaClass.KaClass创建New(10001, "天卡", "Y30", 2592000, 2592000, 0.01, 1.01, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10001, "月卡", "Y30", 2592000, 2592000, 0.01, 1.01, 100, 100, 0, 1, 25, 1, 1, 1, 1)
 			卡信息, _ := Ser_Ka.Ka单卡创建(卡类ID, Ser_Admin.Id取User(1), "演示创建", "", 0)
 			卡信息, _ = Ser_Ka.Ka单卡创建(卡类ID, Ser_Admin.Id取User(1), "演示创建可追回卡号", "", 0)
 			ka.L_ka.K卡号充值_事务(c, 10001, 卡信息.Name, "test0001", "")
-			_ = Ser_AppInfo.NewApp信息(10002, 3, "演示对接卡号限时RSA通讯")
+			_ = appInfo.L_appInfo.NewApp信息(c, 10002, 3, "演示对接卡号限时RSA通讯")
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10002, "天卡", "Y01", 86400, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10002, "周卡", "Y01", 604800, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 		}
@@ -783,4 +785,24 @@ func 数据库兼容旧版本(c *gin.Context) {
 	//2025/01/05  修改webAppid=3 的 uid 为id 方便业务判断在线逻辑  任务池用的人比较少 基本无影响
 	//err = db.Model(DB.DB_LinksToken{}).Where("LoginAppid = ?", 3).Where("Uid = ?", 0).Update("Uid", gorm.Expr("id")).Error
 	//fmt.Println(err.Error())
+
+	//2025/03/29  UniqueNumLog 缺少唯一减少积分表,自动创建所以需要兼容处理
+	局_所有应用信息, err = service.NewAppInfo(c, &db).Infos(map[string]interface{}{})
+	for _, v := range 局_所有应用信息 {
+		//检查是否存在表 不存在则创建
+		// 检查是否存在表 不存在则创建
+		migrator := db.Migrator()
+		tableName := DB2.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(v.AppId)
+		// 检查表是否存在
+		if migrator.HasTable(tableName) {
+			continue //如果存在则跳到循环尾
+		}
+		// 创建唯一积分记录表
+		if err = db.Set("gorm:table_options", "ENGINE=InnoDB").
+			Table(DB2.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(v.AppId)).
+			AutoMigrate(&DB2.DB_UniqueNumLog{}); err != nil {
+			fmt.Println("积分记录表创建失败: ", err.Error())
+		}
+	}
+
 }

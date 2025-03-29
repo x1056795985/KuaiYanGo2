@@ -26,6 +26,7 @@ import (
 	"server/Service/Ser_UserConfig"
 	"server/api/UserApi/response"
 	"server/global"
+	"server/new/app/logic/common/appUser"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/publicData"
@@ -422,8 +423,7 @@ func UserApi_用户减少积分(c *gin.Context) {
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"UserReduceMoney","VipNumber":1.3,"Log":"看你长得帅,扣点钱"}
-
+	//{"Api":"UserReduceMoney","VipNumber":1.3,"Log":"看你长得帅,扣点钱","UniqueStr":"",UniqueTime:0}
 	var 局_AppUser DB.DB_AppUser
 	局_AppUser, ok := Ser_AppUser.Uid取详情(局_在线信息.LoginAppid, 局_在线信息.Uid)
 	if !ok {
@@ -447,9 +447,20 @@ func UserApi_用户减少积分(c *gin.Context) {
 		return
 	}
 
-	err := Ser_AppUser.Id积分增减(AppInfo.AppId, 局_AppUser.Id, 局_增减值, false)
+	局_唯一标志 := string(请求json.GetStringBytes("UniqueStr"))
+
+	err := appUser.L_appUser.Uid积分减少(c, AppInfo.AppId, 局_AppUser.Uid, 局_增减值, 局_唯一标志, 请求json.GetInt64("UniqueTime"))
+	if err != nil && strings.Contains(err.Error(), "唯一标识") {
+		response.X响应状态消息(c, response.Status_唯一标识重复, err.Error())
+		return
+	}
+	if err != nil && strings.Contains(err.Error(), "积分不足") { //基本就是积分不足
+		response.X响应状态消息(c, response.Status_积分不足, err.Error())
+		return
+	}
+
 	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, err.Error()) //基本就是积分不足
+		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 		return
 	}
 
@@ -463,7 +474,7 @@ func UserApi_用户减少积分(c *gin.Context) {
 	局_增减值, _ = 局_增减值D.Mul(decimal.NewFromFloat(-1)).Float64() //乘-1 变成负数
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"VipNumber": 局_AppUser.VipNumber})
-	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("%s|剩余%v", 请求json.GetStringBytes("Log"), 局_AppUser.VipNumber), 局_增减值, AppInfo.AppId, 1)
+	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("%s|≈%v", 请求json.GetStringBytes("Log"), 局_AppUser.VipNumber), 局_增减值, AppInfo.AppId, 1)
 	return
 }
 

@@ -29,6 +29,8 @@ const (
 	Status_同时在线超过最大值    = 208
 	Status_未登录          = 210
 	Status_黑名单信息        = 211 //ip  或绑定信息
+	Status_唯一标识重复       = 212 //积分唯一扣点时出现
+	Status_积分不足         = 213 //积分不足
 )
 
 var Status值键 = make(map[int]string)
@@ -57,5 +59,7 @@ func init() {
 	Status值键[Status_已冻结无法登录] = "已冻结无法登录"
 	Status值键[Status_同时在线超过最大值] = "同时在线超过最大值,请退出其他登录."
 	Status值键[Status_未登录] = "未登录,请先操作登录"
+	Status值键[Status_唯一标识重复] = "唯一标识重复"
+	Status值键[Status_积分不足] = "积分不足"
 
 }
