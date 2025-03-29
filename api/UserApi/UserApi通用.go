@@ -11,7 +11,6 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
 	"server/Service/Captcha"
-	"server/Service/Ser_Admin"
 	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
@@ -186,7 +185,14 @@ func UserApi_用户登录(c *gin.Context) {
 				return
 			}
 		}
-
+		局_归属代理uid := 0
+		if AppInfo.AppType == 3 || AppInfo.AppType == 4 {
+			//账号模式,制卡人就是归属代理 如果是管理员制造的卡, 就使用代理标志为归属uid
+			局_归属代理uid = Ser_User.User用户名取id(局_卡.RegisterUser)
+			if 局_归属代理uid == 0 {
+				局_归属代理uid = 局_在线信息.AgentUid
+			}
+		}
 		//没有这个用户,应该是第一次登录应用,添加进去
 		switch AppInfo.AppType {
 		case 1:
@@ -194,12 +200,12 @@ func UserApi_用户登录(c *gin.Context) {
 		case 2: //账号限时
 			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), AppInfo.MaxOnline, 0, 0, 0, "", 局_在线信息.AgentUid)
 		case 3:
-			//卡号模式如果没有置入代理标识,制卡人就是归属代理
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, S三元(局_在线信息.AgentUid == 0, Ser_User.User用户名取id(局_卡.RegisterUser), 局_在线信息.AgentUid))
+			//卡号模式,制卡人就是归属代理 如果是管理员制造的卡, 就使用代理标志为归属uid
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_归属代理uid)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		case 4:
-			//卡号模式如果没有置入代理标识,制卡人就是归属代理
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, S三元(局_在线信息.AgentUid == 0, Ser_User.User用户名取id(局_卡.RegisterUser), 局_在线信息.AgentUid))
+			//卡号模式,制卡人就是归属代理
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_归属代理uid)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		default:
 			//???应该不会到这里
@@ -343,6 +349,10 @@ func UserApi_用户减少余额(c *gin.Context) {
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"UserReduceMoney","Money":1.01,"Log":"看你长得帅,减些钱","AgentId":10,"AgentMoney":0,"AgentMoneyLog":"代理分成"}
 
+	if 请求json.GetInt("AgentId") > 0 {
+		response.X响应状态消息(c, response.Status_操作失败, "服务端1.0.363+该功能已删除,如有需要请使用更安全的apiHook实现")
+		return
+	}
 	var 局_User DB.DB_User
 	局_User, ok := Ser_User.Id取详情(局_在线信息.Uid)
 
@@ -369,52 +379,6 @@ func UserApi_用户减少余额(c *gin.Context) {
 
 	go Ser_Log.Log_写余额日志(局_User.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("Log"), 新余额), Float64取负值(局_增减值))
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Money": 新余额})
-
-	// 用户减少成功,开始判断代理增加  不需要让用户知道,代理是否有分成,所以上面直接返回就行
-	局_代理用户Id := 请求json.GetInt("AgentId")
-	局_代理分成金额Id := 请求json.GetFloat64("AgentMoney")
-	if 局_代理用户Id == 0 || 局_代理分成金额Id <= 0 {
-		return
-	}
-
-	if 局_代理分成金额Id > 请求json.GetFloat64("Money") { //判断代理分成金额是否比用户减少余额还高
-		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_User.User, c.ClientIP(), fmt.Sprintf("代理%v分成值(%v)大于用户减少余额(%v),可能非法用户尝试篡改应用数据", 局_代理用户Id, 局_代理分成金额Id, 请求json.GetFloat64("Money")))
-		return
-	}
-
-	// 如果小于于0 就是管理员id给管理员分成,大于0就是用户id
-	if 局_代理用户Id < 0 {
-		局_代理用户Id = -局_代理用户Id
-		局_管理员信息, ok2 := Ser_Admin.Id取详情(局_代理用户Id)
-		if ok2 == false {
-			// 管理不存在就不用风控记录了,没什么用
-			return
-		}
-		管理员新余额, 管理员err := Ser_Admin.Id余额增减(局_管理员信息.Id, 局_代理分成金额Id, true)
-		if 管理员err == nil {
-			go Ser_Log.Log_写余额日志(局_管理员信息.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("AgentMoneyLog"), 管理员新余额), 局_代理分成金额Id)
-		} else {
-			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", AppInfo.AppName, 局_在线信息.AppVer, fmt.Sprintf("给管理员分成增加余额时失败失败:%v,%v", 管理员err.Error(), c.GetString("局_json明文")), c.ClientIP())
-		}
-	} else {
-		局_代理信息, ok2 := Ser_User.Id取详情(局_代理用户Id)
-		if ok2 == false {
-			// 用户不存在就不用风控记录了,没什么用
-			return
-		}
-		if 局_代理信息.UPAgentId == 0 { //检测代理是否为普通用户,没有上级代理必然是普通用户,如果是普通用户触发风控
-			// 如果想检测是否为1级代理,可以改成 局_代理信息.UPAgentId >= 0  1级代理的上级代理,必然是管理员负数
-			go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_User.User, c.ClientIP(), fmt.Sprintf("余额减少api,形参分成代理Id(%v)非代理id,可能非法用户尝试篡改应用数据", 局_代理用户Id))
-		} else {
-			代理新余额, 代理err := Ser_User.Id余额增减(局_代理信息.Id, 局_代理分成金额Id, true)
-			if 代理err == nil {
-				go Ser_Log.Log_写余额日志(局_代理信息.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("AgentMoneyLog"), 代理新余额), 局_代理分成金额Id)
-			} else {
-				go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", AppInfo.AppName, 局_在线信息.AppVer, fmt.Sprintf("给代理分成增加余额时失败失败:%v,%v", 代理err.Error(), c.GetString("局_json明文")), c.ClientIP())
-			}
-		}
-	}
-
 }
 func UserApi_用户减少点数(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
@@ -472,6 +436,12 @@ func UserApi_用户减少积分(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "不能为小于等于0")
 		return
 	}
+
+	if 请求json.GetInt("AgentId") > 0 {
+		response.X响应状态消息(c, response.Status_操作失败, "服务端1.0.363+该功能已删除,如有需要请使用更安全的apiHook实现")
+		return
+	}
+
 	if 局_AppUser.VipNumber < 局_增减值 {
 		response.X响应状态消息(c, response.Status_操作失败, "积分不足")
 		return
@@ -494,51 +464,6 @@ func UserApi_用户减少积分(c *gin.Context) {
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"VipNumber": 局_AppUser.VipNumber})
 	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("%s|剩余%v", 请求json.GetStringBytes("Log"), 局_AppUser.VipNumber), 局_增减值, AppInfo.AppId, 1)
-
-	// 用户减少成功,开始判断代理增加  不需要让用户知道,代理是否有分成,所以上面直接返回就行
-	局_代理用户Id := 请求json.GetInt("AgentId")
-	局_代理分成金额Id := 请求json.GetFloat64("AgentMoney")
-	if 局_代理用户Id == 0 || 局_代理分成金额Id <= 0 {
-		return
-	}
-
-	if 局_代理分成金额Id > 请求json.GetFloat64("Money") { //判断代理分成金额是否比用户减少余额还高
-		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_在线信息.User, c.ClientIP(), fmt.Sprintf("代理%v分成值(%v)大于用户减少余额(%v),可能非法用户尝试篡改应用数据", 局_代理用户Id, 局_代理分成金额Id, 请求json.GetFloat64("Money")))
-		return
-	}
-	// 如果小于于0 就是管理员id给管理员分成,大于0就是用户id
-	if 局_代理用户Id < 0 {
-		局_代理用户Id = -局_代理用户Id
-		局_管理员信息, ok2 := Ser_Admin.Id取详情(局_代理用户Id)
-		if ok2 == false {
-			// 管理不存在就不用风控记录了,没什么用
-			return
-		}
-		管理员新余额, 管理员err := Ser_Admin.Id余额增减(局_管理员信息.Id, 局_代理分成金额Id, true)
-		if 管理员err == nil {
-			go Ser_Log.Log_写余额日志(局_管理员信息.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("AgentMoneyLog"), 管理员新余额), 局_代理分成金额Id)
-		} else {
-			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", AppInfo.AppName, 局_在线信息.AppVer, fmt.Sprintf("给管理员分成增加余额时失败失败:%v,%v", 管理员err.Error(), c.GetString("局_json明文")), c.ClientIP())
-		}
-	} else {
-		局_代理信息, ok2 := Ser_User.Id取详情(局_代理用户Id)
-		if ok2 == false {
-			// 用户不存在就不用风控记录了,没什么用
-			return
-		}
-		if 局_代理信息.UPAgentId == 0 { //检测代理是否为普通用户,没有上级代理必然是普通用户,如果是普通用户触发风控
-			// 如果想检测是否为1级代理,可以改成 局_代理信息.UPAgentId >= 0  1级代理的上级代理,必然是管理员负数
-			go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_在线信息.User, c.ClientIP(), fmt.Sprintf("积分减少api,形参分成代理Id(%v)非代理id,可能非法用户尝试篡改应用数据", 局_代理用户Id))
-		} else {
-			代理新余额, 代理err := Ser_User.Id余额增减(局_代理信息.Id, 局_代理分成金额Id, true)
-			if 代理err == nil {
-				go Ser_Log.Log_写余额日志(局_代理信息.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", 请求json.GetStringBytes("AgentMoneyLog"), 代理新余额), 局_代理分成金额Id)
-			} else {
-				go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", AppInfo.AppName, 局_在线信息.AppVer, fmt.Sprintf("给代理分成增加余额时失败失败:%v,%v", 代理err.Error(), c.GetString("局_json明文")), c.ClientIP())
-			}
-		}
-	}
-
 	return
 }
 

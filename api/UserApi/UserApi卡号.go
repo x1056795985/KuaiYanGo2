@@ -9,7 +9,6 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
-	"server/Service/Ser_User"
 	"server/api/UserApi/response"
 	"server/new/app/logic/common/blacklist"
 	DB "server/structs/db"
@@ -56,12 +55,12 @@ func UserApi_取注册送卡(c *gin.Context) {
 	//没有这个用户,应该是第一次登录应用,添加进去
 	switch AppInfo.AppType {
 	case 3:
-		//卡号模式如果没有置入代理标识,制卡人就是归属代理
-		err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, S三元(局_在线信息.AgentUid == 0, Ser_User.User用户名取id(局_卡.RegisterUser), 局_在线信息.AgentUid))
+		//注册送卡一定是系统制卡,不会有制卡人 只能为在线代理标志uid
+		err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_在线信息.AgentUid)
 		_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 	case 4:
-		//卡号模式如果没有置入代理标识,制卡人就是归属代理
-		err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, S三元(局_在线信息.AgentUid == 0, Ser_User.User用户名取id(局_卡.RegisterUser), 局_在线信息.AgentUid))
+		//注册送卡一定是系统制卡,不会有制卡人 只能为在线代理标志uid
+		err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, AppInfo.MaxOnline, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_在线信息.AgentUid)
 		_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 	default:
 		//???应该不会到这里
