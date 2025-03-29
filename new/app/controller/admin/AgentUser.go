@@ -128,11 +128,13 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 	for _, item制卡人User := range 局_制卡人列表 {
 		局_卡类map := make(map[int]int) // [!code ++]
 		for i := range info.DB_Ka {
-			//卡类id 统计数量
-			if _, ok := 局_卡类map[info.DB_Ka[i].KaClassId]; ok {
-				局_卡类map[info.DB_Ka[i].KaClassId]++
-			} else {
-				局_卡类map[info.DB_Ka[i].KaClassId] = 1
+			if info.DB_Ka[i].RegisterUser == item制卡人User {
+				//卡类id 统计数量
+				if _, ok := 局_卡类map[info.DB_Ka[i].KaClassId]; ok {
+					局_卡类map[info.DB_Ka[i].KaClassId]++
+				} else {
+					局_卡类map[info.DB_Ka[i].KaClassId] = 1
+				}
 			}
 		}
 		局_快速文本对象.AppendString("\n========[代理]:" + item制卡人User + "========")
