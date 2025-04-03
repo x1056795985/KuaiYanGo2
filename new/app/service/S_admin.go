@@ -6,38 +6,36 @@ import (
 	"gorm.io/gorm"
 	"server/new/app/models/request"
 	DB "server/structs/db"
-	"time"
 )
 
-type LogMoney struct {
+type Admin struct {
 	db *gorm.DB
 	c  *gin.Context
 }
 
-// NewLogMoney 创建 LogMoney 实例
-func NewLogMoney(c *gin.Context, db *gorm.DB) *LogMoney {
-	return &LogMoney{
+// NewAdmin 创建 Admin 实例
+func NewAdmin(c *gin.Context, db *gorm.DB) *Admin {
+	return &Admin{
 		db: db,
 		c:  c,
 	}
 }
 
 // 增
-func (s *LogMoney) Create(info DB.DB_LogMoney) (row int64, err error) {
+func (s *Admin) Create(info DB.DB_Admin) (row int64, err error) {
 	//创建会自动重新赋值info.Id为新插入的数据id
-	info.Time= time.Now().Unix()
-	tx := s.db.Model(DB.DB_LogMoney{}).Create(&info)
+	tx := s.db.Model(DB.DB_Admin{}).Create(&info)
 	return tx.RowsAffected, tx.Error
 }
 
 // 删除 支持 数组,和id
-func (s *LogMoney) Delete(Id interface{}) (影响行数 int64, error error) {
+func (s *Admin) Delete(Id interface{}) (影响行数 int64, error error) {
 	var tx2 *gorm.DB
 	switch k := Id.(type) {
 	case int:
-		tx2 = s.db.Model(DB.DB_LogMoney{}).Where("Id = ?", k).Delete("")
+		tx2 = s.db.Model(DB.DB_Admin{}).Where("Id = ?", k).Delete("")
 	case []int:
-		tx2 = s.db.Model(DB.DB_LogMoney{}).Where("Id IN ?", k).Delete("")
+		tx2 = s.db.Model(DB.DB_Admin{}).Where("Id IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -45,7 +43,7 @@ func (s *LogMoney) Delete(Id interface{}) (影响行数 int64, error error) {
 }
 
 // 获取列表
-func (s *LogMoney) GetList(请求 request.List, Status int) (int64, []DB.DB_LogMoney, error) {
+func (s *Admin) GetList(请求 request.List, Status int) (int64, []DB.DB_Admin, error) {
 	tx := s.db
 	if Status > 0 {
 		tx = tx.Where("Status = ?", Status)
@@ -73,15 +71,33 @@ func (s *LogMoney) GetList(请求 request.List, Status int) (int64, []DB.DB_LogM
 	case 2:
 		tx = tx.Order("Id DESC")
 	}
-	var 局_数组 []DB.DB_LogMoney
+	var 局_数组 []DB.DB_Admin
 	tx = tx.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组)
 
 	return 总数, 局_数组, tx.Error
 }
 
 // 查
-func (s *LogMoney) Info(id int) (info DB.DB_LogMoney, err error) {
-	tx := s.db.Model(DB.DB_LogMoney{}).Where("Id = ?", id).First(&info)
+func (s *Admin) Info(id int) (info DB.DB_Admin, err error) {
+	tx := s.db.Model(DB.DB_Admin{}).Where("Id = ?", id).First(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
+// 查
+func (s *Admin) Info2(where map[string]interface{}) (info DB.DB_Admin, err error) {
+	tx := s.db.Model(DB.DB_Admin{}).Where(where).First(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
+// 查
+func (s *Admin) InfoName(name string) (info DB.DB_Admin, err error) {
+	tx := s.db.Model(DB.DB_Admin{}).Where("User = ?", name).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -89,8 +105,8 @@ func (s *LogMoney) Info(id int) (info DB.DB_LogMoney, err error) {
 }
 
 // 改
-func (s *LogMoney) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
+func (s *Admin) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(DB.DB_LogMoney{}).Where("Id = ?", Id).Updates(&数据)
+	tx := s.db.Model(DB.DB_Admin{}).Where("Id = ?", id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }

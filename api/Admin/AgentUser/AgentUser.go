@@ -4,12 +4,14 @@ import (
 	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
+	dbm "server/new/app/models/db"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -37,9 +39,9 @@ func (a *Api) GetAgentUserInfo(c *gin.Context) {
 		response.FailWithMessage("查询用户详细信息失败", c)
 		return
 	}
-	DB_AgentUser.Role = Ser_Agent.Q取Id代理级别(DB_AgentUser.Id)
+	DB_AgentUser.Role = agentLevel.L_agentLevel.Q取Id代理级别(c, DB_AgentUser.Id)
 
-	DB_AgentUser.UPAgentUser = Ser_Agent.ID取用户名(DB_AgentUser.UPAgentId)
+	DB_AgentUser.UPAgentUser = agent.L_agent.ID取用户名(c, DB_AgentUser.UPAgentId)
 	DB_AgentUser.LoginAppName = Ser_AppInfo.AppId取应用名称(DB_AgentUser.LoginAppid)
 
 	response.OkWithDetailed(DB_AgentUser, "获取成功", c)
@@ -166,11 +168,11 @@ func (a *Api) New代理信息(c *gin.Context) {
 		response.FailWithMessage("非系统管理员只能创建余额=0的代理用户", c)
 		return
 	}
-	if Ser_Agent.ID取用户名(请求.UPAgentId) == "" {
+	if agent.L_agent.ID取用户名(c, 请求.UPAgentId) == "" {
 		response.FailWithMessage("上级代理不存在", c)
 		return
 	}
-	局_上级代理分成 := Ser_Agent.ID取分成百分比(请求.UPAgentId)
+	局_上级代理分成 := agent.L_agent.ID取分成百分比(c, 请求.UPAgentId)
 	if 局_上级代理分成 < 请求.AgentDiscount {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
@@ -190,12 +192,6 @@ func (a *Api) New代理信息(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	//局_id := Ser_User.User用户名取id(请求.User)
-	/*	err = Ser_Agent.New代理(局_id, 请求.UPAgentId)
-		if err != nil {
-			response.FailWithMessage(err.Error(), c)
-			return
-		}*/
 
 	response.OkWithMessage("添加成功", c)
 	if 请求.Rmb != 0 {
@@ -217,13 +213,13 @@ func (a *Api) Del批量删除代理(c *gin.Context) {
 		response.FailWithMessage("Id数组为空", c)
 		return
 	}
-	局_子级代理ID数组 := Ser_Agent.Q取下级代理数组含子级(请求.Id)
+	局_子级代理ID数组 := agent.L_agent.Q取下级代理数组含子级(c, 请求.Id)
 	if len(局_子级代理ID数组) > 0 {
 		response.FailWithMessage("用户有子级代理,暂不可删除,请先根据代理组织结构图,删除所有子级代理后,再删除该用户", c)
 		return
 	}
 
-	err = Ser_Agent.S删除代理(请求.Id)
+	err = agent.L_agent.S删除代理(c, 请求.Id)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -277,15 +273,15 @@ func (a *Api) Save代理信息(c *gin.Context) {
 		return
 	}
 
-	if Ser_Agent.ID取用户名(请求.UPAgentId) == "" {
+	if agent.L_agent.ID取用户名(c, 请求.UPAgentId) == "" {
 		response.FailWithMessage("上级代理不存在", c)
 		return
 	}
-	if Ser_Agent.Q取Id代理级别(请求.UPAgentId) >= 3 {
+	if agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.UPAgentId) >= 3 {
 		response.FailWithMessage("上级代理为三级代理无法发展下级代理", c)
 		return
 	}
-	局_上级代理分成 := Ser_Agent.ID取分成百分比(请求.UPAgentId)
+	局_上级代理分成 := agent.L_agent.ID取分成百分比(c, 请求.UPAgentId)
 	if 局_上级代理分成 < 请求.AgentDiscount {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
@@ -386,13 +382,13 @@ func (a *Api) GetAgentKaClassAuthority(c *gin.Context) {
 	}
 	var 局_返回 代理可制卡类授权
 	局_上级代理ID := Ser_User.Id取上级代理ID(请求.Id)
-	局_返回.KaList = Ser_KaClass.Q取全部可制卡类树形框列表(局_上级代理ID)
-	局_返回.FunctionList = Ser_Agent.Q取全部代理功能名称_MAP()
+	局_返回.KaList = Ser_KaClass.Q取全部可制卡类树形框列表(c, 局_上级代理ID)
+	局_返回.FunctionList = agent.L_agent.Q取全部代理功能名称_MAP(c)
 	var 局_可用代理功能ID数组 []int
 	if 局_上级代理ID < 0 { //上级是管理员,全部功能都可以看见
-		局_可用代理功能ID数组 = Ser_Agent.Q取全部代理功能ID_int数组()
+		局_可用代理功能ID数组 = agent.L_agent.Q取全部代理功能ID_int数组(c)
 	} else {
-		_, 局_可用代理功能ID数组 = Ser_Agent.Id取代理可制卡类和可用代理功能列表(局_上级代理ID)
+		_, 局_可用代理功能ID数组 = agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, 局_上级代理ID)
 		for key := range 局_返回.FunctionList {
 			if !utils.S数组_整数是否存在(局_可用代理功能ID数组, 局_返回.FunctionList[key]) {
 				delete(局_返回.FunctionList, key) //没有授权就从全部里删除
@@ -400,7 +396,7 @@ func (a *Api) GetAgentKaClassAuthority(c *gin.Context) {
 		}
 	}
 
-	局_返回.IdListAuthority, 局_返回.FunctionId = Ser_Agent.Id取代理可制卡类和可用代理功能列表(请求.Id)
+	局_返回.IdListAuthority, 局_返回.FunctionId = agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, 请求.Id)
 
 	response.OkWithDetailed(局_返回, "获取成功", c)
 	return
@@ -419,19 +415,19 @@ func (a *Api) SetAgentKaClassAuthority(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-	if utils.S数组_整数是否存在(请求.KId, DB.D代理功能_发展下级代理) && Ser_Agent.Q取Id代理级别(请求.Id) >= 3 {
+	if utils.S数组_整数是否存在(请求.KId, DB.D代理功能_发展下级代理) && agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.Id) >= 3 {
 		response.FailWithMessage("三级代理不可设置发展下级代理功能", c)
 		return
 	}
 	var 局_已有卡类 []int
-	global.GVA_DB.Model(DB.DB_KaClass{}).Select("Id").Where("Id IN ?", 请求.KId).Find(&局_已有卡类)
+	global.GVA_DB.Model(dbm.DB_KaClass{}).Select("Id").Where("Id IN ?", 请求.KId).Find(&局_已有卡类)
 	局_上级代理ID := Ser_User.Id取上级代理ID(请求.Id)
 	var 局_可用功能列表 []int
 
 	if 局_上级代理ID < 0 {
-		局_可用功能列表 = Ser_Agent.Q取全部代理功能ID_int数组()
+		局_可用功能列表 = agent.L_agent.Q取全部代理功能ID_int数组(c)
 	} else {
-		_, 局_可用功能列表 = Ser_Agent.Id取代理可制卡类和可用代理功能列表(局_上级代理ID)
+		_, 局_可用功能列表 = agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, 局_上级代理ID)
 	}
 
 	局_已有卡类 = append(局_已有卡类, 局_可用功能列表...) //合并功能ID和卡类ID
@@ -439,7 +435,7 @@ func (a *Api) SetAgentKaClassAuthority(c *gin.Context) {
 
 	if len(局_没有卡类) > 0 {
 		strSlice := make([]string, len(局_没有卡类))
-		var 局_可授权功能Map = Ser_Agent.Q取全部代理功能ID_MAP()
+		var 局_可授权功能Map = agent.L_agent.Q取全部代理功能ID_MAP(c)
 		for i, num := range 局_没有卡类 {
 			if num < 0 {
 				strSlice[i] = 局_可授权功能Map[num]
@@ -451,7 +447,7 @@ func (a *Api) SetAgentKaClassAuthority(c *gin.Context) {
 		return
 	}
 
-	err = Ser_Agent.Z置Id代理可制卡类或功能授权列表(请求.Id, 请求.KId)
+	err = agent.L_agent.Z置Id代理可制卡类或功能授权列表(c, 请求.Id, 请求.KId)
 	if err == nil {
 		response.OkWithMessage("操作成功", c)
 	} else {

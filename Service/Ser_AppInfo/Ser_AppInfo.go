@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"server/global"
 	"server/new/app/logic/common/cloudStorage"
+	dbm "server/new/app/models/db"
 	DB "server/structs/db"
 	utils2 "server/utils"
 	"strconv"
@@ -186,7 +187,7 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 	}
 
 	var NewApp DB.DB_AppInfo
-	var 数组_卡类列表 []DB.DB_KaClass
+	var 数组_卡类列表 []dbm.DB_KaClass
 	var 数组_用户类型列表 []DB.DB_UserClass
 	err = global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId = ?", CopyAppId).First(&NewApp).Error
 	if err != nil {
@@ -204,7 +205,7 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 	NewApp.CryptoKeyPublic = 公钥base64
 	NewApp.CryptoKeyPrivate = 私钥base64
 
-	err = global.GVA_DB.Model(DB.DB_KaClass{}).Where("AppId = ?", CopyAppId).Find(&数组_卡类列表).Error
+	err = global.GVA_DB.Model(dbm.DB_KaClass{}).Where("AppId = ?", CopyAppId).Find(&数组_卡类列表).Error
 	err = global.GVA_DB.Model(DB.DB_UserClass{}).Where("AppId = ?", CopyAppId).Find(&数组_用户类型列表).Error
 	//数据准备完毕,开启事务进行复制应用
 	db := *global.GVA_DB
@@ -227,7 +228,7 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 		for 索引, v := range 数组_卡类列表 {
 			v.Id = 0
 			v.AppId = AppId
-			err = tx.Model(DB.DB_KaClass{}).Create(&v).Error
+			err = tx.Model(dbm.DB_KaClass{}).Create(&v).Error
 			if err != nil {
 				return err
 			}

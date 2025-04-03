@@ -6,12 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/Service/Ser_Admin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/setting"
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -109,7 +110,7 @@ func (a *Api) GetUserInfo(c *gin.Context) {
 		response.FailWithMessage("查询用户详细信息失败", c)
 		return
 	}
-	DB_user.Role = Ser_Agent.Q取Id代理级别(DB_user.Id)
+	DB_user.Role = agentLevel.L_agentLevel.Q取Id代理级别(c, DB_user.Id)
 	if DB_user.LoginAppid > 0 {
 		AppName := ""
 		_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppName").Where("AppId = ?", DB_user.LoginAppid).First(&AppName).Error
@@ -251,7 +252,7 @@ func (a *Api) Del批量删除用户(c *gin.Context) {
 		return
 	}
 
-	if Ser_Agent.Q取Id数组中代理数量(请求.Id) > 0 {
+	if agent.L_agent.Q取Id数组中代理数量(c, 请求.Id) > 0 {
 		response.FailWithMessage("包含代理级别用户,代理请前往代理管理-代理账号删除", c)
 		return
 	}

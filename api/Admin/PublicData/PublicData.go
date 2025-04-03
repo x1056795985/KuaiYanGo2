@@ -174,7 +174,7 @@ func (a *Api) SaveDB_PublicData信息(c *gin.Context) {
 		response.FailWithMessage("变量不存在", c)
 		return
 	}
-	请求.Time = int(time.Now().Unix())
+	请求.Time= time.Now().Unix()
 	err = publicData.L_publicData.Z置值_原值(c, 请求)
 
 	if err != nil {
@@ -208,7 +208,7 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("变量名已存在", c)
 		return
 	}
-	请求.Time = int(time.Now().Unix())
+	请求.Time= time.Now().Unix()
 	//app_id 没有这个字段排除掉
 	err = publicData.L_publicData.C创建(c, 请求)
 	if err != nil {

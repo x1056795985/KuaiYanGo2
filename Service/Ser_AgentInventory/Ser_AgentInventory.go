@@ -1,15 +1,20 @@
 package Ser_AgentInventory
 
 import (
-	"EFunc/utils"
+	. "EFunc/utils"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
+	"server/new/app/logic/common/kaClassUpPrice"
+	dbm "server/new/app/models/db"
+	"server/new/app/service"
 	DB "server/structs/db"
 	"strconv"
 	"time"
@@ -18,12 +23,12 @@ import (
 // 只有管理员才会调用
 // 库存卡包创建人ID 负数为管理员
 // 资源包来源ID 直接购买为0 管理员下发为-1
-func New(归属Uid, KaClassId, NumMax, 库存卡包创建人ID, 资源包来源ID int, 有效期 int64, 备注 string) (DB.Db_Agent_库存卡包, error) {
+func New(c *gin.Context, 归属Uid, KaClassId, NumMax, 库存卡包创建人ID, 资源包来源ID int, 有效期 int64, 备注 string) (DB.Db_Agent_库存卡包, error) {
 
 	if !Ser_KaClass.KaClassId是否存在(KaClassId) {
 		return DB.Db_Agent_库存卡包{}, errors.New("卡类ID不存在")
 	}
-	if Ser_Agent.Q取Id代理级别(归属Uid) == 0 {
+	if agentLevel.L_agentLevel.Q取Id代理级别(c, 归属Uid) == 0 {
 		return DB.Db_Agent_库存卡包{}, errors.New("代理ID不存在")
 	}
 	if NumMax <= 0 {
@@ -53,7 +58,7 @@ func New(归属Uid, KaClassId, NumMax, 库存卡包创建人ID, 资源包来源I
 	return 库存卡包, err
 }
 
-func New代理购买(归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, ip string) (DB.Db_Agent_库存卡包, error) {
+func New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, ip string) (DB.Db_Agent_库存卡包, error) {
 
 	局_卡类详情, err := Ser_KaClass.KaClass取详细信息(KaClassId)
 	if err != nil {
@@ -62,15 +67,15 @@ func New代理购买(归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, 
 	if 局_卡类详情.AgentMoney < 0 { //0元也可以购买
 		return DB.Db_Agent_库存卡包{}, errors.New("卡类代理价格为负数,不可购买,请联系管理员")
 	}
-	if Ser_Agent.Q取Id代理级别(归属Uid) == 0 {
+	if agentLevel.L_agentLevel.Q取Id代理级别(c, 归属Uid) == 0 {
 		return DB.Db_Agent_库存卡包{}, errors.New("代理ID不存在")
 	}
 	if NumMax <= 0 {
 		return DB.Db_Agent_库存卡包{}, errors.New("库存卡包可使用次数必须大于0")
 	}
 
-	可制卡号, _ := Ser_Agent.Id取代理可制卡类和可用代理功能列表(归属Uid)
-	if !utils.S数组_整数是否存在(可制卡号, KaClassId) {
+	可制卡号, _ := agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, 归属Uid)
+	if !S数组_整数是否存在(可制卡号, KaClassId) {
 		return DB.Db_Agent_库存卡包{}, errors.New("权限不足,无法创建卡类ID:" + strconv.Itoa(KaClassId) + "的库存卡包,请联系上级代理授权该卡类")
 	}
 	库存卡包 := DB.Db_Agent_库存卡包{
@@ -88,10 +93,34 @@ func New代理购买(归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, 
 	if 有效期 == 0 {
 		库存卡包.EndTime = 9999999999
 	}
-	局_总金额 := utils.Float64乘int64(局_卡类详情.AgentMoney, int64(NumMax))
+
+	var 局_价格组成 struct {
+		总调价  float64
+		调价详情 []dbm.DB_KaClassUpPrice
+		购买数量 int64
+
+		卡类金额 float64
+		付款金额 float64
+	}
+	db := *global.GVA_DB
+	var 局_代理详情 DB.DB_User
+	局_代理详情, err = service.NewUser(c, &db).Info(归属Uid)
+	if err != nil {
+		return DB.Db_Agent_库存卡包{}, errors.Join(err, errors.New("取代理详情失败"))
+	}
+
+	局_价格组成.总调价, 局_价格组成.调价详情, err = kaClassUpPrice.L_kaClassUpPrice.J计算代理调价(c, 局_卡类详情.Id, 局_代理详情.UPAgentId)
+	if err != nil {
+		return DB.Db_Agent_库存卡包{}, errors.Join(err, errors.New("计算代理调价失败"))
+	}
+	局_价格组成.购买数量 = int64(NumMax)
+	局_价格组成.总调价 = Float64乘int64(局_价格组成.总调价, 局_价格组成.购买数量)
+	局_价格组成.卡类金额 = Float64乘int64(局_卡类详情.AgentMoney, 局_价格组成.购买数量)
+	局_价格组成.付款金额 = Float64加float64(局_价格组成.卡类金额, 局_价格组成.总调价, 2)
+
 	var 局_新余额 float64
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		err = tx.Model(DB.DB_User{}).Where("Id = ?", 归属Uid).Update("RMB", gorm.Expr("RMB - ?", 局_总金额)).Error
+		err = tx.Model(DB.DB_User{}).Where("Id = ?", 归属Uid).Update("RMB", gorm.Expr("RMB - ?", 局_价格组成.付款金额)).Error
 		if err != nil {
 			return err
 		}
@@ -100,7 +129,7 @@ func New代理购买(归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, 
 			return err
 		}
 		if 局_新余额 < 0 {
-			return errors.New("余额不足,缺少:" + utils.Float64到文本(局_新余额, 2))
+			return errors.New("余额不足,缺少:" + Float64到文本(局_新余额, 2))
 		}
 		//扣款成功,创建库存
 
@@ -109,24 +138,28 @@ func New代理购买(归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, 
 	})
 
 	if err == nil {
-		局_log := fmt.Sprintf("购买库存包ID:%d,代理价格(%v)*库存数量(%d)|新余额≈%v", 库存卡包.Id, 局_卡类详情.AgentMoney, NumMax, utils.Float64到文本(局_新余额, 2))
-		go Ser_Log.Log_写余额日志(Ser_User.Id取User(归属Uid), ip, 局_log, utils.Float64取负值(局_总金额))
+		局_log := fmt.Sprintf("购买库存包ID:%d,代理价格(%v)*库存数量(%d)|新余额≈%v", 库存卡包.Id, 局_卡类详情.AgentMoney, NumMax, Float64到文本(局_新余额, 2))
+		go Ser_Log.Log_写余额日志(Ser_User.Id取User(归属Uid), ip, 局_log, Float64取负值(局_价格组成.付款金额))
 	} else {
 		return 库存卡包, err
 	}
-	//代理分成
-	//开始分利润 20240202 mark处理重构以后改事务
-	代理分成数据, err3 := Ser_Agent.D代理分成计算(归属Uid, 局_总金额)
-	if err3 == nil {
-		for 局_索引 := range 代理分成数据 {
-			d := 代理分成数据[局_索引] //太长了,放个变量里
-			新余额, err4 := Ser_User.Id余额增减(d.Uid, d.S实际分成金额, true)
-			if err4 != nil {
-				//,一般不会出现,除非用户不存在
-				global.GVA_LOG.Error(fmt.Sprintf("代理购买库存包代理分成余额增加失败:%s,代理ID:%d,金额¥%v,库存ID:%s", err4.Error(), d.Uid, d.S实际分成金额, 库存卡包.Id))
-			} else {
-				str := fmt.Sprintf("代理购买库存包ID:%d,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 库存卡包.Id, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_总金额, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
-				Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), ip, str, d.S实际分成金额)
+	//代理分成 		//开始分利润 20240202 mark处理重构以后改事务
+	//先分成 代理调价信息的价格
+	if 局_价格组成.总调价 > 0 {
+		局_日志前缀 := fmt.Sprintf("代理:%s,购买库存包ID{%d}", 局_代理详情.User, 库存卡包.Id)
+		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
+		if err != nil {
+			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
+		}
+	}
+	if 局_价格组成.卡类金额 > 0 {
+		//然后再计算百分比的价格
+		代理分成数据, err3 := agent.L_agent.D代理分成计算(c, 局_代理详情.Id, 局_价格组成.卡类金额)
+		if err3 == nil {
+			局_日志前缀 := fmt.Sprintf("代理:%s,购买库存包ID{%d}", 局_代理详情.User, 库存卡包.Id)
+			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_价格组成.卡类金额, 局_日志前缀)
+			if err != nil {
+				global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 			}
 		}
 	}
@@ -135,7 +168,7 @@ func New代理购买(归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, 
 	return 库存卡包, err
 }
 
-func K库存发送(原库存ID, 新代理Uid, 转出数量 int, 转出备注, IP string) error {
+func K库存发送(c *gin.Context, 原库存ID, 新代理Uid, 转出数量 int, 转出备注, IP string) error {
 
 	原库存详情, ok := Id取详情(原库存ID)
 	if !ok {
@@ -188,11 +221,11 @@ func K库存发送(原库存ID, 新代理Uid, 转出数量 int, 转出备注, IP
 			var User1, User2 string
 			User1 = Ser_User.Id取User(原库存详情.Uid)
 			User2 = Ser_User.Id取User(新代理Uid)
-			User1角色 := Ser_Agent.Q取Id代理级别(原库存详情.Uid)
+			User1角色 := agentLevel.L_agentLevel.Q取Id代理级别(c, 原库存详情.Uid)
 			if User1角色 == 0 {
 				User1角色 = 4
 			}
-			User2角色 := Ser_Agent.Q取Id代理级别(新代理Uid)
+			User2角色 := agentLevel.L_agentLevel.Q取Id代理级别(c, 新代理Uid)
 			if User2角色 == 0 {
 				User2角色 = 4
 			}
@@ -203,7 +236,7 @@ func K库存发送(原库存ID, 新代理Uid, 转出数量 int, 转出备注, IP
 	})
 	return err返回
 }
-func K库存撤回(操作UId, 原库存ID, 撤回数量 int, 备注, IP string) error {
+func K库存撤回(c *gin.Context, 操作UId, 原库存ID, 撤回数量 int, 备注, IP string) error {
 	原库存详情, ok := Id取详情(原库存ID)
 	if !ok {
 		return errors.New("库存ID不存在")
@@ -256,11 +289,11 @@ func K库存撤回(操作UId, 原库存ID, 撤回数量 int, 备注, IP string) 
 			}
 			User2 = Ser_User.Id取User(局_User2Id)
 
-			User1角色 := Ser_Agent.Q取Id代理级别(原库存详情.Uid)
+			User1角色 := agentLevel.L_agentLevel.Q取Id代理级别(c, 原库存详情.Uid)
 			if User1角色 == 0 {
 				User1角色 = 4
 			}
-			User2角色 := Ser_Agent.Q取Id代理级别(局_User2Id)
+			User2角色 := agentLevel.L_agentLevel.Q取Id代理级别(c, 局_User2Id)
 			if User2角色 == 0 {
 				User2角色 = 4
 			}

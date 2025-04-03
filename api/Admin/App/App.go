@@ -16,6 +16,7 @@ import (
 	"server/new/app/logic/common/appInfo"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
+	dbm "server/new/app/models/db"
 	"server/new/app/router/webApi2"
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -178,7 +179,7 @@ func (a *Api) Del批量删除App(c *gin.Context) {
 	for _, id值 := range 请求.Id {
 		global.GVA_DB.Migrator().DropTable("db_AppUser_" + strconv.Itoa(id值))
 		global.GVA_DB.Model(DB.DB_UserClass{}).Where("AppId IN ? ", 请求.Id).Delete("")
-		global.GVA_DB.Model(DB.DB_KaClass{}).Where("AppId IN ? ", 请求.Id).Delete("")
+		global.GVA_DB.Model(dbm.DB_KaClass{}).Where("AppId IN ? ", 请求.Id).Delete("")
 		global.GVA_DB.Model(DB.DB_Ka{}).Where("AppId IN ? ", 请求.Id).Delete("")
 	}
 
@@ -247,7 +248,7 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 		if 局_临时.Value != 专属变量.Value || 局_临时.IsVip != 专属变量.IsVip || 局_临时.Note != 专属变量.Note || 局_临时.Type != 专属变量.Type || 局_临时.Sort != 专属变量.Sort {
 			//只有值改变了才修改时间戳
 			if 局_临时.Value != 专属变量.Value {
-				专属变量.Time = int(time.Now().Unix())
+				专属变量.Time= time.Now().Unix()
 			}
 
 			_ = publicData.L_publicData.Z置值_原值(c, 专属变量)
@@ -374,7 +375,7 @@ type 请求_NewApp struct {
 	AppId     int    `json:"AppId" gorm:"column:AppId;primarykey"` // id
 	AppName   string `json:"AppName" gorm:"column:AppName;comment:应用名称"`
 	AppType   int    `json:"AppType"  gorm:"column:AppType;default:1;comment:软件类型"` //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
-	CopyAppId int    `json:"CopyAppId"`                                             //要复制的appId
+	CopyAppId int    `json:"CopyAppId"`                                                 //要复制的appId
 }
 
 // GetAppIdMax 取最大appid值
@@ -423,7 +424,7 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 
 type 响应_AppIdNameList struct {
 	Map   map[string]string `json:"Map"`
-	Array []键值对             `json:"Array"`
+	Array []键值对          `json:"Array"`
 }
 
 type 键值对 struct {

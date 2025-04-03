@@ -5,6 +5,8 @@ import (
 	"server/api/middleware"
 	"server/global"
 	controller "server/new/app/controller/agent"
+	mid2 "server/new/app/router/middleware"
+	DB "server/structs/db"
 )
 
 type AllRouter struct {
@@ -29,11 +31,11 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 	}
 	局_AppUser := controller.NewAppUserController()
 	{
-		agentRouter.POST("AppUser/GetList", 局_AppUser.GetList)        // 获取列表
-		agentRouter.POST("AppUser/GetInfo", 局_AppUser.GetAppUserInfo) // 获取详细信息
-		agentRouter.POST("AppUser/SetStatus", 局_AppUser.Set修改状态)      // 修改状态
+		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_查看归属软件用户})).POST("AppUser/GetList", 局_AppUser.GetList)        // 获取列表
+		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_查看归属软件用户})).POST("AppUser/GetInfo", 局_AppUser.GetAppUserInfo) // 获取详细信息
+		agentRouter.POST("AppUser/SetStatus", 局_AppUser.Set修改状态)                                                 // 修改状态
 		agentRouter.POST("AppUser/SaveUser", 局_AppUser.Save用户信息)
-		agentRouter.POST("AppUser/SetPassUser", 局_AppUser.Set用户密码)
+		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_修改用户密码})).POST("AppUser/SetPassUser")
 	}
 	局_UserClass := controller.NewUserClassController()
 	{
@@ -45,4 +47,16 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 	{
 		agentRouter.POST("Agent/GetKaSalesStatistics", 局_AgentUser.GetKaSalesStatistics)
 	}
+	局_KaClass := controller.NewKaClassController()
+	{
+		agentRouter.POST("KaClass/GetList", 局_KaClass.GetList)
+	}
+
+	局_KaClassUpPrice := controller.NewKaClassUpPriceController()
+	{
+		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_卡类调价})).POST("KaClassUpPrice/Save", 局_KaClassUpPrice.Save)
+
+		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_卡类调价})).POST("KaClassUpPrice/Delete", 局_KaClassUpPrice.Delete)
+	}
+
 }

@@ -14,6 +14,7 @@ import (
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/userClass"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
 	"strconv"
@@ -33,7 +34,7 @@ type ka struct {
 func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int) (err error) {
 	//已优化,事务处理,数据库内直接加减乘除计算字段值,可以并发,不出错
 	var info struct {
-		卡类详情     DB.DB_KaClass
+		卡类详情     dbm.DB_KaClass
 		app用户详情  DB.DB_AppUser
 		user用户详情 DB.DB_User
 		app详情    DB.DB_AppInfo
@@ -176,7 +177,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 // 有效期 0=9999999999 无限制
 func (j *ka) Ka单卡创建(c *gin.Context, 卡类id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) (卡信息切片 DB.DB_Ka, err error) {
 	var info struct {
-		卡类信息 DB.DB_KaClass
+		卡类信息 dbm.DB_KaClass
 	}
 
 	var tx *gorm.DB
@@ -403,7 +404,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 				Count: info.卡号详情.VipNumber,
 				Ip:    info.ip,
 				Note:  "应用ID:" + strconv.Itoa(info.卡号详情.AppId) + "卡号Id:" + strconv.Itoa(info.卡号详情.Id) + "充值积分",
-				Time:  int(time.Now().Unix()),
+				Time:  time.Now().Unix(),
 				Type:  1,
 				User:  充值用户,
 			})
@@ -674,7 +675,7 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 					User:  S三元(info.is卡号, 临时卡号info.Name, 临时账号info.User),
 					AppId: info.卡号详情.AppId,
 					Type:  S三元(info.is计点, constant.Log_type_点数, constant.Log_type_时间),
-					Time:  int(time.Now().Unix()),
+					Time:  time.Now().Unix(),
 					Ip:    c.ClientIP(),
 					Count: Int64到Float64(info.卡号详情.VipTime),
 					Note:  fmt.Sprintf(操作人+"操作追回id:%d,卡号:%s,扣除卡号充值"+info.vipTime名称+",用户类型id:卡号%d->用户%d", info.卡号详情.Id, info.卡号详情.Name, info.卡号详情.UserClassId, 临时软件用户info.UserClassId),
@@ -685,7 +686,7 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 					User:  S三元(info.is卡号, 临时卡号info.Name, 临时账号info.User),
 					AppId: info.卡号详情.AppId,
 					Type:  constant.Log_type_积分,
-					Time:  int(time.Now().Unix()),
+					Time:  time.Now().Unix(),
 					Ip:    c.ClientIP(),
 					Count: Float64取负值(info.卡号详情.VipNumber),
 					Note:  fmt.Sprintf(操作人+"操作追回id:%d,卡号:%s,扣除卡号充值积分|新积分≈%s", info.卡号详情.Id, info.卡号详情.Name, Float64到文本(临时软件用户info.VipNumber, 2)),
@@ -705,7 +706,7 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 					}
 					info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
 						User:  临时账号info.User,
-						Time:  int(time.Now().Unix()),
+						Time:  time.Now().Unix(),
 						Ip:    c.ClientIP(),
 						Count: Float64取负值(info.卡号详情.RMb),
 						Note:  fmt.Sprintf(操作人+"操作追回id:%d,卡号:%s,扣除卡号充值余额%s|新余额≈%s", info.卡号详情.Id, info.卡号详情.Name, Float64到文本(info.卡号详情.RMb, 2), Float64到文本(临时账号info.Rmb, 2)),
@@ -760,7 +761,7 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 					User:  S三元(info.is卡号, 临时卡号info.Name, 临时账号info.User),
 					AppId: info.卡号详情.AppId,
 					Type:  S三元(info.is计点, constant.Log_type_点数, constant.Log_type_时间),
-					Time:  int(time.Now().Unix()),
+					Time:  time.Now().Unix(),
 					Ip:    c.ClientIP(),
 					Count: Int64到Float64(info.卡号详情.VipTime),
 					Note:  fmt.Sprintf(操作人+"操作追回id:%d,卡号:%s,扣除卡号推荐人充值"+S三元(info.is计点, "点数", "时间"), info.卡号详情.Id, info.卡号详情.Name),

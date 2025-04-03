@@ -2,12 +2,12 @@ package KaClass
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_UserClass"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	dbm "server/new/app/models/db"
 	"server/structs/Http/response"
-	DB "server/structs/db"
 	"server/utils"
 	"strconv"
 )
@@ -24,9 +24,9 @@ func (a *Api) GetInfo(c *gin.Context) {
 		return
 	}
 
-	var DB_KaClass DB.DB_KaClass
+	var DB_KaClass dbm.DB_KaClass
 
-	err = global.GVA_DB.Model(DB.DB_KaClass{}).Where("Id = ?", 请求.Id).First(&DB_KaClass).Error
+	err = global.GVA_DB.Model(dbm.DB_KaClass{}).Where("Id = ?", 请求.Id).First(&DB_KaClass).Error
 	// 没查到数据
 	if err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
@@ -67,10 +67,10 @@ func (a *Api) GetKaClassList(c *gin.Context) {
 		return
 	}
 
-	var DB_KaClass []DB.DB_KaClass
+	var DB_KaClass []dbm.DB_KaClass
 	var 总数 int64
 
-	局_DB := global.GVA_DB.Model(DB.DB_KaClass{}).Where("AppId = ?", 请求.AppId)
+	局_DB := global.GVA_DB.Model(dbm.DB_KaClass{}).Where("AppId = ?", 请求.AppId)
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
 	} else {
@@ -124,7 +124,7 @@ func (a *Api) Delete(c *gin.Context) {
 	}
 	var 影响行数 int64
 	var db = global.GVA_DB
-	影响行数 = db.Model(DB.DB_KaClass{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
+	影响行数 = db.Model(dbm.DB_KaClass{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
 		return
@@ -141,7 +141,7 @@ type 结构请求_ID数组 struct {
 
 // save 保存
 func (a *Api) SaveInfo(c *gin.Context) {
-	var 请求 DB.DB_KaClass
+	var 请求 dbm.DB_KaClass
 	err := c.ShouldBindJSON(&请求)
 	//解析失败
 	if err != nil {
@@ -178,7 +178,7 @@ func (a *Api) SaveInfo(c *gin.Context) {
 	}
 
 	var count int64
-	err = global.GVA_DB.Model(DB.DB_KaClass{}).Where("Id = ?", 请求.Id).Count(&count).Error
+	err = global.GVA_DB.Model(dbm.DB_KaClass{}).Where("Id = ?", 请求.Id).Count(&count).Error
 	// 没查到数据
 	if count == 0 {
 		response.FailWithMessage("卡类不存在", c)
@@ -186,7 +186,7 @@ func (a *Api) SaveInfo(c *gin.Context) {
 	}
 
 	//直接排除Aid 禁止修改  Select可能0值 或"" 的字段防止不更新
-	var db = global.GVA_DB.Model(DB.DB_KaClass{})
+	var db = global.GVA_DB.Model(dbm.DB_KaClass{})
 
 	var data = map[string]interface{}{
 		"KaStringType": 请求.KaStringType,
@@ -218,7 +218,7 @@ func (a *Api) SaveInfo(c *gin.Context) {
 		return
 	}
 	if 请求.AgentMoney < 0 {
-		Ser_Agent.D代理授权卡类Id删除(请求.Id)
+		agent.L_agent.D代理授权卡类Id删除(c, 请求.Id)
 	}
 
 	response.OkWithMessage("保存成功", c)
@@ -227,7 +227,7 @@ func (a *Api) SaveInfo(c *gin.Context) {
 
 // New
 func (a *Api) New(c *gin.Context) {
-	var 请求 DB.DB_KaClass
+	var 请求 dbm.DB_KaClass
 	err := c.ShouldBindJSON(&请求)
 	//解析失败
 	if err != nil {
@@ -278,7 +278,7 @@ func (a *Api) New(c *gin.Context) {
 		请求.Num = 1 //卡号类型卡只能用一次
 	}
 	//app_id 没有这个字段排除掉
-	err = global.GVA_DB.Model(DB.DB_KaClass{}).Create(&请求).Error
+	err = global.GVA_DB.Model(dbm.DB_KaClass{}).Create(&请求).Error
 	if err != nil {
 		response.FailWithMessage("添加失败", c)
 		return

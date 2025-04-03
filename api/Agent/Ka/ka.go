@@ -3,7 +3,6 @@ package Ka
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_Chare"
 	"server/Service/Ser_Ka"
@@ -12,7 +11,11 @@ import (
 	"server/Service/Ser_UserClass"
 	"server/Service/Ser_UserConfig"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/ka"
+	"server/new/app/logic/common/kaClassUpPrice"
+	"server/new/app/service"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"sort"
@@ -46,7 +49,7 @@ func (a *Api) GetInfo(c *gin.Context) {
 	}
 	局_在线信息 := 局_接口.(DB.DB_LinksToken)
 
-	局_制卡人数组 := Ser_Agent.Q取下级代理数组_user([]int{c.GetInt("Uid")})
+	局_制卡人数组 := agent.L_agent.Q取下级代理数组_user(c, []int{c.GetInt("Uid")})
 	局_制卡人数组 = append(局_制卡人数组, 局_在线信息.User)
 
 	if !S数组_是否存在(局_制卡人数组, DB_Ka.RegisterUser) {
@@ -67,6 +70,7 @@ type 结构请求_GetKaList struct {
 	Page         int      `json:"Page"`         // 页
 	Status       int      `json:"Status"`       // 状态
 	RegisterTime []string `json:"RegisterTime"` // 制卡开始时间 制卡结束时间
+	UseTime      []string `json:"UseTime"`      // 制卡开始时间 制卡结束时间
 	KaClassId    int      `json:"KaClassId"`    // 卡类id
 	Num          int      `json:"Num"`          // 卡使情况
 	Size         int      `json:"Size"`         // 页数量
@@ -90,19 +94,12 @@ func (a *Api) GetKaList(c *gin.Context) {
 	}
 	局_临时通用, _ := c.Get("局_在线信息")
 	局_在线信息 := 局_临时通用.(DB.DB_LinksToken)
-	/*
-		并不需要,直接限制制卡人值就可以了,
-		局_AppID列表 := Ser_Agent.Id取代理可操作应用AppId列表(c.GetInt("Uid"))
-			if 请求.AppId != 0 && utils.S数组_整数是否存在(局_AppID列表, 请求.AppId) {
-				response.FailWithMessage("无该应用权限,请联系上级授权该应用对应卡类制卡权限", c)
-				return
-			}*/
 
 	var DB_Ka []DB.DB_Ka
 	var 总数 int64
 	var 局_制卡人数组 = []string{局_在线信息.User}
 	if 请求.Child == 1 {
-		局_制卡人数组 = append(Ser_Agent.Q取下级代理数组_user([]int{c.GetInt("Uid")}), 局_在线信息.User)
+		局_制卡人数组 = append(agent.L_agent.Q取下级代理数组_user(c, []int{c.GetInt("Uid")}), 局_在线信息.User)
 	}
 
 	局_DB := global.GVA_DB.Model(DB.DB_Ka{}).Where("RegisterUser IN ?", 局_制卡人数组) //直接限制只允许读取制卡人为自己的卡号
@@ -133,7 +130,11 @@ func (a *Api) GetKaList(c *gin.Context) {
 		制卡结束时间, _ := strconv.Atoi(请求.RegisterTime[1])
 		局_DB.Where("RegisterTime > ?", 制卡开始时间).Where("RegisterTime < ?", 制卡结束时间+86400)
 	}
-
+	if 请求.UseTime != nil && len(请求.UseTime) == 2 && 请求.UseTime[0] != "" && 请求.UseTime[1] != "" {
+		使用开始时间, _ := strconv.Atoi(请求.UseTime[0])
+		使用结束时间, _ := strconv.Atoi(请求.UseTime[1])
+		局_DB.Where("UseTime > ?", 使用开始时间).Where("UseTime < ?", 使用结束时间+86400)
+	}
 	if 请求.KaClassId != 0 {
 		局_DB.Where("KaClassId = ?", 请求.KaClassId)
 	}
@@ -169,10 +170,19 @@ func (a *Api) GetKaList(c *gin.Context) {
 	AppType = Ser_AppInfo.App取AppType(请求.AppId)
 	UserClass := Ser_UserClass.UserClass取map列表Int(请求.AppId)
 
-	可制卡号ID, _ := Ser_Agent.Id取代理可制卡类和可用代理功能列表(c.GetInt("Uid"))
+	可制卡号ID, _ := agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, c.GetInt("Uid"))
 	局_卡类信息数组, _ := Ser_KaClass.Id取详细信息_数组(可制卡号ID)
 	var KaClass2 = make(map[int]结构响应_卡类名称价格, len(局_卡类信息数组))
+	tx := *global.GVA_DB
+	局_代理信息, _ := service.NewUser(c, &tx).Info(c.GetInt("Uid"))
 	for 索引 := range 局_卡类信息数组 {
+		if 局_代理信息.UPAgentId > 0 { //计算卡类代理调价
+			局_代理调价, _, err2 := kaClassUpPrice.L_kaClassUpPrice.J计算代理调价(c, 局_卡类信息数组[索引].Id, 局_代理信息.UPAgentId)
+			if err2 == nil && 局_代理调价 > 0 {
+				局_卡类信息数组[索引].AgentMoney = Float64加float64(局_卡类信息数组[索引].AgentMoney, 局_代理调价, 2)
+			}
+		}
+
 		if 请求.AppId == 局_卡类信息数组[索引].AppId {
 			KaClass2[局_卡类信息数组[索引].Id] = 结构响应_卡类名称价格{局_卡类信息数组[索引].Name, 局_卡类信息数组[索引].AgentMoney}
 		}
@@ -215,10 +225,7 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 		response.FailWithMessage("Id数组暂时只支持1个成员数,后续扩展中", c)
 		return
 	}
-	if !Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_卡号追回) {
-		response.FailWithMessage("权限不足,无卡号追回权限,请联系上级授权", c)
-		return
-	}
+
 	//限制制卡人,只能操作自己的卡号
 	//读取该卡号的制卡人信息
 	if !Ser_Ka.Id检测制卡人(请求.Id, c.GetString("User")) {
@@ -242,7 +249,7 @@ func (a *Api) Z追回卡号(c *gin.Context) {
 
 	局_卡号详情, _ := Ser_Ka.Id取详情(请求.Id[0])
 	局_信息 := "操作卡号管理:代理追回卡号:" + 局_卡号详情.Name
-	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_卡号详情.Name, DB.D代理功能_卡号追回, c.ClientIP(), 局_信息)
+	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_卡号详情.Name, DB.D代理功能_卡号追回, c.ClientIP(), 局_信息)
 
 	response.OkWithMessage("操作成功", c)
 	return
@@ -278,7 +285,7 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("生成数量每批最大500", c)
 		return
 	}
-	if !Ser_Agent.Id卡类权限检测(c.GetInt("Uid"), 请求.Id) {
+	if !agent.L_agent.Id卡类权限检测(c, c.GetInt("Uid"), 请求.Id) {
 		response.FailWithMessage("无该卡制卡权限", c)
 		return
 	}
@@ -300,7 +307,7 @@ func (a *Api) New(c *gin.Context) {
 		return
 	}
 	局_在线信息 := 局_接口.(DB.DB_LinksToken)
-	err = Ser_Ka.Ka代理批量购买(数组_卡[:], 请求.Id, 局_在线信息.Uid, 请求.AdminNote, 0, c.ClientIP())
+	err = Ser_Ka.Ka代理批量购买(c, 数组_卡[:], 请求.Id, 局_在线信息.Uid, 请求.AdminNote, 0, c.ClientIP())
 
 	if err != nil {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
@@ -359,7 +366,7 @@ func (a *Api) K库存制卡(c *gin.Context) {
 	}
 
 	数组_卡 := make([]DB.DB_Ka, 请求.Number) //make初始化,有3个元素的切片, len和cap都为3
-	err = Ser_Ka.Ka代理批量库存购买(数组_卡[:], 请求.Id, 请求.Number, c.GetInt("Uid"), 请求.AgentNote, c.ClientIP())
+	err = Ser_Ka.Ka代理批量库存购买(c, 数组_卡[:], 请求.Id, 请求.Number, c.GetInt("Uid"), 请求.AgentNote, c.ClientIP())
 
 	if err != nil {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
@@ -407,11 +414,11 @@ func (a *Api) Set修改状态(c *gin.Context) {
 	局_代理权限ID := 0
 	switch 请求.Status {
 	case 1:
-		局_权限 = Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_卡号解冻)
+		局_权限 = agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_卡号解冻)
 		局_权限文本 = "无卡号解冻权限,请联系上级代理授权"
 		局_代理权限ID = DB.D代理功能_卡号解冻
 	case 2:
-		局_权限 = Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_卡号冻结)
+		局_权限 = agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_卡号冻结)
 		局_权限文本 = "无卡号冻结权限,请联系上级代理授权"
 		局_代理权限ID = DB.D代理功能_卡号冻结
 	}
@@ -421,6 +428,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 	}
 	//限制制卡人,只能操作自己的卡号
 	//读取该卡号的制卡人信息
+	print(c.GetString("User"))
 	if !Ser_Ka.Id检测制卡人(请求.Id, c.GetString("User")) {
 		response.FailWithMessage("只能操作制卡人为本人的卡号", c)
 		return
@@ -443,7 +451,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 			} else {
 				局_信息 += "卡号解冻"
 			}
-			Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 局_卡号.AppId, 局_卡号.Id, 局_卡号.Name, 局_代理权限ID, c.ClientIP(), 局_信息)
+			Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 局_卡号.AppId, 局_卡号.Id, 局_卡号.Name, 局_代理权限ID, c.ClientIP(), 局_信息)
 		}
 
 	}
@@ -461,10 +469,7 @@ func (a *Api) G更换卡号(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
-	if !Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_更换卡号) {
-		response.FailWithMessage("无卡号更换功能权限,请联系上级授权", c)
-		return
-	}
+
 	//限制制卡人,只能操作自己的卡号
 	//读取该卡号的制卡人信息
 	if !Ser_Ka.Id检测制卡人([]int{请求.Id}, c.GetString("User")) {
@@ -473,7 +478,7 @@ func (a *Api) G更换卡号(c *gin.Context) {
 	}
 
 	局_旧卡号详情, _ := Ser_Ka.Id取详情(请求.Id)
-	err = Ser_Ka.Ka更换卡号(请求.Id, c.GetInt("Uid"), c.ClientIP())
+	err = Ser_Ka.Ka更换卡号(c, 请求.Id, c.GetInt("Uid"), c.ClientIP())
 
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -482,7 +487,7 @@ func (a *Api) G更换卡号(c *gin.Context) {
 
 	局_卡号详情, _ := Ser_Ka.Id取详情(请求.Id)
 	局_信息 := "操作卡号管理:卡号更换新卡号:" + 局_卡号详情.Name
-	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_旧卡号详情.Name, DB.D代理功能_更换卡号, c.ClientIP(), 局_信息)
+	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_旧卡号详情.Name, DB.D代理功能_更换卡号, c.ClientIP(), 局_信息)
 
 	response.OkWithDetailed(局_卡号详情, "更换成功", c)
 	return
@@ -542,7 +547,7 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 	AppIdName := Ser_AppInfo.App取map列表String()
 
 	var Name = make([]键值对, 0, len(AppIdName))
-	局_可操作应用Id := Ser_Agent.Id取代理可操作应用AppId列表(c.GetInt("Uid"))
+	局_可操作应用Id := agent.L_agent.Id取代理可操作应用AppId列表(c, c.GetInt("Uid"))
 	for 索引 := range 局_可操作应用Id {
 		Name = append(Name, 键值对{AppId: 局_可操作应用Id[索引], AppName: AppIdName[strconv.Itoa(局_可操作应用Id[索引])]})
 	}

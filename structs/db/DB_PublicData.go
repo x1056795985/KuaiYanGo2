@@ -6,7 +6,7 @@ type DB_PublicData struct {
 	Value string `json:"Value" gorm:"column:Value;type:MEDIUMTEXT;comment:变量值"`
 	Type  int    `json:"Type" gorm:"column:Type;comment:数据类型"`                 //数据类型 1=单行文本  2=多行文本  3=开关(逻辑型)
 	IsVip int    `json:"IsVip" gorm:"column:IsVip;comment:Vip点数限制;default:0 "` //Vip点数大于值才可以获取
-	Time  int    `json:"Time" gorm:"column:Time;comment:更新时间戳"`
+	Time  int64  `json:"Time" gorm:"column:Time;comment:更新时间戳"`
 	Note  string `json:"Note" gorm:"column:Note;size:1000;comment:备注; "`
 	Sort  int64  `json:"Sort" gorm:"column:Sort;comment:排序权重; "`
 }

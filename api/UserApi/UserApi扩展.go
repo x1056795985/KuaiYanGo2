@@ -4,11 +4,15 @@ import (
 	. "EFunc/utils"
 	"encoding/json"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
+	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Js"
+	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
+	"server/Service/Ser_UserClass"
 	"server/api/UserApi/response"
 	"server/global"
 	"server/new/app/logic/common/cloudStorage"
@@ -293,5 +297,138 @@ func UserApi_云存储_取文件上传授权(c *gin.Context) {
 	}
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 取文件上传授权)
+	return
+}
+func UserApi_云函数执行(c *gin.Context) {
+	defer func() {
+		if err2 := recover(); err2 != nil {
+			局_GoJa错误, ok := err2.(*goja.Exception)
+			if ok {
+				response.X响应状态消息(c, response.Status_操作失败, "异常:可能JS函数传参或返回值类型错误,具体:"+局_GoJa错误.String())
+			} else {
+				response.X响应状态消息(c, response.Status_操作失败, "异常:可能JS函数传参或返回值类型错误,具体:js引擎未返回报错信息")
+			}
+			return
+		}
+	}()
+
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	// {"Api":"RunJS","Parameter":"{'a':1}","JsName":"获取用户相关信息","IsGlobal":false,"Time":1684497856,"Status":30873}
+	var 局_JSid = 0
+	if 请求json.GetBool("IsGlobal") {
+		局_JSid = Ser_PublicJs.Name取Id([]int{Ser_PublicJs.Js类型_公共函数}, string(请求json.GetStringBytes("JsName")))
+	} else {
+		局_JSid = Ser_PublicJs.Name取Id([]int{AppInfo.AppId}, string(请求json.GetStringBytes("JsName")))
+	}
+	if 局_JSid == 0 {
+		response.X响应状态消息(c, response.Status_操作失败, "JS公共函数不存在")
+		return
+	}
+	局_耗时 := time.Now().UnixMilli()
+
+	var 局_PublicJs DB.DB_PublicJs
+	var err error
+	局_PublicJs, err = Ser_PublicJs.Q取值2(局_JSid)
+
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, "JS公共函数不存在")
+		return
+	}
+	if 局_PublicJs.IsVip > 0 && !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	if W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
+		局_PublicJs.Value = string(W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
+	} else {
+		response.X响应状态消息(c, response.Status_操作失败, "js文件读取失败可能被删除")
+		return
+	}
+
+	局_云函数型参数 := ""
+	if 请求json.Get("Parameter").Type() == fastjson.TypeObject {
+		局_云函数型参数 = 请求json.Get("Parameter").String()
+	} else {
+		局_云函数型参数 = string(请求json.GetStringBytes("Parameter"))
+	}
+	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
+	_, err = vm.RunString(局_PublicJs.Value)
+	if 局_详细错误, ok := err.(*goja.Exception); ok {
+		response.X响应状态消息(c, response.Status_操作失败, "JS代码运行失败:"+局_详细错误.String())
+		return
+	}
+	var 局_待执行js函数名 func(string) interface{}
+	ret := vm.Get(局_PublicJs.Name)
+	if ret == nil {
+		response.X响应状态消息(c, response.Status_操作失败, "Js中没有["+局_PublicJs.Name+"()]函数")
+		return
+	}
+	err = vm.ExportTo(ret, &局_待执行js函数名)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, "Js绑定函数到变量失败")
+		return
+	}
+	局_return := 局_待执行js函数名(局_云函数型参数)
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Return": 局_return, "Time": time.Now().UnixMilli() - 局_耗时})
+	return
+}
+
+// 1.0.310+版本添加可用
+func UserApi_取jwtToken(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	局_AppUser, ok := Ser_AppUser.Uid取详情(AppInfo.AppId, 局_在线信息.Uid)
+	if !ok {
+		response.X响应状态消息(c, response.Status_操作失败, "读取用户应用信息失败.")
+		return
+	}
+	var 局_UserClass DB.DB_UserClass
+	局_UserClass, _ = Ser_UserClass.Id取详情(AppInfo.AppId, 局_AppUser.UserClassId)
+	jwtMap := jwt.MapClaims{}
+	_ = json.Unmarshal([]byte(c.GetString("局_json明文")), &jwtMap) //必定是json 不然中间件就报错参数错误了
+	//提交的数据都加入到内容里,方便hookAPi
+
+	鉴权密钥 := []byte(AppInfo.CryptoKeyPrivate)
+	if 局_临时鉴权密钥, ok2 := jwtMap["Key"]; ok2 {
+		鉴权密钥 = []byte(局_临时鉴权密钥.(string))
+	}
+	delete(jwtMap, "Api")
+	delete(jwtMap, "Key")
+	delete(jwtMap, "Time")
+	delete(jwtMap, "Status")
+
+	//这个数据放后面,需要覆盖本地端的数据,防止伪造
+	jwtMap["iat"] = time.Now().Unix() // 发布时间
+	jwtMap["Uid"] = 局_AppUser.Uid
+	jwtMap["User"] = 局_在线信息.User
+	jwtMap["Key"] = 局_AppUser.Key
+	jwtMap["VipTime"] = 局_AppUser.VipTime
+	jwtMap["VipNumber"] = 局_AppUser.VipNumber
+	jwtMap["MaxOnline"] = 局_AppUser.MaxOnline
+	jwtMap["AgentUid"] = 局_AppUser.AgentUid
+	jwtMap["UserClassId"] = 局_AppUser.UserClassId
+	jwtMap["UserClassName"] = 局_UserClass.Name
+	jwtMap["UserClassMark"] = 局_UserClass.Mark
+	jwtMap["UserClassWeight"] = 局_UserClass.Weight
+	// 创建一个JWT的Token对象
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtMap)
+
+	// 使用密钥进行签名
+
+	signedToken, err := token.SignedString(鉴权密钥)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, "生成JWT失败.")
+		return
+	}
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Jwt": signedToken})
 	return
 }

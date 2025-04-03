@@ -4,12 +4,12 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap/buffer"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_User"
 	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/logic/common/agent"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -70,7 +70,7 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 		info.局_制卡人 = append(info.局_制卡人, 请求.AgentName)
 	} else {
 		info.局_制卡人 = append(info.局_制卡人, c.GetString("User")) // 先添加自身
-		info.局_制卡人 = append(info.局_制卡人, Ser_Agent.Q取下级代理数组_user([]int{c.GetInt("Uid")})...)
+		info.局_制卡人 = append(info.局_制卡人, agent.L_agent.Q取下级代理数组_user(c, []int{c.GetInt("Uid")})...)
 	}
 	局_DB := tx.Model(DB.DB_Ka{})
 
@@ -102,7 +102,7 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 	}
 	//直接限制 仅代理自身和直属下级
 	var 局_制卡人数组 = []string{c.GetString("User")}
-	局_制卡人数组 = append(局_制卡人数组, Ser_Agent.Q取下级代理数组_user([]int{c.GetInt("Uid")})...)
+	局_制卡人数组 = append(局_制卡人数组, agent.L_agent.Q取下级代理数组_user(c, []int{c.GetInt("Uid")})...)
 
 	//直接限制 仅代理自身和直属下级
 	局_临时数组 := make([]string, 0, len(info.局_制卡人))

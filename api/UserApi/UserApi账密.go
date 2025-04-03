@@ -1,23 +1,20 @@
 package UserApi
 
 import (
-	"EFunc/utils"
+	. "EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
 	"server/Service/Captcha"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
-	"server/Service/Ser_KaClass"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/api/UserApi/response"
-	"server/global"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/rmbPay"
@@ -25,7 +22,6 @@ import (
 	"server/new/app/models/constant"
 	DB "server/structs/db"
 	utils2 "server/utils"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -118,7 +114,7 @@ func UserApi_密码找回或修改_验证旧密码(c *gin.Context) {
 
 	msg := ""
 	局_新密码 := string(请求json.GetStringBytes("NewPassWord"))
-	if !utils.Z正则_校验密码(局_新密码, &msg) {
+	if !Z正则_校验密码(局_新密码, &msg) {
 		response.X响应状态消息(c, response.Status_操作失败, "密码"+msg)
 		return
 	}
@@ -156,7 +152,7 @@ func UserApi_密码找回或修改_超级密码(c *gin.Context) {
 
 	msg := ""
 	局_新密码 := string(请求json.GetStringBytes("NewPassWord"))
-	if !utils.Z正则_校验密码(局_新密码, &msg) {
+	if !Z正则_校验密码(局_新密码, &msg) {
 		response.X响应状态消息(c, response.Status_操作失败, "密码"+msg)
 		return
 	}
@@ -204,7 +200,7 @@ func UserApi_密码找回或修改_密保手机(c *gin.Context) {
 
 	msg := ""
 	局_新密码 := string(请求json.GetStringBytes("NewPassWord"))
-	if !utils.Z正则_校验密码(局_新密码, &msg) {
+	if !Z正则_校验密码(局_新密码, &msg) {
 		response.X响应状态消息(c, response.Status_操作失败, "密码"+msg)
 		return
 	}
@@ -303,7 +299,7 @@ func UserApi_余额购买积分(c *gin.Context) {
 	局_精确乘数 := decimal.NewFromInt(int64(AppInfo.RmbToVipNumber))
 	局_增减积分, _ := 局_精确花费金额.Mul(局_精确乘数).Float64()
 
-	go Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("购买积分:%.2f|新余额≈%.2f", 局_增减积分, 新余额), utils.Float64取负值(局_花费金额))
+	go Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("购买积分:%.2f|新余额≈%.2f", 局_增减积分, 新余额), Float64取负值(局_花费金额))
 	err = Ser_AppUser.Id积分增减(AppInfo.AppId, 局_AppUser.Id, 局_增减积分, true)
 	if err != nil {
 		新余额, err = Ser_User.Id余额增减(局_在线信息.Uid, 局_花费金额, true)
@@ -319,77 +315,6 @@ func UserApi_余额购买积分(c *gin.Context) {
 
 	}
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AddVipNumber": 局_增减积分})
-	return
-}
-func UserApi_余额购买充值卡(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-
-	if !检测_账密模式专用(c, AppInfo) {
-		return
-	}
-
-	if !检测用户登录在线正常(&局_在线信息) {
-		response.X响应状态(c, response.Status_未登录)
-		return
-	}
-
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"PayMoneyToKa","Money":1,"Time":1684550291,"Status":37674}
-	var 局_卡类 DB.DB_KaClass
-	局_卡类.Id = 请求json.GetInt("KaClassId")
-	局_卡类, err := Ser_KaClass.KaClass取详细信息(局_卡类.Id)
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, "要购买的充值卡类型ID不存在")
-		return
-	}
-	if AppInfo.AppId != 局_卡类.AppId || 局_卡类.Money <= 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "普通用户无法购买本类型充值卡")
-		return
-	}
-
-	新余额, err := Ser_User.Id余额增减(局_在线信息.Uid, 局_卡类.Money, false)
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, "购买失败,"+err.Error())
-		return
-	}
-
-	局_卡信息, err2 := Ser_Ka.Ka单卡创建(局_卡类.Id, 局_在线信息.User, "用户"+局_在线信息.User+"自助通过Api购卡", "", 0)
-	if err2 != nil {
-		新余额, err = Ser_User.Id余额增减(局_在线信息.Uid, 局_卡类.Money, true)
-		if err != nil {
-			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, 局_在线信息.User, AppInfo.AppName, 局_在线信息.AppVer, "用户余额购卡,减余额成功,制卡失败,请手动处理,本次错误原因:"+err.Error(), c.ClientIP())
-			response.X响应状态消息(c, response.Status_操作失败, "购卡失败,费用退还失败,请联系开发者手动处理")
-		} else {
-			response.X响应状态消息(c, response.Status_操作失败, "购卡失败,请重试")
-		}
-		return
-	} else if 局_在线信息.AgentUid > 0 && 局_卡类.AgentMoney > 0 {
-		go Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), "自助购卡->"+AppInfo.AppName+`->卡ID:`+strconv.Itoa(局_卡类.Id)+",卡号:"+局_卡类.Name+":"+局_卡信息.Name+"|新余额≈"+utils.Float64到文本(新余额, 2), utils.Float64取负值(局_卡类.Money))
-
-		//代理分成
-		//开始分利润 20240202 mark处理重构以后改事务
-		代理分成数据, err3 := Ser_Agent.D代理分成计算(局_在线信息.AgentUid, 局_卡类.AgentMoney)
-		if err3 == nil {
-			for 局_索引 := range 代理分成数据 {
-				d := 代理分成数据[局_索引] //太长了,放个变量里
-				新余额, err2 = Ser_User.Id余额增减(d.Uid, d.S实际分成金额, true)
-				if err2 != nil {
-					//,一般不会出现,除非用户不存在
-					global.GVA_LOG.Error(fmt.Sprintf("用户余额代理分成余额增加失败:%s,代理ID:%d,金额¥%v,卡号ID:%d", err2.Error(), d.Uid, d.S实际分成金额, 局_卡信息.Id))
-				} else {
-					str := fmt.Sprintf("用户余额制卡ID:%d,分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_卡信息.Id, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_卡类.Money, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
-					Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), c.ClientIP(), str, d.S实际分成金额)
-				}
-			}
-		}
-		// 分成结束==============
-	}
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AppId": 局_卡信息.AppId, "KaClassId": 局_卡信息.KaClassId, "KaClassName": 局_卡类.Name, "KaName": 局_卡信息.Name})
-
-	局_文本 := fmt.Sprintf("自助购卡应用:%s,卡类:%s,消费:%.2f)", AppInfo.AppName, 局_卡类.Name, 局_卡类.Money)
-	go Ser_Log.Log_写卡号操作日志(局_在线信息.User, c.ClientIP(), 局_文本, []string{局_卡信息.Name}, 1, 0)
 	return
 }
 

@@ -1,7 +1,7 @@
 package UserApi
 
 import (
-	"EFunc/utils"
+	. "EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
@@ -26,7 +26,7 @@ func KyApiSendSms(c *gin.Context) {
 	}
 	//局_错误信息 := ""
 	局_手机号 := string(请求json.GetStringBytes("Phone"))
-	/*	if !utils.Z正则_校验手机号(局_手机号, &局_错误信息) {
+	/*	if !Z正则_校验手机号(局_手机号, &局_错误信息) {
 		response.X响应状态消息(c, response.Status_操作失败, 局_错误信息)
 		return
 	}*/
@@ -48,7 +48,7 @@ func KyApiSendSms(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, err.Error()) //基本就是余额不足
 		return
 	}
-	go Ser_Log.Log_写余额日志(局_User.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", "快验系统ApiSendSms"+局_手机号+","+局_参数验证码, 新余额), utils.Float64取负值(局_增减值))
+	go Ser_Log.Log_写余额日志(局_User.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", "快验系统ApiSendSms"+局_手机号+","+局_参数验证码, 新余额), Float64取负值(局_增减值))
 	err = Captcha.Sms_当前选择发送短信验证码([]string{局_参数验证码}, 局_手机号)
 	if err == nil {
 		response.X响应状态(c, c.GetInt("局_成功Status"))

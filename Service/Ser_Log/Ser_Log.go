@@ -63,7 +63,7 @@ func Log_写风控日志(LId, 风控规则类型 int, User, IP, 风控信息 str
 		LId:  LId,
 		User: User,
 		Ip:   IP + " " + Qqwry.Ip查信息2(IP),
-		Time: int(time.Now().Unix()),
+		Time: time.Now().Unix(),
 		Type: 风控规则类型,
 		Note: 风控信息,
 	}
@@ -86,7 +86,7 @@ func Log_写用户消息(消息类型 int, User, App名称, AppVer, 消息内容
 		App:          App名称,
 		AppVer:       AppVer,
 		MsgType:      消息类型,
-		Time:         int(time.Now().Unix()),
+		Time:         time.Now().Unix(),
 		Ip:           IP + " " + Qqwry.Ip查信息2(IP),
 		Note:         消息内容,
 		IsReadIsRead: false,
@@ -103,7 +103,7 @@ func Log_写余额日志(User, IP, Note string, Count float64) {
 		Id:    0,
 		User:  User,
 		Ip:    IP + " " + Qqwry.Ip查信息2(IP),
-		Time:  int(time.Now().Unix()),
+		Time:  time.Now().Unix(),
 		Count: Count,
 		Note:  Note,
 	}
@@ -122,7 +122,7 @@ func Log_写积分点数时间日志(User, IP, Note string, Count float64, AppId
 		AppId: AppId,
 		Type:  Type,
 		Ip:    IP + " " + Qqwry.Ip查信息2(IP),
-		Time:  int(time.Now().Unix()),
+		Time:  time.Now().Unix(),
 		Count: Count,
 		Note:  Note,
 	}

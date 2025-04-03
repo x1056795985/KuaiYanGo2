@@ -337,7 +337,7 @@ func jS_置公共变量(变量名, 值 string) bool {
 	if publicData.L_publicData.Name是否存在(&gin.Context{}, 1, 变量名) {
 		err = publicData.L_publicData.Z置值(&gin.Context{}, 1, 变量名, 值)
 	} else {
-		var 局_新公共变量 = DB.DB_PublicData{AppId: 1, Name: 变量名, Value: 值, Type: 1, IsVip: 0, Time: int(time.Now().Unix()), Note: ""}
+		var 局_新公共变量 = DB.DB_PublicData{AppId: 1, Name: 变量名, Value: 值, Type: 1, IsVip: 0, Time: time.Now().Unix(), Note: ""}
 		err = publicData.L_publicData.C创建(&gin.Context{}, 局_新公共变量)
 	}
 	return err == nil

@@ -3,10 +3,11 @@ package OtherFunc
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Log"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 )
@@ -33,11 +34,7 @@ func (a *Api) SetAppUserKey(c *gin.Context) {
 		return
 	}
 
-	if !Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_修改用户绑定) {
-		response.FailWithMessage("无修改用户绑定权限,请联系上级代理", c)
-		return
-	}
-	局_可操作AppId := Ser_Agent.Id取代理可操作应用AppId列表(c.GetInt("Uid"))
+	局_可操作AppId := agent.L_agent.Id取代理可操作应用AppId列表(c, c.GetInt("Uid"))
 	if !utils.S数组_整数是否存在(局_可操作AppId, 请求.AppId) {
 		response.FailWithMessage("无该应用操作权限,请联系上级授权该应用任意制卡卡类,获取应用权限", c)
 		return
@@ -63,7 +60,7 @@ func (a *Api) SetAppUserKey(c *gin.Context) {
 	}
 	局_信息 := "修改绑定信息 '" + 局_用户详情.Key + "'  ->  '" + 请求.Key + "'"
 
-	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), Ser_Agent.Q取Id代理级别(c.GetInt("Uid")), 请求.AppId, AppUserid, Ser_AppUser.Id取User(请求.AppId, AppUserid), DB.D代理功能_修改用户绑定, c.ClientIP(), 局_信息)
+	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 请求.AppId, AppUserid, Ser_AppUser.Id取User(请求.AppId, AppUserid), DB.D代理功能_修改用户绑定, c.ClientIP(), 局_信息)
 	response.OkWithMessage("操作成功", c)
 	return
 }

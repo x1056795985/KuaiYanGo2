@@ -2,9 +2,9 @@ package LogAgentOtherFunc
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/agent"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -91,7 +91,7 @@ func (a *Api) GetLogList(c *gin.Context) {
 		局_AgentIds = append(局_AgentIds, LogAgentOtherFunc[索引].AgentUid)
 	}
 	局_MapUId_User := Ser_User.Id取User_批量(局_AgentIds)
-	局_Map代理ID_功能 := Ser_Agent.Q取全部代理功能ID_MAP()
+	局_Map代理ID_功能 := agent.L_agent.Q取全部代理功能ID_MAP(c)
 	局_DB_LogAgentOtherFunc扩展 := make([]DB_LogAgentOtherFunc扩展, len(LogAgentOtherFunc))
 	for 索引, _ := range LogAgentOtherFunc {
 		局_DB_LogAgentOtherFunc扩展[索引] = DB_LogAgentOtherFunc扩展{

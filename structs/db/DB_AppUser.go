@@ -10,7 +10,7 @@ type DB_AppUser struct {
 	Note         string  `json:"Note" gorm:"column:Note;size:5000;comment:备注"`
 	MaxOnline    int     `json:"MaxOnline" gorm:"column:MaxOnline;comment:在线最大数量"`
 	UserClassId  int     `json:"UserClassId" gorm:"column:UserClassId;comment:用户分类类型"` // 0 未分类   1,2,3
-	RegisterTime int     `json:"RegisterTime" gorm:"column:RegisterTime;comment:注册时间"`
+	RegisterTime int64   `json:"RegisterTime" gorm:"column:RegisterTime;comment:注册时间"`
 	AgentUid     int     `json:"AgentUid" gorm:"column:AgentUid;Index;default:0;comment:归属代理uid"`
 }
 

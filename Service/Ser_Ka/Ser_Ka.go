@@ -4,9 +4,9 @@ import (
 	"EFunc/utils"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"math/rand"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AgentInventory"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
@@ -14,6 +14,10 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
+	"server/new/app/logic/common/kaClassUpPrice"
+	dbm "server/new/app/models/db"
 	DB "server/structs/db"
 	"strconv"
 	"strings"
@@ -100,24 +104,42 @@ func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id int, 制卡人账号 st
 
 // Ka代理批量购买 切片可以直接传址 所以放切片  卡信息切片[:]
 // 有效期 0=9999999999 无限制
-func Ka代理批量购买(卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int, 代理备注 string, 有效期时间戳 int64, ip string) error {
+func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int, 代理备注 string, 有效期时间戳 int64, ip string) error {
+	var 局_价格组成 struct {
+		总卡类价格 float64
+
+		总调价  float64 //这个是已经*数量的
+		调价详情 []dbm.DB_KaClassUpPrice
+		购买数量 int64
+
+		总付款金额 float64
+	}
+	局_价格组成.购买数量 = int64(len(卡信息切片))
 
 	KaClass详细信息, err := Ser_KaClass.KaClass取详细信息(卡类id)
 	if err != nil { //估计是卡类不存在
 		return err
 	}
+	局_价格组成.总卡类价格 = utils.Float64乘int64(KaClass详细信息.AgentMoney, 局_价格组成.购买数量)
+
 	局_购卡人信息, ok := Ser_User.Id取详情(购卡人Id)
 	if !ok {
 		return errors.New("用户不存在")
 	}
-	局_总计金额 := utils.Float64乘int64(KaClass详细信息.AgentMoney, int64(len(卡信息切片)))
-	if 局_购卡人信息.Rmb < 局_总计金额 { //先检查一遍,节约事务性能
 
-		return errors.New("余额不足")
-
+	局_价格组成.总调价, 局_价格组成.调价详情, err = kaClassUpPrice.L_kaClassUpPrice.J计算代理调价(c, 卡类id, 局_购卡人信息.UPAgentId)
+	if err != nil {
+		return err
 	}
 
-	if 局_总计金额 < 0 {
+	局_价格组成.总调价 = utils.Float64乘int64(局_价格组成.总调价, 局_价格组成.购买数量)
+	局_价格组成.总付款金额 = utils.Float64加float64(局_价格组成.总调价, 局_价格组成.总卡类价格, 2)
+
+	if 局_购卡人信息.Rmb < 局_价格组成.总付款金额 { //先检查一遍,节约事务性能
+		return fmt.Errorf("余额不足 (当前余额:%.2f < 需支付:%.2f)", 局_购卡人信息.Rmb, 局_价格组成.总付款金额)
+	}
+
+	if 局_价格组成.总付款金额 < 0 {
 		return errors.New("卡类代理价格异常")
 	}
 
@@ -125,7 +147,7 @@ func Ka代理批量购买(卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int,
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 
 		// 减少余额
-		err = tx.Exec("UPDATE db_User SET RMB = RMB - ? WHERE Id = ?", 局_总计金额, 局_购卡人信息.Id).Error
+		err = tx.Exec("UPDATE db_User SET RMB = RMB - ? WHERE Id = ?", 局_价格组成.总付款金额, 局_购卡人信息.Id).Error
 		if err != nil {
 			global.GVA_LOG.Error(strconv.Itoa(局_购卡人信息.Id) + "Id余额减少失败:" + err.Error())
 			return errors.New("余额减少失败查看服务器日志检查原因")
@@ -216,29 +238,30 @@ func Ka代理批量购买(卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int,
 	}
 	局_ID列表 := builder.String()
 	局_文本 := fmt.Sprintf("代理购卡[%s -> %s],卡号ID{%s},|新余额≈%s", Ser_AppInfo.App取AppName(KaClass详细信息.AppId), KaClass详细信息.Name, 局_ID列表, utils.Float64到文本(新余额, 2))
-	go Ser_Log.Log_写余额日志(局_购卡人信息.User, ip, 局_文本, utils.Float64取负值(局_总计金额))
+	Ser_Log.Log_写余额日志(局_购卡人信息.User, ip, 局_文本, utils.Float64取负值(局_价格组成.总付款金额))
 	局_文本 = fmt.Sprintf("新制卡号:[%s -> %s],批次id:{{批次id}}({{卡号索引}}/%d)", Ser_AppInfo.App取AppName(卡信息切片[0].AppId), Ser_KaClass.Id取Name(卡信息切片[0].KaClassId), len(卡信息切片))
-	go Ser_Log.Log_写卡号操作日志(局_购卡人信息.User, ip, 局_文本, 数组_卡号, 1, Ser_Agent.Q取Id代理级别(局_购卡人信息.Id))
+	Ser_Log.Log_写卡号操作日志(局_购卡人信息.User, ip, 局_文本, 数组_卡号, 1, agentLevel.L_agentLevel.Q取Id代理级别(c, 局_购卡人信息.Id))
 
 	//开始分利润 20240202 mark处理重构以后改事务
-	代理分成数据, err2 := Ser_Agent.D代理分成计算(局_购卡人信息.Id, 局_总计金额)
+	//先分成 代理调价信息的价格 然后再计算百分比的价格
+	if 局_价格组成.总调价 > 0 {
+		局_日志前缀 := fmt.Sprintf("下级代理:%s,制卡ID{%s}", 局_购卡人信息.User, 局_ID列表)
+		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
+		if err != nil {
+			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
+		}
+	}
+	//然后再计算百分比的价格
+	代理分成数据, err2 := agent.L_agent.D代理分成计算(c, 局_购卡人信息.Id, 局_价格组成.总卡类价格)
 	if err2 != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成计算失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), 局_购卡人信息.UPAgentId, 局_总计金额, 局_ID列表))
+		global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成计算失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), 局_购卡人信息.UPAgentId, 局_价格组成.总卡类价格, 局_ID列表))
 		return err2
 	}
-
-	for 局_索引 := range 代理分成数据 {
-		d := 代理分成数据[局_索引] //太长了,放个变量里
-		新余额, err2 = Ser_User.Id余额增减(d.Uid, d.S实际分成金额, true)
-		if err2 != nil {
-			//,一般不会出现,除非用户不存在
-			global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成余额增加失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), d.Uid, d.S实际分成金额, 局_ID列表))
-		} else {
-			str := fmt.Sprintf("下级代理:%s,制卡ID{%s},分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_购卡人信息.User, 局_ID列表, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_总计金额, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
-			if d.Uid == 局_购卡人信息.Id {
-				str = fmt.Sprintf("代理制卡ID{%s},自消费分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s", 局_ID列表, utils.Float64到文本(d.S实际分成金额, 2), utils.Float64到文本(局_总计金额, 2), d.F分成百分比, d.F分给下级百分比, utils.Float64到文本(新余额, 2))
-			}
-			Ser_Log.Log_写余额日志(Ser_User.Id取User(d.Uid), ip, str, d.S实际分成金额)
+	if len(代理分成数据) >= 0 {
+		局_日志前缀 := fmt.Sprintf("下级代理:%s,制卡ID{%s},", 局_购卡人信息.User, 局_ID列表)
+		err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_价格组成.总卡类价格, 局_日志前缀)
+		if err != nil {
+			global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 		}
 	}
 	// 分成结束==============
@@ -247,7 +270,7 @@ func Ka代理批量购买(卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int,
 
 // Ka代理批量购买 切片可以直接传址 所以放切片  卡信息切片[:]
 // 有效期 0=9999999999 无限制
-func Ka代理批量库存购买(卡信息切片 []DB.DB_Ka, 库存Id, 制卡数量, 购卡人Id int, 代理备注 string, ip string) error {
+func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库存Id, 制卡数量, 购卡人Id int, 代理备注 string, ip string) error {
 	if 制卡数量 <= 0 {
 		return errors.New("生成数量必须大于0")
 	}
@@ -356,7 +379,7 @@ func Ka代理批量库存购买(卡信息切片 []DB.DB_Ka, 库存Id, 制卡数�
 		数组_卡号 = append(数组_卡号, 卡信息切片[i].Name)
 	}
 	局_文本 := fmt.Sprintf("制卡库存Id:%d,应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", 局_库存详情.Id, Ser_AppInfo.App取AppName(卡信息切片[0].AppId), Ser_KaClass.Id取Name(卡信息切片[0].KaClassId), len(卡信息切片))
-	go Ser_Log.Log_写卡号操作日志(局_购卡人User, ip, 局_文本, 数组_卡号, 1, Ser_Agent.Q取Id代理级别(购卡人Id))
+	go Ser_Log.Log_写卡号操作日志(局_购卡人User, ip, 局_文本, 数组_卡号, 1, agentLevel.L_agentLevel.Q取Id代理级别(c, 购卡人Id))
 	return nil
 }
 func Q取总数() int64 {
@@ -547,7 +570,7 @@ func Ka修改状态_同步卡号模式软件用户(id []int, status int) error {
 }
 
 // 代理权限不在这里校验,在api接口校验
-func Ka更换卡号(id, 代理Id int, ip string) error {
+func Ka更换卡号(c *gin.Context, id, 代理Id int, ip string) error {
 	局_卡号详情, err := Id取详情(id)
 	if err != nil {
 		return errors.New("卡号ID不存在")
@@ -588,7 +611,7 @@ func Ka更换卡号(id, 代理Id int, ip string) error {
 	err = global.GVA_DB.Model(DB.DB_Ka{}).Where("Id = ? ", id).Update("Name", 局_新卡号).Error
 	if err == nil {
 		局_log := fmt.Sprintf("操作更换卡号:  %s  ->  %s", 局_卡号详情.Name, 局_新卡号)
-		Ser_Log.Log_写卡号操作日志(代理User, ip, 局_log, []string{局_卡号详情.Name}, 3, Ser_Agent.Q取Id代理级别(代理Id))
+		Ser_Log.Log_写卡号操作日志(代理User, ip, 局_log, []string{局_卡号详情.Name}, 3, agentLevel.L_agentLevel.Q取Id代理级别(c, 代理Id))
 	}
 	return err
 }
@@ -624,8 +647,8 @@ func Id取制卡人(Id int) string {
 }
 func Id检测制卡人(Id []int, 制卡人 string) bool {
 	var 实际制卡人 []string
-	global.GVA_DB.Model(DB.DB_Ka{}).Distinct("RegisterUser").Where("Id IN ?", Id).Find(&制卡人)
-	if len(制卡人) == 1 && 制卡人 == 实际制卡人[0] {
+	global.GVA_DB.Model(DB.DB_Ka{}).Distinct("RegisterUser").Where("Id IN ?", Id).Find(&实际制卡人)
+	if len(实际制卡人) == 1 && 制卡人 == 实际制卡人[0] {
 		return true
 	}
 

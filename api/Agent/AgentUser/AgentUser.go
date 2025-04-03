@@ -4,13 +4,14 @@ import (
 	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_Chare"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	. "server/utils"
@@ -30,7 +31,7 @@ func (a *Api) GetAgentUserInfo(c *gin.Context) {
 		return
 	}
 
-	if Ser_Agent.Q取上级代理的子级代理级别(c.GetInt("Uid"), 请求.Id) <= 0 {
+	if agent.L_agent.Q取上级代理的子级代理级别(c, c.GetInt("Uid"), 请求.Id) <= 0 {
 		response.FailWithMessage("只能查询自己的子级代理详细信息", c)
 		return
 	}
@@ -43,8 +44,8 @@ func (a *Api) GetAgentUserInfo(c *gin.Context) {
 		response.FailWithMessage("查询用户详细信息失败", c)
 		return
 	}
-	//DB_AgentUser.Role = Ser_Agent.Q取Id代理级别(DB_AgentUser.Id)  //不能让下级代理知道自己是几级代理,容易三级直接想办法联系一级代理
-	DB_AgentUser.UPAgentUser = Ser_Agent.ID取用户名(DB_AgentUser.UPAgentId)
+	//DB_AgentUser.Role = agentLevel.L_agentLevel.Q取Id代理级别(c,DB_AgentUser.Id)  //不能让下级代理知道自己是几级代理,容易三级直接想办法联系一级代理
+	DB_AgentUser.UPAgentUser = agent.L_agent.ID取用户名(c, DB_AgentUser.UPAgentId)
 	//DB_AgentUser.LoginAppName = Ser_AppInfo.AppId取应用名称(DB_AgentUser.LoginAppid)
 
 	response.OkWithDetailed(DB_AgentUser, "获取成功", c)
@@ -84,7 +85,7 @@ func (a *Api) GetAgentUserList(c *gin.Context) {
 	}
 
 	var 总数 int64
-	局_所有子级代理ID := Ser_Agent.Q取下级代理数组含子级([]int{c.GetInt("Uid")})
+	局_所有子级代理ID := agent.L_agent.Q取下级代理数组含子级(c, []int{c.GetInt("Uid")})
 	//限制只能查代理,限制只能查自己的子级代理列表
 	局_DB := global.GVA_DB.Model(DB.DB_User{}).Where("UPAgentId != 0").Where("Id IN ?", 局_所有子级代理ID)
 
@@ -168,10 +169,6 @@ func (a *Api) New代理信息(c *gin.Context) {
 		response.FailWithMessage("添加代理不能有id值", c)
 		return
 	}
-	if !Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_发展下级代理) {
-		response.FailWithMessage("无发展下级代理权限,请联系上级代理授权.", c)
-		return
-	}
 
 	if 请求.Rmb != 0 && c.GetInt("Uid") != 1 {
 		response.FailWithMessage("非系统管理员只能创建余额=0的代理用户", c)
@@ -183,12 +180,12 @@ func (a *Api) New代理信息(c *gin.Context) {
 		return
 	}*/
 
-	if Ser_Agent.Q取Id代理级别(请求.UPAgentId) >= 3 {
+	if agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.UPAgentId) >= 3 {
 		response.FailWithMessage("三级代理无法发展下级代理", c)
 		return
 	}
 
-	局_上级代理分成 := Ser_Agent.ID取分成百分比(请求.UPAgentId)
+	局_上级代理分成 := agent.L_agent.ID取分成百分比(c, 请求.UPAgentId)
 	if 局_上级代理分成 < 请求.AgentDiscount {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
@@ -231,7 +228,7 @@ func (a *Api) Save代理信息(c *gin.Context) {
 		return
 	}
 
-	if Ser_Agent.Q取上级代理的子级代理级别(c.GetInt("Uid"), 请求.Id) != 1 {
+	if agent.L_agent.Q取上级代理的子级代理级别(c, c.GetInt("Uid"), 请求.Id) != 1 {
 		response.FailWithMessage("权限不足,只能操作自己的直属子级代理", c)
 		return
 	}
@@ -261,7 +258,7 @@ func (a *Api) Save代理信息(c *gin.Context) {
 		response.FailWithMessage("非系统管理员不能通过编辑改变代理余额", c)
 		return
 	}
-	局_上级代理分成 := Ser_Agent.ID取分成百分比(请求.UPAgentId)
+	局_上级代理分成 := agent.L_agent.ID取分成百分比(c, 请求.UPAgentId)
 	if 局_上级代理分成 < 请求.AgentDiscount {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
@@ -315,7 +312,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 		return
 	}
 
-	if !Ser_Agent.S是否都为子级代理(c.GetInt("Uid"), 请求.Id) {
+	if !agent.L_agent.S是否都为子级代理(c, c.GetInt("Uid"), 请求.Id) {
 		response.FailWithMessage("权限不足,只能操作自己的子级代理", c)
 		return
 	}
@@ -367,13 +364,13 @@ func (a *Api) GetAgentKaClassAuthority(c *gin.Context) {
 	}
 	var 局_返回 代理可制卡类授权
 	局_上级代理ID := Ser_User.Id取上级代理ID(请求.Id)
-	局_返回.KaList = Ser_KaClass.Q取全部可制卡类树形框列表(局_上级代理ID)
-	局_返回.FunctionList = Ser_Agent.Q取全部代理功能名称_MAP()
+	局_返回.KaList = Ser_KaClass.Q取全部可制卡类树形框列表(c, 局_上级代理ID)
+	局_返回.FunctionList = agent.L_agent.Q取全部代理功能名称_MAP(c)
 	var 局_可用代理功能ID数组 []int
 	if 局_上级代理ID < 0 { //上级是管理员,全部功能都可以看见
-		局_可用代理功能ID数组 = Ser_Agent.Q取全部代理功能ID_int数组()
+		局_可用代理功能ID数组 = agent.L_agent.Q取全部代理功能ID_int数组(c)
 	} else {
-		_, 局_可用代理功能ID数组 = Ser_Agent.Id取代理可制卡类和可用代理功能列表(局_上级代理ID)
+		_, 局_可用代理功能ID数组 = agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, 局_上级代理ID)
 		for key := range 局_返回.FunctionList {
 			if !utils.S数组_整数是否存在(局_可用代理功能ID数组, 局_返回.FunctionList[key]) {
 				delete(局_返回.FunctionList, key) //没有授权就从全部里删除
@@ -381,7 +378,7 @@ func (a *Api) GetAgentKaClassAuthority(c *gin.Context) {
 		}
 	}
 
-	局_返回.IdListAuthority, 局_返回.FunctionId = Ser_Agent.Id取代理可制卡类和可用代理功能列表(请求.Id)
+	局_返回.IdListAuthority, 局_返回.FunctionId = agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, 请求.Id)
 
 	response.OkWithDetailed(局_返回, "获取成功", c)
 	return
@@ -401,25 +398,25 @@ func (a *Api) SetAgentKaClassAuthority(c *gin.Context) {
 		return
 	}
 
-	if Ser_Agent.Q取上级代理的子级代理级别(c.GetInt("Uid"), 请求.Id) != 1 {
+	if agent.L_agent.Q取上级代理的子级代理级别(c, c.GetInt("Uid"), 请求.Id) != 1 {
 		response.FailWithMessage("只能操作自己的直属下级代理", c)
 		return
 	}
 
-	if utils.S数组_整数是否存在(请求.KId, DB.D代理功能_发展下级代理) && Ser_Agent.Q取Id代理级别(请求.Id) >= 3 {
+	if utils.S数组_整数是否存在(请求.KId, DB.D代理功能_发展下级代理) && agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.Id) >= 3 {
 		response.FailWithMessage("该代理不可设置发展下级代理功能权限", c)
 		return
 	}
 
 	var 局_本级权限 []int
-	局_可制卡号, 局_功能授权 := Ser_Agent.Id取代理可制卡类和可用代理功能列表(c.GetInt("Uid"))
+	局_可制卡号, 局_功能授权 := agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, c.GetInt("Uid"))
 
 	局_本级权限 = append(局_可制卡号, 局_功能授权...) //合并功能ID和卡类ID
 	局_没有卡类 := 差集(请求.KId, 局_本级权限)
 
 	if len(局_没有卡类) > 0 {
 		strSlice := make([]string, len(局_没有卡类))
-		var 局_可授权功能Map = Ser_Agent.Q取全部代理功能ID_MAP()
+		var 局_可授权功能Map = agent.L_agent.Q取全部代理功能ID_MAP(c)
 		for i, num := range 局_没有卡类 {
 			if num < 0 {
 				strSlice[i] = 局_可授权功能Map[num]
@@ -431,7 +428,7 @@ func (a *Api) SetAgentKaClassAuthority(c *gin.Context) {
 		return
 	}
 
-	err = Ser_Agent.Z置Id代理可制卡类或功能授权列表(请求.Id, 请求.KId)
+	err = agent.L_agent.Z置Id代理可制卡类或功能授权列表(c, 请求.Id, 请求.KId)
 	if err == nil {
 		response.OkWithMessage("操作成功", c)
 	} else {
@@ -451,12 +448,8 @@ func (a *Api) SendRmbTOAgent(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-	if !Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_转账) {
-		response.FailWithMessage("权限不足,无转账权限,请联系上级授权", c)
-		return
-	}
 
-	if Ser_Agent.Q取上级代理的子级代理级别(c.GetInt("Uid"), 请求.Id) != 1 {
+	if agent.L_agent.Q取上级代理的子级代理级别(c, c.GetInt("Uid"), 请求.Id) != 1 {
 		response.FailWithMessage("只能转账给自己的直属下级代理", c)
 		return
 	}

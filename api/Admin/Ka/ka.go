@@ -107,6 +107,7 @@ type 结构请求_GetKaList struct {
 	Page         int      `json:"Page"`         // 页
 	Status       int      `json:"Status"`       // 状态
 	RegisterTime []string `json:"RegisterTime"` // 制卡开始时间 制卡结束时间
+	UseTime      []string `json:"UseTime"`      // 制卡开始时间 制卡结束时间
 	KaClassId    int      `json:"KaClassId"`    // 卡类id
 	Num          int      `json:"Num"`          // 卡使情况
 	Size         int      `json:"Size"`         // 页数量
@@ -160,6 +161,11 @@ func (a *Api) GetKaList(c *gin.Context) {
 		制卡开始时间, _ := strconv.Atoi(请求.RegisterTime[0])
 		制卡结束时间, _ := strconv.Atoi(请求.RegisterTime[1])
 		局_DB.Where("RegisterTime > ?", 制卡开始时间).Where("RegisterTime < ?", 制卡结束时间+86400)
+	}
+	if 请求.UseTime != nil && len(请求.UseTime) == 2 && 请求.UseTime[0] != "" && 请求.UseTime[1] != "" {
+		使用开始时间, _ := strconv.Atoi(请求.UseTime[0])
+		使用结束时间, _ := strconv.Atoi(请求.UseTime[1])
+		局_DB.Where("UseTime > ?", 使用开始时间).Where("UseTime < ?", 使用结束时间+86400)
 	}
 
 	if 请求.KaClassId != 0 {

@@ -3,11 +3,11 @@ package Menu
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -32,7 +32,7 @@ func (a *Api) GetAgentInfo(c *gin.Context) {
 		return
 	}
 
-	_, 功能权限 := Ser_Agent.Id取代理可制卡类和可用代理功能列表(c.GetInt("Uid"))
+	_, 功能权限 := agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, c.GetInt("Uid"))
 	response.OkWithDetailed(结构响应_GetAdminInfo{
 		AgentInfo:     DB_user,
 		UserMsgNoRead: 0,
@@ -115,10 +115,6 @@ func (a *Api) Y余额充值(c *gin.Context) {
 		return
 	}
 
-	if !Ser_Agent.Id功能权限检测(c.GetInt("Uid"), DB.D代理功能_余额充值) {
-		response.FailWithMessage("无余额充值权限,请联系上级代理", c)
-		return
-	}
 	//========订单状态查询=======================
 	if 请求.D订单ID != "" {
 		局_订单信息, ok := Ser_RMBPayOrder.Order取订单详细(请求.D订单ID)

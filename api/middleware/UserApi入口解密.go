@@ -78,8 +78,9 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"GetPayOrderStatus": {"订单_取状态", UserApi.UserApi_订单_取状态, true},
 	"PayKaUsa":          {"订单_购卡直冲", UserApi.UserApi_订单_购卡直冲, true},
 	"PayUserMoney":      {"订单_余额充值", UserApi.UserApi_订单_余额充值, true},
-	"PayUserVipNumber":  {"订单_积分充值", UserApi.UserApi_订单_积分充值, true},
-	"PayGetKa":          {"订单_支付购卡", UserApi.UserApi_订单_支付购卡, true},
+	//下方接口为历史遗留20250402 已移除 充值类功能集中使用卡类充值方便代理分成等实现
+	//"PayUserVipNumber":  {"订单_积分充值", UserApi.UserApi_订单_积分充值, true},
+	"PayGetKa": {"订单_支付购卡", UserApi.UserApi_订单_支付购卡, true},
 	//下方接口为历史遗留20240429 已移除
 	//"GetAliPayPC":         {"订单_余额充值_支付宝PC支付", UserApi.UserApi_订单_余额充值_支付宝PC支付, true},
 	//"GetWXPayPC":          {"订单_余额充值_微信支付支付", UserApi.UserApi_订单_余额充值_微信支付支付, true},

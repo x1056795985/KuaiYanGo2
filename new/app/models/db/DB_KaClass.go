@@ -1,4 +1,4 @@
-package DB
+package db
 
 type DB_KaClass struct {
 	Id           int     `json:"Id" gorm:"column:Id;primarykey"`

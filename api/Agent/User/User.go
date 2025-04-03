@@ -2,7 +2,6 @@ package User
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/global"
 	"server/structs/Http/response"
@@ -59,11 +58,11 @@ func (a *Api) GetUserInfo(c *gin.Context) {
 		return
 	}
 
-	if Ser_Agent.Q取上级代理的子级代理级别(c.GetInt("Uid"), DB_user.UPAgentId) == 0 {
+	if agent.L_agent.Q取上级代理的子级代理级别(c, c.GetInt("Uid"), DB_user.UPAgentId) == 0 {
 		response.FailWithMessage("只能查询自己下级代理信息", c)
 		return
 	}
-	DB_user.Role = Ser_Agent.Q取Id代理级别(DB_user.Id)
+	DB_user.Role = agentLevel.L_agentLevel.Q取Id代理级别(c, DB_user.Id)
 	if DB_user.LoginAppid > 0 {
 		AppName := ""
 		Ser_AppInfo.AppId取应用名称(DB_user.LoginAppid)

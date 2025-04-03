@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/Service/Ser_Admin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
@@ -16,6 +15,8 @@ import (
 	"server/Service/Ser_UserClass"
 	"server/Service/Ser_UserConfig"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -202,7 +203,7 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 				局_代理id, _ = strconv.Atoi(请求.Keywords)
 			}
 			if 局_代理id != 0 {
-				局_代理id含子级id = Ser_Agent.Q取下级代理数组含子级([]int{局_代理id})
+				局_代理id含子级id = agent.L_agent.Q取下级代理数组含子级(c, []int{局_代理id})
 				局_代理id含子级id = append(局_代理id含子级id, 局_代理id)
 			}
 			if len(局_代理id含子级id) == 0 {
@@ -317,7 +318,7 @@ func (a *Api) Save用户信息(c *gin.Context) {
 		return
 	}
 
-	if 请求.AppUser.AgentUid != 0 && Ser_Agent.Q取Id代理级别(请求.AppUser.AgentUid) == 0 {
+	if 请求.AppUser.AgentUid != 0 && agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.AppUser.AgentUid) == 0 {
 		response.FailWithMessage("归属代理id不正确", c)
 		return
 	}
@@ -438,7 +439,7 @@ func (a *Api) New用户信息(c *gin.Context) {
 		response.FailWithMessage("用户已存在", c)
 		return
 	}
-	请求.RegisterTime = int(time.Now().Unix())
+	请求.RegisterTime = time.Now().Unix()
 	//app_id 没有这个字段排除掉
 
 	局_信息 := DB.DB_AppUser{

@@ -3,13 +3,14 @@ package AgentInventory
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AgentInventory"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -171,23 +172,23 @@ func (a *Api) New库存包信息(c *gin.Context) {
 		return
 	}
 
-	if !utils.S数组_整数是否存在(Ser_Agent.Q取下级代理数组含子级([]int{-c.GetInt("Uid")}), 请求.Uid) {
+	if !utils.S数组_整数是否存在(agent.L_agent.Q取下级代理数组含子级(c, []int{-c.GetInt("Uid")}), 请求.Uid) {
 		response.FailWithMessage("只能给自己的下级或子级代理创建库存", c)
 		return
 	}
 
-	新库存卡包, err2 := Ser_AgentInventory.New(请求.Uid, 请求.KaClassId, 请求.NumMax, -c.GetInt("Uid"), -1, 请求.EndTime, 请求.Note)
+	新库存卡包, err2 := Ser_AgentInventory.New(c, 请求.Uid, 请求.KaClassId, 请求.NumMax, -c.GetInt("Uid"), -1, 请求.EndTime, 请求.Note)
 	if err2 != nil {
 		response.FailWithMessage(err2.Error(), c)
 		return
 	}
 	response.OkWithMessage("操作成功", c)
 
-	User1角色 := Ser_Agent.Q取Id代理级别(请求.Uid)
+	User1角色 := agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.Uid)
 	if User1角色 == 0 {
 		User1角色 = 4
 	}
-	Ser_Log.Log_写库存转移日志(新库存卡包.Id, 新库存卡包.NumMax, 2, Ser_Agent.ID取用户名(请求.Uid), User1角色, Ser_Agent.ID取用户名(-c.GetInt("Uid")), 4, c.ClientIP(), "接收管理员库存包")
+	Ser_Log.Log_写库存转移日志(新库存卡包.Id, 新库存卡包.NumMax, 2, agent.L_agent.ID取用户名(c, 请求.Uid), User1角色, agent.L_agent.ID取用户名(c, -c.GetInt("Uid")), 4, c.ClientIP(), "接收管理员库存包")
 
 	return
 }
@@ -236,7 +237,7 @@ func (a *Api) K库存撤回(c *gin.Context) {
 		return
 	}
 	//管理员Uid为负数
-	err = Ser_AgentInventory.K库存撤回(-c.GetInt("Uid"), 请求.Id, 请求.Num, 请求.Note, c.ClientIP())
+	err = Ser_AgentInventory.K库存撤回(c, -c.GetInt("Uid"), 请求.Id, 请求.Num, 请求.Note, c.ClientIP())
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -282,7 +283,7 @@ func (a *Api) Get取下级代理列表和可创建库存包列表(c *gin.Context
 	var 局_uid int
 	局_uid = -c.GetInt("Uid")
 	响应数据.AgentTree = 转换为代理树2(nodes, 局_uid) //只能给自己的上级代理添加库存
-	局_临时 := Ser_KaClass.Q取全部可制卡类树形框列表(请求.Id)
+	局_临时 := Ser_KaClass.Q取全部可制卡类树形框列表(c, 请求.Id)
 	响应数据.KaClassTree = 局_临时
 	response.OkWithDetailed(响应数据, "获取成功", c)
 	return

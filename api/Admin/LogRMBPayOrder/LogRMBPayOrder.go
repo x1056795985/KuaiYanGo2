@@ -1,6 +1,7 @@
 package LogRMBPayOrder
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Log"
@@ -124,9 +125,17 @@ func (a *Api) GetLogList2(c *gin.Context) {
 		if 局_响应[索引].Processing == "" {
 			局_响应[索引].Processing = "未知原因" + strconv.Itoa(DB_LogRMBPayOrder[索引].ProcessingType)
 		}
-		//删首尾 {} 然后 子文本替换 , 为 \n,
-		局_响应[索引].Extra = strings.Replace(strings.Replace(局_响应[索引].Extra, "}", "", -1), "{", "", -1)
-		局_响应[索引].Extra = strings.Replace("其他信息:,"+局_响应[索引].Extra, ",", "<br />", -1)
+		// 如果Extra是JSON字符串
+		var tmp interface{}
+		if err = json.Unmarshal([]byte(局_响应[索引].Extra), &tmp); err == nil {
+			if formatted, err2 := json.MarshalIndent(tmp, "", "    "); err2 == nil {
+				局_响应[索引].Extra = string(formatted)
+			}
+		}
+		//局_响应[索引].Extra = strings.ReplaceAll(局_响应[索引].Extra, "{\n", "{")
+		//局_响应[索引].Extra = strings.ReplaceAll(局_响应[索引].Extra, "}\n", "}")
+		//局_响应[索引].Extra = strings.ReplaceAll(局_响应[索引].Extra, "},\n", "}")
+		局_响应[索引].Extra = "<pre>" + strings.ReplaceAll(局_响应[索引].Extra, "\n", "<br />") + "<pre />"
 	}
 	response.OkWithDetailed(结构响应_GetDB_LogRMBPayOrderList{局_响应, 总数}, "获取成功", c)
 	return

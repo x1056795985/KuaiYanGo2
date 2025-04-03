@@ -3,7 +3,7 @@ package DB
 // https://blog.csdn.net/qq_25062671/article/details/108653033  结构参考文章
 type Db_Agent_Level struct {
 	ID        int `json:"Id" gorm:"column:Id;primaryKey;comment:Id"`
-	Uid       int `json:"Uid" gorm:"column:Uid;comment:用户Id"`
+	Uid       int `json:"Uid" gorm:"column:Uid;index;comment:用户Id"`
 	UPAgentId int `json:"UPAgentId" gorm:"column:UPAgentId;comment:上级代理ID"` //负数为管理员ID,一般只有一级代理上级代理才是负数
 	Level     int `json:"Level" gorm:"column:Level;comment:是上级代理的第几级代理"`
 }

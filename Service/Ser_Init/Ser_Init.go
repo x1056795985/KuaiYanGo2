@@ -26,8 +26,8 @@ import (
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
-	DB2 "server/new/app/models/db"
-	newDB "server/new/app/models/db"
+	dbm "server/new/app/models/db"
+
 	"server/new/app/service"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -89,7 +89,7 @@ func InitDbTables(c *gin.Context) {
 		// DB.DB_AppUser{}, //DB.DB_AppUser{},   //因为每个应用一个表 所以不在自动迁移里处理  只在创建应用时 创建 处理
 		DB.DB_UserClass{},
 
-		DB.DB_KaClass{},
+		dbm.DB_KaClass{},
 		DB.DB_Ka{},
 
 		DB.DB_LogMoney{},
@@ -110,11 +110,12 @@ func InitDbTables(c *gin.Context) {
 		DB.Db_Agent_库存日志{},
 		DB.Db_Agent_库存卡包{},
 
-		newDB.DB_Setting{},
-		newDB.DB_Blacklist{},
-		newDB.DB_Cron{},
-		newDB.DB_Cron_log{},
-		newDB.DB_PromotionCode{},
+		dbm.DB_Setting{},
+		dbm.DB_Blacklist{},
+		dbm.DB_Cron{},
+		dbm.DB_Cron_log{},
+		dbm.DB_PromotionCode{},
+		dbm.DB_KaClassUpPrice{},
 	)
 
 	if err != nil {
@@ -315,24 +316,22 @@ func InitDbTable数据(c *gin.Context) {
 	//检查 定时任务,例子
 	局_例子版本 = 1
 	if 局_例子记录.Cron < 局_例子版本 {
-		global.GVA_DB.Model(newDB.DB_Cron{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_Cron{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			var S = service.S_Cron{}
 			tx := *global.GVA_DB
-			_ = S.Create(&tx, newDB.DB_Cron{Name: "测试网页访问", Status: 2, IsLog: 2, Type: 1, Cron: `0 0 0 * * ?`, RunText: `https://www.baidu.com`, Note: "例子每分钟请求一次"})
-			_ = S.Create(&tx, newDB.DB_Cron{Name: "测试公共函数", Status: 2, IsLog: 2, Type: 2, Cron: `0 0 0 * * ?`, RunText: `测试网页访问("aaa")`, Note: "例子每分钟执行一次公共函数"})
-			_ = S.Create(&tx, newDB.DB_Cron{Name: "测试执行sql", Status: 2, IsLog: 2, Type: 3, Cron: `0 * * * * ?`, RunText: `DELETE FROM db_cron_log WHERE  RunTime<{{十位时间戳}}-86400`, Note: "例子每天请求一次,支持变量{{十位时间戳}}会替换当前时间戳"})
+			_ = S.Create(&tx, dbm.DB_Cron{Name: "测试网页访问", Status: 2, IsLog: 2, Type: 1, Cron: `0 0 0 * * ?`, RunText: `https://www.baidu.com`, Note: "例子每分钟请求一次"})
+			_ = S.Create(&tx, dbm.DB_Cron{Name: "测试公共函数", Status: 2, IsLog: 2, Type: 2, Cron: `0 0 0 * * ?`, RunText: `测试网页访问("aaa")`, Note: "例子每分钟执行一次公共函数"})
+			_ = S.Create(&tx, dbm.DB_Cron{Name: "测试执行sql", Status: 2, IsLog: 2, Type: 3, Cron: `0 * * * * ?`, RunText: `DELETE FROM db_cron_log WHERE  RunTime<{{十位时间戳}}-86400`, Note: "例子每天请求一次,支持变量{{十位时间戳}}会替换当前时间戳"})
 		}
 		局_例子记录.Cron = 局_例子版本
 	}
 	//-============================================结束==========================
 	//检查 卡号列表,执行修改旧卡的卡号使用时间
 	局_例子版本 = 1
-	if 局_例子记录.KaUseTime < 局_例子版本 {
-		局_sql := "UPDATE `db_ka`  SET `UseTime` = CAST(LEFT(`UserTime`, 10) AS UNSIGNED)  WHERE `UserTime` IS NOT NULL AND `UserTime` != '' and UseTime=0"
-
+	if global.GVA_DB.Exec("Selete 1 FROM `db_ka`  WHERE  `UserTime` != '' and UseTime=0").RowsAffected > 0 {
+		局_sql := "UPDATE `db_ka`  SET `UseTime` = CAST(LEFT(`UserTime`, 10) AS UNSIGNED)  WHERE  `UserTime` != '' and UseTime=0"
 		global.GVA_LOG.Info("兼容执行修改旧卡的卡号时间,执行数量:" + strconv.Itoa(int(global.GVA_DB.Exec(局_sql).RowsAffected)))
-
 		局_例子记录.KaUseTime = 局_例子版本
 	}
 
@@ -739,7 +738,7 @@ func 数据库兼容旧版本(c *gin.Context) {
 
 	//2023/12/13  将配置信息改放到数据库,将旧的数据写入数据库
 	var 局_总数 int64
-	_ = db.Model(newDB.DB_Setting{}).Count(&局_总数).Error
+	_ = db.Model(dbm.DB_Setting{}).Count(&局_总数).Error
 	if 局_总数 == 0 && global.GVA_Viper.IsSet("系统设置.系统开关") {
 		var GVA_CONFIG config.Server备用
 		if err = global.GVA_Viper.Unmarshal(&GVA_CONFIG); err == nil {
@@ -792,15 +791,15 @@ func 数据库兼容旧版本(c *gin.Context) {
 		//检查是否存在表 不存在则创建
 		// 检查是否存在表 不存在则创建
 		migrator := db.Migrator()
-		tableName := DB2.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(v.AppId)
+		tableName := dbm.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(v.AppId)
 		// 检查表是否存在
 		if migrator.HasTable(tableName) {
 			continue //如果存在则跳到循环尾
 		}
 		// 创建唯一积分记录表
 		if err = db.Set("gorm:table_options", "ENGINE=InnoDB").
-			Table(DB2.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(v.AppId)).
-			AutoMigrate(&DB2.DB_UniqueNumLog{}); err != nil {
+			Table(dbm.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(v.AppId)).
+			AutoMigrate(&dbm.DB_UniqueNumLog{}); err != nil {
 			fmt.Println("积分记录表创建失败: ", err.Error())
 		}
 	}

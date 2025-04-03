@@ -7,14 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/Service/Ser_Admin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_UserClass"
 	"server/global"
 	"server/new/app/controller/Common"
-	"server/new/app/logic/agent/appUser"
+	"server/new/app/logic/agent/L_appUser"
 	"server/new/app/logic/common/agent"
 	"server/new/app/models/constant"
 	"server/new/app/models/request"
@@ -36,10 +35,6 @@ func NewAppUserController() *AppUser {
 
 // GetAppUserInfo
 func (C *AppUser) GetAppUserInfo(c *gin.Context) {
-	if !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_查看归属软件用户) {
-		response.FailWithMessage("权限不足,请联系上级授权", c)
-		return
-	}
 	var 请求 struct {
 		Id    int `json:"Id"`
 		AppId int `json:"AppId" binding:"required,min=10000"`
@@ -72,11 +67,7 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 // GetList
 // 获取用户信息列表
 func (C *AppUser) GetList(c *gin.Context) {
-	//{"AppId":2,"Type":2,"Size":10,"Page":1,"Status":1,"keywords":"1"}
-	if !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_查看归属软件用户) {
-		response.FailWithMessage("权限不足,请联系上级授权", c)
-		return
-	}
+
 	var 请求 struct {
 		request.List
 		Status        int `json:"Status"` // 1本软件正常,2本软件冻结
@@ -214,7 +205,7 @@ func (C *AppUser) GetList(c *gin.Context) {
 				response.FailWithMessage("代理用户不存在", c)
 				return
 			}
-			局_代理id含子级id = Ser_Agent.Q取下级代理数组含子级([]int{info.AgentInfo.Id})
+			局_代理id含子级id = agent.L_agent.Q取下级代理数组含子级(c, []int{info.AgentInfo.Id})
 			局_代理id含子级id = append(局_代理id含子级id, info.AgentInfo.Id)
 			if len(局_代理id含子级id) == 0 {
 				response.FailWithMessage("代理用户不存在", c)
@@ -444,7 +435,7 @@ func (C *AppUser) New用户信息(c *gin.Context) {
 		err = errors.New("用户已存在")
 		return
 	}
-	请求.RegisterTime = int(time.Now().Unix())
+	请求.RegisterTime = time.Now().Unix()
 	//app_id 没有这个字段排除掉
 	局_信息 := DB.DB_AppUser{
 		Uid:          请求.Uid,
@@ -496,7 +487,7 @@ func (C *AppUser) Set修改状态(c *gin.Context) {
 			response.FailWithMessage(err.Error(), c)
 		}
 	}()
-	err = appUser.L_appUser.Z置状态_同步卡号修改(c, 请求.AppId, 请求.Id, 请求.Status)
+	err = L_appUser.L_appUser.Z置状态_同步卡号修改(c, 请求.AppId, 请求.Id, 请求.Status)
 	if err != nil {
 		return
 	}
@@ -560,11 +551,6 @@ func (C *AppUser) Set批量维护_增减时间点数(c *gin.Context) {
 
 // save 保存
 func (C *AppUser) Set用户密码(c *gin.Context) {
-	if !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_修改用户密码) {
-		response.FailWithMessage("权限不足,请联系上级授权修改用户密码", c)
-		return
-	}
-
 	var 请求 struct {
 		AppId       int    `json:"AppId" binging:"required,min=10000"` // Appid 必填
 		Id          int    `json:"Id" binging:"required,min=1"`        // Appid 必填

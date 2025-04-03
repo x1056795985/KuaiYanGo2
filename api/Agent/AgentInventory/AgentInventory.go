@@ -3,13 +3,14 @@ package AgentInventory
 import (
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Admin"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AgentInventory"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/agent"
+	"server/new/app/logic/common/agentLevel"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -174,7 +175,7 @@ func (a *Api) New库存购买(c *gin.Context) {
 	}
 	请求.Id = 0
 	请求.Uid = c.GetInt("Uid")
-	新库存卡包, err2 := Ser_AgentInventory.New代理购买(请求.Uid, 请求.KaClassId, 请求.NumMax, 请求.EndTime, 请求.Note, c.ClientIP())
+	新库存卡包, err2 := Ser_AgentInventory.New代理购买(c, 请求.Uid, 请求.KaClassId, 请求.NumMax, 请求.EndTime, 请求.Note, c.ClientIP())
 	if err2 != nil {
 		response.FailWithMessage(err2.Error(), c)
 		return
@@ -182,7 +183,7 @@ func (a *Api) New库存购买(c *gin.Context) {
 
 	response.OkWithMessage("操作成功", c)
 
-	User1角色 := Ser_Agent.Q取Id代理级别(c.GetInt("Uid"))
+	User1角色 := agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid"))
 	if User1角色 == 0 {
 		User1角色 = 4
 	}
@@ -190,7 +191,7 @@ func (a *Api) New库存购买(c *gin.Context) {
 	if 请求.Uid < 0 {
 		局_创建用户名 = Ser_Admin.Id取User(请求.Uid)
 	} else {
-		局_创建用户名 = Ser_Agent.ID取用户名(请求.Uid)
+		局_创建用户名 = agent.L_agent.ID取用户名(c, 请求.Uid)
 	}
 
 	Ser_Log.Log_写库存转移日志(新库存卡包.Id, 新库存卡包.NumMax, 3, 局_创建用户名, User1角色, 局_创建用户名, User1角色, c.ClientIP(), "自助购买")
@@ -212,7 +213,7 @@ func (a *Api) K库存撤回(c *gin.Context) {
 		return
 	}
 
-	err = Ser_AgentInventory.K库存撤回(c.GetInt("Uid"), 请求.Id, 请求.Num, 请求.Note, c.ClientIP())
+	err = Ser_AgentInventory.K库存撤回(c, c.GetInt("Uid"), 请求.Id, 请求.Num, 请求.Note, c.ClientIP())
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -242,7 +243,7 @@ func (a *Api) K库存发送(c *gin.Context) {
 		return
 	}
 
-	err = Ser_AgentInventory.K库存发送(请求.SourceID, 请求.ToUserId, 请求.Num, 请求.Note, c.ClientIP())
+	err = Ser_AgentInventory.K库存发送(c, 请求.SourceID, 请求.ToUserId, 请求.Num, 请求.Note, c.ClientIP())
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -294,7 +295,7 @@ func (a *Api) Get取可创建库存包列表(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-	局_临时 := Ser_KaClass.Q取全部可制卡类树形框列表(c.GetInt("Uid"))
+	局_临时 := Ser_KaClass.Q取全部可制卡类树形框列表(c, c.GetInt("Uid"))
 	response.OkWithDetailed(结构请求_代理树和卡类树{局_临时}, "获取成功", c)
 	return
 }
@@ -338,7 +339,7 @@ func 转换为代理树2(代理列表 []*Node, 上级ID int) []*Node {
 
 func (a *Api) Q可发送库存下级代理(c *gin.Context) {
 
-	局_数组_下级代理ID := Ser_Agent.Q取下级代理数组([]int{c.GetInt("Uid")})
+	局_数组_下级代理ID := agent.L_agent.Q取下级代理数组(c, []int{c.GetInt("Uid")})
 	if len(局_数组_下级代理ID) == 0 {
 		response.FailWithMessage("无直属下级代理", c)
 		return

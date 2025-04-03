@@ -25,7 +25,9 @@ import (
 	VueAgentAssets "server/core/dist/VueAgent/assets"
 	"server/global"
 	"server/new/app/router"
+	mid2 "server/new/app/router/middleware"
 	"server/structs/Http/response"
+	DB "server/structs/db"
 	"strings"
 )
 
@@ -617,7 +619,7 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.POST("OutLogin", MenuApi.OutLogin)
 	baseRouter.POST("GetPayStatus", MenuApi.Q取支付通道状态)
 	baseRouter.POST("GetPayStatus2", MenuApi.Q取支付通道状态2)
-	baseRouter.POST("GetPayPC", MenuApi.Y余额充值)
+	baseRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_余额充值})).POST("GetPayPC", MenuApi.Y余额充值)
 	baseRouter.POST("GetPayOrderStatus", MenuApi.Q取余额充值订单状态)
 
 	if !(global.GVA_Viper.GetInt("系统模式") == 1) {
@@ -635,9 +637,9 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetInfo", App.GetInfo)        // 获取详细信息
 		baseRouter.POST("SetStatus", App.Set修改状态)      // 修改状态
 		baseRouter.POST("SetAgentNote", App.Set修改代理备注) // 修改状态
-		baseRouter.POST("Recover", App.Z追回卡号)
+		baseRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_卡号追回})).POST("Recover", App.Z追回卡号)
 		baseRouter.POST("UseKa", App.K卡号充值)
-		baseRouter.POST("ReplaceKaName", App.G更换卡号)
+		baseRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_更换卡号})).POST("ReplaceKaName", App.G更换卡号)
 		baseRouter.POST("ChartKaRegister", App.Get卡号列表统计制卡)
 		baseRouter.POST("GetKaTemplate", App.Q取卡号生成模板)
 		baseRouter.POST("SetKaTemplate", App.Set修改卡号生成模板)
@@ -655,15 +657,15 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter = Router根Agent.Group("/Agent")
 	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
-	AgentApp := Agent.Api.AgentUser                                                //实现路由的 具体方法位置
-	baseRouter.POST("GetAgentUserList", AgentApp.GetAgentUserList)                 // 获取用户列表
-	baseRouter.POST("GetAgentUserInfo", AgentApp.GetAgentUserInfo)                 // 获取用户详细信息
-	baseRouter.POST("SaveAgentUser", AgentApp.Save代理信息)                            // 保存用户详细信息
-	baseRouter.POST("NewAgentUser", AgentApp.New代理信息)                              // 保存用户详细信息
-	baseRouter.POST("SetAgentUserStatus", AgentApp.Set修改状态)                        // 保存用户详细信息
-	baseRouter.POST("GetAgentKaClassAuthority", AgentApp.GetAgentKaClassAuthority) //取全部可制卡类和已授权卡类
-	baseRouter.POST("SetAgentKaClassAuthority", AgentApp.SetAgentKaClassAuthority) //设置代理可制卡类ID
-	baseRouter.POST("SendRmbTOAgent", AgentApp.SendRmbTOAgent)                     //转账
+	AgentApp := Agent.Api.AgentUser                                                                 //实现路由的 具体方法位置
+	baseRouter.POST("GetAgentUserList", AgentApp.GetAgentUserList)                                  // 获取用户列表
+	baseRouter.POST("GetAgentUserInfo", AgentApp.GetAgentUserInfo)                                  // 获取用户详细信息
+	baseRouter.POST("SaveAgentUser", AgentApp.Save代理信息)                                             // 保存用户详细信息
+	baseRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_发展下级代理})).POST("NewAgentUser", AgentApp.New代理信息)      // 保存用户详细信息
+	baseRouter.POST("SetAgentUserStatus", AgentApp.Set修改状态)                                         // 保存用户详细信息
+	baseRouter.POST("GetAgentKaClassAuthority", AgentApp.GetAgentKaClassAuthority)                  //取全部可制卡类和已授权卡类
+	baseRouter.POST("SetAgentKaClassAuthority", AgentApp.SetAgentKaClassAuthority)                  //设置代理可制卡类ID
+	baseRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_转账})).POST("SendRmbTOAgent", AgentApp.SendRmbTOAgent) //转账
 	baseRouter.POST("ChartAgentLevel", AgentApp.Get代理组织架构图)
 
 	//代理库存管理===========================================
@@ -709,8 +711,8 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter = Router根Agent.Group("/OtherFunc")
 	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 	{
-		App := Agent.Api.OtherFunc                          //实现路由的 具体方法位置
-		baseRouter.POST("SetAppUserKey", App.SetAppUserKey) // 获取列表
+		App := Agent.Api.OtherFunc //实现路由的 具体方法位置
+		baseRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_修改用户绑定})).POST("SetAppUserKey", App.SetAppUserKey)
 	}
 
 	return baseRouter

@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"server/global"
 	"server/new/app/models/db"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -113,7 +114,7 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
 	// 使用事务处理数据库操作
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		// 创建卡类（使用事务的tx）
-		局_注册送卡类 := DB.DB_KaClass{
+		局_注册送卡类 := dbm.DB_KaClass{
 			AppId:        NewApp.AppId,
 			Name:         "注册送卡",
 			Prefix:       "ZC",

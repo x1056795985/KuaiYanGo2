@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"server/Service/Captcha"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_Log"
 	"server/global"
+	"server/new/app/logic/common/agentLevel"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"server/utils"
@@ -78,7 +78,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 		go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "用户被禁止登录代理平台", 3)
 		return
 	}
-	var 局_代理级别 = Ser_Agent.Q取Id代理级别(DB_user.Id)
+	var 局_代理级别 = agentLevel.L_agentLevel.Q取Id代理级别(c, DB_user.Id)
 	if 局_代理级别 < 1 || 局_代理级别 > 3 {
 		response.FailWithMessage("非代理用户禁止登录平台", c)
 		return

@@ -4,35 +4,25 @@ import (
 	. "EFunc/utils"
 	"encoding/json"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
-	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
 	"server/Service/Captcha"
-	"server/Service/Ser_Agent"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
-	"server/Service/Ser_Js"
 	"server/Service/Ser_Ka"
-	"server/Service/Ser_KaClass"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
-	"server/Service/Ser_PublicJs"
-	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserClass"
 	"server/Service/Ser_UserConfig"
 	"server/api/UserApi/response"
 	"server/global"
+	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/appUser"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/publicData"
-	"server/new/app/logic/common/rmbPay"
-	"server/new/app/models/common"
-	"server/new/app/models/constant"
 	"server/new/app/service"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -1242,85 +1232,6 @@ func UserApi_置动态标签(c *gin.Context) {
 	response.X响应状态(c, c.GetInt("局_成功Status"))
 	return
 }
-func UserApi_取支付通道状态(c *gin.Context) {
-	局map := rmbPay.L_rmbPay.Pay_取支付通道状态()
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 局map)
-	return
-}
-func UserApi_取可购买卡类列表(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-
-	var DB_KaClass []DB.DB_KaClass
-	DB_KaClass = Ser_KaClass.KaClass取可购买卡类列表(AppInfo.AppId)
-
-	var 卡类列表_简化 = make([]gin.H, 0, len(DB_KaClass))
-	var 局_用户类型 = DB.DB_UserClass{}
-	var ok = true
-
-	for 索引, _ := range DB_KaClass {
-		局_用户类型, ok = Ser_UserClass.Id取详情(AppInfo.AppId, DB_KaClass[索引].UserClassId)
-
-		if !ok {
-			局_用户类型.Name = ""
-			局_用户类型.Mark = 0
-			局_用户类型.Weight = 1
-		}
-
-		卡类列表_简化 = append(卡类列表_简化, gin.H{
-			"Id":              DB_KaClass[索引].Id,
-			"Name":            DB_KaClass[索引].Name,
-			"Money":           DB_KaClass[索引].Money,
-			"NoUserClass":     DB_KaClass[索引].NoUserClass,
-			"UserClassId":     DB_KaClass[索引].UserClassId,
-			"UserClassName":   局_用户类型.Name,
-			"UserClassMark":   局_用户类型.Mark,
-			"UserClassWeight": 局_用户类型.Weight,
-		})
-
-	}
-
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 卡类列表_简化)
-	return
-}
-func UserApi_取已购买充值卡列表(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-	if !检测用户登录在线正常(&局_在线信息) {
-		response.X响应状态(c, response.Status_未登录)
-		return
-	}
-
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	局_数量 := 10
-	if 请求json.GetInt("Number") > 0 {
-		局_数量 = 请求json.GetInt("Number")
-	}
-	卡类名称map := Ser_KaClass.KaClass取map列表Int(AppInfo.AppId)
-	var DB_Ka []DB.DB_Ka
-	DB_Ka, _ = Ser_Ka.Ka取已购卡列表(局_在线信息.User, 1, 局_数量)
-
-	var 卡列表_简化 = make([]gin.H, len(DB_Ka), len(DB_Ka)+1)
-	for 索引, _ := range DB_Ka {
-		卡列表_简化[索引] = gin.H{
-			"Id":           DB_Ka[索引].Id,
-			"AppId":        DB_Ka[索引].AppId,
-			"Name":         DB_Ka[索引].Name,
-			"Money":        DB_Ka[索引].Money,
-			"KaClassId":    DB_Ka[索引].KaClassId,
-			"KaClassName":  卡类名称map[DB_Ka[索引].KaClassId],
-			"Status":       DB_Ka[索引].Status,
-			"Num":          DB_Ka[索引].Num,
-			"NumMax":       DB_Ka[索引].NumMax,
-			"RegisterTime": DB_Ka[索引].RegisterTime,
-		}
-	}
-
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 卡列表_简化)
-	return
-}
 
 func UserApi_取用户类型列表(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
@@ -1394,84 +1305,6 @@ func UserApi_置用户类型(c *gin.Context) {
 	return
 }
 
-func UserApi_云函数执行(c *gin.Context) {
-	defer func() {
-		if err2 := recover(); err2 != nil {
-			局_GoJa错误, ok := err2.(*goja.Exception)
-			if ok {
-				response.X响应状态消息(c, response.Status_操作失败, "异常:可能JS函数传参或返回值类型错误,具体:"+局_GoJa错误.String())
-			} else {
-				response.X响应状态消息(c, response.Status_操作失败, "异常:可能JS函数传参或返回值类型错误,具体:js引擎未返回报错信息")
-			}
-			return
-		}
-	}()
-
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	// {"Api":"RunJS","Parameter":"{'a':1}","JsName":"获取用户相关信息","IsGlobal":false,"Time":1684497856,"Status":30873}
-	var 局_JSid = 0
-	if 请求json.GetBool("IsGlobal") {
-		局_JSid = Ser_PublicJs.Name取Id([]int{Ser_PublicJs.Js类型_公共函数}, string(请求json.GetStringBytes("JsName")))
-	} else {
-		局_JSid = Ser_PublicJs.Name取Id([]int{AppInfo.AppId}, string(请求json.GetStringBytes("JsName")))
-	}
-	if 局_JSid == 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "JS公共函数不存在")
-		return
-	}
-	局_耗时 := time.Now().UnixMilli()
-
-	var 局_PublicJs DB.DB_PublicJs
-	var err error
-	局_PublicJs, err = Ser_PublicJs.Q取值2(局_JSid)
-
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, "JS公共函数不存在")
-		return
-	}
-	if 局_PublicJs.IsVip > 0 && !检测用户登录在线正常(&局_在线信息) {
-		response.X响应状态(c, response.Status_未登录)
-		return
-	}
-	if W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
-		局_PublicJs.Value = string(W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
-	} else {
-		response.X响应状态消息(c, response.Status_操作失败, "js文件读取失败可能被删除")
-		return
-	}
-
-	局_云函数型参数 := ""
-	if 请求json.Get("Parameter").Type() == fastjson.TypeObject {
-		局_云函数型参数 = 请求json.Get("Parameter").String()
-	} else {
-		局_云函数型参数 = string(请求json.GetStringBytes("Parameter"))
-	}
-	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
-	_, err = vm.RunString(局_PublicJs.Value)
-	if 局_详细错误, ok := err.(*goja.Exception); ok {
-		response.X响应状态消息(c, response.Status_操作失败, "JS代码运行失败:"+局_详细错误.String())
-		return
-	}
-	var 局_待执行js函数名 func(string) interface{}
-	ret := vm.Get(局_PublicJs.Name)
-	if ret == nil {
-		response.X响应状态消息(c, response.Status_操作失败, "Js中没有["+局_PublicJs.Name+"()]函数")
-		return
-	}
-	err = vm.ExportTo(ret, &局_待执行js函数名)
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, "Js绑定函数到变量失败")
-		return
-	}
-	局_return := 局_待执行js函数名(局_云函数型参数)
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Return": 局_return, "Time": time.Now().UnixMilli() - 局_耗时})
-	return
-}
-
 func UserApi_卡号充值(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
@@ -1494,255 +1327,7 @@ func UserApi_卡号充值(c *gin.Context) {
 
 	return
 }
-func UserApi_订单_取状态(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	// {"Api":"GetPayOrderStatus","OrderId":"","Time":1684152719,"Status":15959}
-	局_订单Id := string(请求json.GetStringBytes("OrderId"))
-	if 局_订单Id == "" {
-		response.X响应状态消息(c, response.Status_操作失败, "订单不存在")
-		return
-	}
-
-	局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(局_订单Id)
-	if !ok {
-		// 如果失败了,在判断是不是上传的第三方订单号
-		局_订单详细信息, ok = Ser_RMBPayOrder.Order取订单详细_第三方订单(局_订单Id)
-	}
-
-	// 可能存在未登录充值的情况,所以不检测在线了
-	if !ok { //|| 局_订单详细信息.Uid != 局_在线信息.Uid
-		response.X响应状态消息(c, response.Status_操作失败, "订单不存在")
-	} else {
-		局_响应 := gin.H{"Status": 局_订单详细信息.Status}
-		if 局_卡号 := fastjson.GetString([]byte(局_订单详细信息.Extra), "卡号"); 局_卡号 != "" {
-			局_响应["KaName"] = 局_卡号
-		}
-		response.X响应状态带数据(c, c.GetInt("局_成功Status"), 局_响应)
-	}
-	return
-}
-
-func UserApi_订单_购卡直冲(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-
-	if AppInfo.AppId < 10000 {
-		response.X响应状态消息(c, response.Status_操作失败, "应用不存在")
-		return
-	}
-
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"GetAliPayPC","User":"aaaaaa","KaClassId":1,"PayType":"小叮当","Time":1684152719,"Status":15959}
-
-	局_用户名 := strings.TrimSpace(string(请求json.GetStringBytes("User")))
-	局_卡号 := Ser_AppInfo.App是否为卡号(AppInfo.AppId)
-	var 局_Uid = 0
-	var 局_Uid类型 = 0
-
-	if 局_卡号 {
-		局_Uid类型 = 2
-		局_Uid = Ser_Ka.Ka卡号取id(AppInfo.AppId, 局_用户名)
-
-	} else {
-		局_Uid类型 = 1
-		局_Uid = Ser_User.User用户名取id(局_用户名)
-	}
-
-	if 局_Uid == 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
-		return
-	}
-	局_AppUser, ok := Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid)
-	if !ok {
-		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户未登录过应用,请先操作登录一次")
-		return
-	}
-
-	局_卡类信息, err := Ser_KaClass.KaClass取详细信息(请求json.GetInt("KaClassId"))
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, "卡类不存在")
-		return
-	}
-	if AppInfo.AppId != 局_卡类信息.AppId {
-		response.X响应状态消息(c, response.Status_操作失败, "非本应用卡类")
-		return
-	}
-
-	if 局_卡类信息.Money <= 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "该卡类用户价格小于0不可购买")
-		return
-	}
-
-	if 局_AppUser.UserClassId != 0 && 局_卡类信息.NoUserClass == 2 && 局_AppUser.UserClassId != 局_卡类信息.UserClassId {
-		response.X响应状态消息(c, response.Status_操作失败, "禁止购买，充值卡用户类型与当前用户类型不相同，请重新选择！")
-		return
-	}
-
-	var 局_appUser DB.DB_AppUser
-	局_appUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid)
-	if 局_appUser.Uid == 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
-		return
-	}
-
-	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	// ==============下边为支付数据
-	var 参数 common.PayParams
-	参数.Uid = 局_appUser.Uid
-	参数.UidType = 局_Uid类型
-	参数.Type = 局_支付方式
-	参数.ReceivedUid = 局_appUser.AgentUid
-	参数.Rmb = 局_卡类信息.Money
-	参数.ProcessingType = constant.D订单类型_购卡直冲
-	参数.E额外信息 = gjson.New("{}")
-	err = 参数.E额外信息.Set("AppId", 局_在线信息.LoginAppid)
-	err = 参数.E额外信息.Set("KaClassId", 局_卡类信息.Id)
-	err = 参数.E额外信息.Set("KaClassName", 局_卡类信息.Name)
-	err = 参数.E额外信息.Set("AppUserUid", 局_AppUser.Uid)
-	err = 参数.E额外信息.Set("在线信息AgentUid", 局_在线信息.AgentUid)
-
-	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, err.Error())
-	} else {
-		response.X响应状态带数据(c, c.GetInt("局_成功Status"), 响应数据)
-	}
-	return
-}
-
-func UserApi_订单_积分充值(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-
-	if AppInfo.AppId < 10000 {
-		response.X响应状态消息(c, response.Status_操作失败, "应用不存在")
-		return
-	}
-
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"GetAliPayPC","User":"aaaaaa","Money":0.01,"PayType":"小叮当","Time":1684152719,"Status":15959}
-
-	局_用户名 := strings.TrimSpace(string(请求json.GetStringBytes("User")))
-	局_卡号 := Ser_AppInfo.App是否为卡号(AppInfo.AppId)
-	var 局_Uid = 0
-	var 局_Uid类型 = 0
-	var 局_AppUserID = 0
-
-	if 局_卡号 {
-		局_Uid类型 = 2
-		局_Uid = Ser_Ka.Ka卡号取id(AppInfo.AppId, 局_用户名)
-		局_AppUserID = Ser_AppUser.Uid取Id(AppInfo.AppId, 局_Uid)
-	} else {
-		局_Uid类型 = 1
-		局_Uid = Ser_User.User用户名取id(局_用户名)
-		局_AppUserID = Ser_AppUser.Uid取Id(AppInfo.AppId, 局_Uid)
-	}
-
-	if 局_Uid == 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
-		return
-	}
-
-	if 局_AppUserID == 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户未登录过应用,请先操作登录一次")
-		return
-	}
-	var 局_appUser DB.DB_AppUser
-	局_appUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid)
-	if 局_appUser.Uid == 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
-		return
-	}
-
-	var err error
-	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	// ==============下边为支付数据
-	var 参数 common.PayParams
-	参数.Uid = 局_appUser.Uid
-	参数.UidType = 局_Uid类型
-	参数.Type = 局_支付方式
-	参数.ReceivedUid = 局_appUser.AgentUid
-	参数.Rmb = 请求json.GetFloat64("Money")
-	参数.ProcessingType = constant.D订单类型_积分充值
-	参数.E额外信息 = gjson.New("{}")
-	err = 参数.E额外信息.Set("AppId", 局_在线信息.LoginAppid)
-	err = 参数.E额外信息.Set("AppUserUid", 局_Uid)
-	err = 参数.E额外信息.Set("AppUserId", 局_AppUserID)
-	err = 参数.E额外信息.Set("在线信息AgentUid", 局_在线信息.AgentUid)
-
-	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, "充值方式["+string(请求json.GetStringBytes("PayType"))+"]"+err.Error())
-	} else {
-		response.X响应状态带数据(c, c.GetInt("局_成功Status"), 响应数据)
-	}
-	return
-}
-func UserApi_订单_支付购卡(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-
-	if AppInfo.AppId < 10000 {
-		response.X响应状态消息(c, response.Status_操作失败, "应用不存在")
-		return
-	}
-
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"PayGetKa",,"KaClassId":1,"PayType":"小叮当","Time":1684152719,"Status":15959}
-
-	var 局_Uid类型 = 0
-	if Ser_AppInfo.App是否为卡号(AppInfo.AppId) {
-		局_Uid类型 = 2
-	} else {
-		局_Uid类型 = 1
-	}
-
-	局_卡类信息, err := Ser_KaClass.KaClass取详细信息(请求json.GetInt("KaClassId"))
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, "卡类不存在")
-		return
-	}
-	if AppInfo.AppId != 局_卡类信息.AppId {
-		response.X响应状态消息(c, response.Status_操作失败, "非本应用卡类")
-		return
-	}
-
-	if 局_卡类信息.Money <= 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "该卡类用户价格小于0不可购买")
-		return
-	}
-
-	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
-	// ==============下边为支付数据
-	var 参数 common.PayParams
-	参数.Uid = 0
-	参数.UidType = 局_Uid类型
-	参数.Type = 局_支付方式
-	参数.ReceivedUid = 局_在线信息.AgentUid
-	参数.Rmb = 局_卡类信息.Money
-	参数.ProcessingType = constant.D订单类型_支付购卡
-	参数.E额外信息 = gjson.New("{}")
-	err = 参数.E额外信息.Set("AppId", AppInfo.AppId)
-	err = 参数.E额外信息.Set("KaClassId", 局_卡类信息.Id)
-	err = 参数.E额外信息.Set("KaClassName", 局_卡类信息.Name)
-	err = 参数.E额外信息.Set("在线信息AgentUid", 局_在线信息.AgentUid)
-
-	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
-
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, err.Error())
-	} else {
-		response.X响应状态带数据(c, c.GetInt("局_成功Status"), 响应数据)
-	}
-	return
-}
 func UserApi_置代理标志(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
@@ -1761,7 +1346,7 @@ func UserApi_置代理标志(c *gin.Context) {
 		}
 	}
 
-	if Ser_Agent.Q取Id代理级别(局_代理uid) <= 0 {
+	if agentLevel.L_agentLevel.Q取Id代理级别(c, 局_代理uid) <= 0 {
 		response.X响应状态消息(c, response.Status_操作失败, "AgentUid非代理Uid")
 		return
 	}
@@ -1813,61 +1398,5 @@ func UserApi_取卡号详情(c *gin.Context) {
 		"RegisterTime": kaInfo.RegisterTime,
 		"Status":       kaInfo.Status,
 	})
-	return
-}
-
-// 1.0.310+版本添加可用
-func UserApi_取jwtToken(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-	if !检测用户登录在线正常(&局_在线信息) {
-		response.X响应状态(c, response.Status_未登录)
-		return
-	}
-	局_AppUser, ok := Ser_AppUser.Uid取详情(AppInfo.AppId, 局_在线信息.Uid)
-	if !ok {
-		response.X响应状态消息(c, response.Status_操作失败, "读取用户应用信息失败.")
-		return
-	}
-	var 局_UserClass DB.DB_UserClass
-	局_UserClass, _ = Ser_UserClass.Id取详情(AppInfo.AppId, 局_AppUser.UserClassId)
-	jwtMap := jwt.MapClaims{}
-	_ = json.Unmarshal([]byte(c.GetString("局_json明文")), &jwtMap) //必定是json 不然中间件就报错参数错误了
-	//提交的数据都加入到内容里,方便hookAPi
-
-	鉴权密钥 := []byte(AppInfo.CryptoKeyPrivate)
-	if 局_临时鉴权密钥, ok2 := jwtMap["Key"]; ok2 {
-		鉴权密钥 = []byte(局_临时鉴权密钥.(string))
-	}
-	delete(jwtMap, "Api")
-	delete(jwtMap, "Key")
-	delete(jwtMap, "Time")
-	delete(jwtMap, "Status")
-
-	//这个数据放后面,需要覆盖本地端的数据,防止伪造
-	jwtMap["iat"] = time.Now().Unix() // 发布时间
-	jwtMap["Uid"] = 局_AppUser.Uid
-	jwtMap["User"] = 局_在线信息.User
-	jwtMap["Key"] = 局_AppUser.Key
-	jwtMap["VipTime"] = 局_AppUser.VipTime
-	jwtMap["VipNumber"] = 局_AppUser.VipNumber
-	jwtMap["MaxOnline"] = 局_AppUser.MaxOnline
-	jwtMap["AgentUid"] = 局_AppUser.AgentUid
-	jwtMap["UserClassId"] = 局_AppUser.UserClassId
-	jwtMap["UserClassName"] = 局_UserClass.Name
-	jwtMap["UserClassMark"] = 局_UserClass.Mark
-	jwtMap["UserClassWeight"] = 局_UserClass.Weight
-	// 创建一个JWT的Token对象
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtMap)
-
-	// 使用密钥进行签名
-
-	signedToken, err := token.SignedString(鉴权密钥)
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, "生成JWT失败.")
-		return
-	}
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Jwt": signedToken})
 	return
 }

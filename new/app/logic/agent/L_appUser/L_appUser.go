@@ -1,4 +1,4 @@
-package appUser
+package L_appUser
 
 import (
 	"github.com/gin-gonic/gin"

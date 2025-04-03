@@ -53,25 +53,25 @@ func (j *log) S输出日志(c *gin.Context, logData interface{}) (err error) {
 
 		case DB.DB_LogVipNumber: //积分点数时间日志
 			if v.Time == 0 {
-				v.Time = int(time.Now().Unix())
+				v.Time= time.Now().Unix()
 			}
 			err3 = tx.Model(DB.DB_LogVipNumber{}).Create(&v).Error
 		case []DB.DB_LogVipNumber: //积分点数时间日志
 			for i := range v {
 				if v[i].Time == 0 {
-					v[i].Time = int(time.Now().Unix())
+					v[i].Time= time.Now().Unix()
 				}
 				err3 = tx.Model(DB.DB_LogVipNumber{}).Create(&v[i]).Error
 			}
 		case DB.DB_LogMoney: //余额日志
 			if v.Time == 0 {
-				v.Time = int(time.Now().Unix())
+				v.Time = time.Now().Unix()
 			}
 			err3 = tx.Model(DB.DB_LogMoney{}).Create(&v).Error
 		case []DB.DB_LogMoney: //余额日志
 			for i := range v {
 				if v[i].Time == 0 {
-					v[i].Time = int(time.Now().Unix())
+					v[i].Time = time.Now().Unix()
 				}
 				err3 = tx.Model(DB.DB_LogMoney{}).Create(&v[i]).Error
 			}
@@ -113,25 +113,25 @@ func (j *log) S输出日志(c *gin.Context, logData interface{}) (err error) {
 			}
 		case DB.DB_LogUserMsg: //用户消息日志
 			if v.Time == 0 {
-				v.Time = int(time.Now().Unix())
+				v.Time= time.Now().Unix()
 			}
 			err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v).Error
 		case []DB.DB_LogUserMsg: //用户消息日志
 			for i := range v {
 				if v[i].Time == 0 {
-					v[i].Time = int(time.Now().Unix())
+					v[i].Time= time.Now().Unix()
 				}
 				err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v[i]).Error
 			}
 		case DB.DB_LogRiskControl: //风控日志
 			if v.Time == 0 {
-				v.Time = int(time.Now().Unix())
+				v.Time= time.Now().Unix()
 			}
 			err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v).Error
 		case []DB.DB_LogRiskControl: //风控日志
 			for i := range v {
 				if v[i].Time == 0 {
-					v[i].Time = int(time.Now().Unix())
+					v[i].Time= time.Now().Unix()
 				}
 				err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v[i]).Error
 			}
