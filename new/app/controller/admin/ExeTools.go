@@ -1,6 +1,7 @@
 package controller
 
 import (
+	. "EFunc/utils"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -9,8 +10,6 @@ import (
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/setting"
 	"server/new/app/models/request"
-
-	. "EFunc/utils"
 	"server/structs/Http/response"
 	"strconv"
 )
@@ -102,15 +101,15 @@ func (C *ExeTools) CreateExeAddFNKYTask(c *gin.Context) {
 	局_Appinfo := Ser_AppInfo.App取App详情(请求.AppId)
 	局_系统地址 := setting.Q系统设置().X系统地址
 	局_可用版本 := W文本_分割文本(局_Appinfo.AppVer, "\n")
+	var appInfo = make(gin.H, 4)
 	if len(局_可用版本) == 0 || 局_Appinfo.AppVer == "" {
-		aaa["版本号"] = "1.0.0"
+		appInfo["VerSion"] = "1.0.0"
 	} else {
 		局_分解版本号最新 := W文本_分割文本(局_可用版本[0], ".")
 		局_分解版本号最新[len(局_分解版本号最新)-1] = strconv.Itoa(D到整数(局_分解版本号最新[len(局_分解版本号最新)-1]) + 1)
-		aaa["版本号"] = S数组_合并文本(局_分解版本号最新, ".")
+		appInfo["VerSion"] = S数组_合并文本(局_分解版本号最新, ".")
 	}
 
-	var appInfo = make(gin.H, 3)
 	appInfo["CryptoType"] = 局_Appinfo.CryptoType
 	appInfo["AppWeb"] = 局_系统地址 + 局_Appinfo.AppWeb
 	if 局_Appinfo.CryptoType == 2 {

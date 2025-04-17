@@ -13,6 +13,7 @@ import (
 	"github.com/valyala/fastjson"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Js"
+	"server/Service/Ser_Log"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
 	"server/Service/Ser_UserClass"
@@ -504,6 +505,15 @@ func UserApi_VMP计算授权码防山寨(c *gin.Context) {
 		response.X响应状态(c, response.Status_未登录)
 		return
 	}
+
+	_, ok := global.H缓存.Get("VMP计算code_" + strconv.Itoa(局_在线信息.Id)) //获取
+	if ok {                                                         //如果ok说明已经存在这个记录了
+		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_在线信息.User, c.ClientIP(), "用户一次登陆,多次重复计算VMP授权码,可能在尝试转发请求破解")
+		response.X响应状态消息(c, response.Status_操作失败, "禁止重复计算授权")
+		//写风控日志
+		return
+	}
+
 	请求json := gjson.New(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
 	//{"Api":"VmpComputeAuthRoot",Hwid:"dada4654" }
 
@@ -514,7 +524,8 @@ func UserApi_VMP计算授权码防山寨(c *gin.Context) {
 		return
 	}
 	请求json = gjson.New(局_响应信息) //必定是json 不然中间件就报错参数错误了
-
+	//每个在线id 只允许获取一次
+	global.H缓存.Set("VMP计算code_"+strconv.Itoa(局_在线信息.Id), 1, time.Minute*3600)
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"VmpAuth": 请求json.Get("VmpAuth").String()})
 	return
 }

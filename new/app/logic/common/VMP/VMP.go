@@ -25,6 +25,7 @@ type VMP struct {
 // vPrivate RsaBase64私钥
 // vModulus RsaBase64模数
 // vProductCode base64产品代码
+// /耗时：7 ms  实测速度极快,万次才7毫秒 测试配置 16H40G
 func (j *VMP) J计算授权码(c *gin.Context, VmpRsa common.VmpRsa, 授权信息 common.VmpParams) (授权码 string, err error) {
 	exported := struct {
 		Algorithm   string
