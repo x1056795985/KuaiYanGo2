@@ -89,6 +89,17 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 			adminRouter.POST("ApkTools/CreateApkAddFNKYTask", 局_ApkTools.CreateApkAddFNKYTask)
 		}
 	}
+	//工具 apk加验证
+	局_exeTools := controller.NewExeToolsController()
+	{
+		adminRouter.POST("ExeTools/GetList", 局_exeTools.GetList)
+		adminRouter.POST("ExeTools/GetTaskIdStatus", 局_exeTools.GetTaskIdStatus)
+		adminRouter.POST("ExeTools/GetUiList", 局_exeTools.GetUiList)
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
+			adminRouter.POST("ExeTools/GetUploadToken", 局_exeTools.GetUploadToken)
+			adminRouter.POST("ExeTools/CreateExeAddFNKYTask", 局_exeTools.CreateExeAddFNKYTask)
+		}
+	}
 	//应用管理
 	局_AppInfo := controller.NewAppInfoController()
 	{

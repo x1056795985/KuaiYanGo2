@@ -7,9 +7,9 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/valyala/fastjson"
 	"runtime"
-	"strings"
 )
 
 const 强制Rsa加密接口 = `	"GetToken":            1,
@@ -52,7 +52,7 @@ func (k *Api快验_类) C初始化配置(配置json string) bool {
 	}
 	path = path + "/config.json" //设置文件目录   //注意设置 ./config.json  宝塔写文件不会写运行目录 文件会在 /www/server/panel 文件夹
 
-	if strings.Index(utils.W文件_读入文本(path), "\"系统模式\": 1056795985") > 0 {
+	if gjson.New(utils.W文件_读入文本(path)).Get("系统模式").Int64() == 1056795985 {
 		k.SetAppWeb("http://127.0.0.1:18888")
 		fmt.Printf("超级管理员模式\n")
 	}
@@ -1289,6 +1289,21 @@ func (k *Api快验_类) R任务池_取任务列表(响应任务信息 *string, P
 func (k *Api快验_类) R任务池_取任务状态(响应任务信息 *string) bool {
 	请求json := make(map[string]interface{}, 10)
 	请求json["Api"] = "TaskPoolGetTypeStatus"
+	响应json, ok := k.通讯(请求json)
+	if !ok { // 直接返回即可,错误原因 在 发包并返回解密 已经有了
+		return false
+	}
+	*响应任务信息 = 响应json.GetObject("Data").String()
+	return true
+}
+
+func (k *Api快验_类) VMP计算授权码(响应任务信息 *string, AppId int, User string, Hwid string) bool {
+	//{"Api":"VmpComputeAuth","AppId":10001,"User":"adadasdasd", Hwid:"dada4654"}
+	请求json := make(map[string]interface{}, 10)
+	请求json["Api"] = "VmpComputeAuth"
+	请求json["AppId"] = AppId
+	请求json["User"] = User
+	请求json["Hwid"] = Hwid
 	响应json, ok := k.通讯(请求json)
 	if !ok { // 直接返回即可,错误原因 在 发包并返回解密 已经有了
 		return false

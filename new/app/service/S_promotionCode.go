@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/new/app/models/db"
+	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
 )
 
@@ -22,8 +22,8 @@ func NewPromotionCode(c *gin.Context, db *gorm.DB) *PromotionCode {
 }
 
 // 增
-func (s *PromotionCode) Create(info db.DB_PromotionCode) (row int64, err error) {
-	tx := s.db.Model(db.DB_PromotionCode{}).Create(&info)
+func (s *PromotionCode) Create(info dbm.DB_PromotionCode) (row int64, err error) {
+	tx := s.db.Model(dbm.DB_PromotionCode{}).Create(&info)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -32,9 +32,9 @@ func (s *PromotionCode) Delete(Id interface{}) (影响行数 int64, error error)
 	var tx2 *gorm.DB
 	switch k := Id.(type) {
 	case int:
-		tx2 = s.db.Model(db.DB_PromotionCode{}).Where("Id = ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_PromotionCode{}).Where("Id = ?", k).Delete("")
 	case []int:
-		tx2 = s.db.Model(db.DB_PromotionCode{}).Where("Id IN ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_PromotionCode{}).Where("Id IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -42,7 +42,7 @@ func (s *PromotionCode) Delete(Id interface{}) (影响行数 int64, error error)
 }
 
 // 获取列表
-func (s *PromotionCode) GetList(请求 request.List, Status int) (int64, []db.DB_PromotionCode, error) {
+func (s *PromotionCode) GetList(请求 request.List, Status int) (int64, []dbm.DB_PromotionCode, error) {
 	tx := s.db
 	if Status > 0 {
 		tx = tx.Where("Status = ?", Status)
@@ -70,15 +70,15 @@ func (s *PromotionCode) GetList(请求 request.List, Status int) (int64, []db.DB
 	case 2:
 		tx = tx.Order("Id DESC")
 	}
-	var 局_数组 []db.DB_PromotionCode
+	var 局_数组 []dbm.DB_PromotionCode
 	tx = tx.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组)
 
 	return 总数, 局_数组, tx.Error
 }
 
 // 查
-func (s *PromotionCode) Info(id int) (info db.DB_PromotionCode, err error) {
-	tx := s.db.Model(db.DB_PromotionCode{}).Where("Id = ?", id).First(&info)
+func (s *PromotionCode) Info(id int) (info dbm.DB_PromotionCode, err error) {
+	tx := s.db.Model(dbm.DB_PromotionCode{}).Where("Id = ?", id).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -86,8 +86,8 @@ func (s *PromotionCode) Info(id int) (info db.DB_PromotionCode, err error) {
 }
 
 // 查
-func (s *PromotionCode) Info2(where map[string]interface{}) (info db.DB_PromotionCode, err error) {
-	tx := s.db.Model(db.DB_PromotionCode{}).Where(where).First(&info)
+func (s *PromotionCode) Info2(where map[string]interface{}) (info dbm.DB_PromotionCode, err error) {
+	tx := s.db.Model(dbm.DB_PromotionCode{}).Where(where).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -97,12 +97,12 @@ func (s *PromotionCode) Info2(where map[string]interface{}) (info db.DB_Promotio
 // 改
 func (s *PromotionCode) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(db.DB_PromotionCode{}).Where("Id = ?", id).Updates(&数据)
+	tx := s.db.Model(dbm.DB_PromotionCode{}).Where("Id = ?", id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
 
 // 保存
-func (s *PromotionCode) Save(info db.DB_PromotionCode) (row int64, err error) {
-	tx := s.db.Model(db.DB_PromotionCode{}).Where("Id = ?", info.Id).Save(&info)
+func (s *PromotionCode) Save(info dbm.DB_PromotionCode) (row int64, err error) {
+	tx := s.db.Model(dbm.DB_PromotionCode{}).Where("Id = ?", info.Id).Save(&info)
 	return tx.RowsAffected, tx.Error
 }

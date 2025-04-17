@@ -48,12 +48,13 @@ func RunWindowsServer() {
 	fmt.Printf("是否有读写文件权限:%v\n", utils2.X系统_权限检测())
 	global.Q快验.C初始化配置(string(utils.B编码_BASE64解码("eyJBcHBXZWIiOiJodHRwOi8va3lhcGkuOXc5OS5jbi9BcGk/QXBwSWQ9MTAwMDEiLCJDcnlwdG9LZXlQdWJsaWMiOiItLS0tLUJFR0lOIFBVQkxJQyBLRVktLS0tLVxuTUlHZk1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDM0hib1NYQ0trcUdWaDBsaEt6cFNwaDFYRVxuNUtNYnBtYUhBTzIyNzdnOGtZaVVRRk5XU21PNlZ0RjJlcENKTURleTJjSVZEMk9OUnFZSkxLeWdYbHpkSGtZNlxuQU1Oa3AweTh5elVMQUlUSkgyOTkwbzJTb3VPdzdYQlBPNTN0Nk9URVJSTG92Lzh5YTVMNXJaK1NzM2R4RHNJVFxudkZqd0drYzZ5QlBBVFJKM1N3SURBUUFCXG4tLS0tLUVORCBQVUJMSUMgS0VZLS0tLS1cbiIsIkNyeXB0b1R5cGUiOjN9")))
 
-	ret, err := req.C().EnableInsecureSkipVerify().R().Get(string(utils.B编码_BASE64解码("aHR0cHM6Ly9hcGl3Zy45dzk5LmNu")))
-
-	if err == nil && ret.GetHeader("X-Ca-Error-Code") != "" {
-		//需要放在这里,不然无法执行 //初始化取token,放中间件内了,可以自验证
-		global.Q快验.SetAppWeb(string(utils.B编码_BASE64解码("aHR0cHM6Ly9hcGl3Zy45dzk5LmNu")))
-		global.Q快验.J集_连接方式 = 1
+	if global.GVA_Viper.GetInt("系统模式") != 1056795985 {
+		ret, err := req.C().EnableInsecureSkipVerify().R().Get(string(utils.B编码_BASE64解码("aHR0cHM6Ly9hcGl3Zy45dzk5LmNu")))
+		if err == nil && ret.GetHeader("X-Ca-Error-Code") != "" {
+			//需要放在这里,不然无法执行 //初始化取token,放中间件内了,可以自验证
+			global.Q快验.SetAppWeb(string(utils.B编码_BASE64解码("aHR0cHM6Ly9hcGl3Zy45dzk5LmNu")))
+			global.Q快验.J集_连接方式 = 1
+		}
 	}
 
 	if global.GVA_DB != nil {
@@ -66,7 +67,7 @@ func RunWindowsServer() {
 		}()
 	}
 	KuaiYanUpdater.B宝塔_修改项目信息pid()
-	err = global.GVA_Gin.ListenAndServe() //执行到此处会暂停,直到系统退出
+	err := global.GVA_Gin.ListenAndServe() //执行到此处会暂停,直到系统退出
 	if err != nil {
 		global.GVA_LOG.Error(err.Error())
 	}

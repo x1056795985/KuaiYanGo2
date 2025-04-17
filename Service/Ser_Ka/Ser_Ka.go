@@ -274,8 +274,8 @@ func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库�
 	if 制卡数量 <= 0 {
 		return errors.New("生成数量必须大于0")
 	}
-	if 制卡数量 > 500 {
-		return errors.New("生成数量每批最大500")
+	if 制卡数量 > 5000 {
+		return errors.New("生成数量每批最大5000")
 	}
 	局_库存详情, ok := Ser_AgentInventory.Id取详情(库存Id)
 

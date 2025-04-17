@@ -31,10 +31,12 @@ func (DB_TaskPoolData) TableName() string {
 }
 
 type TaskPool_数据_精简 struct {
-	Uuid       string `json:"uuid" gorm:"column:uuid;size:36;primarykey;"`
-	Tid        int    `json:"Tid" gorm:"column:Tid;comment:对应的任务类型Id"`
-	TimeStart  int    `json:"TimeStart" gorm:"column:TimeStart;comment:任务创建时间戳"`
-	SubmitData string `json:"SubmitData" gorm:"column:SubmitData;comment:生产提交数据"`
+	Uuid        string `json:"uuid" gorm:"column:uuid;size:36;primarykey;"`
+	Tid         int    `json:"Tid" gorm:"column:Tid;comment:对应的任务类型Id"`
+	TimeStart   int    `json:"TimeStart" gorm:"column:TimeStart;comment:任务创建时间戳"`
+	SubmitData  string `json:"SubmitData" gorm:"column:SubmitData;comment:生产提交数据"`
+	SubmitAppId int    `json:"SubmitAppId" gorm:"column:SubmitAppId;comment:生产者AppID"`
+	SubmitUid   int    `json:"SubmitUid" gorm:"column:SubmitUid;comment:生产者Uid"`
 }
 
 type TaskPool_类型 struct {

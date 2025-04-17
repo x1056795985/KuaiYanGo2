@@ -112,7 +112,8 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 	}
 	tx := *global.GVA_DB
 	var 局_通道数据 m.Request
-	参数.S商品名称 = j.Q取提示信息(&参数)
+
+	参数.S商品名称 = App服务.AppId取应用名称(参数.E额外信息.Get("AppId").Int()) + j.Q取提示信息(&参数)
 
 	if 参数.ReceivedUid > 0 && agent.L_agent.Id功能权限检测(c, 参数.ReceivedUid, DB.D代理功能_代收款) {
 		var 局代理Info DB.DB_User

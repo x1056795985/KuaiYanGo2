@@ -2,11 +2,14 @@ package UserApi
 
 import (
 	. "EFunc/utils"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/valyala/fastjson"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Js"
@@ -15,8 +18,10 @@ import (
 	"server/Service/Ser_UserClass"
 	"server/api/UserApi/response"
 	"server/global"
+	"server/new/app/logic/common/VMP"
 	"server/new/app/logic/common/cloudStorage"
 	"server/new/app/logic/common/mqttClient"
+	"server/new/app/models/common"
 	"server/new/app/models/request"
 	response2 "server/new/app/models/response"
 	"server/new/app/service"
@@ -430,5 +435,86 @@ func UserApi_取jwtToken(c *gin.Context) {
 		return
 	}
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"Jwt": signedToken})
+	return
+}
+
+func UserApi_VMP计算授权码(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	请求json := gjson.New(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	//{"Api":"VmpComputeAuth","AppId":10001, Hwid:"dada4654","User":"adadasdasd"}
+	var VmpRsa common.VmpRsa
+	block, _ := pem.Decode([]byte(AppInfo.CryptoKeyPrivate))
+	if block == nil {
+		response.X响应状态消息(c, response.Status_操作失败, "分解私钥失败")
+		return
+	}
+
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, "无法解析 PKCS1 私钥"+err.Error())
+		return
+	}
+
+	VmpRsa.Rsa位数 = 1024
+	VmpRsa.RsaBase64私钥 = B编码_BASE64编码(VMP.S十进制解码(privateKey.D))
+	VmpRsa.RsaBase64模数 = B编码_BASE64编码(VMP.S十进制解码(privateKey.N))
+
+	局_Base64产品代码字节 := Int32ToBytes(int32(局_在线信息.Uid))                                     //共计8个字节,前四个字节为在线用户用户uid 防山寨
+	局_Base64产品代码字节 = append(局_Base64产品代码字节, Int32ToBytes(请求json.Get("AppId").Int32())...) //补appid 4个字节 后四个字节为用户appid 防止用户串应用
+	VmpRsa.Base64产品代码 = B编码_BASE64编码(局_Base64产品代码字节)
+
+	var 局_授权参数 common.VmpParams
+	局_授权参数.UserName = 请求json.Get("User").String()
+	//实测只需要授权一天即可,因为授权码使用后,所有功能不在受时间限制 实际还是需要靠心跳控制时分秒 精准度
+	//激活码的到期时间只有激活的时候才检测,被保护的函数执行时不检测,所以登陆后立刻调用,当天有效即可
+	//但是为了防止遇到极端11:59:59时间登陆的情况,所以有效时间设置为明天
+
+	局_明天time := time.Now().AddDate(0, 0, 1)
+	局_授权参数.ExpireDate.Year = 局_明天time.Year()
+	局_授权参数.ExpireDate.Month = int(局_明天time.Month())
+	局_授权参数.ExpireDate.Month = 局_明天time.Day()
+	局_授权参数.MaxBuildDate = common.S时间{
+		Year:  time.Now().Year(),
+		Month: int(time.Now().Month()),
+		Day:   time.Now().Day(),
+	}
+	局_授权参数.TimeLimit = 1
+	局_授权参数.Hwid = 请求json.Get("Hwid").String()
+
+	var 授权码 string
+	授权码, err = VMP.L_VMP.J计算授权码(nil, VmpRsa, 局_授权参数)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, err.Error())
+		return
+	}
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"VmpAuth": 授权码})
+	return
+}
+func UserApi_VMP计算授权码防山寨(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	请求json := gjson.New(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	//{"Api":"VmpComputeAuthRoot",Hwid:"dada4654" }
+
+	var 局_响应信息 string
+	var 局_错误代码 int
+	if !global.Q快验.VMP计算授权码(&局_响应信息, 局_在线信息.LoginAppid, 局_在线信息.User, 请求json.Get("Hwid").String()) {
+		response.X响应状态消息(c, 局_错误代码, global.Q快验.Q取错误信息(&局_错误代码))
+		return
+	}
+	请求json = gjson.New(局_响应信息) //必定是json 不然中间件就报错参数错误了
+
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"VmpAuth": 请求json.Get("VmpAuth").String()})
 	return
 }

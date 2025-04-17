@@ -78,15 +78,25 @@ func (j *agent) Id功能权限检测(c *gin.Context, 代理ID, 权限代号 int)
 func (j *agent) S删除代理(c *gin.Context, UID []int) error {
 	db := *global.GVA_DB
 	err := db.Transaction(func(tx *gorm.DB) error {
+		//代理用户删除
 		影响行数 := tx.Model(DB.DB_User{}).Where("Id IN ? ", UID).Delete(DB.DB_User{}).RowsAffected
 		if 影响行数 == 0 {
 			return errors.New("代理用户删除失败")
 		}
-		//代理用户删除了删除代理关系
+		// 删除代理关系
 		影响行数 = tx.Model(DB.Db_Agent_Level{}).Where("Uid IN ? ", UID).Delete(DB.Db_Agent_Level{}).RowsAffected
 		if 影响行数 == 0 {
 			return errors.New("代理关系删除失败")
 		}
+		//删除 代理推广码 NewPromotionCode
+		if err := tx.Model(&dbm.DB_PromotionCode{}).Where("Id IN ? ", UID).Delete(&dbm.DB_PromotionCode{}).Error; err != nil {
+			return errors.Join(errors.New("代理推广码删除失败"), err)
+		}
+		//删除代理云配置  appid=50  "AppId": 50,  也不用限制 appid  只要是这个用户的,都删除
+		if err := tx.Model(&DB.DB_UserConfig{}).Where("Uid IN ? ", UID).Delete(&DB.DB_UserConfig{}).Error; err != nil {
+			return errors.Join(errors.New("代理云配置删除失败"), err)
+		}
+
 		return nil
 	})
 

@@ -66,8 +66,8 @@ func New制新卡(c *gin.Context) {
 		response.FailWithMessage("生成数量必须大于0", c)
 		return
 	}
-	if 请求.Number > 100 {
-		response.FailWithMessage("生成数量每批最大100", c)
+	if 请求.Number > 5000 {
+		response.FailWithMessage("生成数量每批最大5000", c)
 		return
 	}
 

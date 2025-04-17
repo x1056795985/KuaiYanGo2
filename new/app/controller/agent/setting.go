@@ -6,7 +6,7 @@ import (
 	"server/new/app/controller/Common"
 	"server/new/app/logic/agent/L_setting"
 	m "server/new/app/models/common"
-	"server/new/app/models/db"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -57,7 +57,21 @@ func (s *Setting) SetBaseInfo(c *gin.Context) {
 		return
 	}
 	tx := *global.GVA_DB
-	_, err := service.NewPromotionCode(c, &tx).Save(db.DB_PromotionCode{c.GetInt("Uid"), 请求.PromotionCode})
+	var 局_当前数据 = dbm.DB_PromotionCode{}
+	var err error
+	局_当前数据, _ = service.NewPromotionCode(c, &tx).Info(c.GetInt("Uid"))
+	if 局_当前数据.Id == 0 {
+		//不存在,直接新建
+		局_当前数据.Id = c.GetInt("Uid")
+		局_当前数据.PromotionCode = 请求.PromotionCode
+		_, err = service.NewPromotionCode(c, &tx).Create(局_当前数据)
+	} else {
+		//已存在,更新数据
+		局_当前数据.PromotionCode = 请求.PromotionCode
+		_, err = service.NewPromotionCode(c, &tx).Update(局_当前数据.Id, map[string]interface{}{
+			"PromotionCode": 请求.PromotionCode,
+		})
+	}
 	if err != nil {
 		局返回 := err.Error()
 		if strings.Index(局返回, "Duplicate") != -1 { //唯一索引触发,

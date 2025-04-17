@@ -5,6 +5,9 @@
       <functions>
         <function importPath="server/new/app/logic/agent/L_setting" name="Q取代理在线支付信息" />
       </functions>
+      <methods>
+        <method importPath="server/new/app/service" receiver="*PromotionCode" name="Info" />
+      </methods>
     </inspection_tool>
     <inspection_tool class="NonAsciiCharacters" enabled="false" level="WARNING" enabled_by_default="false" />
   </profile>

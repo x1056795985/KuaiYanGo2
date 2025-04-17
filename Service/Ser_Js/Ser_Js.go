@@ -3,6 +3,7 @@ package Ser_Js
 // https://blog.csdn.net/wyongqing/article/details/124704136   参考地址
 import (
 	. "EFunc/utils"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,10 +22,12 @@ import (
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserConfig"
 	"server/global"
+	"server/new/app/logic/common/VMP"
 	"server/new/app/logic/common/cloudStorage"
 	"server/new/app/logic/common/mqttClient"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/rmbPay"
+	"server/new/app/models/common"
 	"server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -86,10 +89,10 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_文本_取文本右边", W文本_取文本右边)
 	_ = vm.Set("$api_文本_取文本左边", W文本_取文本左边)
 	_ = vm.Set("$api_文本_取出中间文本", W文本_取出中间文本)
-	_ = vm.Set("$api_时间_取现行时间戳", S时间_取现行时间戳())
-	_ = vm.Set("$api_时间_取现行时间戳13", S时间_取现行时间戳13())
+	_ = vm.Set("$api_时间_取现行时间戳", S时间_取现行时间戳)
+	_ = vm.Set("$api_时间_取现行时间戳13", S时间_取现行时间戳13)
 	_ = vm.Set("$api_生成二维码并转base64", rmbPay.L_rmbPay.S生成二维码并转base64)
-	//
+	_ = vm.Set("$api_VMP计算授权码", jS_VMP计算授权码)
 
 	//处理载入外部js文件  'import "@/utils/utils";
 	if strings.Index(局_PublicJs.Value, "import '") != -1 || strings.Index(局_PublicJs.Value, `import "`) != -1 {
@@ -302,14 +305,14 @@ func jS_用户Id增减积分(局_在线信息 DB.DB_LinksToken, 增减值 float6
 func jS_用户Id增减时间点数(AppId int, 局_在线信息 DB.DB_LinksToken, 增减值 int, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
 	//获取增减值的绝对值
-	增减值 = S三元(增减值 > 0, 增减值, -增减值)
+	局_增减值 := S三元(增减值 > 0, 增减值, -增减值)
 
 	局_AppUserId := Ser_AppUser.User或卡号取Id(AppId, 局_在线信息.User)
 	if 局_AppUserId == 0 {
 		局_AppUserId = Ser_AppUser.Uid取Id(AppId, 局_在线信息.Uid)
 	}
 
-	err := Ser_AppUser.Id点数增减(AppId, 局_AppUserId, int64(增减值), is增加)
+	err := Ser_AppUser.Id点数增减(AppId, 局_AppUserId, int64(局_增减值), is增加)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
@@ -686,4 +689,23 @@ func jS_云存储_取文件上传授权(path string) js对象_通用返回 {
 	} else {
 		return js对象_通用返回{IsOk: true, Err: "成功", Data: 下载地址}
 	}
+}
+
+func jS_VMP计算授权码(Rsa位数 int, RsaBase64私钥, RsaBase64模数, base64产品代码, 授权信息json string) js对象_通用返回 {
+	var 局_授权参数 struct {
+		common.VmpParams
+		UserDataBas64 string `json:"UserDataBas64"` //因为 json无法表示字节集 所以改用base64
+	}
+	err := json.Unmarshal([]byte(授权信息json), &局_授权参数)
+
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: "授权信息json格式错误"}
+	}
+	局_授权参数.UserData, _ = base64.StdEncoding.DecodeString(局_授权参数.UserDataBas64)
+	var 授权码 string
+	授权码, err = VMP.L_VMP.J计算授权码(nil, common.VmpRsa{Rsa位数: Rsa位数, RsaBase64私钥: RsaBase64私钥, RsaBase64模数: RsaBase64模数, Base64产品代码: base64产品代码}, 局_授权参数.VmpParams)
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	}
+	return js对象_通用返回{IsOk: true, Data: 授权码}
 }

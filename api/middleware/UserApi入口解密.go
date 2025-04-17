@@ -106,6 +106,8 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"GetUploadToken":        {"云存储_取文件上传授权", UserApi.UserApi_云存储_取文件上传授权, true},
 
 	//快验Api
+	"VmpComputeAuth":         {"VMP计算授权码", UserApi.UserApi_VMP计算授权码, false},
+	"VmpComputeAuthRoot":     {"VMP计算授权码防山寨", UserApi.UserApi_VMP计算授权码防山寨, false},
 	"KyApiSendSms":           {"快验发送验证码短信", UserApi.KyApiSendSms, false},
 	"KyApiJiYanVerifyTicket": {"快验_极验验证码结果验证", UserApi.K快验_极验验证码结果验证, false},
 }

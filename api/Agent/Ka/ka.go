@@ -281,8 +281,8 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("生成数量必须大于0", c)
 		return
 	}
-	if 请求.Number > 500 {
-		response.FailWithMessage("生成数量每批最大500", c)
+	if 请求.Number > 5000 {
+		response.FailWithMessage("生成数量每批最大5000", c)
 		return
 	}
 	if !agent.L_agent.Id卡类权限检测(c, c.GetInt("Uid"), 请求.Id) {
