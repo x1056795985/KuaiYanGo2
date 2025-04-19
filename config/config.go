@@ -96,10 +96,19 @@ type MQTT配置 struct {
 	M密码    string `json:"密码"`
 }
 type Y云存储配置 struct {
-	D当前选择    int      `mapstructure:"当前选择" json:"当前选择" `
+	D当前选择    int      `mapstructure:"当前选择" json:"当前选择" ` // 1 S3通用协议 2 七牛云
+	S3兼容协议   S3兼容协议   `mapstructure:"S3兼容协议" json:"S3兼容协议" `
 	Q七牛云对象存储 Q七牛云对象存储 `mapstructure:"七牛云对象存储" json:"七牛云对象存储" `
 }
 type Q七牛云对象存储 struct {
+	AccessKey string `  json:"AccessKey" `
+	SecretKey string `  json:"SecretKey" `
+	W外链域名     string `json:"外链域名" `       //外链域名
+	Bucket    string `  json:"Bucket" `   //空间名称
+	RootPath  string `  json:"rootPath" ` //根文件夹
+}
+type S3兼容协议 struct {
+	Endpoint  string `  json:"Endpoint" `
 	AccessKey string `  json:"AccessKey" `
 	SecretKey string `  json:"SecretKey" `
 	W外链域名     string `json:"外链域名" `       //外链域名

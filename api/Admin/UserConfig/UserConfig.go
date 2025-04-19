@@ -59,26 +59,26 @@ func (a *Api) GetList(c *gin.Context) {
 		return
 	}
 
-	局_DB := global.GVA_DB.Model(DB.DB_UserConfig{})
-
+	局_DB := global.GVA_DB.Model(&DB.DB_UserConfig{})
+	局_DB = 局_DB.Where("Uid>?", 0)
 	if 请求.AppId > 0 {
-		局_DB.Where("AppId=?", 请求.AppId)
+		局_DB = 局_DB.Where("AppId=?", 请求.AppId)
 	}
 
 	if 请求.Order == 1 {
-		局_DB.Order("Time ASC")
+		局_DB = 局_DB.Order("Time ASC")
 	} else if 请求.Order == 2 {
-		局_DB.Order("Time DESC")
+		局_DB = 局_DB.Order("Time DESC")
 	}
 
 	if 请求.Keywords != "" {
 		switch 请求.Type {
 		case 1: //变量名
-			局_DB.Where("LOCATE( ?, Name)>0 ", 请求.Keywords)
+			局_DB = 局_DB.Where("LOCATE( ?, Name)>0 ", 请求.Keywords)
 		case 2: //用户
-			局_DB.Where("LOCATE( ?, User)>0 ", 请求.Keywords)
+			局_DB = 局_DB.Where("LOCATE( ?, User)>0 ", 请求.Keywords)
 		case 3: //Uid
-			局_DB.Where("Uid = ?", 请求.Keywords)
+			局_DB = 局_DB.Where("Uid = ?", 请求.Keywords)
 		}
 	}
 
@@ -207,6 +207,10 @@ func (a *Api) SetUserConfig(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if 请求.Uid <= 0 {
+		response.FailWithMessage("管理平台配置禁止修改", c)
 		return
 	}
 	if 请求.Name == "" {

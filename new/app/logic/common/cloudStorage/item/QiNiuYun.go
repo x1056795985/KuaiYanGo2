@@ -207,9 +207,7 @@ func (j *Q七牛云) X下载(c *gin.Context, 文件路径 string) (下载地址 
 
 func (j *Q七牛云) Q取外链地址(c *gin.Context, 文件路径 string, 有效秒数 int64) (下载地址 string, err error) {
 	domain := j.配置.W外链域名
-	if 有效秒数 == 0 {
-		有效秒数 = 86400 * 365
-	}
+
 	if domain == "" {
 		info, err2 := j.Q基础信息2(c)
 		if err2 == nil {

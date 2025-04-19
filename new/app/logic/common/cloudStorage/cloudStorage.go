@@ -35,6 +35,8 @@ func (j *Item) Q取通道(序号 int) (存储接口 StorageItem, err error) {
 	switch 序号 {
 	default:
 		return nil, errors.New("序号错误")
+	case 1:
+		存储接口 = &item.S3Api{}
 	case 2:
 		存储接口 = &item.Q七牛云{}
 	}
@@ -96,14 +98,18 @@ func (j *Item) X下载(c *gin.Context, 文件路径 string) (下载地址 string
 	return 存储空间.X下载(c, 文件路径)
 }
 
-func (j *Item) Q取外链地址(c *gin.Context, 文件路径 string, 有效时间 int64) (下载地址 string, err error) {
+func (j *Item) Q取外链地址(c *gin.Context, 文件路径 string, 有效秒数 int64) (下载地址 string, err error) {
 	var 存储空间 StorageItem
 
 	存储空间, err = j.Q取通道(0)
 	if err != nil {
 		return
 	}
-	return 存储空间.Q取外链地址(c, 文件路径, 有效时间)
+
+	if 有效秒数 == 0 {
+		有效秒数 = 604800
+	}
+	return 存储空间.Q取外链地址(c, 文件路径, 有效秒数)
 }
 
 func (j *Item) Q取基础信息(c *gin.Context) (json string, err error) {

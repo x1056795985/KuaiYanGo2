@@ -2,8 +2,6 @@ package utils
 
 import (
 	"errors"
-	"github.com/fvbock/endless"
-	"github.com/gin-gonic/gin"
 	"os"
 	"os/exec"
 	"runtime"
@@ -19,12 +17,12 @@ func Reload() error {
 	return cmd.Run()
 }
 
-func Reload热重启(继承端口 int) error {
-	if runtime.GOOS == "windows" {
-		return errors.New("不支持windows")
-	}
-
-	新服务器 := endless.NewServer(":"+strconv.Itoa(继承端口), gin.Default())
-	return 新服务器.ListenAndServe()
-
-}
+//func Reload热重启(继承端口 int) error {
+//	if runtime.GOOS == "windows" {
+//		return errors.New("不支持windows")
+//	}
+//
+//	新服务器 := endless.NewServer(":"+strconv.Itoa(继承端口), gin.Default())
+//	return 新服务器.ListenAndServe()
+//
+//}
