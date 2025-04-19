@@ -71,6 +71,8 @@ func (j *S3Api) H获取文件列表(c *gin.Context, 前缀 string, 分隔符 str
 				Path:   strings.TrimPrefix(对象.Key, j.配置.RootPath),
 				Type:   2,
 				UpTime: 对象.LastModified.Unix(),
+				Size:   对象.Size,
+				MD5:    对象.ETag,
 			})
 		} else { //有斜杠说明是路径
 			局_path = utils.W文本_取文本左边(局_path, "/")
