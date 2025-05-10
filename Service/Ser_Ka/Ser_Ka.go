@@ -108,7 +108,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 	var 局_价格组成 struct {
 		总卡类价格 float64
 
-		总调价  float64 //这个是已经*数量的
+		总调价   float64 //这个是已经*数量的
 		调价详情 []dbm.DB_KaClassUpPrice
 		购买数量 int64
 
@@ -615,8 +615,16 @@ func Ka更换卡号(c *gin.Context, id, 代理Id int, ip string) error {
 	}
 	return err
 }
+
 func Ka修改已用次数加一(id []int) error {
-	return global.GVA_DB.Model(DB.DB_Ka{}).Where("Id IN ? ", id).Update("Num", gorm.Expr("Num+1 , UserTime=CONCAT(UserTime,?)", strconv.Itoa(int(time.Now().Unix()))+",")).Error
+	now := time.Now().Unix()
+	return global.GVA_DB.Model(DB.DB_Ka{}).
+		Where("Id IN ?", id).
+		Updates(map[string]interface{}{
+			"Num":      gorm.Expr("Num + 1"),
+			"UserTime": gorm.Expr("CONCAT(UserTime, ?)", strconv.Itoa(int(now))+","),
+			"UseTime":  now,
+		}).Error
 }
 
 func Ka修改管理员备注(id []int, AdminNote string) error {

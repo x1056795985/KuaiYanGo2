@@ -46,7 +46,6 @@ type 结构请求_GetUserList struct {
 	Order    int    `json:"Order"`    // 0 倒序 1 正序
 }
 
-// GetList
 // 获取任务类型列表
 func (a *Api) GetList(c *gin.Context) {
 	var 请求 结构请求_GetUserList
@@ -93,7 +92,6 @@ type TaskPool_类型带数量 struct {
 	DB.TaskPool_类型
 }
 
-// GetList
 // 获取任务类型列表
 func (a *Api) GetList2(c *gin.Context) {
 	var 请求 结构请求_GetUserList
@@ -112,7 +110,7 @@ func (a *Api) GetList2(c *gin.Context) {
           (SELECT  COUNT(*) FROM db_TaskPoolData WHERE  db_TaskPoolData.Tid =db_TaskPoolType.Id AND TimeStart>"{时间戳}") AS TaskCount
     FROM db_TaskPoolType
 `
-	sql = strings.Replace(sql, `"{时间戳}"`, strconv.Itoa(int(utils.S时间_取现行时间戳()-86400)), 1)
+	sql = strings.Replace(sql, `"{时间戳}"`, strconv.Itoa(int(utils.S时间_取现行时间戳()-(86400*30))), 1)
 
 	// 添加条件
 	if 请求.Keywords != "" {

@@ -607,9 +607,6 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 	if info.卡号详情.Num == 0 {
 		return errors.New("卡号未使用")
 	}
-	if info.卡号详情.User == "" {
-		return errors.New("无已充值用户,但有使用次数,可能手动修改使用次数导致的")
-	}
 
 	//防sb客户放负值
 	if info.卡号详情.VipTime < 0 || info.卡号详情.VipNumber < 0 || info.卡号详情.RMb < 0 {
@@ -622,6 +619,15 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 	}
 	info.is卡号 = info.卡号应用.AppType == 3 || info.卡号应用.AppType == 4
 	info.is计点 = info.卡号应用.AppType == 2 || info.卡号应用.AppType == 4
+
+	if info.is卡号 && info.卡号详情.User == "" {
+		return errors.New("卡号模式应用,已转换软件用户的卡号,无法追回")
+	}
+
+	if info.卡号详情.User == "" {
+		return errors.New("无已充值用户,但有使用次数,可能手动修改")
+	}
+
 	info.vipTime名称 = S三元(info.is计点, "点数", "时间")
 
 	已用用户数组 := W文本_分割文本(info.卡号详情.User, ",")

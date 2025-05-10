@@ -115,20 +115,13 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 		return
 	}
 
-	var 局_appUser DB.DB_AppUser
-	局_appUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid)
-	if 局_appUser.Uid == 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "要充值的用户不存在")
-		return
-	}
-
 	局_支付方式 := strings.TrimSpace(string(请求json.GetStringBytes("PayType")))
 	// ==============下边为支付数据
 	var 参数 common.PayParams
-	参数.Uid = 局_appUser.Uid
+	参数.Uid = 局_AppUser.Uid
 	参数.UidType = 局_Uid类型
 	参数.Type = 局_支付方式
-	参数.ReceivedUid = 局_appUser.AgentUid
+	参数.ReceivedUid = 局_AppUser.AgentUid
 	参数.ProcessingType = constant.D订单类型_购卡直冲
 	参数.E额外信息 = gjson.New("{}")
 	err = 参数.E额外信息.Set("AppId", 局_在线信息.LoginAppid)

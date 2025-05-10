@@ -124,6 +124,7 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 					参数.Z支付配置s = 代理在线支付信息
 					参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 					局_通道数据, err = 局_通道.D订单创建(c, &参数)
+					global.GVA_LOG.Error(参数.PayOrder+"代付订单创建失败", zap.Error(err))
 					if err == nil {
 						goto 下单成功
 					}

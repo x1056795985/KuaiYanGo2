@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/cache/local_cache"
 	"go.uber.org/zap"
+	//"net/http"
+	//_ "net/http/pprof" // 开启 pprof
 	"os"
 	"runtime/debug"
 	"server/Service/Ser_Init"
@@ -31,6 +33,7 @@ import (
 //go:generate go mod download
 
 func main() {
+	//go log.Fatal(http.ListenAndServe("127.0.0.1:6060", nil))
 	defer func() {
 		if err := recover(); err != nil {
 			局_上报错误 := fmt.Sprintln("全局捕获错误:\n", err, "\n堆栈信息:\n", string(debug.Stack()))
@@ -66,6 +69,7 @@ func main() {
 	}
 	core.InitCron定时任务()
 	new.Main()
+
 	core.RunWindowsServer() //启动web服务器  先启动 不然无法自验证
 
 }
