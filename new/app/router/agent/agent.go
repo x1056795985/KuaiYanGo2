@@ -31,12 +31,14 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 	}
 	局_AppUser := controller.NewAppUserController()
 	{
-		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_查看归属软件用户})).POST("AppUser/GetList", 局_AppUser.GetList)        // 获取列表
-		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_查看归属软件用户})).POST("AppUser/GetInfo", 局_AppUser.GetAppUserInfo) // 获取详细信息
-		agentRouter.POST("AppUser/SetStatus", 局_AppUser.Set修改状态)                                                 // 修改状态
+		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_查看归属软件用户})).POST("AppUser/GetList", 局_AppUser.GetList)        // 获取列表
+		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_查看归属软件用户})).POST("AppUser/GetInfo", 局_AppUser.GetAppUserInfo) // 获取详细信息
+		agentRouter.POST("AppUser/SetStatus", 局_AppUser.Set修改状态)                                                       // 修改状态
 		agentRouter.POST("AppUser/SaveUser", 局_AppUser.Save用户信息)
-		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_修改用户密码})).POST("AppUser/SetPassUser")
+		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_修改用户密码})).POST("AppUser/SetPassUser", 局_AppUser.Set用户密码)
 	}
+	// 为需要鉴权的路由单独创建子组
+
 	局_UserClass := controller.NewUserClassController()
 	{
 		agentRouter.POST("UserClass/GetIdNameList", 局_UserClass.GetIdNameList) // 获取列表
@@ -54,9 +56,8 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 
 	局_KaClassUpPrice := controller.NewKaClassUpPriceController()
 	{
-		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_卡类调价})).POST("KaClassUpPrice/Save", 局_KaClassUpPrice.Save)
-
-		agentRouter.Use(mid2.Is代理鉴权([]int{DB.D代理功能_卡类调价})).POST("KaClassUpPrice/Delete", 局_KaClassUpPrice.Delete)
+		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_卡类调价})).POST("KaClassUpPrice/Save", 局_KaClassUpPrice.Save)
+		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_卡类调价})).POST("KaClassUpPrice/Delete", 局_KaClassUpPrice.Delete)
 	}
 
 }

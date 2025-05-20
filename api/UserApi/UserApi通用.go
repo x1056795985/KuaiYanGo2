@@ -1180,8 +1180,9 @@ func UserApi_用户登录远程注销(c *gin.Context) {
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	// {"Api":"RemoteLogOut","User":"aaaaaa","PassWord":"ssssss","Time":1684069624,"Status":27417}'
+	// {"Api":"RemoteLogOut","User":"aaaaaa","PassWord":"ssssss","Token":"","Time":1684069624,"Status":27417}'
 	局_id := 0
+
 	if AppInfo.AppType == 1 || AppInfo.AppType == 2 {
 		局_User, ok := Ser_User.User取详情(string(请求json.GetStringBytes("User")))
 		if !ok {
@@ -1201,8 +1202,24 @@ func UserApi_用户登录远程注销(c *gin.Context) {
 			return
 		}
 	}
+	var err error
+	var 局_指定token = string(请求json.GetStringBytes("Token"))
+	if 局_指定token == "" {
+		err = Ser_LinkUser.Set批量注销Uid(局_id, Ser_LinkUser.Z注销_用户远程注销)
+	} else {
+		var 局_临时在线信息 DB.DB_LinksToken
+		局_临时在线信息, err = Ser_LinkUser.Token取User在线详情(局_指定token)
+		if err != nil {
+			response.X响应状态(c, response.Status_操作失败)
+			return
+		}
+		if 局_临时在线信息.Uid != 局_id { //只允许注销已经登陆的token,并且uid是自己的
+			response.X响应状态消息(c, response.Status_操作失败, "用户没有权限注销此token")
+			return
+		}
+		err = Ser_LinkUser.Set批量注销([]int{局_临时在线信息.Id}, Ser_LinkUser.Z注销_用户远程注销)
+	}
 
-	err := Ser_LinkUser.Set批量注销Uid(局_id, Ser_LinkUser.Z注销_用户远程注销)
 	更新上下文缓存在线信息(c)
 	if err != nil {
 		response.X响应状态(c, response.Status_操作失败)
