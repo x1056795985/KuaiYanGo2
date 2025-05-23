@@ -139,7 +139,7 @@ func UserApi_任务池_取任务列表(c *gin.Context) {
 		return
 	}
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-	//{"Api":"TaskPoolGetDataList","Page":1,"Order":1,"Size":30,"Tid":1,"Time":1684761030,"Status":12622}
+	//{"Api":"TaskPoolGetDataList","Page":1,"Order":1,"Size":30,"Tid":1,"isSimple":1,"Time":1684761030,"Status":12622}
 	db := *global.GVA_DB
 	var 请求 = request.List{
 		Page:     请求json.GetInt("Page"),
@@ -153,6 +153,13 @@ func UserApi_任务池_取任务列表(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 		return
 	}
+	if 请求json.GetInt("isSimple") == 1 { //简略信息,节省网络通讯时间
+		for a, _ := range list {
+			list[a].SubmitData = ""
+			list[a].ReturnData = ""
+		}
+	}
+
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), response2.GetList{List: list, Count: i})
 	return
 }

@@ -210,8 +210,9 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 				局_代理id含子级id = []int{-999}
 			}
 			局_DB.Where("AgentUid IN ?", 局_代理id含子级id)
+		case 8: //归属代理id
+			局_DB.Where("AgentUid = ?", utils.D到整数(请求.Keywords))
 		}
-
 	}
 
 	switch 请求.IsLogin {
