@@ -118,6 +118,7 @@ func (C *ExeTools) CreateExeAddFNKYTask(c *gin.Context) {
 		appInfo["CryptoKeyPublic"] = 局_Appinfo.CryptoKeyPublic
 	}
 	aaa["AppInfo"] = appInfo
+	aaa["加密盐"] = setting.Q系统设置().Y用户API加密盐
 
 	aaa2, err := json.Marshal(aaa)
 	if err != nil {

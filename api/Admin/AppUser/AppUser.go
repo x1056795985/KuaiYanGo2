@@ -237,7 +237,43 @@ func (a *Api) GetAppUserList(c *gin.Context) {
 		return
 	}
 	UserClass := Ser_UserClass.UserClass取map列表Int(请求.AppId)
-	response.OkWithDetailed(结构响应_GetAppUserList{DB_AppUser, 总数, app信息.AppType, UserClass}, "获取成功", c)
+	var 局_list = []struct {
+		DB_AppUser带User信息
+		AgentName string `json:"AgentName"`
+	}{}
+	for _, v := range DB_AppUser {
+		局_list = append(局_list, struct {
+			DB_AppUser带User信息
+			AgentName string `json:"AgentName"`
+		}{
+			DB_AppUser带User信息: v,
+			AgentName:         "",
+		})
+	}
+
+	var 局_临时uid数组 []int
+	for _, v := range DB_AppUser {
+		if v.AgentUid > 0 {
+			局_临时uid数组 = append(局_临时uid数组, v.AgentUid)
+		}
+	}
+
+	if len(局_临时uid数组) > 0 {
+		局_临时uid数组 = utils.S数组_去重复(局_临时uid数组)
+		局_map := Ser_User.Id取User_批量(局_临时uid数组)
+
+		for i := range len(局_list) {
+			if 局_list[i].AgentUid > 0 {
+				if 局代理名称, ok := 局_map[局_list[i].AgentUid]; ok {
+					局_list[i].AgentName = 局代理名称
+				} else {
+					局_list[i].AgentName = "已删除用户"
+				}
+			}
+		}
+	}
+
+	response.OkWithDetailed(结构响应_GetAppUserList{局_list, 总数, app信息.AppType, UserClass}, "获取成功", c)
 	return
 }
 
