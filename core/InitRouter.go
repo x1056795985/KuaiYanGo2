@@ -633,9 +633,10 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
 	{
-		App := Agent.Api.Ka                            //实现路由的 具体方法位置
-		baseRouter.POST("GetList", App.GetKaList)      // 获取列表
-		baseRouter.POST("New", App.New)                // 新制卡号
+		App := Agent.Api.Ka                       //实现路由的 具体方法位置
+		baseRouter.POST("GetList", App.GetKaList) // 获取列表
+		baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_制卡})).
+			POST("New", App.New)
 		baseRouter.POST("InventoryNewKa", App.K库存制卡)   // 新制卡号
 		baseRouter.POST("GetInfo", App.GetInfo)        // 获取详细信息
 		baseRouter.POST("SetStatus", App.Set修改状态)      // 修改状态
@@ -684,11 +685,12 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 	baseRouter = Router根Agent.Group("/AgentInventory")
 	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
 
-	AgentInventory := Agent.Api.AgentInventory                        //实现路由的 具体方法位置
-	baseRouter.POST("GetList", AgentInventory.GetAgentInventoryList)  // 获取列表
-	baseRouter.POST("GetKaClassTree", AgentInventory.Get取可创建库存包列表)    // 获取列表
-	baseRouter.POST("GetInfo", AgentInventory.GetAgentInventoryInfo)  // 获取详细信息
-	baseRouter.POST("NewBuy", AgentInventory.New库存购买)                 // 创建库存包
+	AgentInventory := Agent.Api.AgentInventory                       //实现路由的 具体方法位置
+	baseRouter.POST("GetList", AgentInventory.GetAgentInventoryList) // 获取列表
+	baseRouter.POST("GetKaClassTree", AgentInventory.Get取可创建库存包列表)   // 获取列表
+	baseRouter.POST("GetInfo", AgentInventory.GetAgentInventoryInfo) // 获取详细信息
+	baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_制卡})).
+		POST("NewBuy", AgentInventory.New库存购买) // 创建库存包
 	baseRouter.POST("Send", AgentInventory.K库存发送)                     // 创建库存包
 	baseRouter.POST("GetSubordinateAgent", AgentInventory.Q可发送库存下级代理) // 创建库存包
 	baseRouter.POST("Withdraw", AgentInventory.K库存撤回)                 // 撤回转出的库存

@@ -301,6 +301,7 @@ func (j *agent) Q取全部代理功能ID_MAP(c *gin.Context) map[int]string {
 	局_map[DB.D代理功能_解冻软件用户] = "解冻软件用户"
 	局_map[DB.D代理功能_修改用户密码] = "修改用户密码"
 	局_map[DB.D代理功能_卡类调价] = "卡类调价"
+	局_map[DB.D代理功能_制卡] = "制卡"
 	return 局_map
 }
 

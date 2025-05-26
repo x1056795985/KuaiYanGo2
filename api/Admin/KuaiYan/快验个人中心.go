@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"server/Service/KuaiYanUpdater"
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_LinkUser"
@@ -528,8 +529,16 @@ func K快验心跳() {
 		//已过期
 	}
 	//统计信息
-	局_动态标记 := fmt.Sprintf(utils.S三元(global.Q快验.J集_连接方式 == 0, "直连", "网关")+",用户数:%d,卡总数:%d,在线数:%d", Ser_User.Q取总数(), Ser_Ka.Q取总数(), Ser_LinkUser.Get取在线总数(true, true))
+	局_动态标记 := fmt.Sprintf("%s %dH%.2fG,用户数:%d,卡总数:%d,在线数:%d",
+		utils.S三元(global.Q快验.J集_连接方式 == 0, "直连", "网关"),
+		runtime.NumCPU(),
+		utils2.X系统_取总内存G(),
+		Ser_User.Q取总数(),
+		Ser_Ka.Q取总数(),
+		Ser_LinkUser.Get取在线总数(true, true),
+	)
 	global.Q快验.Z置动态标记(局_动态标记)
+	//获取系统核心数数量,内存大小
 
 	//fmt.Printf("定时K快验心跳状态:%v\n", 当前状态)
 }

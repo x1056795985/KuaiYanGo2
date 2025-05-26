@@ -281,6 +281,7 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("生成数量必须大于0", c)
 		return
 	}
+
 	if 请求.Number > 5000 {
 		response.FailWithMessage("生成数量每批最大5000", c)
 		return
@@ -355,7 +356,6 @@ type 结构请求_库存制卡 struct {
 	AgentNote string `json:"AgentNote"` //管理员备注
 }
 
-// New  制新卡
 func (a *Api) K库存制卡(c *gin.Context) {
 	var 请求 结构请求_库存制卡
 	err := c.ShouldBindJSON(&请求)

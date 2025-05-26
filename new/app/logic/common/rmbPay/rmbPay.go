@@ -120,7 +120,8 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 		var 代理在线支付信息 m.Z在线支付
 		if 局代理Info, err = service.NewUser(c, &tx).Info(参数.ReceivedUid); err == nil {
 			if 代理在线支付信息, err = L_setting.Q取代理在线支付信息(c, 参数.ReceivedUid); err == nil {
-				if 局代理Info.Rmb > 参数.Rmb+L_rmbPay.Pay_指定Uid待支付金额(c, 参数.ReceivedUid) {
+				局_代收款金额 := 参数.Rmb + L_rmbPay.Pay_指定Uid待支付金额(c, 参数.ReceivedUid)
+				if 局代理Info.Rmb > 局_代收款金额 {
 					参数.Z支付配置s = 代理在线支付信息
 					参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 					局_通道数据, err = 局_通道.D订单创建(c, &参数)
@@ -128,6 +129,8 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 					if err == nil {
 						goto 下单成功
 					}
+				} else {
+					err = errors.New("代理余额不足(" + Float64到文本(局_代收款金额, 2) + "=未关闭代收款订单总额)")
 				}
 			}
 		}
@@ -135,6 +138,9 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 		参数.Z支付配置s = setting.Q在线支付配置()
 		参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 		参数.ReceivedUid = 0
+		if err != nil {
+			参数.E额外信息.Set("代收款err", err.Error())
+		}
 	} else {
 		参数.ReceivedUid = 0
 	}
