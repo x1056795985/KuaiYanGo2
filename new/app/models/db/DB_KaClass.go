@@ -3,9 +3,9 @@ package db
 type DB_KaClass struct {
 	Id           int     `json:"Id" gorm:"column:Id;primarykey"`
 	AppId        int     `json:"AppId" gorm:"column:AppId;所属软件id"`
-	Name         string  `json:"Name" gorm:"column:Name;size:200;comment:卡名称"` //  年卡月卡季卡等等
+	Name         string  `json:"Name" gorm:"column:Name;size:191;comment:卡名称"` //  年卡月卡季卡等等
 	Note         string  `json:"Note" gorm:"column:Note;size:400;comment:卡备注"` //  年卡月卡季卡等等
-	Prefix       string  `json:"Prefix" gorm:"column:Prefix;size:200;comment:卡前缀"`
+	Prefix       string  `json:"Prefix" gorm:"column:Prefix;size:191;comment:卡前缀"`
 	VipTime      int64   `json:"VipTime" gorm:"column:VipTime;comment:增减时间秒数或点数"`
 	InviteCount  int64   `json:"InviteCount" gorm:"column:InviteCount;comment:邀请人增减时间秒数或点数"`
 	RMb          float64 `json:"RMb" gorm:"column:RMb;type:decimal(10,2);default:0;comment:余额增减"`

@@ -306,7 +306,7 @@ type 结构请求_代理树和卡类树 struct {
 
 type Node struct {
 	Id            int     `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"` // id
-	User          string  `json:"User" gorm:"column:User;size:200;UNIQUE;index;comment:用户登录名"`
+	User          string  `json:"User" gorm:"column:User;size:191;UNIQUE;index;comment:用户登录名"`
 	UPAgentId     int     `json:"UPAgentId" gorm:"column:UPAgentId;comment:上级代理id"`
 	AgentDiscount int     `json:"AgentDiscount" gorm:"column:AgentDiscount;comment:分成百分比"`
 	Children      []*Node `json:"Children,omitempty" gorm:"column:Children;comment:下级代理id"`

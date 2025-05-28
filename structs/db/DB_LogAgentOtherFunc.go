@@ -11,7 +11,7 @@ type DB_LogAgentOtherFunc struct {
 	Func      int    `json:"Func" gorm:"column:Func;comment:操作功能id"`
 	Note      string `json:"Note" gorm:"column:Note;size:5000;comment:其他信息"`
 	Time      int64  `json:"Time" gorm:"column:Time;comment:时间"`
-	Ip        string `json:"Ip" gorm:"column:Ip;size:200;comment:ip地址"`
+	Ip        string `json:"Ip" gorm:"column:Ip;size:191;comment:ip地址"`
 }
 
 func (DB_LogAgentOtherFunc) TableName() string {

@@ -563,7 +563,7 @@ func Get卡号列表统计应用卡类可用已用(c *gin.Context) [][]string {
 type 临时应用id总数键值对 struct {
 	应用AppId int
 	总数      int
-	在线数量  int
+	在线数量    int
 }
 type 结构_请求类型 struct {
 	Type  int `json:"Type"`
@@ -1164,7 +1164,7 @@ func Get代理组织架构图(c *gin.Context, 根代理ID int) []*Node {
 
 type Node struct {
 	Id            int     `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"` // id
-	User          string  `json:"User" gorm:"column:User;size:200;UNIQUE;index;comment:用户登录名"`
+	User          string  `json:"User" gorm:"column:User;size:191;UNIQUE;index;comment:用户登录名"`
 	UPAgentId     int     `json:"UPAgentId" gorm:"column:UPAgentId;comment:上级代理id"`
 	AgentDiscount int     `json:"AgentDiscount" gorm:"column:AgentDiscount;comment:分成百分比"`
 	Children      []*Node `json:"Children,omitempty" gorm:"column:Children;comment:下级代理id"`

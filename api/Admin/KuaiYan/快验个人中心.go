@@ -529,10 +529,10 @@ func K快验心跳() {
 		//已过期
 	}
 	//统计信息
-	局_动态标记 := fmt.Sprintf("%s %dH%.2fG,用户数:%d,卡总数:%d,在线数:%d",
+	局_动态标记 := fmt.Sprintf("%s %dH %d协程,用户数:%d,卡总数:%d,在线数:%d",
 		utils.S三元(global.Q快验.J集_连接方式 == 0, "直连", "网关"),
 		runtime.NumCPU(),
-		utils2.X系统_取总内存G(),
+		runtime.NumGoroutine(),
 		Ser_User.Q取总数(),
 		Ser_Ka.Q取总数(),
 		Ser_LinkUser.Get取在线总数(true, true),

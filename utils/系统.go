@@ -6,8 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
-	"syscall"
 	"time"
 )
 
@@ -42,27 +40,4 @@ func GetCurrentAbPathByExecutable() string {
 	res, _ := filepath.EvalSymlinks(filepath.Dir(exePath))
 	return res
 }
-
-func X系统_取总内存G() float64 {
-	if runtime.GOOS == "windows" {
-		// Windows系统
-		//var memStatus syscall.MemoryStatusEx
-		//memStatus.Length = uint32(unsafe.Sizeof(memStatus))
-		//ret, _, _ := syscall.NewLazyDLL("kernel32.dll").NewProc("GlobalMemoryStatusEx").Call(
-		//	uintptr(unsafe.Pointer(&memStatus)))
-		//if ret == 0 {
-		//	return 0
-		//}
-		//return memStatus.TotalPhys
-		return 0
-	} else {
-		// Linux/Unix系统
-		var info syscall.Sysinfo_t
-		err := syscall.Sysinfo(&info)
-		if err != nil {
-			return 0
-		}
-
-		return utils.Float64除int64(float64(info.Totalram*uint64(info.Unit))/1024/1024, 1024, 2)
-	}
-}
+ 

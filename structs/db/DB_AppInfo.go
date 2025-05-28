@@ -2,8 +2,8 @@ package DB
 
 type DB_AppInfo struct {
 	AppId                 int    `json:"AppId" gorm:"column:AppId;primarykey"` // id
-	AppWeb                string `json:"AppWeb" gorm:"column:AppWeb;size:200;comment:服务器地址"`
-	AppName               string `json:"AppName" gorm:"column:AppName;size:200;comment:应用名称"`
+	AppWeb                string `json:"AppWeb" gorm:"column:AppWeb;size:191;comment:服务器地址"`
+	AppName               string `json:"AppName" gorm:"column:AppName;size:191;comment:应用名称"`
 	Status                int    `json:"Status" gorm:"column:Status;default:3;comment:状态(1>停止运营,2>免费模式,3>收费模式)"`
 	AppStatusMessage      string `json:"AppStatusMessage" gorm:"column:AppStatusMessage;comment:状态原因"`
 	AppVer                string `json:"AppVer"  gorm:"column:AppVer;default:1.0.0;comment:软件版本"`
