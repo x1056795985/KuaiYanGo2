@@ -77,7 +77,7 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 	}
 	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据, 局_在线信息.LoginAppid, 局_在线信息.Uid)
 	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, "Task数据创建加入队列失败")
+		response.X响应状态消息(c, response.Status_操作失败, "Task数据创建加入队列失败"+err.Error())
 		return
 	}
 	if 局_任务类型.HookSubmitDataEnd != "" {
@@ -486,7 +486,7 @@ func UserApi_VMP计算授权码(c *gin.Context) {
 	局_明天time := time.Now().AddDate(0, 0, 1)
 	局_授权参数.ExpireDate.Year = 局_明天time.Year()
 	局_授权参数.ExpireDate.Month = int(局_明天time.Month())
-	局_授权参数.ExpireDate.Month = 局_明天time.Day()
+	局_授权参数.ExpireDate.Day = 局_明天time.Day()
 	局_授权参数.MaxBuildDate = common.S时间{
 		Year:  time.Now().Year(),
 		Month: int(time.Now().Month()),
