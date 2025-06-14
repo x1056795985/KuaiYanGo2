@@ -587,10 +587,16 @@ func P批量_全部用户修改为指定时间或点数(AppId int, Number int64,
 	return 影响行数, err
 }
 
-// Id点数增减 可能减少到0以下 ,增加无限制
 func X修改用户类型_批量(AppId int, Id []int, UserClassId int) (int64, error) {
 	//因为无符号 转换正负数 比较乱容易精度错误,所以 增加一个 Is增加 形参 判断是增加还是减少
 	db := *global.GVA_DB
 	db2 := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("UserClassId", UserClassId)
+	return db2.RowsAffected, db2.Error
+}
+
+func X修改用户绑定信息_批量(AppId int, Id []int, Key string) (int64, error) {
+	//因为无符号 转换正负数 比较乱容易精度错误,所以 增加一个 Is增加 形参 判断是增加还是减少
+	db := *global.GVA_DB
+	db2 := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("Key", Key)
 	return db2.RowsAffected, db2.Error
 }

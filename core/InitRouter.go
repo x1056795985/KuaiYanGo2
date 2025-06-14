@@ -256,6 +256,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetBatchSetUserConfig", App.Set批量维护_置云配置)
 		baseRouter.POST("SetBatchUserClass", App.Set批量维护_修改用户类型)
 		baseRouter.POST("SetBatchAllUserVipTime", App.P批量_全部用户增减时间点数)
+		baseRouter.POST("BatchSetAppUserKey", App.P批量_设置用户绑定信息)
 
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("DeleteBatch", App.Set批量维护_删除用户)
@@ -545,6 +546,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("ChartKaRegister", App.Get卡号列表统计制卡)
 		baseRouter.POST("ChartAppUserRegister", App.Get应用用户账号注册统计)
 		baseRouter.POST("ChartAgentLevel", App.Get代理组织架构图)
+		baseRouter.POST("ChartTidTaskData", App.Get任务池任务Id分析)
 	}
 	//快验个人中心===========================================
 	baseRouter = Router根Admin.Group("/KuaiYan")

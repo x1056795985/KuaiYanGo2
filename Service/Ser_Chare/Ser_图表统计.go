@@ -1189,3 +1189,64 @@ func getTreeIterative(list []*Node, parentId int) []*Node {
 	return memo[parentId].Children
 
 }
+
+// 定义日期统计结构
+type dailyStat struct {
+	success int
+	fail    int
+}
+
+// 获取统计结果
+func Get任务池任务Id分析(c *gin.Context) [][]string {
+	局_type := struct {
+		TaskId int `json:"TaskId"`
+	}{}
+	_ = c.ShouldBindJSON(&局_type)
+
+	var TaskDataList []DB.DB_TaskPoolData
+	global.GVA_DB.Model(DB.DB_TaskPoolData{}).Select("TimeStart,Status").
+		Where("Tid = ?", 局_type.TaskId).
+		Find(&TaskDataList)
+
+	// 初始化30天数据容器（从今天往前推29天）
+	now := time.Now()
+	dayStats := make(map[string]*dailyStat)
+	for i := 0; i < 30; i++ {
+		date := now.AddDate(0, 0, -i).Format("01-02")
+		dayStats[date] = &dailyStat{}
+	}
+
+	// 统计每日数据
+	for _, task := range TaskDataList {
+		taskDate := time.Unix(int64(task.TimeStart), 0).Format("01-02")
+		if stat, exists := dayStats[taskDate]; exists {
+			if task.Status == 3 { // 3表示成功
+				stat.success++
+			} else if task.Status == 4 { // 4表示失败
+				stat.fail++
+			}
+		}
+	}
+
+	// 构建结果数组（按时间倒序：最近→最早）
+	Data := [][]string{{"日期", "失败", "成功", "总数"}}
+	weekdays := []string{"日", "一", "二", "三", "四", "五", "六"} // 添加中文星期缩写数组
+	for i := 29; i >= 0; i-- {
+		t := now.AddDate(0, 0, -i)
+		day := t.Day()
+		weekday := weekdays[t.Weekday()] // 获取中文星期缩写
+		// 修改日期格式为 "日(周几)"
+		displayDate := fmt.Sprintf("%d|%s", day, weekday)
+		dateKey := t.Format("01-02")
+		stat := dayStats[dateKey]
+		total := stat.success + stat.fail
+		Data = append(Data, []string{
+			displayDate,
+			strconv.Itoa(stat.fail),
+			strconv.Itoa(stat.success),
+			strconv.Itoa(total),
+		})
+	}
+
+	return Data
+}

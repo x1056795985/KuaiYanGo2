@@ -823,3 +823,36 @@ func (a *Api) P批量_全部用户增减时间点数(c *gin.Context) {
 	}
 	return
 }
+
+// Del批量维护_全部用户增减时间点数
+func (a *Api) P批量_设置用户绑定信息(c *gin.Context) {
+	var 请求 struct {
+		AppId int    `json:"AppId"`
+		Id    []int  `json:"Id"`
+		Key   string `json:"Key"`
+	}
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+
+	if 请求.AppId < 10000 || !Ser_AppInfo.AppId是否存在(请求.AppId) {
+		response.FailWithMessage("AppId不存在", c)
+		return
+	}
+	if len(请求.Id) <= 0 {
+		response.FailWithMessage("id数量必须大于0", c)
+		return
+	}
+
+	影响数量, err2 := Ser_AppUser.X修改用户绑定信息_批量(请求.AppId, 请求.Id, 请求.Key)
+	if err2 != nil {
+		response.FailWithMessage(err2.Error(), c)
+	} else {
+		response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
+	}
+
+	return
+}

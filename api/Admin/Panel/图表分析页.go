@@ -45,3 +45,6 @@ func (s *Api) Get应用用户账号注册统计(c *gin.Context) {
 func (s *Api) Get代理组织架构图(c *gin.Context) {
 	response.OkWithDetailed(Ser_Chare.Get代理组织架构图(c, -1), "获取成功", c)
 }
+func (s *Api) Get任务池任务Id分析(c *gin.Context) {
+	response.OkWithDetailed(Ser_Chare.Get任务池任务Id分析(c), "获取成功", c)
+}

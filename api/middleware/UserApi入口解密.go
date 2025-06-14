@@ -43,7 +43,7 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"GetAppUpDataJson":       {"取新版本下载地址", UserApi.UserApi_取新版本下载地址, true},
 	"GetAppPublicData":       {"取应用专属变量", UserApi.UserApi_取应用专属变量, true},
 	"GetPublicData":          {"取公共变量", UserApi.UserApi_取公共变量, true},
-	"SetPublicData":          {"取公共变量", UserApi.UserApi_置公共变量, true},
+	"SetPublicData":          {"置公共变量", UserApi.UserApi_置公共变量, true},
 	"GetAgentConfig":         {"取代理云配置", UserApi.UserApi_取代理云配置, true},
 	"GetAppVersion":          {"取应用最新版本", UserApi.UserApi_取应用最新版本, true},
 	"GetAppHomeUrl":          {"取应用主页Url", UserApi.UserApi_取应用主页Url, true},
