@@ -34,6 +34,9 @@ func KaId是否存在(Appid int, id int) bool {
 // Ka批量创建 切片可以直接传址 所以放切片  卡信息切片[:]
 // 有效期 0=9999999999 无限制
 func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) error {
+	if len(卡信息切片) >= 2621 { //65535 / 25 ≈ 2621.4。所以一次最多只能插入2621条记录
+		return errors.New("每批次最大数量不能超过2621")
+	}
 
 	KaClass详细信息, err := Ser_KaClass.KaClass取详细信息(卡类id)
 	if err != nil { //估计是卡类不存在
@@ -113,6 +116,9 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 		购买数量 int64
 
 		总付款金额 float64
+	}
+	if len(卡信息切片) >= 2621 { //65535 / 25 ≈ 2621.4。所以一次最多只能插入2621条记录
+		return errors.New("每批次最大数量不能超过2621")
 	}
 	局_价格组成.购买数量 = int64(len(卡信息切片))
 
@@ -274,9 +280,10 @@ func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库�
 	if 制卡数量 <= 0 {
 		return errors.New("生成数量必须大于0")
 	}
-	if 制卡数量 > 5000 {
-		return errors.New("生成数量每批最大5000")
+	if 制卡数量 > 2621 {
+		return errors.New("生成数量每批最大2621")
 	}
+
 	局_库存详情, ok := Ser_AgentInventory.Id取详情(库存Id)
 
 	if !ok {

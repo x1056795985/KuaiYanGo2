@@ -308,8 +308,8 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("生成数量必须大于0", c)
 		return
 	}
-	if 请求.Number > 5000 {
-		response.FailWithMessage("生成数量每批最大5000", c)
+	if 请求.Number > 2600 {
+		response.FailWithMessage("生成数量每批最大2600", c)
 		return
 	}
 

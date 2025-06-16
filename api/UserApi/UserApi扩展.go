@@ -411,9 +411,6 @@ func UserApi_取jwtToken(c *gin.Context) {
 	//提交的数据都加入到内容里,方便hookAPi
 
 	鉴权密钥 := []byte(AppInfo.CryptoKeyPrivate)
-	if 局_临时鉴权密钥, ok2 := jwtMap["Key"]; ok2 {
-		鉴权密钥 = []byte(局_临时鉴权密钥.(string))
-	}
 	delete(jwtMap, "Api")
 	delete(jwtMap, "Key")
 	delete(jwtMap, "Time")
@@ -433,11 +430,20 @@ func UserApi_取jwtToken(c *gin.Context) {
 	jwtMap["UserClassMark"] = 局_UserClass.Mark
 	jwtMap["UserClassWeight"] = 局_UserClass.Weight
 	// 创建一个JWT的Token对象
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtMap)
+	block, _ := pem.Decode(鉴权密钥)
+	if block == nil {
+		response.X响应状态消息(c, response.Status_操作失败, "PEM 解析失败")
+		return
+	}
 
-	// 使用密钥进行签名
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, "私钥解析失败: "+err.Error())
+		return
+	}
 
-	signedToken, err := token.SignedString(鉴权密钥)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwtMap)
+	signedToken, err := token.SignedString(privateKey)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "生成JWT失败.")
 		return
