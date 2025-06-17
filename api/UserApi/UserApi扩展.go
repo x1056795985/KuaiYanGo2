@@ -156,13 +156,14 @@ func UserApi_任务池_取任务列表(c *gin.Context) {
 
 	var list2 = make([]struct {
 		DB.DB_TaskPoolData
-		Msg string `json:"msg"`
+		Msg string `json:"Msg"`
 	}, len(list))
 
 	for a, _ := range list {
 		list2[a].DB_TaskPoolData = list[a]
 		// 取出 json msg 部分信息当做失败提示  ,"msg":"主页_角色详细信息卡片失败",  取文本中间吧不解析json了,提高响应速度
 		list2[a].Msg = W文本_取出中间文本(list[a].ReturnData, `"msg"`, `",`)
+
 		if 请求json.GetInt("isSimple") == 1 { //简略信息,节省网络通讯时间
 			list[a].SubmitData = ""
 			list[a].ReturnData = ""
