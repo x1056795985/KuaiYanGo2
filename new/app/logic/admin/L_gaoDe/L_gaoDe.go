@@ -54,3 +54,35 @@ func G高德查询天气(c *gin.Context) (data2 string, err error) {
 	}
 	return
 }
+
+func X心知天气查询天气(c *gin.Context) (data2 string, err error) {
+	key := ""
+	if global.Q快验.Q取应用专属变量(&key, "心知天气") {
+		key = fastjson.GetString([]byte(key), "心知天气")
+	} else {
+		err = errors.New(global.Q快验.Q取错误信息(nil))
+		return
+	}
+	if key == "" {
+		err = errors.New(global.Q快验.Q取错误信息(nil))
+		return
+	}
+
+	result, err2 := req.C().EnableInsecureSkipVerify().R().Get("https://api.seniverse.com/v3/weather/now.json?key=S62cg9ezY6vo_zdI2&location=" + S三元(c.ClientIP() == "127.0.0.1", global.Q快验.Q取用户IP(), c.ClientIP()) + "&language=zh-Hans&unit=c")
+	if err2 != nil {
+		return "", err2
+	}
+	//{"results":[{"location":{"id":"WWYMRT0VRMUG","name":"大连","country":"CN","path":"大连,大连,辽宁,中国","timezone":"Asia/Shanghai","timezone_offset":"+08:00"},"now":{"text":"晴","code":"0","temperature":"23"},"last_update":"2025-06-20T11:27:26+08:00"}]}
+	data2 = fastjson.GetString(result.Bytes(), "adcode")
+	if "0" == fastjson.GetString(result.Bytes(), "results", "0", "now", "code") {
+		data2 = ""
+		data2 += fastjson.GetString(result.Bytes(), "results", "0", "location", "name")
+		data2 += " 天气："
+		data2 += fastjson.GetString(result.Bytes(), "results", "0", "now", "text")
+		data2 += " 温度："
+		data2 += fastjson.GetString(result.Bytes(), "results", "0", "now", "temperature")
+	} else {
+		err = errors.New(fastjson.GetString(result.Bytes(), "info"))
+	}
+	return
+}
