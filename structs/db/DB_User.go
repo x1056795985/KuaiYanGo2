@@ -19,6 +19,7 @@ type DB_User struct {
 	LoginTime           int64   `json:"LoginTime" gorm:"column:LoginTime;comment:登录时间"`
 	RegisterIp          string  `json:"RegisterIp" gorm:"column:RegisterIp;size:191;comment:注册ip"`
 	RegisterTime        int64   `json:"RegisterTime" gorm:"column:RegisterTime;comment:注册时间"`
+	Sort                int64   `json:"Sort" gorm:"column:Sort;default:0;comment:排序权重; "`
 }
 
 func (DB_User) TableName() string {

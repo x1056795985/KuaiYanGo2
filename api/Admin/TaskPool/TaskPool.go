@@ -124,9 +124,9 @@ func (a *Api) GetList2(c *gin.Context) {
 
 	// 添加排序
 	if 请求.Order == 1 {
-		sql += " ORDER BY db_TaskPoolType.Id ASC"
+		sql += " ORDER BY db_TaskPoolType.Sort DESC,db_TaskPoolType.Id ASC"
 	} else {
-		sql += " ORDER BY db_TaskPoolType.Id DESC"
+		sql += " ORDER BY db_TaskPoolType.Sort DESC,db_TaskPoolType.Id DESC"
 	}
 
 	// 添加分页

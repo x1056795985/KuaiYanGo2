@@ -69,3 +69,6 @@ func (C *TaskPoolData) Delete(c *gin.Context) {
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
 	return
 }
+
+
+

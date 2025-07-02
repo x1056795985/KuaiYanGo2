@@ -105,6 +105,11 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("App/SetAppSort", 局_AppInfo.SetAppSort)
 	}
+	//任务池类型
+	局_TaskPoolType := controller.NewTaskPoolTypeController()
+	{
+		adminRouter.POST("TaskPool/SetSort", 局_TaskPoolType.SetSort)
+	}
 	//任务数据
 	局_TaskPoolData := controller.NewTaskPoolDataController()
 	{
@@ -115,5 +120,6 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	局_AgentUser := controller.NewAgentUserController()
 	{
 		adminRouter.POST("Agent/GetKaSalesStatistics", 局_AgentUser.GetKaSalesStatistics)
+		adminRouter.POST("Agent/SetSort", 局_AgentUser.SetSort)
 	}
 }

@@ -34,7 +34,7 @@ func Task队列弹出任务(任务类型id []int, 最大获取数量, ReturnAppI
 	return 任务Uuid
 }
 
-func Task队列统计Id数量() (map[int]string, error) {
+func Task_取队列数量() (map[int]string, error) {
 
 	var results []struct {
 		Tid   int

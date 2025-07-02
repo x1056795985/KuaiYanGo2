@@ -78,6 +78,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_置黑名单", jS_置黑名单)
 	_ = vm.Set("$api_mqtt发送消息", jS_mqtt发送消息)
 	_ = vm.Set("$api_任务池Uuid添加到队列", jS_任务池Uuid添加到队列)
+	_ = vm.Set("$api_任务池_取队列长度", jS_任务池_取队列长度)
 	_ = vm.Set("$api_Jwt生成", jS_Jwt生成)
 	_ = vm.Set("$api_云存储_取外链", jS_云存储_取外链)
 	_ = vm.Set("$api_云存储_取文件上传授权", jS_云存储_取文件上传授权)
@@ -652,6 +653,13 @@ func jS_任务池Uuid添加到队列(uuid string) js对象_通用返回 {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
 	return js对象_通用返回{IsOk: true, Err: "成功"}
+}
+func jS_任务池_取队列长度() js对象_通用返回 {
+	data, err := Ser_TaskPool.Task_取队列数量()
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	}
+	return js对象_通用返回{IsOk: true, Err: "成功", Data: data}
 }
 func jS_Jwt生成(JSON数据, 签名密钥 string) js对象_通用返回 {
 	if JSON数据 == "" {

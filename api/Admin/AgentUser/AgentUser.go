@@ -84,9 +84,9 @@ func (a *Api) GetAgentUserList(c *gin.Context) {
 	局_DB := global.GVA_DB.Model(DB.DB_User{}).Where("UPAgentId != 0")
 
 	if 请求.Order == 1 {
-		局_DB.Order("Id ASC")
+		局_DB.Order("Sort DESC,Id ASC")
 	} else {
-		局_DB.Order("Id DESC")
+		局_DB.Order("Sort ASC,Id DESC")
 	}
 
 	if 请求.Status == 1 || 请求.Status == 2 {
@@ -114,7 +114,7 @@ func (a *Api) GetAgentUserList(c *gin.Context) {
 
 	//Count(&总数) 必须放在where 后面 不然值会被清0
 	//err = 局_DB.Count(&总数).Limit(请求.Size).Omit("login_app_name").Offset((请求.Page - 1) * 请求.Size).Find(&DB_User_简化实例).Error
-	err = 局_DB.Count(&总数).Select("`db_User`.`Id`,`db_User`.`User`,`db_User`.`PassWord`,`db_User`.`Phone`,`db_User`.`Email`,`db_User`.`Qq`,`db_User`.`SuperPassWord`,`db_User`.`Status`,`db_User`.`Rmb`,`db_User`.`Note`,`db_User`.`RealNameAttestation`,`db_User`.`UPAgentId`,`db_User`.`AgentDiscount`,`db_User`.`LoginAppid`,`db_User`.`LoginIp`,`db_User`.`LoginTime`,`db_User`.`RegisterIp`,`db_User`.`RegisterTime`, (SELECT COUNT(*) FROM `db_Agent_Level` WHERE `db_Agent_Level`.`Uid` = `db_User`.`Id`) AS `Role`").
+	err = 局_DB.Count(&总数).Select("`db_User`.`Id`,`db_User`.`User`,`db_User`.`PassWord`,`db_User`.`Phone`,`db_User`.`Email`,`db_User`.`Qq`,`db_User`.`SuperPassWord`,`db_User`.`Status`,`db_User`.`Rmb`,`db_User`.`Note`,`db_User`.`RealNameAttestation`,`db_User`.`UPAgentId`,`db_User`.`AgentDiscount`,`db_User`.`LoginAppid`,`db_User`.`LoginIp`,`db_User`.`LoginTime`,`db_User`.`RegisterIp`,`db_User`.`Sort`,`db_User`.`RegisterTime`, (SELECT COUNT(*) FROM `db_Agent_Level` WHERE `db_Agent_Level`.`Uid` = `db_User`.`Id`) AS `Role`").
 		Where("UPAgentId != 0").
 		Order("Id DESC").
 		Limit(请求.Size).
@@ -148,6 +148,7 @@ type DB_AgentUser_简化 struct {
 	LoginTime           int64   `json:"LoginTime" gorm:"column:LoginTime;comment:登录时间"`
 	LoginIp             string  `json:"LoginIp" gorm:"column:LoginIp;comment:登录ip"`
 	Role                int     `json:"Role" gorm:"column:Role;comment:角色"`
+	Sort                int64   `json:"Sort" gorm:"column:Sort;default:0;comment:排序权重; "`
 }
 
 // New用户信息
