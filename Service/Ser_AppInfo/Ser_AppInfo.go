@@ -3,6 +3,7 @@ package Ser_AppInfo
 import (
 	"EFunc/utils"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/songzhibin97/gkit/tools/rand_string"
@@ -10,6 +11,7 @@ import (
 	"regexp"
 	"server/global"
 	"server/new/app/logic/common/cloudStorage"
+	"server/new/app/logic/common/publicData"
 	dbm "server/new/app/models/db"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -248,6 +250,18 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 		if err != nil {
 			return errors.Join(err, errors.New("用户表创建失败,请删除该应用重新创建"))
 		}
+
+		// 创建唯一积分记录表
+		if err = tx.Set("gorm:table_options", "ENGINE=InnoDB").
+			Table(dbm.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(NewApp.AppId)).
+			AutoMigrate(&dbm.DB_UniqueNumLog{}); err != nil {
+			return fmt.Errorf("积分记录表创建失败: %w", err)
+		}
+		err = publicData.L_publicData.F复制app专属变量(CopyAppId, NewApp.AppId)
+		if err != nil {
+			return fmt.Errorf("复制app专属变量失败: %w", err)
+		}
+
 		return
 	})
 

@@ -154,3 +154,23 @@ func (j *publicData) Q取队列长度(c *gin.Context, Appid int, 变量名 strin
 	返回 = utils.W文本_取行数(局_云变量数据.Value)
 	return
 }
+func (j *publicData) F复制app专属变量(原appid, 新appid int) error {
+	db := *global.GVA_DB
+	// 开启事务
+	return db.Transaction(func(tx *gorm.DB) error {
+		var 变量列表 []DB.DB_PublicData
+		if err := tx.Model(DB.DB_PublicData{}).Where("AppId=?", 原appid).Find(&变量列表).Error; err != nil {
+			return err
+		}
+
+		for _, v := range 变量列表 {
+			v.AppId = 新appid
+			// 使用 Clauses 处理冲突（存在则跳过）
+			if err := tx.Clauses(clause.OnConflict{DoNothing: true}).
+				Create(&v).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
