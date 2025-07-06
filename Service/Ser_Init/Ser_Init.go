@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"os"
 	"server/Service/Ser_Admin"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
@@ -100,10 +99,7 @@ func InitDbTables(c *gin.Context) {
 		DB.DB_LogRiskControl{},
 		DB.DB_LogVipNumber{},
 		DB.DB_LogAgentOtherFunc{},
-		//任务池数据库
-		DB.TaskPool_类型{},
-		DB.TaskPool_队列{},
-		DB.DB_TaskPoolData{},
+
 		//	代理相关
 		DB.Db_Agent_Level{},
 		DB.Db_Agent_卡类授权{},
@@ -116,11 +112,16 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_Cron_log{},
 		dbm.DB_PromotionCode{},
 		dbm.DB_KaClassUpPrice{},
+
+		//任务池数据库
+		DB.TaskPool_类型{},
+		DB.TaskPool_队列{},
+		DB.DB_TaskPoolData{}, //任务池数据库 放到最后 业务字段可能和预设不同
 	)
 
 	if err != nil {
 		global.GVA_LOG.Error("InitDbTables表创建失败", zap.Error(err)) //日志错误 表创建成功
-		os.Exit(0)                                                //结束程序
+		//os.Exit(0)                                                //结束程序  //20250703 不能结束,如果客户修改过字段类型,会导致进不去程序 比如修改任务池数据提交字段类型
 	}
 	//global.GVA_LOG.Info("register table success(创建表成功)") //日志消息 表创建成功
 	InitDbTable数据(c) //初始化数据
@@ -719,7 +720,7 @@ func 数据库兼容旧版本(c *gin.Context) {
 		err = db.Exec("ALTER TABLE db_TaskPoolData MODIFY COLUMN ReturnData varchar(8000)").Error
 		err = db.Exec("ALTER TABLE db_TaskPoolData MODIFY COLUMN SubmitData varchar(8000)").Error
 		if err != nil {
-			fmt.Println("兼容就版本,成功修改字段类型为 varchar(8000)", err.Error())
+			fmt.Println("兼容就版本,失败修改字段类型为 varchar(8000)", err.Error())
 		} else {
 			fmt.Println("兼容就版本,成功修改字段类型为 varchar(8000)")
 		}
