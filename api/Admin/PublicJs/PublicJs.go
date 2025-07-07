@@ -12,6 +12,7 @@ import (
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -217,18 +218,23 @@ func (a *Api) New(c *gin.Context) {
 		return
 	}
 	if 请求.Name == "" {
-		response.FailWithMessage("变量名不能为空", c)
+		response.FailWithMessage("公共函数名不能为空", c)
+		return
+	}
+
+	if strings.Index(请求.Name, "$api_") != -1 {
+		response.FailWithMessage("公共函数名不能包含$api_", c)
 		return
 	}
 
 	if 请求.Type < 1 {
-		response.FailWithMessage("变量类型错误", c)
+		response.FailWithMessage("公共函数类型错误", c)
 		return
 	}
 
 	var 局_临时Id = Ser_PublicJs.Name取Id([]int{Ser_PublicJs.Js类型_公共函数, Ser_PublicJs.Js类型_任务池Hook函数, Ser_PublicJs.Js类型_ApiHook函数}, 请求.Name) //1 全局,2hook函数
 	if 局_临时Id != 0 && 局_临时Id != 请求.Id {
-		response.FailWithMessage("变量名已存在", c)
+		response.FailWithMessage("公共函数名已存在", c)
 		return
 	}
 

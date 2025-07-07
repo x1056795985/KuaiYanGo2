@@ -15,6 +15,7 @@ import (
 const 管理员后台 = 1
 const 代理后台 = 2
 const WEBApi = 3
+const WebUser = 4
 
 // Token有效的才放行,否则返回Ttoken失效
 func IsTokenAdmin() gin.HandlerFunc {

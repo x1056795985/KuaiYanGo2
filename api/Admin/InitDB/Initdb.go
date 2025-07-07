@@ -1,8 +1,8 @@
 package InitDB
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"server/Service/Ser_Init"
@@ -95,15 +95,20 @@ func (i *DBApi) InitDB(c *gin.Context) {
 	global.GVA_CONFIG.Mysql.MaxOpenConns = 100
 	global.GVA_CONFIG.Mysql.LogMode = "error"
 
-	局_db := Ser_Init.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
+	局_db, err := Ser_Init.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
 
 	//开始创建数据库
+	if err != nil {
+		response.FailWithMessage("连接数据库失败，\r\n"+err.Error(), c) //响应
+		return
+	}
+
 	if 局_db == nil {
-		response.FailWithMessage("自动创建数据库失败，确认已启动Mysql,检查参数后再次进行初始化\r\n", c) //响应
+		response.FailWithMessage("连接数据库失败，未知错误\r\n", c) //响应
 		return
 	}
 	//判断数据库编码
-	_, err := init_检测数据库编码格式(局_db)
+	_, err = init_检测数据库编码格式(局_db)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c) //响应
 		return

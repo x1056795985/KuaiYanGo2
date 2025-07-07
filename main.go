@@ -54,7 +54,7 @@ func main() {
 			//fmt.Printf("delete k:%s v:%v\n", k, v)
 		}),
 	)
-	global.GVA_DB = Ser_Init.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
+	global.GVA_DB, _ = Ser_Init.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
 
 	if global.GVA_DB != nil { //如果数据库不为空
 		c := gin.Context{}

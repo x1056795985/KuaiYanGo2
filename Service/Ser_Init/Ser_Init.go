@@ -2,6 +2,7 @@ package Ser_Init
 
 import (
 	"EFunc/utils"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -34,12 +35,12 @@ import (
 	"time"
 )
 
-// InitGormMysql 初始化数据库并产生数据库全局变量
-func InitGormMysql() *gorm.DB {
+// 初始化数据库并产生数据库全局变量
+func InitGormMysql() (*gorm.DB, error) {
 	m := global.GVA_CONFIG.Mysql
 	//如果没有数据库名字,直接返回估计还没传配置,第一次启动
 	if m.Dbname == "" {
-		return nil
+		return nil, errors.New("数据库名称不能为空")
 	}
 
 	mysqlConfig := mysql.Config{
@@ -51,7 +52,7 @@ func InitGormMysql() *gorm.DB {
 	//连接并设置数据库连接池参数
 	if db, err := gorm.Open(mysql.New(mysqlConfig), internal.Gorm.Config(m.Prefix)); err != nil {
 		//链接失败了
-		return nil
+		return nil, err
 	} else {
 		db.InstanceSet("gorm:table_options", "ENGINE="+m.Engine)
 		sqlDB, _ := db.DB()
@@ -59,7 +60,7 @@ func InitGormMysql() *gorm.DB {
 		sqlDB.SetMaxOpenConns(m.MaxOpenConns) //允许空闲数
 		//设定数据库连接的最大生命周期 Mysql默认120秒 所以gorm 设置个比这个值小的数 防止断开连接时操作数据库失败
 		sqlDB.SetConnMaxLifetime(100 * time.Second)
-		return db //返回连接好的db池
+		return db, nil //返回连接好的db池
 		//获取gorm db对象，其他包需要执行数据库查询的时候，只要通过	global.GVA_DB 获取db对象即可。
 		//不用担心协程并发使用同样的db对象会共用同一个连接，db对象在调用他的方法的时候会从数据库连接池中获取新的连接
 	}

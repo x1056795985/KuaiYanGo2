@@ -23,9 +23,9 @@ func NewUser(c *gin.Context, db *gorm.DB) *User {
 }
 
 // 增
-func (s *User) Create(info DB.DB_User) (row int64, err error) {
+func (s *User) Create(info *DB.DB_User) (row int64, err error) {
 	//创建会自动重新赋值info.Id为新插入的数据id
-	tx := s.db.Model(DB.DB_User{}).Create(&info)
+	tx := s.db.Model(DB.DB_User{}).Create(info)
 	return tx.RowsAffected, tx.Error
 }
 
