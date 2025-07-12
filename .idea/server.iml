@@ -11,6 +11,7 @@
       <excludeFolder url="file://$MODULE_DIR$/云函数" />
       <excludeFolder url="file://$MODULE_DIR$/core/dist" />
       <excludeFolder url="file://$MODULE_DIR$/SDK" />
+      <excludeFolder url="file://$MODULE_DIR$/new/app/web/webUser" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

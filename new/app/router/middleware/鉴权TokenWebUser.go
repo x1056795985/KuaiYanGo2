@@ -1,12 +1,13 @@
 package middleware
 
 import (
+	. "EFunc/utils"
 	"bytes"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"server/global"
+	"server/new/app/controller/Common/response"
 	"server/new/app/models/constant"
-	"server/structs/Http/response"
 	DB "server/structs/db"
 	"time"
 )
@@ -14,13 +15,30 @@ import (
 // Token有效的才放行,否则返回Ttoken失效
 func IsTokenWebUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		局_白名单 := []string{
+			"/userApi/app/getAppBaseInfo",
+			"/userApi/app/getAppGongGao",
+			"/userApi/base/loginUserOrKa",
+			"/userApi/base/loginKey",
+			"/userApi/user/newUserInfo",
+			"/userApi/user/getPwSendSms",
+			"/userApi/user/smsCodeSetPassWord",
+		}
+		if S数组_是否存在(局_白名单, c.Request.URL.Path) {
+			c.Next()
+			return
+		}
+
 		Token := c.Request.Header.Get("Token") //优先协议头的,Token
 		if Token == "" {                       //如果协议头没有,再读取,url内的
 			Token = c.Request.FormValue("Token")
 		}
+		if Token == "" { //如果协议头没有,再读取,cookies内的
+			Token, _ = c.Cookie("Token")
+		}
 
 		if Token == "" {
-			response.FailTokenErr(gin.H{"reload": true}, "请先登录", c)
+			response.FailTokenErr(c, gin.H{"reload": true}, "请先登录")
 			c.Abort()
 			return
 		}
@@ -29,24 +47,25 @@ func IsTokenWebUser() gin.HandlerFunc {
 		err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
 		// 没查到数据 或状态不正常
 		if err != nil || DB_LinksToken.Status != 1 {
-			response.FailTokenErr(gin.H{}, "令牌已失效", c)
+			response.FailTokenErr(c, gin.H{}, "令牌已失效")
 			c.Abort()
 			return
 		}
 
 		if DB_LinksToken.LoginAppid != constant.APPID_Web用户中心 {
-			response.FailTokenErr(gin.H{}, "非WebUser令牌,请重新登录", c)
+			response.FailTokenErr(c, gin.H{}, "非WebUser令牌,请重新登录")
 			c.Abort()
 			return
 		}
 
 		data, err := c.GetRawData() //GetRawData只能使用一次
 		if err != nil {
-			response.FailTokenErr(gin.H{}, "参数错误", c)
+			response.FailTokenErr(c, gin.H{}, "参数错误")
 			c.Abort()
 			return
 		}
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data)) // 关键点 //通过这写回post数据,就可以多次读取了
+
 		c.Set("DB_LinksToken", DB_LinksToken)
 		//更新最后活动时间
 		global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})

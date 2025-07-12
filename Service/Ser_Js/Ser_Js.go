@@ -90,6 +90,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_文本_取文本右边", W文本_取文本右边)
 	_ = vm.Set("$api_文本_取文本左边", W文本_取文本左边)
 	_ = vm.Set("$api_文本_取出中间文本", W文本_取出中间文本)
+	_ = vm.Set("$api_文本_子文本替换", W文本_子文本替换)
 	_ = vm.Set("$api_时间_取现行时间戳", S时间_取现行时间戳)
 	_ = vm.Set("$api_时间_取现行时间戳13", S时间_取现行时间戳13)
 	_ = vm.Set("$api_生成二维码并转base64", rmbPay.L_rmbPay.S生成二维码并转base64)

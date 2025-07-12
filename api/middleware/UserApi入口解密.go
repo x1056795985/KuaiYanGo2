@@ -104,6 +104,8 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"GetKaInfo":             {"取卡号详情", UserApi.UserApi_取卡号详情, true},
 	"GetJwtToken":           {"取jwt令牌", UserApi.UserApi_取jwtToken, true},
 	"GetUploadToken":        {"云存储_取文件上传授权", UserApi.UserApi_云存储_取文件上传授权, true},
+	"LoginShortUrl":         {"取登陆短链", UserApi.UserApi_取登陆短链, true},
+
 	//快验Api
 	"VmpComputeAuth":         {"VMP计算授权码", UserApi.UserApi_VMP计算授权码, false},
 	"VmpComputeAuthRoot":     {"VMP计算授权码防山寨", UserApi.UserApi_VMP计算授权码防山寨, false},

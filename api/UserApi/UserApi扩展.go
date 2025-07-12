@@ -22,7 +22,9 @@ import (
 	"server/new/app/logic/common/VMP"
 	"server/new/app/logic/common/cloudStorage"
 	"server/new/app/logic/common/mqttClient"
+	"server/new/app/logic/common/setting"
 	"server/new/app/models/common"
+	"server/new/app/models/constant"
 	"server/new/app/models/request"
 	response2 "server/new/app/models/response"
 	"server/new/app/service"
@@ -488,7 +490,7 @@ func UserApi_VMP计算授权码(c *gin.Context) {
 	VmpRsa.RsaBase64私钥 = B编码_BASE64编码(VMP.S十进制解码(privateKey.D))
 	VmpRsa.RsaBase64模数 = B编码_BASE64编码(VMP.S十进制解码(privateKey.N))
 
-	局_Base64产品代码字节 := Int32ToBytes(int32(局_在线信息.Uid))                                     //共计8个字节,前四个字节为在线用户用户uid 防山寨
+	局_Base64产品代码字节 := Int32ToBytes(int32(局_在线信息.Uid))                                         //共计8个字节,前四个字节为在线用户用户uid 防山寨
 	局_Base64产品代码字节 = append(局_Base64产品代码字节, Int32ToBytes(请求json.Get("AppId").Int32())...) //补appid 4个字节 后四个字节为用户appid 防止用户串应用
 	VmpRsa.Base64产品代码 = B编码_BASE64编码(局_Base64产品代码字节)
 
@@ -529,7 +531,7 @@ func UserApi_VMP计算授权码防山寨(c *gin.Context) {
 	}
 
 	_, ok := global.H缓存.Get("VMP计算code_" + strconv.Itoa(局_在线信息.Id)) //获取
-	if ok {                                                         //如果ok说明已经存在这个记录了
+	if ok {                                                                  //如果ok说明已经存在这个记录了
 		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_在线信息.User, c.ClientIP(), "用户一次登陆,多次重复计算VMP授权码,可能在尝试转发请求破解")
 		response.X响应状态消息(c, response.Status_操作失败, "禁止重复计算授权")
 		//写风控日志
@@ -550,4 +552,36 @@ func UserApi_VMP计算授权码防山寨(c *gin.Context) {
 	global.H缓存.Set("VMP计算code_"+strconv.Itoa(局_在线信息.Id), 1, time.Minute*3600)
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"VmpAuth": 请求json.Get("VmpAuth").String()})
 	return
+}
+
+/* 已经登陆的状态下,获取登陆web用户中心的登陆短链,实现直接登陆无需密码的登陆
+ */
+func UserApi_取登陆短链(c *gin.Context) {
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	if !检测用户登录在线正常(&局_在线信息) {
+		response.X响应状态(c, response.Status_未登录)
+		return
+	}
+	请求json := gjson.New(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+	//{"Api":"LoginShortUrl","JumpUrl":"pages/user/home"}
+	局_key := W文本_取随机字符串(8)
+	//不能使用软件用户信息,必须使用 在线id  因为可能存在, 获取短链后,用户修改密码的情况,这时必须保证短链失效
+	global.H缓存.Set(constant.H缓存前缀_LoginURLPrefix+局_key, 局_在线信息.Id, time.Minute*5) //短链有效期5分钟
+
+	局_jump := 请求json.Get("JumpUrl").String() //登陆成功后302跳转路由
+	if 局_jump != "" && strings.Index(局_jump, "#/") != -1 {
+		局_jump = W文本_取文本右边(局_jump, "#/")
+	}
+	if 局_jump == "" {
+		局_jump = "pages/user/home"
+	}
+
+	局_临时地址 := setting.Q系统设置().X系统地址 + "/userApi/base/loginKey?k=" + 局_key + "&j=" + 局_jump
+	局_ret := make(map[string]string, 2)
+	局_ret["webUser"] = 局_临时地址
+	局_ret["webUserPng"] = T图片_生成二维码base64(局_临时地址)
+
+	response.X响应状态带数据(c, c.GetInt("局_成功Status"), 局_ret)
 }

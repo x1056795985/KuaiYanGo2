@@ -174,3 +174,20 @@ func (C *User) SmsCodeSetPassWord(c *gin.Context) {
 	}
 	return
 }
+
+func (C *User) Logout(c *gin.Context) {
+	var err error
+	var info = struct {
+		appInfo  DB.DB_AppInfo
+		likeInfo DB.DB_LinksToken
+	}{}
+	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
+
+	err = Ser_LinkUser.Set批量注销([]int{info.likeInfo.Id}, Ser_LinkUser.Z注销_用户操作注销)
+	if err != nil {
+		response.FailWithMessage(c, "注销失败")
+		return
+	}
+	response.OkWithMessage(c, "注销成功")
+	return
+}
