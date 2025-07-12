@@ -8,10 +8,12 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_UserClass"
+	"server/config"
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
 	"server/new/app/logic/common/ka"
+	"server/new/app/logic/common/setting"
 	"server/new/app/models/constant"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -131,7 +133,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		info.appUser, err = service.NewAppUser(c, &tx, 请求.AppId).InfoUid(info.Uid)
 	}
 
-	info.DB_links_user.Uid = info.appUser.Id
+	info.DB_links_user.Uid = info.appUser.Uid
 	info.DB_links_user.User = 请求.UserOrKa
 	info.DB_links_user.Tab = strconv.Itoa(请求.AppId)
 	info.DB_links_user.Key = info.appUser.Key
@@ -192,5 +194,74 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	}
 
 	response.OkWithDetailed(c, responseData, "登录成功")
+	return
+}
+
+func (C *Base) LoginKey(c *gin.Context) {
+	//http://127.0.0.1:18888/userApi/base/loginKey?k=10001&j=\pages\user\home
+	局_key := c.Query("k")
+	局_jumpUrl := c.Query("j") //302 回跳的地址
+	var info = struct {
+		来源links_user  DB.DB_LinksToken
+		DB_links_user DB.DB_LinksToken
+		appInfo       DB.DB_AppInfo
+		系统设置          config.X系统设置
+	}{}
+	var err error
+	tx := *global.GVA_DB
+	局_key = constant.H缓存前缀_LoginURLPrefix + 局_key
+
+	if Data缓存, ok := global.H缓存.Get(局_key); ok {
+		info.来源links_user, err = service.NewLinksToken(c, &tx).Info(Data缓存.(int))
+		if err != nil {
+			goto 结束开始跳转
+		}
+	}
+	if info.来源links_user.Status != 1 { //已经不是正常状态了 ,可能改过密码
+		goto 结束开始跳转
+	}
+	info.appInfo, err = service.NewAppInfo(c, &tx).Info(info.来源links_user.LoginAppid)
+	if err != nil {
+		goto 结束开始跳转
+	}
+
+	info.DB_links_user.Uid = info.来源links_user.Uid
+	info.DB_links_user.User = info.来源links_user.User
+	info.DB_links_user.Tab = strconv.Itoa(info.来源links_user.LoginAppid)
+	info.DB_links_user.Key = info.来源links_user.Key
+	info.DB_links_user.Ip = c.ClientIP()
+	if 省市, 运行商, err2 := Qqwry.Ip查信息(info.DB_links_user.Ip); err2 == nil && 省市 != "" {
+		info.DB_links_user.IPCity = 省市 + " " + 运行商
+	}
+	info.DB_links_user.Status = 1
+	info.DB_links_user.LoginTime = time.Now().Unix()
+	info.DB_links_user.OutTime = 36000 //退出时间
+	info.DB_links_user.LastTime = info.DB_links_user.LoginTime
+	info.DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
+	info.DB_links_user.LoginAppid = constant.APPID_Web用户中心
+	err = global.GVA_DB.Create(&info.DB_links_user).Error
+	if err != nil {
+		goto 结束开始跳转
+	}
+	go Ser_Log.Log_写登录日志(info.来源links_user.User, c.ClientIP(), "Web用户中心平台("+strconv.Itoa(info.来源links_user.LoginAppid)+")登录", constant.APPID_Web用户中心)
+
+	//账号模式登录成功把登录信息写到账号表
+	if info.appInfo.AppType == 1 || info.appInfo.AppType == 2 {
+		_, err = service.NewUser(c, &tx).Update(info.appInfo.AppId, map[string]interface{}{"LoginAppid": constant.APPID_Web用户中心, "LoginIp": c.ClientIP(), "LoginTime": time.Now().Unix()})
+		if err != nil {
+			局_log := "账号模式登录成功把登录最后时间信息写到账号表失败:" + err.Error()
+			Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.来源links_user.User, "webUser", strconv.Itoa(info.appInfo.AppId), 局_log, c.ClientIP())
+		}
+	}
+
+	//不管登陆成功还是失败,都需要跳转到这里
+结束开始跳转:
+	//设置临时token 前端路由守卫,会把cook放到token内 httpOnly 必须为false 否则js无法读取cookies
+	c.SetCookie("tempToken", info.DB_links_user.Token, 36000, "/", ".", false, false)
+	//设置302跳转
+	info.系统设置 = setting.Q系统设置()
+	info.系统设置.X系统地址 = "http://127.0.0.1:9000"
+	局_jumpUrl = info.系统设置.X系统地址 + "/user/" + strconv.Itoa(info.来源links_user.LoginAppid) + "/#/" + 局_jumpUrl
+	c.Redirect(302, 局_jumpUrl)
 	return
 }
