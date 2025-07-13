@@ -8,6 +8,8 @@ import (
 	"server/global"
 	"server/new/app/controller/Common/response"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
+	"server/new/app/service"
 	DB "server/structs/db"
 	"time"
 )
@@ -42,6 +44,7 @@ func IsTokenWebUser() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
 		var DB_LinksToken DB.DB_LinksToken
 		//这里如果报错  invalid memory address or nil pointer dereference   可能是配置文件数据库配置北山,global.GVA_DB 值为空
 		err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
@@ -57,6 +60,14 @@ func IsTokenWebUser() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		db := *global.GVA_DB
+		var 局_网页用户中心配置 dbm.DB_AppInfoWebUser
+		局_网页用户中心配置, err = service.NewAppInfoWebUser(c, &db).Info(D到整数(DB_LinksToken.Tab))
+		if err != nil || 局_网页用户中心配置.Status != 1 {
+			response.FailTokenErr(c, gin.H{"reload": true}, "应用未开放网页用户中心,请联系管理员")
+			c.Abort()
+			return
+		}
 
 		data, err := c.GetRawData() //GetRawData只能使用一次
 		if err != nil {
@@ -67,6 +78,7 @@ func IsTokenWebUser() gin.HandlerFunc {
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data)) // 关键点 //通过这写回post数据,就可以多次读取了
 
 		c.Set("DB_LinksToken", DB_LinksToken)
+		c.Set("网页用户中心配置", 局_网页用户中心配置)
 		//更新最后活动时间
 		global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
 		// 继续处理请求

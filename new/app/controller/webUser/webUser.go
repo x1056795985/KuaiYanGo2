@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/global"
 	"server/new/app/service"
+	"server/structs/Http/response"
 	DB "server/structs/db"
 )
 
@@ -16,4 +17,11 @@ func Y用户数据信息还原(c *gin.Context, 在线信息 *DB.DB_LinksToken, A
 		局_临时通用, _ = service.NewAppInfo(c, &db).Info(D到整数(在线信息.Tab))
 		*AppInfo = 局_临时通用.(DB.DB_AppInfo)
 	}
+}
+func Y限账号模式应用(c *gin.Context, AppInfo *DB.DB_AppInfo) bool {
+	if AppInfo.AppType == 1 || AppInfo.AppType == 2 {
+		return true
+	}
+	response.FailWithMessage("仅限账号模式应用调用", c)
+	return false
 }

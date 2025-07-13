@@ -33,6 +33,9 @@ func (r H缓存验证码) Get(id string, 是否删除 bool) string {
 
 // 校验验证码  就是多一步 校验,实际没区别
 func (r H缓存验证码) Verify(id, Value string, 是否删除 bool) bool {
+	if id == "" || Value == "" {
+		return false
+	}
 	v := H缓存验证码{}.Get(id, 是否删除)
 	if v == Value { //如果验证成功 直接删除,防止验证码多次使用
 		global.H缓存.Delete(CAPTCHA + id)

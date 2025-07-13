@@ -18,6 +18,7 @@ import (
 	"server/new/app/logic/common/setting"
 	dbm "server/new/app/models/db"
 	"server/new/app/router/webApi2"
+	"server/new/app/service"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"sort"
@@ -193,7 +194,11 @@ type 结构请求_ID数组 struct {
 
 // save 保存
 func (a *Api) SaveApp信息(c *gin.Context) {
-	var 请求 结构响应_AppInfo
+	var 请求 struct {
+		AppData        DB.DB_AppInfo         `json:"AppData"`
+		PublicData     []DB.DB_PublicData    `json:"PublicData"` // 列表
+		AppInfoWebUser dbm.DB_AppInfoWebUser `json:"AppInfoWebUser"`
+	}
 	err := c.ShouldBindJSON(&请求)
 	//解析失败
 	if err != nil {
@@ -238,7 +243,25 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 	if 局_旧AppInfo.CryptoKeyPrivate != 请求.AppData.CryptoKeyPrivate {
 		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_其他, Ser_Admin.Id取User(1), 请求.AppData.AppName, "", "防误操作应用"+strconv.Itoa(局_旧AppInfo.AppId)+"更换私钥旧私钥:"+局_旧AppInfo.CryptoKeyPrivate, c.ClientIP())
 	}
-
+	//=====网页用户中心配置============
+	tx := *global.GVA_DB
+	_, err = service.NewAppInfoWebUser(c, &tx).Info(局_旧AppInfo.AppId)
+	if err != nil {
+		_, err = service.NewAppInfoWebUser(c, &tx).Create(dbm.DB_AppInfoWebUser{
+			Id:           局_旧AppInfo.AppId,
+			Status:       请求.AppInfoWebUser.Status,
+			CaptchaLogin: 请求.AppInfoWebUser.CaptchaLogin,
+		})
+	} else {
+		_, err = service.NewAppInfoWebUser(c, &tx).Update(局_旧AppInfo.AppId, map[string]interface{}{
+			"status":       请求.AppInfoWebUser.Status,
+			"captchaLogin": 请求.AppInfoWebUser.CaptchaLogin,
+		})
+	}
+	if err != nil {
+		response.FailWithMessage("保存网页用户中心配置失败", c)
+		return
+	}
 	//===========检查专属变量
 	for _, 专属变量 := range 请求.PublicData {
 		局_临时, err2 := publicData.L_publicData.Q取值2(c, 专属变量.AppId, 专属变量.Name)
@@ -248,7 +271,7 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 		if 局_临时.Value != 专属变量.Value || 局_临时.IsVip != 专属变量.IsVip || 局_临时.Note != 专属变量.Note || 局_临时.Type != 专属变量.Type || 局_临时.Sort != 专属变量.Sort {
 			//只有值改变了才修改时间戳
 			if 局_临时.Value != 专属变量.Value {
-				专属变量.Time= time.Now().Unix()
+				专属变量.Time = time.Now().Unix()
 			}
 
 			_ = publicData.L_publicData.Z置值_原值(c, 专属变量)
@@ -338,11 +361,6 @@ const Api之后Hook函数模板 = `(JSON响应明文) {
     return JSON响应明文
 }`
 
-type 结构响应_AppInfo struct {
-	AppData    DB.DB_AppInfo      `json:"AppData"`    // 列表
-	PublicData []DB.DB_PublicData `json:"PublicData"` // 列表
-}
-
 // NewApp信息
 func (a *Api) NewApp信息(c *gin.Context) {
 	var 请求 请求_NewApp
@@ -375,7 +393,7 @@ type 请求_NewApp struct {
 	AppId     int    `json:"AppId" gorm:"column:AppId;primarykey"` // id
 	AppName   string `json:"AppName" gorm:"column:AppName;comment:应用名称"`
 	AppType   int    `json:"AppType"  gorm:"column:AppType;default:1;comment:软件类型"` //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
-	CopyAppId int    `json:"CopyAppId"`                                                 //要复制的appId
+	CopyAppId int    `json:"CopyAppId"`                                             //要复制的appId
 }
 
 // GetAppIdMax 取最大appid值
@@ -424,7 +442,7 @@ func (a *Api) GetAppIdNameList(c *gin.Context) {
 
 type 响应_AppIdNameList struct {
 	Map   map[string]string `json:"Map"`
-	Array []键值对          `json:"Array"`
+	Array []键值对             `json:"Array"`
 }
 
 type 键值对 struct {

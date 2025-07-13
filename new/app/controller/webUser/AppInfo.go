@@ -5,6 +5,7 @@ import (
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
 )
@@ -26,7 +27,8 @@ func (C *AppInfo) GetAppBaseInfo(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		appInfo DB.DB_AppInfo
+		appInfo     DB.DB_AppInfo
+		appInfoUser dbm.DB_AppInfoWebUser
 	}{}
 	var err error
 	tx := *global.GVA_DB
@@ -35,13 +37,19 @@ func (C *AppInfo) GetAppBaseInfo(c *gin.Context) {
 		response.FailWithMessage(c, "AppId不存在")
 		return
 	}
+	if info.appInfoUser, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId); err != nil {
+		info.appInfoUser = dbm.DB_AppInfoWebUser{
+			Status: 2,
+		}
+	}
 	data := gin.H{
-		"AppId":            info.appInfo.AppId,
-		"AppType":          info.appInfo.AppType,
-		"AppName":          info.appInfo.AppName,
-		"AppWeb":           info.appInfo.AppWeb,
-		"Status":           info.appInfo.Status,
-		"AppStatusMessage": info.appInfo.AppStatusMessage,
+		"appId":            info.appInfo.AppId,
+		"appType":          info.appInfo.AppType,
+		"appName":          info.appInfo.AppName,
+		"appWeb":           info.appInfo.AppWeb,
+		"status":           info.appInfo.Status,
+		"appStatusMessage": info.appInfo.AppStatusMessage,
+		"webUserStatus":    info.appInfoUser.Status,
 	}
 	response.OkWithData(c, data)
 	return

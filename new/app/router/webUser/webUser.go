@@ -43,8 +43,11 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("user/newUserInfo", 局_user.NewUserInfo)
 		adminRouter.POST("user/getPwSendSms", 局_user.GetPwSendSms)
+		adminRouter.POST("user/getInfo", 局_user.GetInfo)
 		adminRouter.POST("user/smsCodeSetPassWord", 局_user.SmsCodeSetPassWord)
 		adminRouter.POST("user/logout", 局_user.Logout)
+		adminRouter.POST("user/setBaseInfo", 局_user.SetBaseInfo)
+		adminRouter.POST("user/sendSms", 局_user.SendSms)
 	}
 
 	局_appUser := controller.NewAppUserController()

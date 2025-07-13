@@ -15,6 +15,7 @@ import (
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/setting"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
 	"server/utils"
@@ -52,6 +53,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		DB_links_user DB.DB_LinksToken
 		kaInfo        DB.DB_Ka
 		user          DB.DB_User
+		网页用户中心配置      dbm.DB_AppInfoWebUser
 	}{}
 	var err error
 	tx := *global.GVA_DB
@@ -59,6 +61,12 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	if info.appInfo, err = service.NewAppInfo(c, &tx).Info(请求.AppId); err != nil {
 		response.FailWithMessage(c, "AppId不存在")
 
+		return
+	}
+	info.网页用户中心配置, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId)
+	if err != nil || info.网页用户中心配置.Status != 1 {
+		response.FailWithMessage(c, constant.C常_关闭提示)
+		c.Abort()
 		return
 	}
 
@@ -206,6 +214,7 @@ func (C *Base) LoginKey(c *gin.Context) {
 		DB_links_user DB.DB_LinksToken
 		appInfo       DB.DB_AppInfo
 		系统设置          config.X系统设置
+		网页用户中心配置      dbm.DB_AppInfoWebUser
 	}{}
 	var err error
 	tx := *global.GVA_DB
@@ -217,6 +226,7 @@ func (C *Base) LoginKey(c *gin.Context) {
 			goto 结束开始跳转
 		}
 	}
+
 	if info.来源links_user.Status != 1 { //已经不是正常状态了 ,可能改过密码
 		goto 结束开始跳转
 	}
@@ -225,6 +235,11 @@ func (C *Base) LoginKey(c *gin.Context) {
 		goto 结束开始跳转
 	}
 
+	info.网页用户中心配置, err = service.NewAppInfoWebUser(c, &tx).Info(info.来源links_user.LoginAppid)
+	if err != nil || info.网页用户中心配置.Status != 1 {
+		response.FailWithMessage(c, constant.C常_关闭提示)
+		return
+	}
 	info.DB_links_user.Uid = info.来源links_user.Uid
 	info.DB_links_user.User = info.来源links_user.User
 	info.DB_links_user.Tab = strconv.Itoa(info.来源links_user.LoginAppid)

@@ -120,6 +120,40 @@ func (C *User) GetPwSendSms(c *gin.Context) {
 	response.OkWithData(c, gin.H{"captchaType": 3, "captchaId": 局_验证码ID})
 	return
 }
+func (C *User) GetInfo(c *gin.Context) {
+	var info = struct {
+		user     DB.DB_User
+		appInfo  DB.DB_AppInfo
+		likeInfo DB.DB_LinksToken
+	}{}
+	var err error
+	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
+	tx := *global.GVA_DB
+	info.user, err = service.NewUser(c, &tx).Info(info.likeInfo.Uid)
+	if err != nil {
+		response.FailWithMessage(c, "用户不存在")
+		return
+	}
+	if info.user.UPAgentId > 0 {
+		response.FailWithMessage(c, "代理账号,不可操作")
+		return
+	}
+
+	response.OkWithData(c, gin.H{
+		"user":                info.user.User,
+		"phone":               info.user.Phone,
+		"qq":                  info.user.Qq,
+		"email":               info.user.Email,
+		"upAgentId":           info.user.UPAgentId,
+		"realNameAttestation": info.user.RealNameAttestation,
+		"loginIp":             info.user.LoginIp,
+		"loginTime":           info.user.LoginTime,
+		"registerIp":          info.user.RegisterIp,
+		"registerTime":        info.user.RegisterTime,
+	})
+
+	return
+}
 
 func (C *User) SmsCodeSetPassWord(c *gin.Context) {
 	var 请求 struct {
@@ -189,5 +223,89 @@ func (C *User) Logout(c *gin.Context) {
 		return
 	}
 	response.OkWithMessage(c, "注销成功")
+	return
+}
+func (C *User) SetBaseInfo(c *gin.Context) {
+	var 请求 struct {
+		Type         string `json:"type" binding:"required" zh:"类型"`
+		Value        string `json:"value" binding:"required" zh:"值"`
+		CaptchaId    string `json:"captchaId" binding:"" zh:"验证码id"`
+		CaptchaValue string `json:"captchaValue" binding:"" zh:"验证码值"`
+	}
+	//解析失败
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	var err error
+	var info = struct {
+		appInfo  DB.DB_AppInfo
+		likeInfo DB.DB_LinksToken
+	}{}
+	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
+	if !Y限账号模式应用(c, &info.appInfo) {
+		return
+	}
+	tx := *global.GVA_DB
+	switch 请求.Type {
+	case "email":
+		_, err = service.NewUser(c, &tx).Update(info.likeInfo.Uid, map[string]interface{}{"Email": 请求.Value})
+	case "qq":
+		_, err = service.NewUser(c, &tx).Update(info.likeInfo.Uid, map[string]interface{}{"Qq": 请求.Value})
+	case "phone":
+		//校验验证码是否正确,
+
+		if !Captcha.H缓存验证码校验实例.Verify(请求.CaptchaId, 请求.CaptchaValue, false) {
+			response.FailWithMessage(c, "短信验证码错误.")
+			return
+		}
+		if 请求.Value == "" || strings.Index(请求.CaptchaId, "Note"+utils2.Md5String(请求.Value)[:16]) == -1 {
+			go Ser_Log.Log_写风控日志(info.likeInfo.Id, Ser_Log.Log风控类型_Api异常调用, info.likeInfo.User, c.ClientIP(), "用户使用非新手机号绑定的验证码进行提交,更换绑定手机,可能是异常用户")
+			response.FailWithMessage(c, "验证码错误.")
+			return
+		}
+		_, err = service.NewUser(c, &tx).Update(info.likeInfo.Uid, map[string]interface{}{"Phone": 请求.Value})
+
+	}
+	if err != nil {
+		response.FailWithMessage(c, err.Error())
+		return
+	}
+
+	response.OkWithMessage(c, "注销成功")
+	return
+}
+
+func (C *User) SendSms(c *gin.Context) {
+	var 请求 struct {
+		Phone string `json:"phone" binding:"required,len=11" zh:"手机号"`
+	}
+	//解析失败
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	var err error
+	var info = struct {
+		appInfo  DB.DB_AppInfo
+		likeInfo DB.DB_LinksToken
+	}{}
+	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
+	if !Y限账号模式应用(c, &info.appInfo) {
+		return
+	}
+	局_msg := "手机号码非正确手机号格式"
+	if !utils2.Z正则_校验手机号(请求.Phone, &局_msg) {
+		response.FailWithMessage(c, 局_msg)
+		return
+	}
+	局_验证码 := W文本_取随机字符串_数字(6)
+	局_验证码ID := "Note" + utils2.Md5String(请求.Phone)[:16] + W文本_取随机字符串(15)
+	err = Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, 请求.Phone)
+	if err != nil {
+		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.likeInfo.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 请求.Phone, err.Error()), c.ClientIP())
+		response.FailWithMessage(c, "发送失败")
+		return
+	}
+	Captcha.H缓存验证码校验实例.Set(局_验证码ID, 局_验证码)
+	response.OkWithData(c, gin.H{"captchaType": 3, "captchaId": 局_验证码ID})
 	return
 }

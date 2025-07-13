@@ -113,6 +113,7 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_Cron_log{},
 		dbm.DB_PromotionCode{},
 		dbm.DB_KaClassUpPrice{},
+		dbm.DB_AppInfoWebUser{},
 
 		//任务池数据库
 		DB.TaskPool_类型{},

@@ -105,6 +105,11 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("App/SetAppSort", 局_AppInfo.SetAppSort)
 	}
+	//应用WebUser管理
+	局_AppInfoWebUser := controller.NewAppInfoWebUserController()
+	{
+		adminRouter.POST("AppWebUser/GetInfo", 局_AppInfoWebUser.GetInfo)
+	}
 	//任务池类型
 	局_TaskPoolType := controller.NewTaskPoolTypeController()
 	{

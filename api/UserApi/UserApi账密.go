@@ -223,13 +223,14 @@ func UserApi_密码找回或修改_密保手机(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "用户不存在")
 		return
 	}
+
+	if !Captcha.H缓存验证码校验实例.Verify(局_短信验证码Id, 局_短信验证码值, false) {
+		response.X响应状态消息(c, response.Status_操作失败, "短信验证码错误.")
+		return
+	}
 	if 局_User.Phone == "" || strings.Index(局_短信验证码Id, "Note"+utils2.Md5String(局_User.Phone)[:16]) == -1 {
 		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, string(请求json.GetStringBytes("User")), c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非账号绑定的验证码进行提交,可能是异常用户")
 		response.X响应状态消息(c, response.Status_操作失败, "验证码错误.")
-		return
-	}
-	if !Captcha.H缓存验证码校验实例.Verify(局_短信验证码Id, 局_短信验证码值, false) {
-		response.X响应状态消息(c, response.Status_操作失败, "短信验证码错误.")
 		return
 	}
 
