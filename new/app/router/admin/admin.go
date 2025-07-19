@@ -127,4 +127,14 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("Agent/GetKaSalesStatistics", 局_AgentUser.GetKaSalesStatistics)
 		adminRouter.POST("Agent/SetSort", 局_AgentUser.SetSort)
 	}
+	//活动管理
+	局_AppPromotionConfig := controller.NewAppPromotionConfigController()
+	{
+		adminRouter.POST("appPromotionConfig/info", 局_AppPromotionConfig.Info)
+		adminRouter.POST("appPromotionConfig/create", 局_AppPromotionConfig.Create)
+		adminRouter.POST("appPromotionConfig/delete", 局_AppPromotionConfig.Delete)
+		adminRouter.POST("appPromotionConfig/update", 局_AppPromotionConfig.Update)
+		adminRouter.POST("appPromotionConfig/getList", 局_AppPromotionConfig.GetList)
+		adminRouter.POST("appPromotionConfig/setSort", 局_AppPromotionConfig.Sort)
+	}
 }

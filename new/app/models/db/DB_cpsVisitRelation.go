@@ -1,7 +1,7 @@
 package db
 
 // cps关系表
-type CpsVisitRelation struct {
+type DB_CpsVisitRelation struct {
 	Id           int   `json:"id" gorm:"column:id;primarykey;comment:关系ID"`
 	CreatedAt    int64 `json:"createdAt" gorm:"column:created_at;comment:创建时间"`
 	UpdatedAt    int64 `json:"updatedAt" gorm:"column:updated_at;comment:更新时间"`
@@ -15,6 +15,6 @@ type CpsVisitRelation struct {
 	Referer       string `json:"referer" gorm:"column:referer;comment:来源"`                                             //来源 从哪里注册推广的,方便统计 类似广告位id
 }
 
-func (CpsVisitRelation) TableName() string {
+func (DB_CpsVisitRelation) TableName() string {
 	return "db_cps_visit_relation"
 }

@@ -1,0 +1,253 @@
+package controller
+
+import (
+	"errors"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	"server/global"
+	"server/new/app/controller/Common"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/request"
+	. "server/new/app/models/response"
+	"server/new/app/service"
+	"server/structs/Http/response"
+	"strconv"
+	"time"
+)
+
+type AppPromotionConfig struct {
+	Common.Common
+}
+
+func NewAppPromotionConfigController() *AppPromotionConfig {
+	return &AppPromotionConfig{}
+}
+
+// GetList
+func (C *AppPromotionConfig) GetList(c *gin.Context) {
+	//{"AppId":2,"Type":2,"Size":10,"Page":1,"Status":1,"keywords":"1"}
+	var 请求 struct {
+		request.List
+		AppId         int `json:"appId"`
+		Status        int `json:"status"`
+		PromotionType int `json:"promotionType"`
+	}
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	tx := *global.GVA_DB
+	var S = service.NewAppPromotionConfig(c, &tx)
+	var dataList []dbm.DB_AppPromotionConfig
+	var 总数 int64
+	var err error
+	总数, dataList, err = S.GetList(请求.List, 请求.AppId, 请求.Status, 请求.PromotionType)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(GetList2{List: dataList, Count: 总数}, "操作成功", c)
+	return
+
+}
+
+// Create
+// @action 添加
+// @show  2
+func (C *AppPromotionConfig) Create(c *gin.Context) {
+	var 请求 struct {
+		Name          string `json:"name" binding:"required" zh:"活动名称"` //比如教师节活动
+		AppId         int    `json:"appId" binding:"required" zh:"appId"`
+		StartTime     int64  `json:"startTime" binding:"required" zh:"开始时间"`
+		EndTime       int64  `json:"endTime" binding:"required" zh:"结束时间"`
+		PromotionType int    `json:"promotionType" binding:"required" zh:"活动类型"`
+	}
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+
+	if 请求.StartTime >= 请求.EndTime {
+		response.FailWithMessage("开始时间必须早于结束时间", c)
+		return
+	}
+
+	tx := *global.GVA_DB
+	var S = service.NewAppPromotionConfig(c, &tx)
+	var err error
+	var info struct {
+		局_活动配置表ID          int
+		Cps                dbm.DB_CpsInfo
+		AppPromotionConfig dbm.DB_AppPromotionConfig
+	}
+
+	//事务内处理
+	err = tx.Transaction(func(tx *gorm.DB) error {
+		//先创建活动表配置信息, 创建成功后, 再创建活动表数据
+		switch 请求.PromotionType {
+		default:
+			return errors.New("活动类型错误")
+		case 1:
+			info.Cps = dbm.DB_CpsInfo{
+				CreateTime:         time.Now().Unix(),
+				UpdateTime:         time.Now().Unix(),
+				BronzeThreshold:    0,
+				BronzeKickback:     10,
+				SilverThreshold:    10,
+				SilverKickback:     20,
+				GoldMedalThreshold: 20,
+				GoldMedalKickback:  30,
+				NarrowPic:          "",
+				DetailPic:          "",
+			}
+			_, err = service.NewCpsInfo(c, tx).Create(&info.Cps)
+			if err != nil {
+				return err
+			}
+			info.局_活动配置表ID = info.Cps.Id
+		}
+
+		_, err = S.Create(&dbm.DB_AppPromotionConfig{
+			Name:             请求.Name,
+			AppId:            请求.AppId,
+			CreateTime:       time.Now().Unix(),
+			UpdateTime:       time.Now().Unix(),
+			StartTime:        请求.StartTime,
+			EndTime:          请求.EndTime,
+			PromotionType:    请求.PromotionType,
+			TypeAssociatedId: info.局_活动配置表ID,
+		})
+		return err
+
+	})
+
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return // 确保退出函数
+	}
+	response.Ok(c) // 仅在无错误时返回成功
+}
+
+// @action 删除
+// @show  2
+func (C *AppPromotionConfig) Delete(c *gin.Context) {
+	var 请求 request.Ids
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+
+	tx := *global.GVA_DB
+	var err error
+	var 影响行数 int64
+
+	// 使用事务包裹删除操作
+	err = tx.Transaction(func(tx *gorm.DB) error {
+		// 1. 先查询需要删除的活动配置
+		var configs []dbm.DB_AppPromotionConfig
+		if err = tx.Where("id IN (?)", 请求.Ids).Find(&configs).Error; err != nil {
+			return err
+		}
+
+		// 2. 删除关联的CpsInfo记录（仅限类型1的活动）
+		var cpsIds []int
+		for _, config := range configs {
+			if config.PromotionType == 1 {
+				cpsIds = append(cpsIds, config.TypeAssociatedId)
+			}
+		}
+
+		if len(cpsIds) > 0 {
+			if err = tx.Where("id IN (?)", cpsIds).Delete(&dbm.DB_CpsInfo{}).Error; err != nil {
+				return err
+			}
+		}
+
+		// 3. 删除主表记录
+		result := tx.Where("id IN (?)", 请求.Ids).Delete(&dbm.DB_AppPromotionConfig{})
+		if result.Error != nil {
+			return result.Error
+		}
+
+		影响行数 = result.RowsAffected
+		return nil
+	})
+
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
+}
+
+// Update
+// @action 更新
+// @show  2
+func (C *AppPromotionConfig) Update(c *gin.Context) {
+	var 请求 dbm.DB_AppPromotionConfig
+	//解析失败
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	if 请求.Id <= 0 {
+		response.FailWithMessage("Id必须大于0", c)
+		return
+	}
+	tx := *global.GVA_DB
+
+	_, err := service.NewAppPromotionConfig(c, &tx).UpdateMap([]int{请求.Id}, map[string]interface{}{
+		"name":       请求.Name,
+		"updateTime": time.Now().Unix(),
+		"startTime":  请求.StartTime,
+		"endTime":    请求.EndTime,
+	})
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+
+	} else {
+		response.OkWithMessage("操作成功", c)
+	}
+
+}
+
+// Info
+// @action 查询
+// @show  2
+func (C *AppPromotionConfig) Info(c *gin.Context) {
+	var 请求 request.Id
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+
+	tx := *global.GVA_DB
+	var S = service.NewAppPromotionConfig(c, &tx)
+	var info dbm.DB_AppPromotionConfig
+	info, err := S.Info(请求.Id)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+
+	} else {
+		response.OkWithDetailed(info, "操作成功", c)
+	}
+
+}
+
+// @action 查询
+// @show  2
+func (C *AppPromotionConfig) Sort(c *gin.Context) {
+	var 请求 struct {
+		request.Ids
+		Sort int64 `json:"sort" `
+	}
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+
+	tx := *global.GVA_DB
+	var S = service.NewAppPromotionConfig(c, &tx)
+	总数, err := S.UpdateWhere(map[string]interface{}{"id": 请求.Ids.Ids}, map[string]interface{}{"sort": 请求.Sort})
+
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+	} else {
+		response.OkWithDetailed(总数, "操作成功", c)
+	}
+
+}

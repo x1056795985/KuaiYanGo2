@@ -12,3 +12,8 @@ type KaClassUp带调价信息 struct {
 	UserClassName  string  `json:"UserClassName"` //用户类型名称
 	Markup         float64 `json:"Markup"`        //调整价
 }
+
+type GetList2 struct {
+	List  interface{} `json:"list"`  // 列表
+	Count int64       `json:"count"` // 总数
+}
