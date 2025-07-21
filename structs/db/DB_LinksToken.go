@@ -1,10 +1,10 @@
 package DB
 
 type DB_LinksToken struct {
-	Id               int    `json:"Id" gorm:"column:Id;primarykey"`                              // id
-	Uid              int    `json:"Uid" gorm:"column:Uid;index;comment:用户唯一id"`                  // uid  user id
-	User             string `json:"User" gorm:"column:User;index;size:191;comment:用户登录名"`        // 用户登录名
-	Status           int    `json:"Status" gorm:"column:Status;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
+	Id               int    `json:"Id" gorm:"column:Id;primarykey"`                                    // id
+	Uid              int    `json:"Uid" gorm:"column:Uid;index;comment:用户唯一id"`                        // uid  user id
+	User             string `json:"User" gorm:"column:User;index;size:191;comment:用户登录名"`              // 用户登录名
+	Status           int    `json:"Status" gorm:"column:Status;index;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
 	Token            string `json:"-" gorm:"column:Token;index;size:191;comment:令牌"`
 	LoginAppid       int    `json:"LoginAppid" gorm:"column:LoginAppid;comment:登录位置id"` //1管理员后台 2代理后天  3WebApi令牌
 	AppVer           string `json:"AppVer" gorm:"column:AppVer;size:128;comment:软件版本"`

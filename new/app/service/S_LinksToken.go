@@ -103,6 +103,15 @@ func (s *LinksToken) Info(id int) (info DB.DB_LinksToken, err error) {
 	return
 }
 
+// 查
+func (s *LinksToken) Infos(where map[string]interface{}) (info []DB.DB_LinksToken, err error) {
+	tx := s.db.Model(DB.DB_LinksToken{}).Where(where).Find(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
 // 改
 func (s *LinksToken) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
 	tx := s.db.Model(DB.DB_LinksToken{}).Where("Id = ?", id).Updates(&数据)

@@ -536,6 +536,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("ChartLinksUser", App.Get在线统计)
 		baseRouter.POST("ChartLinksUserIPCity", App.Get在线用户Ip地图分布统计)
 		baseRouter.POST("ChartLinksUserLoginTime", App.Get在线用户统计登录活动时间)
+		baseRouter.POST("ChartEveryHourLinksCount", App.Get统计分时段在线总数)
 		baseRouter.POST("ChartAppUserClass", App.Get应用用户类型统计)
 		baseRouter.POST("ChartUser", App.Get用户账号登录注册统计)
 		baseRouter.POST("ChartRMBAddSub", App.Get余额充值消费统计)

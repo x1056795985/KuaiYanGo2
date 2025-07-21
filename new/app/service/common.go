@@ -27,7 +27,7 @@ func (s *BaseService[T]) Create(record *T) (int64, error) {
 	tx := s.db.Create(record)
 	return tx.RowsAffected, tx.Error
 } // 批量创建
-func (s *BaseService[T]) BatchCreate(records []*T) error {
+func (s *BaseService[T]) BatchCreate(records *[]T) error {
 	return s.db.CreateInBatches(records, 100).Error
 }
 

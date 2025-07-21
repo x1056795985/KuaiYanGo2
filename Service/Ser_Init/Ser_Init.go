@@ -117,6 +117,9 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_AppPromotionConfig{},
 		dbm.DB_CpsInfo{},
 
+		//统计数据用的表
+		dbm.DB_TongJiZaiXian{},
+
 		//任务池数据库
 		DB.TaskPool_类型{},
 		DB.TaskPool_队列{},

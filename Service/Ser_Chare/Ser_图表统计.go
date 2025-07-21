@@ -11,6 +11,7 @@ import (
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_UserClass"
 	"server/global"
+	dbm "server/new/app/models/db"
 	DB "server/structs/db"
 	"sort"
 	"strconv"
@@ -310,7 +311,102 @@ func Get在线用户统计登录活动时间(c *gin.Context) []gin.H {
 
 	return Data
 }
+func Get统计分时段在线总数(c *gin.Context) []gin.H {
+	请求 := 结构_请求类型{Type: 1, AppId: 0}
+	_ = c.ShouldBindJSON(&请求)
+	var 局_开始时间戳 int64
+	switch 请求.Type {
+	case 1: //24小时
+		局_开始时间戳 = time.Now().Unix() - 86400
+	case 2: // 30天
+		局_开始时间戳 = time.Now().Unix() - 86400*30
+	case 3: //365天
+		局_开始时间戳 = time.Now().Unix() - 86400*365
+	}
 
+	Data缓存, ok := global.H缓存.Get("Get统计分时段在线总数" + strconv.Itoa(请求.Type))
+	if ok {
+		return Data缓存.([]gin.H)
+	}
+
+	局_耗时 := time.Now().Unix()
+	var 局_临时 = []dbm.DB_TongJiZaiXian{}
+
+	tx := global.GVA_DB
+	tx.Model(dbm.DB_TongJiZaiXian{}).Where("appId=?", 请求.AppId).Where("createdAt>?", 局_开始时间戳).Order("createdAt ASC").Find(&局_临时)
+
+	var 局_登录数量 = make([]int64, 0, 32)
+	var 局_登录时间 = make([]string, 0, 32)
+	var 局_时间 int
+	var S计数 int64
+	for I, _ := range 局_临时 {
+		//将时间戳转为时间 类型
+		S时间 := time.Unix(局_临时[I].CreatedAt, 0)
+
+		switch 请求.Type {
+		case 1: //24小时
+			if 局_时间 == 0 {
+				局_时间 = S时间.Hour()
+			}
+			if S时间.Hour() == 局_时间 {
+				S计数 += 局_临时[I].Count
+			} else {
+				局_登录数量 = append(局_登录数量, S计数)
+				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"时")
+				局_时间 = S时间.Hour()
+				S计数 = 局_临时[I].Count
+			}
+		case 2: // 30天
+			if 局_时间 == 0 {
+				局_时间 = S时间.Day()
+			}
+			if S时间.Day() == 局_时间 {
+				S计数 += 局_临时[I].Count
+			} else {
+				局_登录数量 = append(局_登录数量, S计数)
+				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"天")
+				局_时间 = S时间.Day()
+				S计数 = 局_临时[I].Count
+			}
+		case 3: //365天
+			if 局_时间 == 0 {
+				局_时间 = int(S时间.Month())
+			}
+			if int(S时间.Month()) == 局_时间 {
+				S计数 += 局_临时[I].Count
+			} else {
+				局_登录数量 = append(局_登录数量, S计数)
+				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"月")
+				局_时间 = int(S时间.Month())
+				S计数 = 局_临时[I].Count
+			}
+
+		}
+		if len(局_临时) == I+1 {
+			局_登录数量 = append(局_登录数量, S计数)
+			switch 请求.Type {
+			case 1:
+				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"时")
+			case 2:
+				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"日")
+			case 3:
+				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"月")
+			}
+		}
+
+	}
+	//fmt.Println(局_登录数量)
+	Data := []gin.H{
+		{"name": "统计分时段在线总数", "type": "line", "data": 局_登录数量},
+		{"name": "统计分时段在线时间", "type": "line", "data": 局_登录时间},
+	}
+
+	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
+		global.H缓存.Set("Get统计分时段在线总数"+strconv.Itoa(请求.Type), Data, time.Minute*5)
+	}
+
+	return Data
+}
 func Get应用用户类型统计(c *gin.Context) []gin.H {
 	局_type := 结构_请求类型{Type: 1, AppId: 10000}
 	_ = c.ShouldBindJSON(&局_type)

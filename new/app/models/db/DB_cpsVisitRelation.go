@@ -3,8 +3,8 @@ package db
 // cps关系表
 type DB_CpsVisitRelation struct {
 	Id           int   `json:"id" gorm:"column:id;primarykey;comment:关系ID"`
-	CreatedAt    int64 `json:"createdAt" gorm:"column:created_at;comment:创建时间"`
-	UpdatedAt    int64 `json:"updatedAt" gorm:"column:updated_at;comment:更新时间"`
+	CreatedAt    int64 `json:"createdAt" gorm:"column:createdAt;comment:创建时间"`
+	UpdatedAt    int64 `json:"updatedAt" gorm:"column:updatedAt;comment:更新时间"`
 	VisitUserId  int   `json:"visitUserId" gorm:"column:visitUserId;index;comment:邀请者用户ID"` //邀请者一定是账号id   邀请者是余额结算,无需AppId
 	VisitedAppId int   `json:"visitedAppId" gorm:"column:visitedAppId;index:idx_appid_userid;comment:被邀请者AppId"`
 	//不同应用可能是不同的邀请者,要区分开来, 用户在该应用充值时,给对应的邀请者
