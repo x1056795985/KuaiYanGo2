@@ -1,7 +1,10 @@
 package controller
 
 import (
+	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"server/Service/Ser_AppInfo"
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
@@ -42,14 +45,30 @@ func (C *AppInfo) GetAppBaseInfo(c *gin.Context) {
 			Status: 2,
 		}
 	}
+	局_最新版本 := "1.0.0"
+	局_可用版本 := W文本_分割文本(info.appInfo.AppVer, "\n")
+	if len(局_可用版本) > 0 {
+		局_最新版本 = 局_可用版本[0]
+	}
+	//如果下载地址url不是json则直接填写, 如果是json,则获取 data 第一个成员的 url地址
+	局_downloadUrl := info.appInfo.UrlDownload
+	局_json := gjson.New(Ser_AppInfo.App下载更新地址变量处理(info.appInfo))
+	if 局_json.Get("data.0.url").String() != "" {
+		局_downloadUrl = 局_json.Get("data.0.url").String()
+	}
+
 	data := gin.H{
 		"appId":            info.appInfo.AppId,
 		"appType":          info.appInfo.AppType,
 		"appName":          info.appInfo.AppName,
 		"appWeb":           info.appInfo.AppWeb,
+		"UrlHome":          info.appInfo.UrlHome,
 		"status":           info.appInfo.Status,
 		"appStatusMessage": info.appInfo.AppStatusMessage,
 		"webUserStatus":    info.appInfoUser.Status,
+		"appVer":           局_最新版本,
+		"downloadUrl":      局_downloadUrl,
+		"qrcodeUrl":        T图片_生成二维码base64(局_downloadUrl),
 	}
 	response.OkWithData(c, data)
 	return
