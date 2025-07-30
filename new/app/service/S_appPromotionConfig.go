@@ -52,10 +52,14 @@ func (s *AppPromotionConfig) GetList(请求 request.List, AppId int, Status int,
 		局_DB.Where("startTime > ?", time.Now().Unix())
 	case 2:
 		//<el-option key="2" label="活动中" :value="2"/>
-		局_DB.Where("startTime > ?", time.Now().Unix()).Where("endTime < ?", time.Now().Unix())
+		局_DB.Where("startTime < ?", time.Now().Unix()).Where("endTime > ?", time.Now().Unix())
 	case 3:
 		//<el-option key="3" label="已结束" :value="3"/>
 		局_DB.Where("endTime < ?", time.Now().Unix())
+	case 4: //
+		//<el-option key="4" label="活动中和即将开始" :value="3"/>
+
+		局_DB.Where("startTime < ?", time.Now().Unix()+86400).Where("endTime > ?", time.Now().Unix())
 	}
 
 	if PromotionType > 0 {

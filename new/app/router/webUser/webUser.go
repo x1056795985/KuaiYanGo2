@@ -6,7 +6,6 @@ import (
 	controller "server/new/app/controller/webUser"
 	"server/new/app/router/middleware"
 	"server/new/app/web/webUser"
-	VueWebUserAssets "server/new/app/web/webUser/assets"
 )
 
 type AllRouter struct {
@@ -18,8 +17,14 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 	html := webUser.NewHtmlHandler()
 	Router根Admin := router.Group("user/:appId") //127.0.0.1:18080/  这个后面第一个不需要 / 符号
 	Router根Admin.GET("/", html.Index)
-	Router根Admin2 := router.Group("user/0") //127.0.0.1:18080/  这个后面第一个不需要 / 符号
-	Router根Admin2.StaticFS("/assets", http.FS(VueWebUserAssets.Assets))
+	//http://127.0.0.1:18888/user/10001/assets/index-BUyaaghm.css
+	Router根Admin.GET("assets/*filepath", func(c *gin.Context) {
+		c.FileFromFS("assets/"+c.Param("filepath"), http.FS(webUser.Assets))
+	})
+	// http://127.0.0.1:18888/user/10001/static/shilu-login/2.png
+	Router根Admin.GET("static/*filepath", func(c *gin.Context) {
+		c.FileFromFS("static/"+c.Param("filepath"), http.FS(webUser.Static))
+	})
 
 	// 跨域，如需跨域可以打开下面的注释
 	//global.GVA_Viper.GetString("管理入口")
@@ -68,9 +73,14 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 		adminRouter.POST("pay/payKaUsa", 局_pay.PayKaUsa)
 	}
 
-	局_cps := controller.NewCpsController()
+	局_AppPromotionConfig := controller.NewAppPromotionConfigController()
 	{
-		adminRouter.POST("cps/setVisitRelation", 局_cps.SetVisitRelation)
+		adminRouter.POST("appPromotionConfig/getList", 局_AppPromotionConfig.GetList)
+	}
+
+	局_cpsInfo := controller.NewCpsController()
+	{
+		adminRouter.POST("cps/info", 局_cpsInfo.Info)
 	}
 
 }

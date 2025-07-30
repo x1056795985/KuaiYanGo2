@@ -6,6 +6,10 @@
         <entryData>
           <resourceRoots>
             <path value="file://$PROJECT_DIR$/new/app/web" />
+            <path value="file://$PROJECT_DIR$/new/app/web/webUser/assets" />
+            <path value="file://$PROJECT_DIR$/new/app/web/webUser/static" />
+            <path value="file://$PROJECT_DIR$/core/dist/VueAgent/assets" />
+            <path value="file://$PROJECT_DIR$/core/dist/VueAdmin/assets" />
           </resourceRoots>
         </entryData>
       </entry>

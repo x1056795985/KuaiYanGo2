@@ -67,23 +67,17 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
 	NewApp.UpKeyData = 10    //修改绑定key增减值
 	NewApp.UrlHome = "https://www.baidu.com/"
 	NewApp.UrlDownload = `{
-    "htmlurl": "www.baidu.com(自动下载失败打开指定网址,手动更新地址",
-    "data": [{
-        "WenJianMin": "文件名{{AppName}}{{AppVer}}.exe(  {{AppName}}变量替换为应用名称{{AppVer}} 这个变量会替换为最新版本的版本号,省的每次更新都改版本号 )",
-        "md5": "e10adc3949ba59abbe56e057f20f883e(小写文件md5可选,有就校验,空就只校验文件名)",
-        "Lujing": "/(下载本地相对路径)",
-        "size": "12345(可选,不填写也没问题)",
-        "url": "https://www.baidu.com/文件名{{AppName}}{{AppVer}}.exe(下载路径)",
-        "YunXing": "1(值为更新完成后会运行这个文件,只能有一个文件值为1)"
-
-    }, {
-        "WenJianMin": "文件名.dll",
-        "md5": "e10adc3949ba59abbe56e057f20f883e(小写文件md5可选,有就校验,没有就文件名校验)",
-        "Lujing": "/(下载本地相对路径)",
-        "size": "12345",
-        "url": "https://www.baidu.com/文件名.dll(下载路径)",
-        "YunXing": "0"
-    }]
+ "htmlurl": "https://www.fnkuaiyan.cn",
+ "data": [
+  {
+     "WenJianMin": "飞鸟快验{{AppVer}}.bin",
+     "md5": "E655BDD4DF35C94AA2A706E2E55C4FF5",
+     "Lujing": "/",
+     "size": "",
+     "url": "{{云存储_取外链('10001/飞鸟快验{{AppVer}}.bin',0)}}",
+     "YunXing": "1"
+   }
+ ]
 }`
 	NewApp.AppGongGao = "我是一条公告"
 	if NewApp.AppType == 2 || NewApp.AppType == 4 {

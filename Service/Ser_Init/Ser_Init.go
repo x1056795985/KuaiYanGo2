@@ -116,6 +116,8 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_AppInfoWebUser{},
 		dbm.DB_AppPromotionConfig{},
 		dbm.DB_CpsInfo{},
+		dbm.DB_CpsShortUrl{},
+
 
 		//统计数据用的表
 		dbm.DB_TongJiZaiXian{},
@@ -137,7 +139,7 @@ func InitDbTables(c *gin.Context) {
 
 func InitDbTable数据(c *gin.Context) {
 	db := global.GVA_DB //全局变量赋值到局部
-	数据库兼容旧版本(c)         //需要先兼容, 迁移配置数据 才能使用setting
+	数据库兼容旧版本(c) //需要先兼容, 迁移配置数据 才能使用setting
 	局_例子记录 := setting.Q例子写出记录()
 	if db == nil {
 		return
