@@ -1,6 +1,7 @@
 package VueAgent
 
 import (
+	"embed"
 	_ "embed"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -10,6 +11,9 @@ import (
 var Html []byte
 
 type HtmlHandler struct{}
+
+//go:embed assets/*
+var Assets embed.FS
 
 func NewHtmlHandler() *HtmlHandler {
 	return &HtmlHandler{}

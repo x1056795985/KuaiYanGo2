@@ -1,6 +1,7 @@
 package VueAdmin
 
 import (
+	"embed"
 	_ "embed"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -8,6 +9,9 @@ import (
 
 //go:embed index.html
 var Html []byte
+
+//go:embed assets/*
+var Assets embed.FS
 
 type HtmlHandler struct{}
 

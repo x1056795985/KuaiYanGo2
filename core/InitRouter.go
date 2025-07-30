@@ -20,9 +20,7 @@ import (
 	"server/api/WebApi"
 	"server/api/middleware"
 	"server/core/dist/VueAdmin"
-	VueAdminAssets "server/core/dist/VueAdmin/assets"
 	"server/core/dist/VueAgent"
-	VueAgentAssets "server/core/dist/VueAgent/assets"
 	"server/global"
 	"server/new/app/router"
 	mid2 "server/new/app/router/middleware"
@@ -139,9 +137,10 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 
 	//打包静态VueAdmin文件============================
 	html := VueAdmin.NewHtmlHandler()
-	Router根Admin.StaticFS("/assets", http.FS(VueAdminAssets.Assets))
 	Router根Admin.GET("/", html.Index)
-
+	Router根Admin.GET("/assets/*filepath", func(c *gin.Context) {
+		c.FileFromFS("assets/"+c.Param("filepath"), http.FS(VueAdmin.Assets))
+	})
 	// 解决刷新404问题
 	//Router.NoRoute(html.RedirectIndex)
 	//结束==============================================================
@@ -598,9 +597,10 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 
 	//打包静态VueAgent文件============================
 	html := VueAgent.NewHtmlHandler()
-	Router根Agent.StaticFS("/assets", http.FS(VueAgentAssets.Assets))
 	Router根Agent.GET("/", html.Index)
-
+	Router根Agent.GET("/assets/*filepath", func(c *gin.Context) {
+		c.FileFromFS("assets/"+c.Param("filepath"), http.FS(VueAgent.Assets))
+	})
 	// 解决刷新404问题
 	//Router.NoRoute(html.RedirectIndex)
 	//结束==============================================================
