@@ -82,5 +82,10 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("cps/info", 局_cpsInfo.Info)
 	}
-
+	局_cpsShortUrl := controller.NewCpsShortUrlController()
+	router.GET("/c/:shortUrl", 局_cpsShortUrl.Jump) //以c为二级目录区分短链模块
+	{
+		adminRouter.POST("cpsShortUrl/info", 局_cpsShortUrl.Info)
+		adminRouter.POST("cpsShortUrl/create", 局_cpsShortUrl.Create)
+	}
 }
