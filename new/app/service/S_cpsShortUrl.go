@@ -25,3 +25,10 @@ func (s *CpsShortUrl) InfoShortUrl(ShortUrl string) (info dbm.DB_CpsShortUrl, er
 	}
 	return
 }
+
+// 点击计数+1
+func (s *CpsShortUrl) ClickCountUP(Id int, number int) (err error) {
+	tx := s.db.Model(dbm.DB_CpsShortUrl{}).Where("id = ?", Id).Update("clickCount", gorm.Expr("clickCount + ?", number))
+	err = tx.Error
+	return
+}

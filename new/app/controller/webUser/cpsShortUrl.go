@@ -48,6 +48,9 @@ func (C *CpsShortUrl) Jump(c *gin.Context) {
 	局_跳转url = info.CpsShortUrl.BaseUrl + "#/pages/other/jump?type=1&cpsCode=" + hexStr + "&routerUrl=" + url.QueryEscape(info.CpsShortUrl.RouterUrl)
 	//跳转到本地中间页写入本地推荐人数据然后跳转
 	c.Redirect(302, 局_跳转url)
+	// 跳转成功,写入数据库计数+1
+	_ = service.NewCpsShortUrl(c, &tx).ClickCountUP(info.CpsShortUrl.Id, 1)
+
 }
 
 // 创建短链,短链信息
