@@ -95,4 +95,9 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 		adminRouter.POST("cpsInvitingRelation/get", 局_cpsInvitingRelation.Get)
 		adminRouter.POST("cpsInvitingRelation/getInvitingList", 局_cpsInvitingRelation.GetInvitingList)
 	}
+
+	局_cpsUser := controller.NewCpsUserController()
+	{
+		adminRouter.POST("cpsUser/info", 局_cpsUser.Info)
+	}
 }
