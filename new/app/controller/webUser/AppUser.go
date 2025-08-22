@@ -30,7 +30,7 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 
 	tx := *global.GVA_DB
 
-	info.appUser, err = service.NewAppUser(c, &tx, info.appInfo.AppId).Info(info.likeInfo.Uid)
+	info.appUser, err = service.NewAppUser(c, &tx, info.appInfo.AppId).InfoUid(info.likeInfo.Uid)
 	if err != nil {
 		response.FailWithMessage(c, "用户不存在")
 		return

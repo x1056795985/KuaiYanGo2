@@ -97,6 +97,15 @@ func (s *User) Info2(where map[string]interface{}) (info DB.DB_User, err error) 
 }
 
 // 查
+func (s *User) Infos(where map[string]interface{}) (info []DB.DB_User, err error) {
+	tx := s.db.Model(DB.DB_User{}).Where(where).Find(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
+// 查
 func (s *User) InfoName(name string) (info DB.DB_User, err error) {
 	tx := s.db.Model(DB.DB_User{}).Where("User = ?", name).First(&info)
 	if tx.Error != nil {

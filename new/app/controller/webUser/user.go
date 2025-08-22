@@ -10,6 +10,7 @@ import (
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/logic/webUser/cpsInvitingRelation"
 	"server/new/app/models/constant"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -34,9 +35,10 @@ func (C *User) NewUserInfo(c *gin.Context) {
 		Password      string `json:"password" binding:"required,min=6,max=190" zh:"密码"` // 密码
 		QQ            string `json:"qq"`
 		Phone         string `json:"phone"`
-		SuperPassword string `json:"superPassword" binding:"min=6,max=190" zh:"超级密码"` // 密码`
+		SuperPassword string `json:"superPassword"   zh:"超级密码"` // 密码`
 		Email         string `json:"email"`
-		PromotionCode string `json:"promotionCode"`
+		PromotionCode int    `json:"promotionCode"`
+		AppId         int    `json:"appId"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
@@ -76,6 +78,12 @@ func (C *User) NewUserInfo(c *gin.Context) {
 	}
 
 	response.OkWithMessage(c, "注册成功")
+	//如果appid和邀请码有值,则进行邀请码处理
+	if 请求.AppId > 10000 && 请求.PromotionCode > 0 && info.user.Id > 0 && 请求.PromotionCode != info.user.Id {
+		err = cpsInvitingRelation.L_CpsInvitingRelation.S设置邀请人(c, 请求.AppId, 请求.PromotionCode, info.user.Id, c.GetHeader("Referer"))
+		//忽略错误
+	}
+
 	return
 }
 

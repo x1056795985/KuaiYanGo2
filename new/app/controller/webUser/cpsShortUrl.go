@@ -12,7 +12,6 @@ import (
 	"server/new/app/service"
 	DB "server/structs/db"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -41,11 +40,8 @@ func (C *CpsShortUrl) Jump(c *gin.Context) {
 	//跳转到中间页 //http://localhost:9000/user/10001/ ,然后
 
 	var 局_跳转url string
-	// 将整数转换为十六进制字符串（大写）
-	hexStr := strconv.FormatInt(int64(info.CpsShortUrl.Uid+10000), 16)
-	// 然后使用 strings.ToUpper() 转换为大写
-	hexStr = strings.ToUpper(hexStr)
-	局_跳转url = info.CpsShortUrl.BaseUrl + "#/pages/other/jump?type=1&cpsCode=" + hexStr + "&routerUrl=" + url.QueryEscape(info.CpsShortUrl.RouterUrl)
+
+	局_跳转url = info.CpsShortUrl.BaseUrl + "#/pages/other/jump?type=1&cpsCode=" + strconv.Itoa(info.CpsShortUrl.Uid) + "&routerUrl=" + url.QueryEscape(info.CpsShortUrl.RouterUrl)
 	//跳转到本地中间页写入本地推荐人数据然后跳转
 	c.Redirect(302, 局_跳转url)
 	// 跳转成功,写入数据库计数+1
