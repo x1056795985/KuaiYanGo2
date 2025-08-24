@@ -6,11 +6,13 @@ import (
 	"gorm.io/gorm"
 	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
 	"server/structs/Http/response"
+	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -71,13 +73,26 @@ func (C *AppPromotionConfig) Create(c *gin.Context) {
 	}
 
 	tx := *global.GVA_DB
-	var S = service.NewAppPromotionConfig(c, &tx)
-	var err error
+
 	var info struct {
+		AppInfo            DB.DB_AppInfo
 		局_活动配置表ID          int
 		Cps                dbm.DB_CpsInfo
 		AppPromotionConfig dbm.DB_AppPromotionConfig
 	}
+	var err error
+	info.AppInfo, err = service.NewAppInfo(c, &tx).Info(请求.AppId)
+	if err != nil {
+		response.FailWithMessage("AppId不存在", c)
+		return
+	}
+	//做预检查
+	if 请求.PromotionType == constant.H活动类型_cps && (info.AppInfo.AppType == 3 || info.AppInfo.AppType == 4) {
+		response.FailWithMessage("卡号模式应用暂不支持该活动", c)
+		return
+	}
+
+	var S = service.NewAppPromotionConfig(c, &tx)
 
 	//事务内处理
 	err = tx.Transaction(func(tx *gorm.DB) error {
@@ -85,7 +100,7 @@ func (C *AppPromotionConfig) Create(c *gin.Context) {
 		switch 请求.PromotionType {
 		default:
 			return errors.New("活动类型错误")
-		case 1:
+		case constant.H活动类型_cps:
 			info.Cps = dbm.DB_CpsInfo{
 				CreateTime:         time.Now().Unix(),
 				UpdateTime:         time.Now().Unix(),
