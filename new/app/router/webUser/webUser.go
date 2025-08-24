@@ -32,7 +32,7 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 	// 需要鉴权才能访问的接口
 	adminRouter.Use(middleware.IsDbConn())
 	adminRouter.Use(middleware.IsTokenWebUser())
-	// 无需鉴权就可以访问的接口
+	// 无需鉴权就可以访问的接口 通过中间件 白名单控制
 	局_AppInfo := controller.NewAppInfoController()
 	{
 		adminRouter.POST("app/getAppBaseInfo", 局_AppInfo.GetAppBaseInfo)
@@ -41,6 +41,7 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 	局_Base := controller.NewBaseController()
 	{
 		adminRouter.POST("base/loginUserOrKa", 局_Base.LoginUserOrKa)
+		adminRouter.POST("base/Captcha2", 局_Base.Captcha2)
 	}
 	adminRouter.GET("base/loginKey", 局_Base.LoginKey) //这个是get请求,单独处理
 

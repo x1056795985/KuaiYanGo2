@@ -62,7 +62,7 @@ func (b *BaseApi) Captcha2(c *gin.Context) {
 		oc = true
 	}
 
-	验证码id, Base64验证码图片, err := Captcha.Captcha_取点选验证码()
+	验证码id, Base64验证码图片, err := Captcha.Captcha_取点选验证码(interfaceToInt(v))
 	if err != nil {
 		global.GVA_LOG.Error("验证码获取失败!", zap.Error(err))
 		response.FailWithMessage("验证码获取失败", c)

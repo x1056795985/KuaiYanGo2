@@ -4,6 +4,7 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/tools/rand_string"
+	"server/Service/Captcha"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_Log"
@@ -46,6 +47,33 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
+
+	客户端ip := c.ClientIP()
+	// 判断验证码是否开启
+	openCaptcha := global.GVA_CONFIG.Captcha.OpenCaptcha // 是否开启防暴次数
+	openCaptchaTimeOut := 10                             // 缓存超时时间
+	v, ok := global.H缓存.Get(客户端ip)                       // 获取这个ip已经被请求次数
+	if !ok {
+		// 获取这个ip已经被请求次数  如果没请求过, 设置值为1
+		global.H缓存.Set(客户端ip, 1, time.Second*time.Duration(openCaptchaTimeOut))
+	}
+	//如果 防暴次数次数=0  或 已请求次数大于 防暴次数  校验验证码
+	var j校验验证码 = false
+	if openCaptcha == 0 || openCaptcha < interfaceToInt(v) {
+		j校验验证码 = true
+	}
+
+	_ = global.H缓存.Increment(客户端ip, 1) //这个ip防爆次数 + 1
+	// j校验验证码
+	if j校验验证码 {
+		//验证码验证码正确 = 真
+		if !Captcha.Captcha_Verify点选(请求.CaptchaId, 请求.Captcha, true) {
+			response.FailWithMessage(c, "验证码错误")
+			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "验证码错误:"+请求.Captcha, constant.APPID_Web用户中心)
+			return
+		}
+	}
+
 	var info = struct {
 		Uid           int
 		appInfo       DB.DB_AppInfo
@@ -170,7 +198,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	}
 
 	var 局_用户类型 DB.DB_UserClass
-	局_用户类型, ok := Ser_UserClass.Id取详情(请求.AppId, info.appUser.UserClassId)
+	局_用户类型, ok = Ser_UserClass.Id取详情(请求.AppId, info.appUser.UserClassId)
 	if !ok {
 		局_用户类型.Name = "已删待改"
 		局_用户类型.Mark = 0
@@ -200,7 +228,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 			NewAppUser:    !局_老用户,
 		},
 	}
-
+	global.H缓存.Delete(客户端ip) //重置防暴次数
 	response.OkWithDetailed(c, responseData, "登录成功")
 	return
 }

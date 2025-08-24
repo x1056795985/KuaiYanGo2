@@ -25,6 +25,7 @@ func IsTokenWebUser() gin.HandlerFunc {
 			"/userApi/user/newUserInfo",
 			"/userApi/user/getPwSendSms",
 			"/userApi/user/smsCodeSetPassWord",
+			"/userApi/base/Captcha2",
 		}
 		if S数组_是否存在(局_白名单, c.Request.URL.Path) {
 			c.Next()
