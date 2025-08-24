@@ -17,13 +17,16 @@ func NewCpsInvitingRelation(c *gin.Context, db *gorm.DB) *CpsInvitingRelation {
 	}
 }
 
-// 获取邀请人的 所有下级
+// 获取邀请人的 所有下级   数量限制=0 无限制
 func (s *CpsInvitingRelation) Q取所有被邀请人(指定AppId int, 邀请人id int, 数量限制 int) (infos []dbm.DB_CpsInvitingRelation, err error) {
 	tx := s.db.Model(new(dbm.DB_CpsInvitingRelation)).
 		Where(map[string]interface{}{"inviterId": 邀请人id, "inviteeAppId": 指定AppId}).
-		Order("id desc").
-		Limit(数量限制).
-		Find(&infos)
+		Order("id desc")
+	if 数量限制 > 0 {
+		tx = tx.Limit(数量限制)
+	}
+	tx = tx.Find(&infos)
+
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -32,23 +35,27 @@ func (s *CpsInvitingRelation) Q取所有被邀请人(指定AppId int, 邀请人i
 
 func (s *CpsInvitingRelation) Q取归属邀请人(指定AppId, 被邀请人id int) (上级, 上上级 dbm.DB_CpsInvitingRelation, err error) {
 	//预创建 内存变量,防止空指针 通过id 判断是否存在
+	var 数组 []dbm.DB_CpsInvitingRelation
 	上级 = dbm.DB_CpsInvitingRelation{}
 	上上级 = dbm.DB_CpsInvitingRelation{}
 
-	// 查询直接邀请人（一级邀请）
-	tx := *s.db
-	err = tx.Model(dbm.DB_CpsInvitingRelation{}).
+	// 查询直接邀请人 含二级
+
+	err = s.db.Debug().Model(dbm.DB_CpsInvitingRelation{}).
 		Where("inviteeAppId = ?", 指定AppId).
-		Where("inviteeId = ?", 被邀请人id).First(&上级).Error
+		Where("inviteeId = ?", 被邀请人id).Find(&数组).Error
 
 	if err != nil {
 		return
 	}
 
-	// 查询间接邀请人（二级邀请）
-	err = tx.Model(dbm.DB_CpsInvitingRelation{}).
-		Where("inviteeAppId = ?", 指定AppId).
-		Where("inviteeId = ?", 上级.InviterId).First(&上上级).Error
+	for _, v := range 数组 {
+		if v.Level == 1 {
+			上级 = v
+		} else if v.Level == 2 {
+			上上级 = v
+		}
+	}
 
 	return
 }

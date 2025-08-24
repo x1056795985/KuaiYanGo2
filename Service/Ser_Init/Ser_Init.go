@@ -119,6 +119,7 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_CpsShortUrl{},
 		dbm.DB_CpsInvitingRelation{},
 		dbm.DB_CpsUser{},
+		dbm.DB_CpsPayOrder{},
 
 		//统计数据用的表
 		dbm.DB_TongJiZaiXian{},

@@ -17,6 +17,7 @@ import (
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/setting"
+	"server/new/app/logic/webUser/cpsPayOrder"
 	m "server/new/app/models/common"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
@@ -526,6 +527,7 @@ func (j *rmbPay) D订单回调(c *gin.Context) (响应信息 string, 响应代�
 	}
 
 	_ = j.Z支付成功_后处理(c, &参数)
+	_ = cpsPayOrder.L_cpsPayOrder.C处理佣金发放_线程安全(c, &参数)
 
 	return
 }

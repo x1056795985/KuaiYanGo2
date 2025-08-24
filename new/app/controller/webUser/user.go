@@ -61,13 +61,14 @@ func (C *User) NewUserInfo(c *gin.Context) {
 	}
 
 	info.user.User = 请求.User
-	info.user.PassWord = 请求.Password
+
+	info.user.PassWord = utils2.BcryptHash(请求.Password)
 	info.user.Qq = 请求.QQ
 	info.user.Phone = 请求.Phone
 	info.user.RegisterIp = c.ClientIP()
 	info.user.RegisterTime = time.Now().Unix()
 	//如果为空, 则说明客户不需要超级密码修改密码功能,直接随机一个防止密码被猜到
-	info.user.SuperPassWord = S三元(请求.SuperPassword == "", W文本_取随机字符串(24), 请求.SuperPassword)
+	info.user.SuperPassWord = utils2.BcryptHash(S三元(请求.SuperPassword == "", W文本_取随机字符串(24), 请求.SuperPassword))
 	info.user.Email = 请求.Email
 
 	_, err = service.NewUser(c, &tx).Create(&info.user)

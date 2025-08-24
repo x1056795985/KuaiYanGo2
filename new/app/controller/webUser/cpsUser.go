@@ -31,7 +31,7 @@ func (C *CpsUser) Info(c *gin.Context) {
 	tx := *global.GVA_DB
 	info.cpsUser, err = service.NewCpsUser(c, &tx).Info(info.likeInfo.Uid)
 	//判断是否存在,如果不存在,插入默认数据
-	if err != nil && err.Error() != "record not found" {
+	if err != nil && err.Error() == "record not found" {
 		info.cpsUser.Id = info.likeInfo.Uid
 		info.cpsUser.CreatedAt = time.Now().Unix()
 		info.cpsUser.UpdatedAt = info.cpsUser.CreatedAt

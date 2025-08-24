@@ -100,4 +100,8 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("cpsUser/info", 局_cpsUser.Info)
 	}
+	局_cpsPayOrder := controller.NewCpsPayOrderController()
+	{
+		adminRouter.POST("cpsPayOrder/list", 局_cpsPayOrder.List)
+	}
 }
