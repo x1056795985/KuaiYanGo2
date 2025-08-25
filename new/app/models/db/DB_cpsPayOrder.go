@@ -2,7 +2,7 @@ package db
 
 // cps分销订单信息  客户支付后,用于统计cps拉新的客户分成信息
 type DB_CpsPayOrder struct {
-	Id       int     `json:"Id" gorm:"column:Id;primarykey"`
+	Id       int     `json:"id" gorm:"column:id;primarykey"`
 	PayOrder string  `json:"payOrder" gorm:"column:payOrder;size:191;uniqueIndex;comment:余额充值订单id"` //唯一索引,那个线程插入成功,那个处理
 	Time     int64   `json:"time" gorm:"column:time;index;comment:时间"`
 	AppId    int     `json:"appId" gorm:"column:appId;comment:应用id"`
@@ -18,7 +18,7 @@ type DB_CpsPayOrder struct {
 	GrandpaDiscount int     `json:"grandpaDiscount" gorm:"column:grandpaDiscount;default:0;comment:上上级佣金百分比"` //当时的徒孙订单分成比例
 	GrandpaRMB      float64 `json:"grandpaRMB" gorm:"column:grandpaRMB;type:decimal(10,2);comment:上上级实际佣金"`
 	GrandpaStatus   int     `json:"grandpaStatus" gorm:"column:grandpaStatus;comment:上上级佣金状态"`
-	Note            string  `json:"Note" gorm:"column:Note;size:5000;comment:信息"`
+	Note            string  `json:"note" gorm:"column:note;size:5000;comment:信息"`
 	Extra           string  `json:"extra" gorm:"column:extra;size:1910;comment:额外信息"`
 }
 

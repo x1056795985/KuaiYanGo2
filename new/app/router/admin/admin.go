@@ -144,4 +144,12 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("cpsInfo/info", 局_CpsInfo.Info)
 		adminRouter.POST("cpsInfo/update", 局_CpsInfo.Update)
 	}
+	//活动管理
+	局_CpsPayOrder := controller.NewCpsPayOrderController()
+	{
+		adminRouter.POST("cpsPayOrder/getList", 局_CpsPayOrder.GetList)
+		adminRouter.POST("cpsPayOrder/info", 局_CpsPayOrder.Info)
+		adminRouter.POST("cpsPayOrder/delete", 局_CpsPayOrder.Delete)
+		adminRouter.POST("cpsPayOrder/setNote", 局_CpsPayOrder.SerNote)
+	}
 }

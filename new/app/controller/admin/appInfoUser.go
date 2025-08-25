@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/global"
 	"server/new/app/controller/Common"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	"server/structs/Http/response"
 )
@@ -30,8 +31,13 @@ func (C *AppInfoWebUser) GetInfo(c *gin.Context) {
 
 	info, err := S.Info(请求.Id)
 	if err != nil {
-		response.FailWithMessage("暂无网页用户中心配置,请点击保存初始化配置", c)
-		return
+		info = dbm.DB_AppInfoWebUser{
+			Id:           请求.Id,
+			Status:       2,
+			CaptchaLogin: 3,
+		}
+		_, _ = S.Create(info)
+
 	}
 	response.OkWithData(info, c)
 	return
