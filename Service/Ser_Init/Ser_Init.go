@@ -752,13 +752,6 @@ func 数据库兼容旧版本(c *gin.Context) {
 	var 局_总数 int64
 	_ = db.Model(dbm.DB_Setting{}).Count(&局_总数).Error
 	if 局_总数 == 0 && global.GVA_Viper.IsSet("系统设置.系统开关") {
-		var GVA_CONFIG config.Server备用
-		if err = global.GVA_Viper.Unmarshal(&GVA_CONFIG); err == nil {
-			_ = setting.Z系统设置(&GVA_CONFIG.X系统设置)
-			_ = setting.Z短信平台配置(&GVA_CONFIG.D短信平台配置)
-			_ = setting.Z行为验证码平台配置(&GVA_CONFIG.X行为验证码平台配置)
-			_ = setting.Z在线支付配置(&GVA_CONFIG.Z在线支付)
-		}
 		var Test config.Test
 		Test.DbAgentLevel = global.GVA_Viper.GetInt("test.db_agent_level")
 		Test.DbAppinfo = global.GVA_Viper.GetInt("test.db_appinfo")

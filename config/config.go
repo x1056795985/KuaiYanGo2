@@ -12,7 +12,6 @@ type Server struct {
 	Mysql Mysql `mapstructure:"mysql" json:"mysql" `
 }
 type Server备用 struct {
-	X系统设置      X系统设置      `mapstructure:"系统设置" json:"系统设置" `           // 系统名称
 	Z在线支付      m.Z在线支付    `mapstructure:"在线支付" json:"在线支付" `           // 系统名称
 	D短信平台配置    D短信平台配置    `mapstructure:"短信平台配置" json:"短信平台配置" `       // 短信配置
 	X行为验证码平台配置 X行为验证码平台配置 `mapstructure:"行为验证码平台配置" json:"行为验证码平台配置" ` // 短信配置
