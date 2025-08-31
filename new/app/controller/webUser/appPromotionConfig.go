@@ -45,9 +45,6 @@ func (C *AppPromotionConfig) GetList(c *gin.Context) {
 	return
 }
 
-// Info
-// @action 查询
-// @show  2
 func (C *AppPromotionConfig) Info(c *gin.Context) {
 	var 请求 request.Id
 	if !C.ToJSON(c, &请求) {

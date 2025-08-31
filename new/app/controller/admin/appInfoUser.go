@@ -35,6 +35,7 @@ func (C *AppInfoWebUser) GetInfo(c *gin.Context) {
 			Id:           请求.Id,
 			Status:       2,
 			CaptchaLogin: 3,
+			UrlDownload:  "https://www.fnkuaiyan.com/",
 		}
 		_, _ = S.Create(info)
 

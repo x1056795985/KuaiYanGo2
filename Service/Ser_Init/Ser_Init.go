@@ -74,8 +74,8 @@ func InitDbTables(c *gin.Context) {
 	//gorm:table_options 设置创建表强制为InnoDB引擎, 因为MyISAM不支持事务,回滚会失效所以要修改成InnoDB引擎,
 	//参考地址 https://blog.csdn.net/qq_25436207/article/details/107533197
 
-	//AutoMigrate 自动迁移功能（如不存在会自动创建一个表）传过来的是  结构体HelloWorld实例的指针地址
-	err := db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(
+	// 分别迁移每个表来定位问题
+	tables := []interface{}{
 		// 系统模块表  数据库结构表
 		DB.DB_PublicData{},
 		DB.DB_PublicJs{},
@@ -115,11 +115,16 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_KaClassUpPrice{},
 		dbm.DB_AppInfoWebUser{},
 		dbm.DB_AppPromotionConfig{},
+
 		dbm.DB_CpsInfo{},
 		dbm.DB_CpsShortUrl{},
 		dbm.DB_CpsInvitingRelation{},
 		dbm.DB_CpsUser{},
 		dbm.DB_CpsPayOrder{},
+
+		dbm.DB_CheckInUser{},
+		dbm.DB_CheckInScoreLog{},
+		dbm.DB_CheckInLog{},
 
 		//统计数据用的表
 		dbm.DB_TongJiZaiXian{},
@@ -128,11 +133,13 @@ func InitDbTables(c *gin.Context) {
 		DB.TaskPool_类型{},
 		DB.TaskPool_队列{},
 		DB.DB_TaskPoolData{}, //任务池数据库 放到最后 业务字段可能和预设不同
-	)
-
-	if err != nil {
-		global.GVA_LOG.Error("InitDbTables表创建失败", zap.Error(err)) //日志错误 表创建成功
-		//os.Exit(0)                                                //结束程序  //20250703 不能结束,如果客户修改过字段类型,会导致进不去程序 比如修改任务池数据提交字段类型
+	}
+	for _, table := range tables {
+		//AutoMigrate 自动迁移功能（如不存在会自动创建一个表）传过来的是  结构体HelloWorld实例的指针地址
+		if err := db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(table); err != nil {
+			global.GVA_LOG.Error("表创建失败", zap.String("table", fmt.Sprintf("%T", table)), zap.Error(err))
+			//os.Exit(0)                                                //结束程序  //20250703 不能结束,如果客户修改过字段类型,会导致进不去程序 比如修改任务池数据提交字段类型
+		}
 	}
 	//global.GVA_LOG.Info("register table success(创建表成功)") //日志消息 表创建成功
 	InitDbTable数据(c) //初始化数据

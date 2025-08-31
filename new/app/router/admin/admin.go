@@ -136,6 +136,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("appPromotionConfig/update", 局_AppPromotionConfig.Update)
 		adminRouter.POST("appPromotionConfig/getList", 局_AppPromotionConfig.GetList)
 		adminRouter.POST("appPromotionConfig/setSort", 局_AppPromotionConfig.Sort)
+		adminRouter.POST("appPromotionConfig/reset", 局_AppPromotionConfig.Reset)
 	}
 	//活动管理
 	局_CpsInfo := controller.NewCpsInfoController()

@@ -251,11 +251,13 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 			Id:           局_旧AppInfo.AppId,
 			Status:       请求.AppInfoWebUser.Status,
 			CaptchaLogin: 请求.AppInfoWebUser.CaptchaLogin,
+			UrlDownload:  请求.AppInfoWebUser.UrlDownload,
 		})
 	} else {
 		_, err = service.NewAppInfoWebUser(c, &tx).Update(局_旧AppInfo.AppId, map[string]interface{}{
 			"status":       请求.AppInfoWebUser.Status,
 			"captchaLogin": 请求.AppInfoWebUser.CaptchaLogin,
+			"urlDownload":  请求.AppInfoWebUser.UrlDownload,
 		})
 	}
 	if err != nil {

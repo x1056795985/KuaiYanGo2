@@ -105,4 +105,17 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("cpsPayOrder/list", 局_cpsPayOrder.List)
 	}
+
+	局_CheckInUser := controller.NewCheckInUserController()
+	{
+		adminRouter.POST("checkInUser/info", 局_CheckInUser.Info)
+	}
+	局_CheckInLog := controller.NewCheckInLogController()
+	{
+		adminRouter.POST("checkInLog/create", 局_CheckInLog.Create)
+	}
+	局_CheckInScoreLog := controller.NewCheckInScoreLogController()
+	{
+		adminRouter.POST("checkInScoreLog/getList", 局_CheckInScoreLog.GetList)
+	}
 }

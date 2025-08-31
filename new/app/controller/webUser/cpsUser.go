@@ -29,10 +29,11 @@ func (C *CpsUser) Info(c *gin.Context) {
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	//查询是否拥有邀请人   如果已设置过,需要删除,因为有唯一索引
 	tx := *global.GVA_DB
-	info.cpsUser, err = service.NewCpsUser(c, &tx).Info(info.likeInfo.Uid)
+	info.cpsUser, err = service.NewCpsUser(c, &tx).Info(info.appInfo.AppId, info.likeInfo.Uid)
 	//判断是否存在,如果不存在,插入默认数据
 	if err != nil && err.Error() == "record not found" {
-		info.cpsUser.Id = info.likeInfo.Uid
+		info.cpsUser.UserId = info.likeInfo.Uid
+		info.cpsUser.AppId = info.appInfo.AppId
 		info.cpsUser.CreatedAt = time.Now().Unix()
 		info.cpsUser.UpdatedAt = info.cpsUser.CreatedAt
 		_, err = service.NewCpsUser(c, &tx).Create(&info.cpsUser)

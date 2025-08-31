@@ -44,6 +44,7 @@ func RunWindowsServer() {
 	后台端口:%s
 	管理员后台运行地址:http://127.0.0.1%s/%s
 	代理后台运行地址:http://127.0.0.1%s/%s
+	web用户中心运行地址:http://127.0.0.1/user/{AppId}
 `, global.X系统信息.B版本号当前, 端口, 端口, global.GVA_Viper.GetString("管理入口"), 端口, global.GVA_Viper.GetString("代理入口"))
 	fmt.Printf("是否有读写文件权限:%v\n", utils2.X系统_权限检测())
 	global.Q快验.C初始化配置(string(utils.B编码_BASE64解码("eyJBcHBXZWIiOiJodHRwOi8va3lhcGkuOXc5OS5jbi9BcGk/QXBwSWQ9MTAwMDEiLCJDcnlwdG9LZXlQdWJsaWMiOiItLS0tLUJFR0lOIFBVQkxJQyBLRVktLS0tLVxuTUlHZk1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDM0hib1NYQ0trcUdWaDBsaEt6cFNwaDFYRVxuNUtNYnBtYUhBTzIyNzdnOGtZaVVRRk5XU21PNlZ0RjJlcENKTURleTJjSVZEMk9OUnFZSkxLeWdYbHpkSGtZNlxuQU1Oa3AweTh5elVMQUlUSkgyOTkwbzJTb3VPdzdYQlBPNTN0Nk9URVJSTG92Lzh5YTVMNXJaK1NzM2R4RHNJVFxudkZqd0drYzZ5QlBBVFJKM1N3SURBUUFCXG4tLS0tLUVORCBQVUJMSUMgS0VZLS0tLS1cbiIsIkNyeXB0b1R5cGUiOjN9")))

@@ -22,3 +22,12 @@ func (s *CpsUser) Z增减累计收入(id int, 增减值 float64, is增加 bool) 
 	err = s.db.Model(new(dbm.DB_CpsUser)).Where("id = ?", id).Update("cumulativeRMB=?", gorm.Expr("cumulativeRMB "+S三元(is增加, "+", "-")+" ?", 增减值)).Error
 	return
 }
+
+// 查
+func (s *CpsUser) Info(appId, id int) (info dbm.DB_CpsUser, err error) {
+	tx := s.db.Model(new(dbm.DB_CpsUser)).Where("userId = ?", id).Where("appId = ?", appId).First(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}

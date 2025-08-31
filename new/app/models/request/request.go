@@ -21,3 +21,13 @@ type Id struct {
 type Ids struct {
 	Ids []int `json:"Ids" binding:"required,min=1"` //id数组
 }
+
+// 列表请求通用参数
+type List2 struct {
+	Page     int    `json:"page" binding:"required"` // 页
+	Size     int    `json:"size" binding:"required"` // 页数量
+	Type     int    `json:"type"`                    // 关键字类型
+	Keywords string `json:"keywords"`                // 关键字
+	Order    int    `json:"order"`                   // 0 倒序 1 正序
+	Count    int64  `json:"count"`                   // 总数缓存
+}

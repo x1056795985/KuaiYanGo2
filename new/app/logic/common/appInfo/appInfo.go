@@ -65,7 +65,7 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
 	NewApp.VerifyKey = 1     //绑定模式
 	NewApp.IsUserKeySame = 1 //不同用户可否相同
 	NewApp.UpKeyData = 10    //修改绑定key增减值
-	NewApp.UrlHome = "https://www.baidu.com/"
+	NewApp.UrlHome = "https://www.fnkuaiyan.com/"
 	NewApp.UrlDownload = `{
  "htmlurl": "https://www.fnkuaiyan.cn",
  "data": [

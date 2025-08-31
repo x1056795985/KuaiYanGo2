@@ -109,13 +109,14 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 	}
 	//判断邀请人的级别
 	info.有效邀请数量 = cpsUser.L_cpsUser.Q取有效邀请数量(c, 参数.E额外信息.Get("AppId").Int(), info.上级.InviterId)
-	info.cpsUser, err = service.NewCpsUser(c, tx).Info(info.上级.InviterId)
+	info.cpsUser, err = service.NewCpsUser(c, tx).Info(参数.E额外信息.Get("AppId").Int(), info.上级.InviterId)
 	if err != nil {
 		global.GVA_LOG.Error("订单:"+参数.PayOrder+",佣金发放失败,获取cpsUser"+strconv.Itoa(info.上级.InviterId)+"信息失败", zap.Any("err", err))
 		return
 	}
+
 	if info.有效邀请数量 != info.cpsUser.Count { //更新一下缓存信息
-		_, _ = service.NewCpsUser(c, tx).UpdateMap([]int{info.上级.InviterId}, map[string]interface{}{"count": info.有效邀请数量})
+		_, _ = service.NewCpsUser(c, tx).UpdateMap([]int{info.cpsUser.Id}, map[string]interface{}{"count": info.有效邀请数量})
 	}
 
 	//开始抢锁
@@ -185,7 +186,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 				Note:  "订单:" + 参数.PayOrder + ",cps核心客户佣金|新余额≈" + Float64到文本(局_新余额, 2),
 			})
 			// 增加累计收入缓存
-			err = tx.Model(dbm.DB_CpsUser{}).Where("Id=?", info.cpsPayOrder.InviterId).Update("cumulativeRMB", gorm.Expr("cumulativeRMB + ?", info.cpsPayOrder.InviterRMB)).Error
+			err = tx.Model(dbm.DB_CpsUser{}).Where("appId=?", info.cpsPayOrder.AppId).Where("userId=?", info.cpsPayOrder.InviterId).Update("cumulativeRMB", gorm.Expr("cumulativeRMB + ?", info.cpsPayOrder.InviterRMB)).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人更新累计收入缓存失败"))
 			}
@@ -232,7 +233,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 				Note:  "订单:" + 参数.PayOrder + ",cps裂变客户佣金|新余额≈" + Float64到文本(局_新余额, 2),
 			})
 			// 增加累计收入缓存
-			err = tx.Model(dbm.DB_CpsUser{}).Where("Id=?", info.cpsPayOrder.GrandpaId).Update("cumulativeRMB", gorm.Expr("cumulativeRMB + ?", info.cpsPayOrder.GrandpaRMB)).Error
+			err = tx.Model(dbm.DB_CpsUser{}).Where("appId=?", info.cpsPayOrder.AppId).Where("id=?", info.cpsPayOrder.GrandpaId).Update("cumulativeRMB", gorm.Expr("cumulativeRMB + ?", info.cpsPayOrder.GrandpaRMB)).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人上级更新累计收入缓存失败"))
 			}

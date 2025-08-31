@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/global"
@@ -263,6 +264,45 @@ func (C *AppPromotionConfig) Sort(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 	} else {
 		response.OkWithDetailed(总数, "操作成功", c)
+	}
+
+}
+func (C *AppPromotionConfig) Reset(c *gin.Context) {
+	var 请求 struct {
+		Id int `json:"id" binding:"required,min=1"`
+	}
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+
+	tx := *global.GVA_DB
+	var S = service.NewAppPromotionConfig(c, &tx)
+	var info dbm.DB_AppPromotionConfig
+	info, err := S.Info(请求.Id)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	var 局_数量_邀请关系, 局_数量_用户数量, 局_数量_佣金订单 int64
+
+	switch info.PromotionType {
+	default:
+		response.FailWithMessage("不支持的推广类型", c)
+	case 1: //cps
+		//删除应用邀请关系
+		局_数量_邀请关系, err = service.NewCpsInvitingRelation(c, &tx).DeleteWhere(map[string]interface{}{"inviteeAppId": info.AppId})
+		//重置 用户邀请数量和金额
+		局_数量_用户数量, err = service.NewCpsUser(c, &tx).UpdateWhere(map[string]interface{}{}, map[string]interface{}{"count": 0, "cumulativeRMB": 0})
+		//删除佣金订单
+		局_数量_佣金订单, err = service.NewCpsPayOrder(c, &tx).DeleteWhere(map[string]interface{}{"appId": info.AppId})
+	}
+
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+	} else {
+		局_提示信息 := fmt.Sprintf("重置成功,删除了%d个应用邀请关系,%d个用户,%d个佣金订单", 局_数量_邀请关系, 局_数量_用户数量, 局_数量_佣金订单)
+
+		response.OkWithDetailed(info, 局_提示信息, c)
 	}
 
 }
