@@ -4,11 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/controller/Common/response"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
 	"time"
 )
 
@@ -39,10 +39,10 @@ func (C *CpsInfo) GetList(c *gin.Context) {
 	var err error
 	总数, dataList, err = S.GetList(请求.List)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(c, err.Error())
 		return
 	}
-	response.OkWithDetailed(GetList2{List: dataList, Count: 总数}, "操作成功", c)
+	response.OkWithDetailed(c, GetList2{List: dataList, Count: 总数}, "操作成功")
 	return
 }
 
@@ -82,9 +82,9 @@ func (C *CpsInfo) Update(c *gin.Context) {
 	})
 
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(c, err.Error())
 	} else {
-		response.OkWithMessage("操作成功", c)
+		response.OkWithMessage(c, "操作成功")
 	}
 
 }
@@ -103,10 +103,10 @@ func (C *CpsInfo) Info(c *gin.Context) {
 	var info dbm.DB_CpsInfo
 	info, err := S.Info(请求.Id)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(c, err.Error())
 
 	} else {
-		response.OkWithDetailed(info, "操作成功", c)
+		response.OkWithDetailed(c, info, "操作成功")
 	}
 
 }

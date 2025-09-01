@@ -122,6 +122,7 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_CpsUser{},
 		dbm.DB_CpsPayOrder{},
 
+		dbm.DB_CheckInInfo{},
 		dbm.DB_CheckInUser{},
 		dbm.DB_CheckInScoreLog{},
 		dbm.DB_CheckInLog{},

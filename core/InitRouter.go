@@ -285,6 +285,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	{
 		App := Api.Admin.KaClass                       //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetKaClassList) // 获取列表
+		baseRouter.POST("GetListAll", App.GetListAll)  // 获取列表
 		baseRouter.POST("New", App.New)                // 新建信息
 		baseRouter.POST("GetInfo", App.GetInfo)        // 获取详细信息
 		baseRouter.POST("SaveInfo", App.SaveInfo)      // 保存详细信息

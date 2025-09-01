@@ -79,6 +79,7 @@ func (C *AppPromotionConfig) Create(c *gin.Context) {
 		AppInfo            DB.DB_AppInfo
 		局_活动配置表ID          int
 		Cps                dbm.DB_CpsInfo
+		CheckInInfo        dbm.DB_CheckInInfo
 		AppPromotionConfig dbm.DB_AppPromotionConfig
 	}
 	var err error
@@ -101,6 +102,21 @@ func (C *AppPromotionConfig) Create(c *gin.Context) {
 		switch 请求.PromotionType {
 		default:
 			return errors.New("活动类型错误")
+		case constant.H活动类型_签到:
+			info.CheckInInfo = dbm.DB_CheckInInfo{
+				CreateTime:       time.Now().Unix(),
+				UpdateTime:       time.Now().Unix(),
+				ShareGivePoints:  10,
+				InviteGivePoints: 88,
+				CardClassList:    "[]",
+			}
+
+			_, err = service.NewCheckInInfo(c, tx).Create(&info.CheckInInfo)
+			if err != nil {
+				return err
+			}
+			info.局_活动配置表ID = info.CheckInInfo.Id
+
 		case constant.H活动类型_cps:
 			info.Cps = dbm.DB_CpsInfo{
 				CreateTime:         time.Now().Unix(),

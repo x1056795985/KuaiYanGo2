@@ -286,3 +286,34 @@ func (a *Api) New(c *gin.Context) {
 	response.OkWithMessage("添加成功", c)
 	return
 }
+
+func (a *Api) GetListAll(c *gin.Context) {
+	var 请求 struct {
+		AppId int `json:"AppId"`
+	}
+	//{"AppId":2}
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("提交参数错误:"+err.Error(), c)
+		return
+	}
+
+	if 请求.AppId < 10000 {
+		response.FailWithMessage("AppId请输>=10000的整数", c)
+		return
+	}
+
+	var DB_KaClass []dbm.DB_KaClass
+	局_DB := global.GVA_DB.Model(dbm.DB_KaClass{}).Where("AppId = ?", 请求.AppId)
+
+	//Count(&总数) 必须放在where 后面 不然值会被清0
+	err = 局_DB.Find(&DB_KaClass).Error
+	//fmt.Println("用户总数%d", 总数, DB_LinksToken)
+	if err != nil {
+		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(DB_KaClass, "ok", c)
+	return
+}

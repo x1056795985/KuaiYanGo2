@@ -17,6 +17,11 @@ type Id struct {
 	Id int `json:"Id" binding:"required,min=1"`
 }
 
+// 单id请求
+type Id2 struct {
+	Id int `json:"id" binding:"required,min=1"`
+}
+
 // 单id数组请求
 type Ids struct {
 	Ids []int `json:"Ids" binding:"required,min=1"` //id数组

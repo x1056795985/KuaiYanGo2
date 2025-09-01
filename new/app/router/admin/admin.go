@@ -138,19 +138,26 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("appPromotionConfig/setSort", 局_AppPromotionConfig.Sort)
 		adminRouter.POST("appPromotionConfig/reset", 局_AppPromotionConfig.Reset)
 	}
-	//活动管理
+	//Cps管理
 	局_CpsInfo := controller.NewCpsInfoController()
 	{
 		adminRouter.POST("cpsInfo/getList", 局_CpsInfo.GetList)
 		adminRouter.POST("cpsInfo/info", 局_CpsInfo.Info)
 		adminRouter.POST("cpsInfo/update", 局_CpsInfo.Update)
 	}
-	//活动管理
+	//cps订单管理
 	局_CpsPayOrder := controller.NewCpsPayOrderController()
 	{
 		adminRouter.POST("cpsPayOrder/getList", 局_CpsPayOrder.GetList)
 		adminRouter.POST("cpsPayOrder/info", 局_CpsPayOrder.Info)
 		adminRouter.POST("cpsPayOrder/delete", 局_CpsPayOrder.Delete)
 		adminRouter.POST("cpsPayOrder/setNote", 局_CpsPayOrder.SerNote)
+	}
+	//签到管理
+	局_CheckIn := controller.NewCheckInInfoController()
+	{
+		adminRouter.POST("checkInInfo/getList", 局_CheckIn.GetList)
+		adminRouter.POST("checkInInfo/info", 局_CheckIn.Info)
+		adminRouter.POST("checkInInfo/update", 局_CheckIn.Update)
 	}
 }
