@@ -117,7 +117,7 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_AppPromotionConfig{},
 
 		dbm.DB_CpsInfo{},
-		dbm.DB_CpsShortUrl{},
+		dbm.DB_ShortUrl{},
 		dbm.DB_CpsInvitingRelation{},
 		dbm.DB_CpsUser{},
 		dbm.DB_CpsPayOrder{},
@@ -126,6 +126,7 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_CheckInUser{},
 		dbm.DB_CheckInScoreLog{},
 		dbm.DB_CheckInLog{},
+		dbm.DB_CheckInTaskLog{},
 
 		//统计数据用的表
 		dbm.DB_TongJiZaiXian{},

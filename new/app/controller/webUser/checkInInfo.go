@@ -10,33 +10,34 @@ import (
 	DB "server/structs/db"
 )
 
-type CpsInfo struct {
+type CheckInInfo struct {
 	Common.Common
 }
 
-func NewCpsInfoController() *CpsInfo {
-	return &CpsInfo{}
+func NewCheckInInfoController() *CheckInInfo {
+	return &CheckInInfo{}
 }
 
-func (C *CpsInfo) Info(c *gin.Context) {
+func (C *CheckInInfo) Info(c *gin.Context) {
 	var err error
 	var info = struct {
 		appInfo             DB.DB_AppInfo
 		likeInfo            DB.DB_LinksToken
-		CpsInfo             dbm.DB_CpsInfo
+		CheckInInfo         dbm.DB_CheckInInfo
 		AppPromotionConfigs []dbm.DB_AppPromotionConfig
 		AppPromotionConfig  dbm.DB_AppPromotionConfig
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	tx := *global.GVA_DB
+
 	if 临时, ok := c.Get("AppPromotionConfig"); ok {
 		info.AppPromotionConfig = 临时.(dbm.DB_AppPromotionConfig)
 	} else {
-		response.FailWithMessage(c, "未开启cps活动")
+		response.FailWithMessage(c, "未开启签到活动")
 		return
 	}
 
-	info.CpsInfo, err = service.NewCpsInfo(c, &tx).Info(info.AppPromotionConfig.TypeAssociatedId)
+	info.CheckInInfo, err = service.NewCheckInInfo(c, &tx).Info(info.AppPromotionConfig.TypeAssociatedId)
 	if err != nil && err.Error() != "record not found" {
 		response.FailWithMessage(c, err.Error())
 		return
@@ -44,7 +45,7 @@ func (C *CpsInfo) Info(c *gin.Context) {
 
 	response.OkWithData(c, gin.H{
 		"appPromotionConfig": info.AppPromotionConfig,
-		"cps":                info.CpsInfo,
+		"checkIn":            info.CheckInInfo,
 	})
 	return
 }

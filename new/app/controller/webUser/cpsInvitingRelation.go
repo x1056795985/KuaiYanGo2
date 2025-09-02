@@ -32,7 +32,7 @@ func (C *CpsInvitingRelation) Set(c *gin.Context) {
 	var info = struct {
 		appInfo  DB.DB_AppInfo
 		likeInfo DB.DB_LinksToken
-		上级       dbm.DB_CpsInvitingRelation
+		上级     dbm.DB_CpsInvitingRelation
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	//查询是否拥有邀请人   如果已设置过,需要删除,因为有唯一索引
@@ -49,14 +49,15 @@ func (C *CpsInvitingRelation) Set(c *gin.Context) {
 			response.FailWithMessage(c, err.Error())
 			return
 		}
+
 	}
 	response.Ok(c)
 }
 func (C *CpsInvitingRelation) Get(c *gin.Context) {
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
-		Y邀请关系    dbm.DB_CpsInvitingRelation
+		appInfo   DB.DB_AppInfo
+		likeInfo  DB.DB_LinksToken
+		Y邀请关系 dbm.DB_CpsInvitingRelation
 	}{}
 
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
@@ -73,9 +74,9 @@ func (C *CpsInvitingRelation) Get(c *gin.Context) {
 
 func (C *CpsInvitingRelation) GetInvitingList(c *gin.Context) {
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
-		Y邀请关系    []dbm.DB_CpsInvitingRelation
+		appInfo   DB.DB_AppInfo
+		likeInfo  DB.DB_LinksToken
+		Y邀请关系 []dbm.DB_CpsInvitingRelation
 	}{}
 
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)

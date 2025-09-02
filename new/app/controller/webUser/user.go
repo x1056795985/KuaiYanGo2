@@ -50,7 +50,7 @@ func (C *User) NewUserInfo(c *gin.Context) {
 	var err error
 	//tx := *global.GVA_DB
 
-	err = Ser_User.New用户信息(请求.User, 请求.Password, 请求.Password, 请求.QQ, 请求.Email, 请求.Phone, c.ClientIP(), "", 0, 0, 0, "")
+	info.user, err = Ser_User.New用户信息(请求.User, 请求.Password, 请求.Password, 请求.QQ, 请求.Email, 请求.Phone, c.ClientIP(), "", 0, 0, 0, "")
 	if err != nil {
 		response.FailWithMessage(c, err.Error())
 		return

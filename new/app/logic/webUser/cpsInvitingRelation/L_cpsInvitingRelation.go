@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/global"
+	"server/new/app/logic/webUser/user"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -85,5 +86,8 @@ func (j *appUser) S设置邀请人(c *gin.Context, AppId, 邀请人, 被邀请�
 	}
 
 	err = tx.Create(&info.插入数据).Error
+	if err == nil {
+		user.L_user.T邀请注册成功后处理(c, AppId, 邀请人, 被邀请人, Referer)
+	}
 	return
 }

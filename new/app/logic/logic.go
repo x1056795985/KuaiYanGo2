@@ -12,4 +12,5 @@ import (
 	_ "server/new/app/logic/common/mqttClient"
 	_ "server/new/app/logic/common/rmbPay"
 	_ "server/new/app/logic/common/rmbPay/rmbPayItem"
+	_ "server/new/app/logic/webUser/checkInTaskLog"
 )

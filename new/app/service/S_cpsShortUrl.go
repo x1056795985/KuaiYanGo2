@@ -6,20 +6,20 @@ import (
 	dbm "server/new/app/models/db"
 )
 
-type CpsShortUrl struct {
-	*BaseService[dbm.DB_CpsShortUrl] // 嵌入泛型基础服务
+type ShortUrl struct {
+	*BaseService[dbm.DB_ShortUrl] // 嵌入泛型基础服务
 }
 
-// NewCpsShortUrl 创建 CpsShortUrl 实例
-func NewCpsShortUrl(c *gin.Context, db *gorm.DB) *CpsShortUrl {
-	return &CpsShortUrl{
-		BaseService: NewBaseService[dbm.DB_CpsShortUrl](c, db),
+// NewShortUrl 创建 ShortUrl 实例
+func NewShortUrl(c *gin.Context, db *gorm.DB) *ShortUrl {
+	return &ShortUrl{
+		BaseService: NewBaseService[dbm.DB_ShortUrl](c, db),
 	}
 }
 
 // 查
-func (s *CpsShortUrl) InfoShortUrl(ShortUrl string) (info dbm.DB_CpsShortUrl, err error) {
-	tx := s.db.Model(dbm.DB_CpsShortUrl{}).Where("ShortUrl = ?", ShortUrl).First(&info)
+func (s *ShortUrl) InfoShortUrl(ShortUrl string) (info dbm.DB_ShortUrl, err error) {
+	tx := s.db.Model(dbm.DB_ShortUrl{}).Where("ShortUrl = ?", ShortUrl).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -27,8 +27,8 @@ func (s *CpsShortUrl) InfoShortUrl(ShortUrl string) (info dbm.DB_CpsShortUrl, er
 }
 
 // 点击计数+1
-func (s *CpsShortUrl) ClickCountUP(Id int, number int) (err error) {
-	tx := s.db.Model(dbm.DB_CpsShortUrl{}).Where("id = ?", Id).Update("clickCount", gorm.Expr("clickCount + ?", number))
+func (s *ShortUrl) ClickCountUP(Id int, number int) (err error) {
+	tx := s.db.Model(dbm.DB_ShortUrl{}).Where("id = ?", Id).Update("clickCount", gorm.Expr("clickCount + ?", number))
 	err = tx.Error
 	return
 }

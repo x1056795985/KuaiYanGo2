@@ -309,29 +309,29 @@ func Id置QQ邮箱手机号(Id int, QQ, 邮箱, 手机号 string) error {
 }
 
 // New用户信息
-func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注 string, UPAgentId int, AgentDiscount int, Rmb float64, RealNameAttestation string) error {
-
+func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注 string, UPAgentId int, AgentDiscount int, Rmb float64, RealNameAttestation string) (DB.DB_User, error) {
+	var 局_User DB.DB_User
 	msg := ""
 	局_最短长度 := 6
 	if UPAgentId != 0 {
 		局_最短长度 = 2
 	}
 	if utf8.RuneCountInString(User) < 局_最短长度 || utf8.RuneCountInString(User) > 18 {
-		return errors.New("用户名长度必须大于" + strconv.Itoa(局_最短长度) + "小于18")
+		return 局_User, errors.New("用户名长度必须大于" + strconv.Itoa(局_最短长度) + "小于18")
 	}
 
 	if UPAgentId != 0 {
 		if !utils.Z正则_校验代理用户名(User, &msg) {
-			return errors.New("用户名" + msg)
+			return 局_User, errors.New("用户名" + msg)
 		}
 	} else {
 		if !utils.Z正则_校验用户名(User, &msg) {
-			return errors.New("用户名" + msg)
+			return 局_User, errors.New("用户名" + msg)
 		}
 	}
 
 	if !utils.Z正则_校验密码(PassWord, &msg) {
-		return errors.New("密码" + msg)
+		return 局_User, errors.New("密码" + msg)
 	}
 	//不用校验 任意填写
 	/*	if Email != "" && !utils.Z正则_校验email(Email, &msg) {
@@ -346,10 +346,9 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 		return errors.New("超级密码" + msg)
 	}*/
 	if User用户名取id(User) != 0 || Ser_Admin.User用户名取id(User) != 0 {
-		return errors.New("用户名已存在")
+		return 局_User, errors.New("用户名已存在")
 	}
 
-	var 局_User DB.DB_User
 	局_User.Id = 0
 	局_User.User = User
 	局_User.Qq = Qq
@@ -373,7 +372,7 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 	err := global.GVA_DB.Model(DB.DB_User{}).Where("User = ?", 局_User.User).Count(&count).Error
 	// 没查到数据
 	if count != 0 {
-		return errors.New("用户已存在")
+		return 局_User, errors.New("用户已存在")
 	}
 
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
@@ -409,7 +408,7 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 		return nil
 	})
 
-	return nil
+	return 局_User, nil
 }
 
 // 0 非代理,1 一级代理 2 二级代理 3 三级代理 本包专用, 方式环形导包

@@ -431,7 +431,7 @@ func UserApi_用户注册(c *gin.Context) {
 		return
 	}
 
-	err := Ser_User.New用户信息(string(请求json.GetStringBytes("User")), string(请求json.GetStringBytes("PassWord")), string(请求json.GetStringBytes("SuperPassWord")), string(请求json.GetStringBytes("Qq")), string(请求json.GetStringBytes("Email")), string(请求json.GetStringBytes("Phone")), c.ClientIP(), "", 0, 0, 0, "")
+	_, err := Ser_User.New用户信息(string(请求json.GetStringBytes("User")), string(请求json.GetStringBytes("PassWord")), string(请求json.GetStringBytes("SuperPassWord")), string(请求json.GetStringBytes("Qq")), string(请求json.GetStringBytes("Email")), string(请求json.GetStringBytes("Phone")), c.ClientIP(), "", 0, 0, 0, "")
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 		return
