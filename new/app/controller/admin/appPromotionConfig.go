@@ -93,6 +93,10 @@ func (C *AppPromotionConfig) Create(c *gin.Context) {
 		response.FailWithMessage("卡号模式应用暂不支持该活动", c)
 		return
 	}
+	if 请求.PromotionType == constant.H活动类型_签到 && (info.AppInfo.AppType == 3 || info.AppInfo.AppType == 4) {
+		response.FailWithMessage("卡号模式应用暂不支持该活动", c)
+		return
+	}
 
 	var S = service.NewAppPromotionConfig(c, &tx)
 
@@ -304,13 +308,22 @@ func (C *AppPromotionConfig) Reset(c *gin.Context) {
 	switch info.PromotionType {
 	default:
 		response.FailWithMessage("不支持的推广类型", c)
-	case 1: //cps
+		return
+	case constant.H活动类型_cps: //cps
 		//删除应用邀请关系
 		局_数量_邀请关系, err = service.NewCpsInvitingRelation(c, &tx).DeleteWhere(map[string]interface{}{"inviteeAppId": info.AppId})
 		//重置 用户邀请数量和金额
-		局_数量_用户数量, err = service.NewCpsUser(c, &tx).UpdateWhere(map[string]interface{}{}, map[string]interface{}{"count": 0, "cumulativeRMB": 0})
+		局_数量_用户数量, err = service.NewCpsUser(c, &tx).UpdateWhere(map[string]interface{}{"appId": info.AppId}, map[string]interface{}{"count": 0, "cumulativeRMB": 0})
 		//删除佣金订单
 		局_数量_佣金订单, err = service.NewCpsPayOrder(c, &tx).DeleteWhere(map[string]interface{}{"appId": info.AppId})
+	case constant.H活动类型_签到: //
+		//清空用户签到分
+		局_数量_用户数量, err = service.NewCheckInUser(c, &tx).UpdateWhere(map[string]interface{}{"appId": info.AppId}, map[string]interface{}{"count": 0, "cumulativeRMB": 0})
+		//删除该应用的签到记录
+		局_数量_用户数量, err = service.NewCheckInLog(c, &tx).DeleteWhere(map[string]interface{}{"appId": info.AppId})
+		//删除该应用用户的积分记录
+		局_数量_用户数量, err = service.NewCheckInScoreLog(c, &tx).DeleteWhere(map[string]interface{}{"appId": info.AppId})
+
 	}
 
 	if err != nil {

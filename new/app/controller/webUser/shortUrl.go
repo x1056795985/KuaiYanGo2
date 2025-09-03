@@ -56,7 +56,6 @@ func (C *ShortUrl) Create(c *gin.Context) {
 		BaseUrl   string `json:"baseUrl"  binding:"required" zh:"基础地址"`
 		RouterUrl string `json:"routerUrl"  binding:"required" zh:"路由地址"`
 		ShortType int    `json:"shortType"`
-		Other     string `json:"other"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -70,6 +69,7 @@ func (C *ShortUrl) Create(c *gin.Context) {
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	tx := *global.GVA_DB
+	other := `{"ip":"` + c.ClientIP() + `"}`
 	//先读取这个长链接和uid 是否已经有符合条件的短连接了,如果有直接返回,如果没有在创建,
 	info.ShortUrls, err = service.NewShortUrl(c, &tx).Infos(map[string]interface{}{
 		"uid":       info.likeInfo.Uid,
@@ -77,7 +77,7 @@ func (C *ShortUrl) Create(c *gin.Context) {
 		"baseUrl":   请求.BaseUrl,
 		"routerUrl": 请求.RouterUrl,
 		"shortType": 请求.ShortType,
-		"other":     请求.Other,
+		"other":     other,
 	})
 	if len(info.ShortUrls) > 0 {
 		info.ShortUrl = info.ShortUrls[0]
@@ -92,7 +92,7 @@ func (C *ShortUrl) Create(c *gin.Context) {
 		info.ShortUrl.AppId = info.appInfo.AppId
 		info.ShortUrl.Status = 1
 		info.ShortUrl.ShortType = 请求.ShortType
-		info.ShortUrl.Other = 请求.Other
+		info.ShortUrl.Other = other
 		_, err = service.NewShortUrl(c, &tx).Create(&info.ShortUrl)
 		if err != nil {
 			response.FailWithMessage(c, err.Error())

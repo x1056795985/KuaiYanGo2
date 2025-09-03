@@ -39,7 +39,7 @@ func (C *CheckInScoreLog) GetList(c *gin.Context) {
 	//查询是否拥有邀请人   如果已设置过,需要删除,因为有唯一索引
 	db := *global.GVA_DB
 
-	info.总数, info.积分日志, err = service.NewCheckInScoreLog(c, &db).GetList(请求.List2, info.appInfo.AppId, info.likeInfo.Uid)
+	info.总数, info.积分日志, err = service.NewCheckInScoreLog(c, &db).GetList(请求.List2, info.appInfo.AppId, info.likeInfo.Uid, 0, 0)
 
 	if err != nil {
 		response.FailWithMessage(c, err.Error())
