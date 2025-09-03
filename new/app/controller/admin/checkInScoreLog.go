@@ -23,17 +23,17 @@ func NewCheckInScoreLogController() *CheckInScoreLog {
 func (C *CheckInScoreLog) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List2
-		AppId        int      `json:"appId"`
-		UserId       int      `json:"UserId"`
-		RegisterTime []string `json:"RegisterTime"`
+		AppId        int     `json:"appId"`
+		UserId       int     `json:"UserId"`
+		RegisterTime []int64 `json:"RegisterTime"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
 	}
 	var 开始时间, 结束时间 int64
-	if 请求.RegisterTime != nil && len(请求.RegisterTime) == 2 && 请求.RegisterTime[0] != "" && 请求.RegisterTime[1] != "" {
-		开始时间, _ = strconv.ParseInt(请求.RegisterTime[0], 10, 64)
-		结束时间, _ = strconv.ParseInt(请求.RegisterTime[1], 10, 64)
+	if 请求.RegisterTime != nil && len(请求.RegisterTime) == 2 && 请求.RegisterTime[0] > 0 && 请求.RegisterTime[1] > 0 {
+		开始时间 = 请求.RegisterTime[0]
+		结束时间 = 请求.RegisterTime[1]
 	}
 
 	tx := *global.GVA_DB
@@ -89,4 +89,26 @@ func (C *CheckInScoreLog) GetList(c *gin.Context) {
 	response.OkWithDetailed(c, GetList2{List: 响应, Count: 总数}, "操作成功")
 	return
 
+}
+
+// @action 删除
+// @show  2
+func (C *CheckInScoreLog) Delete(c *gin.Context) {
+	var 请求 struct {
+		Ids []int `json:"ids" binding:"required,min=1"` //id数组
+	}
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+
+	tx := *global.GVA_DB
+	var err error
+	var 影响行数 int64
+	影响行数, err = service.NewCheckInScoreLog(c, &tx).Delete(请求.Ids)
+
+	if err != nil {
+		response.FailWithMessage(c, err.Error())
+		return
+	}
+	response.OkWithMessage(c, "删除成功,数量"+strconv.FormatInt(影响行数, 10))
 }

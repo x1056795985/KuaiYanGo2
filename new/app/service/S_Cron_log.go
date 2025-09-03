@@ -70,8 +70,8 @@ func (s *S_CronLog) GetList(tx *gorm.DB, 请求 request.List, 结果 int8, Type 
 		局_DB.Where("Type = ?", Type)
 	}
 	if RegisterTime != nil && len(RegisterTime) == 2 && RegisterTime[0] != "" && RegisterTime[1] != "" {
-		开始时间, _ := strconv.Atoi(RegisterTime[0])
-		结束时间, _ := strconv.Atoi(RegisterTime[1])
+		开始时间, _ := strconv.ParseInt(RegisterTime[0], 10, 64)
+		结束时间, _ := strconv.ParseInt(RegisterTime[1], 10, 64)
 		局_DB.Where("RunTime > ?", 开始时间).Where("RunTime < ?", 结束时间+86400)
 	}
 

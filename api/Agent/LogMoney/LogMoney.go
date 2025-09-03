@@ -64,8 +64,8 @@ func (a *Api) GetLogMoneyList(c *gin.Context) {
 		局_DB.Order("Id DESC")
 	}
 	if 请求.RegisterTime != nil && len(请求.RegisterTime) == 2 && 请求.RegisterTime[0] != "" && 请求.RegisterTime[1] != "" {
-		制卡开始时间, _ := strconv.Atoi(请求.RegisterTime[0])
-		制卡结束时间, _ := strconv.Atoi(请求.RegisterTime[1])
+		制卡开始时间, _ := strconv.ParseInt(请求.RegisterTime[0], 10, 64)
+		制卡结束时间, _ := strconv.ParseInt(请求.RegisterTime[1], 10, 64)
 		局_DB.Where("Time > ?", 制卡开始时间).Where("Time < ?", 制卡结束时间+86400)
 	}
 	if 请求.Keywords != "" {
@@ -94,7 +94,7 @@ func (a *Api) GetLogMoneyList(c *gin.Context) {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
 		return
 	}
-	
+
 	response.OkWithDetailed(结构响应_GetDB_LogMoneyList{DB_LogMoney, 总数}, "获取成功", c)
 	return
 }

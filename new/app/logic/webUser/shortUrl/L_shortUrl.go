@@ -2,6 +2,7 @@ package shortUr
 
 import (
 	"EFunc/utils"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -84,6 +85,18 @@ func (j *shortUr) 签到分享被访问(c *gin.Context, 短链信息 dbm.DB_Shor
 		//必须通过QQ或微信内置浏览器打开才可以
 		//未通过风控
 		return
+	}
+	//和创建人使用相同ip也不可以
+	局_访问人ip := c.ClientIP()
+	var other struct {
+		Ip string `json:"ip"`
+	}
+	err = json.Unmarshal([]byte(短链信息.Other), &other)
+	if err == nil {
+		if other.Ip == 局_访问人ip {
+			//不能使用相同ip
+			return
+		}
 	}
 
 	局_今天唯一标记 := time.Now().Format("20060102")

@@ -160,4 +160,10 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("checkInInfo/info", 局_CheckIn.Info)
 		adminRouter.POST("checkInInfo/update", 局_CheckIn.Update)
 	}
+	//签到分日志
+	局_CheckInScoreLog := controller.NewCheckInScoreLogController()
+	{
+		adminRouter.POST("checkInScoreLog/getList", 局_CheckInScoreLog.GetList)
+		adminRouter.POST("checkInScoreLog/delete", 局_CheckInScoreLog.Delete)
+	}
 }

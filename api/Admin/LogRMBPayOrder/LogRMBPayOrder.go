@@ -75,8 +75,8 @@ func (a *Api) GetLogList2(c *gin.Context) {
 	}
 	//时间筛选=========
 	if 请求.RegisterTime != nil && len(请求.RegisterTime) == 2 && 请求.RegisterTime[0] != "" && 请求.RegisterTime[1] != "" {
-		制卡开始时间, _ := strconv.Atoi(请求.RegisterTime[0])
-		制卡结束时间, _ := strconv.Atoi(请求.RegisterTime[1])
+		制卡开始时间, _ := strconv.ParseInt(请求.RegisterTime[0], 10, 64)
+		制卡结束时间, _ := strconv.ParseInt(请求.RegisterTime[1], 10, 64)
 		局_DB.Where("db_Log_RMBPayOrder.Time > ?", 制卡开始时间).Where("db_Log_RMBPayOrder.Time < ?", 制卡结束时间+86400)
 	}
 	//关键字筛选

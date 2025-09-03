@@ -21,14 +21,35 @@ func NewCheckInScoreLog(c *gin.Context, db *gorm.DB) *CheckInScoreLog {
 }
 
 // 优化查询链式操作
-func (s *CheckInScoreLog) GetList(请求 request.List2, appId, userId int) (int64, []dbm.DB_CheckInScoreLog, error) {
+func (s *CheckInScoreLog) GetList(请求 request.List2, appId, userId int, 开始时间, 结束时间 int64) (int64, []dbm.DB_CheckInScoreLog, error) {
 	// 创建查询构建器
 	db := s.db.Model(new(dbm.DB_CheckInScoreLog))
+	if appId > 0 {
+		db = db.Where("appId = ?", appId)
+	}
+	if userId > 0 {
+		db = db.Where("userId = ?", userId)
+	}
+	if 开始时间 > 0 {
+		db = db.Where("createdAt >= ?", 开始时间)
+	}
+	if 结束时间 > 0 {
+		db = db.Where("createdAt <= ?", 结束时间)
+	}
 
-	db = db.Where("appId = ? and userId=?", appId, userId)
 	// 关键字搜索
-	if 请求.Keywords != "" && 请求.Type == 1 {
-		db = db.Where("Id = ?", 请求.Keywords)
+	if 请求.Keywords != "" {
+		switch 请求.Type {
+		case 1: //用户名搜索
+			局_临时userId := 0
+			局_userInfo, err2 := NewUser(s.c, s.db).InfoName(请求.Keywords)
+			if err2 == nil {
+				局_临时userId = 局_userInfo.Id
+			}
+			db = db.Where("userId = ?", 局_临时userId)
+		case 2: //消息
+			db = db.Where("msg LIKE ?", "%"+请求.Keywords+"%")
+		}
 	}
 
 	// 优化计数逻辑

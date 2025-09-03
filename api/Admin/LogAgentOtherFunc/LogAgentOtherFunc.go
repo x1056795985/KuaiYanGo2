@@ -43,8 +43,8 @@ func (a *Api) GetLogList(c *gin.Context) {
 	}
 
 	if 请求.Time != nil && len(请求.Time) == 2 && 请求.Time[0] != "" && 请求.Time[1] != "" {
-		开始时间, _ := strconv.Atoi(请求.Time[0])
-		结束时间, _ := strconv.Atoi(请求.Time[1])
+		开始时间, _ := strconv.ParseInt(请求.Time[0], 10, 64)
+		结束时间, _ := strconv.ParseInt(请求.Time[1], 10, 64)
 		局_DB.Where("Time > ?", 开始时间).Where("Time < ?", 结束时间+86400)
 	}
 
