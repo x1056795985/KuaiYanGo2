@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"server/Service/Ser_AppInfo"
+	"server/Service/Ser_AppUser"
 	"server/Service/Ser_User"
 	"server/global"
 	"server/new/app/logic/common/log"
@@ -87,6 +88,19 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 		//处理新信息
 		客户expr := map[string]interface{}{}
 		客户expr["VipNumber"] = gorm.Expr("VipNumber + ?", info.卡类详情.VipNumber) //积分不会变直接增加即可
+		if info.卡类详情.VipNumber != 0 {
+			//日志仅写到上下文内,由实际业务处理是否写入日志和修改备注信息
+			c.Set("logVipNumber", DB.DB_LogVipNumber{
+				User:  Ser_AppUser.Uid取User(info.卡类详情.AppId, info.app用户详情.Uid),
+				AppId: info.卡类详情.AppId,
+				Ip:    c.ClientIP(),
+				Type:  1,
+				Time:  time.Now().Unix(),
+				Count: info.卡类详情.VipNumber,
+				Note:  "应用ID:" + strconv.Itoa(info.卡类详情.AppId) + "卡类Id:" + strconv.Itoa(info.卡类详情.Id) + "充值积分",
+			})
+		}
+
 		if info.卡类详情.MaxOnline > 0 {
 			客户expr["MaxOnline"] = info.卡类详情.MaxOnline //最大在线数直接赋值处理即可
 		}

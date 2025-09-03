@@ -663,6 +663,12 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				info.LogMoney = append(info.LogMoney, 临时数据.(DB.DB_LogMoney))
 				info.LogMoney[len(info.LogMoney)-1].Note = "购卡直冲支付订单:" + 参数.PayOrder + info.LogMoney[len(info.LogMoney)-1].Note
 			}
+
+			if 临时数据, ok = c.Get("logVipNumber"); ok { //判断是否有积分充值的日志
+				info.LogVipNumber = append(info.LogVipNumber, 临时数据.(DB.DB_LogVipNumber))
+				info.LogVipNumber[len(info.LogVipNumber)-1].Note = "购卡直冲支付订单:" + 参数.PayOrder + info.LogVipNumber[len(info.LogVipNumber)-1].Note
+			}
+
 			if 临时数据, ok = c.Get("info.app详情"); ok {
 				info.app详情 = 临时数据.(DB.DB_AppInfo)
 			}

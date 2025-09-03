@@ -70,6 +70,8 @@ func Id取Uid_批量(AppId int, id []int) []int {
 	global.GVA_DB.Raw("SELECT `Uid` FROM `db_AppUser_"+strconv.Itoa(AppId)+"` WHERE `Id` IN  ? ", id).Scan(&Uid)
 	return Uid
 }
+
+// 尽量不要用 请使用 Uid取User  弱化 appUser.id 防止混乱
 func Id取User(AppId int, id int) string {
 	var 用户名 string
 	if Ser_AppInfo.App是否为卡号(AppId) {
