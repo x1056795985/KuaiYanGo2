@@ -173,8 +173,8 @@ func (j *S3Api) X下载(c *gin.Context, 文件路径 string) (下载地址 strin
 func (j *S3Api) Q取外链地址(c *gin.Context, 文件路径 string, 有效秒数 int64) (下载地址 string, err error) {
 	对象名称 := path.Join(j.配置.RootPath, 文件路径)
 
-	if 有效秒数 > 604800 {
-		err = errors.New("S3兼容协议,官方限制最长有限期7天(604800秒),如有长时间需求,请公共函数动态生成.")
+	if 有效秒数 > 604799 {
+		err = errors.New("S3兼容协议,官方限制最长有限期7天(604799秒),如有长时间需求,请公共函数动态生成.")
 		return
 	}
 
