@@ -93,27 +93,29 @@ func (j *checkTaskLog) T邀请注册成功后处理(c *gin.Context, AppId, 邀�
 			return err
 		}
 
+		// 加锁重新查签到分
+		err = tx.Model(dbm.DB_CheckInUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("appId = ?", AppId).Where("userId = ?", 邀请人).First(&info.checkInUser).Error
+		if err != nil {
+			return err
+		}
+
+		_, err = service.NewCheckInUser(c, tx).UpdateMap([]int{info.checkInUser.Id}, map[string]interface{}{
+			"checkInScore": info.checkInUser.CheckInScore + info.CheckInInfo.ShareGivePoints,
+		})
+		if err != nil {
+			return err
+		}
 		//增加签到积分记录
 		_, err = service.NewCheckInScoreLog(c, tx).Create(&dbm.DB_CheckInScoreLog{
-			Id:        0,
-			AppId:     AppId,
-			UserId:    邀请人,
-			CreatedAt: time.Now().Unix(),
-			Number:    int64(info.CheckInInfo.InviteGivePoints),
-			Msg:       "成功邀请好友" + utils.W文本_去除敏感信息(info.user.User),
+			Id:           0,
+			AppId:        AppId,
+			UserId:       邀请人,
+			CreatedAt:    time.Now().Unix(),
+			Number:       int64(info.CheckInInfo.InviteGivePoints),
+			Msg:          "成功邀请好友" + utils.W文本_去除敏感信息(info.user.User),
+			NumberBefore: info.checkInUser.CheckInScore,
+			NumberAfter:  info.checkInUser.CheckInScore + info.CheckInInfo.ShareGivePoints,
 		})
-
-		if info.CheckInInfo.InviteGivePoints > 0 {
-			// 加锁重新查签到分
-			err = tx.Model(dbm.DB_CheckInUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("appId = ?", AppId).Where("userId = ?", 邀请人).First(&info.checkInUser).Error
-			if err != nil {
-				return err
-			}
-			info.checkInUser.CheckInScore += info.CheckInInfo.ShareGivePoints
-			_, err = service.NewCheckInUser(c, tx).UpdateMap([]int{info.checkInUser.Id}, map[string]interface{}{
-				"checkInScore": info.checkInUser.CheckInScore,
-			})
-		}
 
 		return err
 	})

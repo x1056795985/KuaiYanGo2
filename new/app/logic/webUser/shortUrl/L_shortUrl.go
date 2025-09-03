@@ -110,28 +110,30 @@ func (j *shortUr) 签到分享被访问(c *gin.Context, 短链信息 dbm.DB_Shor
 			return err
 		}
 
-		//增加签到积分记录
-		_, err = service.NewCheckInScoreLog(c, tx).Create(&dbm.DB_CheckInScoreLog{
-			Id:        0,
-			AppId:     短链信息.AppId,
-			UserId:    短链信息.Uid,
-			CreatedAt: time.Now().Unix(),
-			Number:    int64(info.CheckInInfo.ShareGivePoints),
-			Msg:       "好友访问每日分享",
+		// 加锁重新查签到分
+		err = tx.Model(dbm.DB_CheckInUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("appId = ?", 短链信息.AppId).Where("userId = ?", 短链信息.Uid).First(&info.checkInUser).Error
+		if err != nil {
+			return err
+		}
+		info.checkInUser.CheckInScore += info.CheckInInfo.ShareGivePoints
+		_, err = service.NewCheckInUser(c, tx).UpdateMap([]int{info.checkInUser.Id}, map[string]interface{}{
+			"checkInScore": info.checkInUser.CheckInScore,
 		})
 
-		if info.CheckInInfo.ShareGivePoints > 0 {
-			// 加锁重新查签到分
-			err = tx.Model(dbm.DB_CheckInUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("appId = ?", 短链信息.AppId).Where("userId = ?", 短链信息.Uid).First(&info.checkInUser).Error
-			if err != nil {
-				return err
-			}
-			info.checkInUser.CheckInScore += info.CheckInInfo.ShareGivePoints
-			_, err = service.NewCheckInUser(c, tx).UpdateMap([]int{info.checkInUser.Id}, map[string]interface{}{
-				"checkInScore": info.checkInUser.CheckInScore,
-			})
+		//增加签到积分记录
+		_, err = service.NewCheckInScoreLog(c, tx).Create(&dbm.DB_CheckInScoreLog{
+			Id:           0,
+			AppId:        短链信息.AppId,
+			UserId:       短链信息.Uid,
+			CreatedAt:    time.Now().Unix(),
+			Number:       int64(info.CheckInInfo.ShareGivePoints),
+			Msg:          "好友访问每日分享",
+			NumberBefore: info.checkInUser.CheckInScore - info.CheckInInfo.ShareGivePoints,
+			NumberAfter:  info.checkInUser.CheckInScore,
+		})
+		if err != nil {
+			return err
 		}
-
 		return err
 	})
 

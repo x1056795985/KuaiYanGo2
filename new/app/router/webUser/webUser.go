@@ -122,5 +122,6 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 	局_checkInInfo := controller.NewCheckInInfoController()
 	{
 		根路由.Group("", mid2.Is存在活动_签到()).POST("checkInInfo/info", 局_checkInInfo.Info)
+		根路由.Group("", mid2.Is存在活动_签到()).POST("checkInInfo/redeemReward", 局_checkInInfo.RedeemReward)
 	}
 }

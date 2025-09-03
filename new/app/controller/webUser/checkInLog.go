@@ -97,26 +97,32 @@ func (C *CheckInLog) Create(c *gin.Context) {
 			return err
 		}
 
-		//增加签到积分记录
-		_, err = service.NewCheckInScoreLog(c, tx).Create(&dbm.DB_CheckInScoreLog{
-			Id:        0,
-			AppId:     info.appInfo.AppId,
-			UserId:    info.likeInfo.Uid,
-			CreatedAt: time.Now().Unix(),
-			Number:    int64(局_增加签到分),
-			Msg:       "每日签到",
-		})
 		// 加锁重新查签到分
 		err = tx.Model(dbm.DB_CheckInUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", info.checkInUser.Id).First(&info.checkInUser).Error
 		if err != nil {
 			return err
 		}
-		info.checkInUser.CheckInScore += 局_增加签到分
+
 		info.checkInUser.ContinuousDay = 局_连续签到天数 + 1
 		_, err = service.NewCheckInUser(c, tx).UpdateMap([]int{info.checkInUser.Id}, map[string]interface{}{
-			"checkInScore":  info.checkInUser.CheckInScore,
+			"checkInScore":  info.checkInUser.CheckInScore + 局_增加签到分,
 			"continuousDay": info.checkInUser.ContinuousDay,
 		})
+		if err != nil {
+			return err
+		}
+		//增加签到积分记录
+		_, err = service.NewCheckInScoreLog(c, tx).Create(&dbm.DB_CheckInScoreLog{
+			Id:           0,
+			AppId:        info.appInfo.AppId,
+			UserId:       info.likeInfo.Uid,
+			CreatedAt:    time.Now().Unix(),
+			Number:       int64(局_增加签到分),
+			Msg:          "每日签到",
+			NumberBefore: info.checkInUser.CheckInScore,
+			NumberAfter:  info.checkInUser.CheckInScore + 局_增加签到分,
+		})
+
 		return err
 	})
 
