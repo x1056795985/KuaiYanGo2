@@ -69,7 +69,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		//验证码验证码正确 = 真
 		if !Captcha.Captcha_Verify点选(请求.CaptchaId, 请求.Captcha, true) {
 			response.FailWithMessage(c, "验证码错误")
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "验证码错误:"+请求.Captcha, constant.APPID_Web用户中心)
+			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]验证码错误:"+请求.Captcha, constant.APPID_Web用户中心)
 			return
 		}
 	}
@@ -105,7 +105,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 			return
 		}
 		if info.kaInfo.Status == 2 {
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "卡号已冻结", constant.APPID_Web用户中心)
+			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]卡号已冻结", constant.APPID_Web用户中心)
 			response.FailWithMessage(c, "卡号已冻结")
 			return
 		}
@@ -114,18 +114,18 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		info.user, err = service.NewUser(c, &tx).InfoName(请求.UserOrKa)
 		// 没查到数据  或  取反(密码正确)
 		if err != nil || !utils.BcryptCheck(请求.Password, info.user.PassWord) {
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "用户或密码错误", constant.APPID_Web用户中心)
+			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]用户或密码错误", constant.APPID_Web用户中心)
 			response.FailWithMessage(c, "用户或密码错误")
 			return
 		}
 		if info.user.Status == 2 {
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "账号已冻结", constant.APPID_Web用户中心)
+			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]账号已冻结", constant.APPID_Web用户中心)
 			response.FailWithMessage(c, "账号已冻结")
 			return
 		}
 		if info.user.UPAgentId != 0 {
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "代理商请登录代理平台", constant.APPID_Web用户中心)
-			response.FailWithMessage(c, "代理商请登录代理平台")
+			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]代理商请登录代理平台,禁止登陆用户中心", constant.APPID_Web用户中心)
+			response.FailWithMessage(c, "代理商请登录代理平台,禁止登陆用户中心")
 			return
 		}
 		info.Uid = info.user.Id
@@ -185,7 +185,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	info.DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	info.DB_links_user.LoginAppid = constant.APPID_Web用户中心
 	err = global.GVA_DB.Create(&info.DB_links_user).Error
-	go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "Web用户中心平台("+strconv.Itoa(请求.AppId)+")登录", constant.APPID_Web用户中心)
+	go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]登录", constant.APPID_Web用户中心)
 
 	//账号模式登录成功把登录信息写到账号表
 	if info.appInfo.AppType == 1 || info.appInfo.AppType == 2 {
@@ -286,7 +286,7 @@ func (C *Base) LoginKey(c *gin.Context) {
 	if err != nil {
 		goto 结束开始跳转
 	}
-	go Ser_Log.Log_写登录日志(info.来源links_user.User, c.ClientIP(), "Web用户中心平台("+strconv.Itoa(info.来源links_user.LoginAppid)+")登录", constant.APPID_Web用户中心)
+	go Ser_Log.Log_写登录日志(info.来源links_user.User, c.ClientIP(), "["+strconv.Itoa(info.来源links_user.LoginAppid)+"]登录", constant.APPID_Web用户中心)
 
 	//账号模式登录成功把登录信息写到账号表
 	if info.appInfo.AppType == 1 || info.appInfo.AppType == 2 {
@@ -303,7 +303,7 @@ func (C *Base) LoginKey(c *gin.Context) {
 	c.SetCookie("tempToken", info.DB_links_user.Token, 36000, "/", ".", false, false)
 	//设置302跳转
 	info.系统设置 = setting.Q系统设置()
-	info.系统设置.X系统地址 = "http://127.0.0.1:9000"
+	//info.系统设置.X系统地址 = "http://127.0.0.1:9000"
 	局_jumpUrl = info.系统设置.X系统地址 + "/user/" + strconv.Itoa(info.来源links_user.LoginAppid) + "/#/" + 局_jumpUrl
 	c.Redirect(302, 局_jumpUrl)
 	return

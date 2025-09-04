@@ -13,6 +13,7 @@ import (
 	"server/new/app/controller/Common/response"
 	"server/new/app/logic/webUser/cpsInvitingRelation"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -39,16 +40,33 @@ func (C *User) NewUserInfo(c *gin.Context) {
 		Email         string `json:"email"`
 		PromotionCode int    `json:"promotionCode"`
 		AppId         int    `json:"appId"`
+		Captcha       string `json:"captcha"`   // 验证码
+		CaptchaId     string `json:"captchaId"` // 验证码ID
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
 		return
 	}
 	var info = struct {
-		user DB.DB_User
+		网页用户中心配置 dbm.DB_AppInfoWebUser
+		user     DB.DB_User
 	}{}
 	var err error
-	//tx := *global.GVA_DB
+	tx := *global.GVA_DB
+
+	info.网页用户中心配置, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId)
+	if err != nil || info.网页用户中心配置.Status != 1 {
+		response.FailWithMessage(c, constant.C常_关闭提示)
+		return
+	}
+
+	if info.网页用户中心配置.CaptchaReg == 1 {
+		//验证码验证码正确 = 真
+		if !Captcha.Captcha_Verify点选(请求.CaptchaId, 请求.Captcha, true) {
+			response.FailWithMessage(c, "验证码错误")
+			return
+		}
+	}
 
 	info.user, err = Ser_User.New用户信息(请求.User, 请求.Password, 请求.Password, 请求.QQ, 请求.Email, 请求.Phone, c.ClientIP(), "", 0, 0, 0, "")
 	if err != nil {
@@ -264,7 +282,9 @@ func (C *User) SetBaseInfo(c *gin.Context) {
 
 func (C *User) SendSms(c *gin.Context) {
 	var 请求 struct {
-		Phone string `json:"phone" binding:"required,len=11" zh:"手机号"`
+		Phone     string `json:"phone" binding:"required,len=11" zh:"手机号"`
+		Captcha   string `json:"captcha"`   // 验证码
+		CaptchaId string `json:"captchaId"` // 验证码ID
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
@@ -274,11 +294,29 @@ func (C *User) SendSms(c *gin.Context) {
 	var info = struct {
 		appInfo  DB.DB_AppInfo
 		likeInfo DB.DB_LinksToken
+		网页用户中心配置 dbm.DB_AppInfoWebUser
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	if !Y限账号模式应用(c, &info.appInfo) {
 		return
 	}
+
+	tx := *global.GVA_DB
+
+	info.网页用户中心配置, err = service.NewAppInfoWebUser(c, &tx).Info(info.appInfo.AppId)
+	if err != nil || info.网页用户中心配置.Status != 1 {
+		response.FailWithMessage(c, constant.C常_关闭提示)
+		return
+	}
+
+	if info.网页用户中心配置.CaptchaSendSms == 1 {
+		//验证码验证码正确 = 真
+		if !Captcha.Captcha_Verify点选(请求.CaptchaId, 请求.Captcha, true) {
+			response.FailWithMessage(c, "验证码错误")
+			return
+		}
+	}
+
 	局_msg := "手机号码非正确手机号格式"
 	if !utils2.Z正则_校验手机号(请求.Phone, &局_msg) {
 		response.FailWithMessage(c, 局_msg)

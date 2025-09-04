@@ -166,4 +166,9 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("checkInScoreLog/getList", 局_CheckInScoreLog.GetList)
 		adminRouter.POST("checkInScoreLog/delete", 局_CheckInScoreLog.Delete)
 	}
+	//签到分日志
+	局_AppUser := controller.NewAppUserController()
+	{
+		adminRouter.POST("AppUser/batchAddUser", 局_AppUser.BatchAddUser)
+	}
 }

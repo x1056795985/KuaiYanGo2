@@ -1,6 +1,7 @@
 package Ser_Js
 
 // https://blog.csdn.net/wyongqing/article/details/124704136   参考地址
+
 import (
 	. "EFunc/utils"
 	"encoding/base64"
@@ -76,6 +77,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_取缓存", jS_取缓存)
 	_ = vm.Set("$api_置缓存", jS_置缓存)
 	_ = vm.Set("$api_置黑名单", jS_置黑名单)
+	_ = vm.Set("$api_置软件用户状态", jS_置软件用户状态)
 	_ = vm.Set("$api_mqtt发送消息", jS_mqtt发送消息)
 	_ = vm.Set("$api_任务池Uuid添加到队列", jS_任务池Uuid添加到队列)
 	_ = vm.Set("$api_任务池_取队列长度", jS_任务池_取队列长度)
@@ -720,4 +722,36 @@ func jS_VMP计算授权码(Rsa位数 int, RsaBase64私钥, RsaBase64模数, base
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
 	return js对象_通用返回{IsOk: true, Data: 授权码}
+}
+
+// 批量修改状态
+func jS_置软件用户状态(局_在线信息 DB.DB_LinksToken, 状态 int) js对象_通用返回 {
+
+	if 局_在线信息.LoginAppid <= 10000 {
+		return js对象_通用返回{IsOk: false, Err: "AppId必须大于10000"}
+	}
+	if 局_在线信息.Uid == 0 {
+		局_在线信息.Uid = Ser_AppUser.User或卡号取Uid(局_在线信息.LoginAppid, 局_在线信息.User)
+	}
+
+	if 局_在线信息.Uid == 0 {
+		return js对象_通用返回{IsOk: false, Err: "Uid不能为0"}
+	}
+
+	if 状态 != 1 && 状态 != 2 {
+		return js对象_通用返回{IsOk: false, Err: "修改失败:Status状态代码错误"}
+	}
+
+	局_软件用户Id := Ser_AppUser.Uid取Id(局_在线信息.LoginAppid, 局_在线信息.Uid)
+
+	err := Ser_AppUser.Z置状态_同步卡号修改(局_在线信息.LoginAppid, []int{局_软件用户Id}, 状态)
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: "修改失败"}
+	}
+
+	//如果是冻结同时注销在线的uid
+	if 状态 == 2 {
+		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_在线信息.Uid}, 局_在线信息.LoginAppid, Ser_LinkUser.Z注销_管理员手动注销)
+	}
+	return js对象_通用返回{IsOk: true, Err: "成功"}
 }

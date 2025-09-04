@@ -248,16 +248,20 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 	_, err = service.NewAppInfoWebUser(c, &tx).Info(局_旧AppInfo.AppId)
 	if err != nil {
 		_, err = service.NewAppInfoWebUser(c, &tx).Create(dbm.DB_AppInfoWebUser{
-			Id:           局_旧AppInfo.AppId,
-			Status:       请求.AppInfoWebUser.Status,
-			CaptchaLogin: 请求.AppInfoWebUser.CaptchaLogin,
-			UrlDownload:  请求.AppInfoWebUser.UrlDownload,
+			Id:             局_旧AppInfo.AppId,
+			Status:         请求.AppInfoWebUser.Status,
+			CaptchaLogin:   请求.AppInfoWebUser.CaptchaLogin,
+			UrlDownload:    请求.AppInfoWebUser.UrlDownload,
+			CaptchaReg:     请求.AppInfoWebUser.CaptchaReg,
+			CaptchaSendSms: 请求.AppInfoWebUser.CaptchaSendSms,
 		})
 	} else {
 		_, err = service.NewAppInfoWebUser(c, &tx).Update(局_旧AppInfo.AppId, map[string]interface{}{
-			"status":       请求.AppInfoWebUser.Status,
-			"captchaLogin": 请求.AppInfoWebUser.CaptchaLogin,
-			"urlDownload":  请求.AppInfoWebUser.UrlDownload,
+			"status":         请求.AppInfoWebUser.Status,
+			"captchaLogin":   请求.AppInfoWebUser.CaptchaLogin,
+			"urlDownload":    请求.AppInfoWebUser.UrlDownload,
+			"captchaReg":     请求.AppInfoWebUser.CaptchaReg,
+			"captchaSendSms": 请求.AppInfoWebUser.CaptchaSendSms,
 		})
 	}
 	if err != nil {

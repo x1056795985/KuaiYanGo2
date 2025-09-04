@@ -32,10 +32,12 @@ func (C *AppInfoWebUser) GetInfo(c *gin.Context) {
 	info, err := S.Info(请求.Id)
 	if err != nil {
 		info = dbm.DB_AppInfoWebUser{
-			Id:           请求.Id,
-			Status:       2,
-			CaptchaLogin: 3,
-			UrlDownload:  "https://www.fnkuaiyan.com/",
+			Id:             请求.Id,
+			Status:         2,
+			CaptchaLogin:   3,
+			UrlDownload:    "https://www.fnkuaiyan.com/",
+			CaptchaReg:     2,
+			CaptchaSendSms: 1,
 		}
 		_, _ = S.Create(info)
 
