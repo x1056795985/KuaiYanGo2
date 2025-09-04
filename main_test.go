@@ -63,16 +63,47 @@ func 编译飞鸟快验() {
 		}
 	*/
 	// 设置环境变量
-	env := os.Environ()
-	env = append(env, "GOOS=linux")
-	env = append(env, "GOARCH=amd64")
-	env = append(env, "CGO_ENABLED=0")
+	// 设置环境变量
 	cmd = exec.Command("go", "build", "-o", 局_编译名称, "main.go")
-	cmd.Env = env
 	cmd.Dir = 局_项目路径
+
+	// 获取当前的 GOPATH 和 GOMODCACHE
+	goPath := os.Getenv("GOPATH")
+	goModCache := os.Getenv("GOMODCACHE")
+
+	// 如果 GOMODCACHE 未设置，使用默认值
+	if goModCache == "" && goPath != "" {
+		// GOMODCACHE 默认在 GOPATH/pkg/mod
+		goModCache = goPath + "/pkg/mod"
+	}
+
+	// 构建环境变量列表
+	envs := []string{
+		"GOOS=linux",
+		"GOARCH=amd64",
+		"CGO_ENABLED=0",
+		"PATH=" + os.Getenv("PATH"),
+		"GOCACHE=" + os.TempDir() + "/gocache", // 添加这一行
+	}
+
+	// 只有在值不为空时才添加 GOPATH 和 GOMODCACHE
+	if goPath != "" {
+		envs = append(envs, "GOPATH="+goPath)
+	}
+	if goModCache != "" {
+		envs = append(envs, "GOMODCACHE="+goModCache)
+	}
+
+	cmd.Env = envs
+
+	out.Reset()
+	stderr.Reset()
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("命令执行失败:", err.Error())
+		fmt.Println("stderr:", stderr.String()) // 打印详细的错误信息
 		return
 	}
 	fmt.Println("编译命令执行成功:" + 局_编译名称)

@@ -467,6 +467,11 @@ func (a *Api) New用户信息(c *gin.Context) {
 添加该用户信息`, c)
 			return
 		}
+		if agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.Uid) > 0 {
+			response.FailWithMessage(`禁止添加代理到软件用户`, c)
+			return
+		}
+
 	}
 
 	var count int64
