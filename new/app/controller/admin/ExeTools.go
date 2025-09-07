@@ -36,7 +36,7 @@ func (C *ExeTools) GetUploadToken(c *gin.Context) {
 	var 局_返回 string
 	var 局_json gin.H
 
-	if !global.Q快验.Y云存储_取文件上传授权(&局_返回, global.X系统信息.H会员帐号+"/"+请求.Path) {
+	if !global.Q快验.Y云存储_取文件上传授权(&局_返回, "ExeV0/"+global.X系统信息.H会员帐号+"/"+请求.Path) {
 		response.FailWithMessage(global.Q快验.Q取错误信息(nil), c)
 		return
 	}
