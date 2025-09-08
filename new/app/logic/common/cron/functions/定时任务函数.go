@@ -223,7 +223,7 @@ func D定时任务_统计应用在线用户总数(c *gin.Context) {
 		global.GVA_LOG.Error("D定时任务_统计应用在线用户总数失败:" + err.Error())
 	}
 	// 删除一年前的数据
-	err = tx.Where("createdAt < ?", time.Now().AddDate(0, 0, -365)).Delete(&db.DB_TongJiZaiXian{}).Error
+	err = tx.Where("createdAt < ?", time.Now().AddDate(0, 0, -365).Unix()).Delete(&db.DB_TongJiZaiXian{}).Error
 
 }
 func D定时任务_http请求(时间戳 int64, R任务数据 db.DB_Cron) (string, error) {
