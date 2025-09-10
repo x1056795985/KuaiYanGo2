@@ -131,8 +131,10 @@ func (C *AppPromotionConfig) Create(c *gin.Context) {
 				SilverKickback:     20,
 				GoldMedalThreshold: 20,
 				GoldMedalKickback:  30,
+				GrandsonKickback:   2,
 				NarrowPic:          "",
 				DetailPic:          "",
+				BindingDay:         180,
 			}
 			_, err = service.NewCpsInfo(c, tx).Create(&info.Cps)
 			if err != nil {
