@@ -100,6 +100,7 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	values.Set("return_url", rmbPay.L_rmbPay.Z支付订单回调关键字转换(局_支付配置.Y易支付同步回调url, 参数))
 	values.Set("type", 局_支付配置.Y易支付支付方式)
 	values.Set("sitename", 参数.S商品名称)
+	values.Set("clientip", c.ClientIP())
 
 	// 过滤掉不需要参与签名的参数
 	var 参数列表 []string

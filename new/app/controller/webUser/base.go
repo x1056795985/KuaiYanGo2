@@ -14,7 +14,7 @@ import (
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
 	"server/new/app/logic/common/ka"
-	"server/new/app/logic/common/setting"
+	"server/new/app/logic/webUser/appInfoWebUser"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
@@ -39,7 +39,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	var 请求 struct {
 		AppId     int    `json:"AppId" binging:"required,min=10000"`                    // Appid 必填
 		UserOrKa  string `json:"UserOrKa" binding:"required,min=6,max=190" zh:"用户名或卡号"` // 用户名
-		Password  string `json:"password" binding:"required,min=6,max=190" zh:"密码"`     // 密码
+		Password  string `json:"password"   zh:"密码"`                                    // 密码
 		Captcha   string `json:"captcha"`                                               // 验证码
 		CaptchaId string `json:"captchaId"`                                             // 验证码ID
 	}
@@ -302,9 +302,7 @@ func (C *Base) LoginKey(c *gin.Context) {
 	//设置临时token 前端路由守卫,会把cook放到token内 httpOnly 必须为false 否则js无法读取cookies
 	c.SetCookie("tempToken", info.DB_links_user.Token, 36000, "/", ".", false, false)
 	//设置302跳转
-	info.系统设置 = setting.Q系统设置()
-	//info.系统设置.X系统地址 = "http://127.0.0.1:9000"
-	局_jumpUrl = info.系统设置.X系统地址 + "/user/" + strconv.Itoa(info.来源links_user.LoginAppid) + "/#/" + 局_jumpUrl
+	局_jumpUrl = appInfoWebUser.L_appInfoWebUser.Q用户中心域名(c, info.网页用户中心配置.Id) + "/user/" + strconv.Itoa(info.来源links_user.LoginAppid) + "/#/" + 局_jumpUrl
 	c.Redirect(302, 局_jumpUrl)
 	return
 }

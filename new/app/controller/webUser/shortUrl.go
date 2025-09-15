@@ -7,7 +7,7 @@ import (
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
-	"server/new/app/logic/common/setting"
+	"server/new/app/logic/webUser/appInfoWebUser"
 	shortUr "server/new/app/logic/webUser/shortUrl"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
@@ -100,7 +100,7 @@ func (C *ShortUrl) Create(c *gin.Context) {
 		}
 	}
 	response.OkWithData(c, gin.H{
-		"shortUrl": setting.Q系统设置().X系统地址 + "/c/" + info.ShortUrl.ShortUrl,
+		"shortUrl": appInfoWebUser.L_appInfoWebUser.Q用户中心域名(c, info.appInfo.AppId) + "/c/" + info.ShortUrl.ShortUrl,
 	})
 	return
 }
