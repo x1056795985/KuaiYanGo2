@@ -8,6 +8,7 @@
       <methods>
         <method importPath="server/new/app/service" receiver="*PromotionCode" name="Info" />
         <method importPath="server/new/app/service" receiver="*User" name="InfoName" />
+        <method importPath="server/new/app/service" receiver="*User" name="Info" />
       </methods>
     </inspection_tool>
     <inspection_tool class="NonAsciiCharacters" enabled="false" level="WARNING" enabled_by_default="false" />

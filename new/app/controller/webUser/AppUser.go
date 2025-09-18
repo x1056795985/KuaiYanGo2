@@ -1,6 +1,7 @@
 package controller
 
 import (
+	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"server/global"
 	"server/new/app/controller/Common"
@@ -41,6 +42,10 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 		info.userClass.Name = "已删类型id" + strconv.Itoa(info.appUser.UserClassId)
 		info.userClass.Id = info.appUser.UserClassId
 	}
+	var 局_userInfo DB.DB_User
+	if info.appInfo.AppType <= 2 {
+		局_userInfo, err = service.NewUser(c, &tx).Info(info.likeInfo.Uid)
+	}
 
 	response.OkWithData(c, gin.H{
 		"Uid":             info.appUser.Uid,
@@ -58,6 +63,8 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 		"UserClassName":   info.userClass.Name,
 		"UserClassMark":   info.userClass.Mark,
 		"UserClassWeight": info.userClass.Weight,
+		"isUserApp":       S三元(info.appInfo.AppType <= 2, true, false),
+		"rmb":             局_userInfo.Rmb,
 	})
 	return
 
