@@ -222,7 +222,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人上级账号不存在"))
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", info.cpsPayOrder.GrandpaId).Update("Rmb", gorm.Expr("Rmb + ?", info.cpsPayOrder.GrandpaRMB)).Error
+			err = tx.Model(DB.DB_User{}).Where("Id = ?", info.cpsPayOrder.GrandpaId).Update("Rmb", Float64加float64(info.邀请人上级User.Rmb, info.cpsPayOrder.GrandpaRMB, 2)).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人上级支付佣金失败,请重试"))
 			}

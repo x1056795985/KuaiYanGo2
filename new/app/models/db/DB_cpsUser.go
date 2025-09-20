@@ -8,7 +8,7 @@ type DB_CpsUser struct {
 	UpdatedAt int64 `json:"updatedAt" gorm:"column:updatedAt;comment:更新时间"`
 	//CpsCode   string `json:"cpsCode" gorm:"column:cpsCode;size:255;default:'';unique;comment:分销邀请码"`  不再数据库存储,而是通过crc32生成
 	Count         int     `json:"count" gorm:"column:count;default:0;comment:有效拉新计数缓存"`
-	CumulativeRMB float64 `json:"cumulativeRMB" gorm:"column:cumulativeRMB;default:0;comment:累计收入缓存"`
+	CumulativeRMB float64 `json:"cumulativeRMB" gorm:"column:cumulativeRMB;type:decimal(10,2);default:0;comment:累计收入缓存"`
 }
 
 func (DB_CpsUser) TableName() string {
