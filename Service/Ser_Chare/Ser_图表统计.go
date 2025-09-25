@@ -710,12 +710,12 @@ func Get余额充值消费统计(c *gin.Context) []gin.H {
 	*/
 	var 局_数量 [7]string
 
-	global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).
+	global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Debug().
 		Select("SUM(case when ( Time between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then Rmb else null end) as  '1' ",
 			"SUM(case when ( Time between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then Rmb else null end) as  '2' ",
 			"SUM(case when ( Time between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then Rmb else null end) as  '3' ",
 			"SUM(case when ( Time between "+时间处理函数(-3)+" and "+时间处理函数(-2)+") then Rmb else null end) as  '4' ",
-			"SUM(case when ( Time between "+时间处理函数(-2)+" and "+时间处理函数(-0)+") then Rmb else null end) as  '5' ",
+			"SUM(case when ( Time between "+时间处理函数(-2)+" and "+时间处理函数(-1)+") then Rmb else null end) as  '5' ",
 			"SUM(case when ( Time between "+时间处理函数(-1)+" and "+时间处理函数(0)+") then Rmb else null end) as  '6' ",
 			"SUM(case when ( Time between "+时间处理函数(0)+" and "+时间处理函数(1)+") then Rmb else null end) as  '7' ").
 		Order("").Where("Status=3").
