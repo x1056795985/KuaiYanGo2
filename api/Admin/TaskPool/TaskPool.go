@@ -419,3 +419,25 @@ func (a *Api) Uuid重新加入队列(c *gin.Context) {
 	response.OkWithMessage("操作成功", c)
 	return
 }
+
+func (a *Api) P批量Uuid重新加入队列(c *gin.Context) {
+	var 请求 struct {
+		Uuid []string `json:"Uuids" `
+	}
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	局_成功数量 := 0
+	for i := range len(请求.Uuid) {
+		err = Ser_TaskPool.Uuid_添加到队列(请求.Uuid[i])
+		if err == nil {
+			局_成功数量++
+		}
+	}
+
+	response.OkWithMessage("重新加入队列,成功:"+utils.D到文本(局_成功数量)+",失败:"+utils.D到文本(len(请求.Uuid)-局_成功数量), c)
+	return
+}

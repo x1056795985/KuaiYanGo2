@@ -14,6 +14,7 @@ type Z在线支付 struct {
 	Z在线支付_小叮当         //id 5
 	Z在线支付_虎皮椒         //id 6
 	Z在线支付_易支付         //id7
+	Z在线支付_易支付2        //id8
 }
 type PayParams struct {
 	DB.DB_LogRMBPayOrder
@@ -106,4 +107,15 @@ type Z在线支付_易支付 struct {
 	Y易支付商户密钥KEY string `mapstructure:"易支付商户密钥KEY" json:"易支付商户密钥KEY" `
 	Y易支付最大金额    int    `mapstructure:"易支付最大金额" json:"易支付最大金额" `
 	Y易支付同步回调url string `mapstructure:"易支付同步回调url" json:"易支付同步回调url" `
+}
+
+type Z在线支付_易支付2 struct {
+	Y易支付2开关      bool   `mapstructure:"易支付2开关" json:"易支付2开关" `
+	Y易支付2显示名称    string `mapstructure:"易支付2显示名称" json:"易支付2显示名称" `
+	Y易支付2网关      string `mapstructure:"易支付2网关" json:"易支付2网关" `
+	Y易支付2商户ID    string `mapstructure:"易支付2商户ID" json:"易支付2商户ID" `
+	Y易支付2支付方式    string `mapstructure:"易支付2支付方式" json:"易支付2支付方式" `
+	Y易支付2商户密钥KEY string `mapstructure:"易支付2商户密钥KEY" json:"易支付2商户密钥KEY" `
+	Y易支付2最大金额    int    `mapstructure:"易支付2最大金额" json:"易支付2最大金额" `
+	Y易支付2同步回调url string `mapstructure:"易支付2同步回调url" json:"易支付2同步回调url" `
 }

@@ -377,6 +377,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetStatus", App.Set修改状态)
 		baseRouter.POST("DeleteTaskQueueTid", App.Q清空队列)
 		baseRouter.POST("UuidAddQueue", App.Uuid重新加入队列)
+		baseRouter.POST("BatchUuidAddQueue", App.P批量Uuid重新加入队列)
 
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("Delete", App.Del批量删除) // 删除信息

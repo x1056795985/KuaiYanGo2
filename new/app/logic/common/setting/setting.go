@@ -108,10 +108,12 @@ func Q在线支付配置() m.Z在线支付 {
 	配置值.Z支付宝商户ID = "20210088888888"
 	配置值.Z支付宝同步回调url = "https://www.baidu.com/s?wd=%E8%AE%A2%E5%8D%95{OrderId}%E6%94%AF%E4%BB%98%E6%88%90%E5%8A%9F"
 	配置值.Y易支付同步回调url = "https://www.baidu.com/s?wd=%E8%AE%A2%E5%8D%95{OrderId}%E6%94%AF%E4%BB%98%E6%88%90%E5%8A%9F"
+	配置值.Y易支付2同步回调url = "https://www.baidu.com/s?wd=%E8%AE%A2%E5%8D%95{OrderId}%E6%94%AF%E4%BB%98%E6%88%90%E5%8A%9F"
 	配置值.W微信支付单次最大金额 = 500
 	配置值.X小叮当单次最大金额 = 500
 	配置值.X小叮当支付类型 = 43
 	配置值.Z在线支付_易支付.Y易支付最大金额 = 2000
+	配置值.Z在线支付_易支付2.Y易支付2最大金额 = 2000
 	局_临时配置值, err := Q获取配置[m.Z在线支付](配置名)
 	if err == nil {
 		配置值 = 局_临时配置值

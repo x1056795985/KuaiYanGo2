@@ -21,6 +21,7 @@ func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data m.Z在线�
 	配置值.X小叮当支付类型 = 43
 	配置值.H虎皮椒单次最大金额 = 500
 	配置值.Y易支付最大金额 = 500
+	配置值.Y易支付2最大金额 = 500
 	data = 配置值
 	if 局_uid == 0 {
 		err = errors.New("uid错误")
@@ -41,6 +42,7 @@ func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data m.Z在线�
 	err = func取值并解析("小叮当", &data.Z在线支付_小叮当)
 	err = func取值并解析("虎皮椒", &data.Z在线支付_虎皮椒)
 	err = func取值并解析("易支付", &data.Z在线支付_易支付)
+	err = func取值并解析("易支付2", &data.Z在线支付_易支付2)
 	return
 }
 
@@ -68,5 +70,6 @@ func Z置代理在线支付信息(c *gin.Context, 在线支付 m.Z在线支付) 
 	err = func序列化并置值("小叮当", &在线支付.Z在线支付_小叮当)
 	err = func序列化并置值("虎皮椒", &在线支付.Z在线支付_虎皮椒)
 	err = func序列化并置值("易支付", &在线支付.Z在线支付_易支付)
+	err = func序列化并置值("易支付2", &在线支付.Z在线支付_易支付2)
 	return
 }

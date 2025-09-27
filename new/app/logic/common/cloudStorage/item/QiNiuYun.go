@@ -47,7 +47,7 @@ func (j *Q七牛云) H获取文件列表(c *gin.Context, 前缀 string, 分隔�
 	局_标志 := ""
 	var list = make([]common.W文件对象详情, 0, 100)
 	var objectInfo objects.ObjectDetails
-	iter := j.bucket.List(c, &objects.ListObjectsOptions{Prefix: 路径前缀, Marker: 局_标志, Delimiter: 分隔符})
+	iter := j.bucket.List(c, &objects.ListObjectsOptions{Prefix: 路径前缀, Marker: 局_标志, NeedParts: true})
 	defer iter.Close()
 	局_目录信息 := ""
 	for iter.Next(&objectInfo) {

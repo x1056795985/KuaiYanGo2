@@ -34,17 +34,6 @@ type X系统设置 struct {
 	B备案号 string `mapstructure:"备案号" json:"备案号" `
 }
 
-type Z在线支付 struct {
-	J禁止退款          bool `mapstructure:"禁止退款" json:"禁止退款" `
-	m.Z在线支付_支付宝PC       //id 1
-	m.Z在线支付_支付宝当面付      //id 2
-	m.Z在线支付_支付宝H5       //id 3
-	m.Z在线支付_微信支付        //id 4
-	m.Z在线支付_小叮当         //id 5
-	m.Z在线支付_虎皮椒         //id 6
-	m.Z在线支付_易支付         //id 6
-}
-
 type D短信平台配置 struct {
 	D当前选择    int      `mapstructure:"当前选择" json:"当前选择" `
 	TX云短信Sms TX云短信Sms `mapstructure:"TX云Sms" json:"TX云Sms" `

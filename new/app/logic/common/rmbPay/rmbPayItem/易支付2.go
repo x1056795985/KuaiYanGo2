@@ -21,21 +21,21 @@ import (
 )
 
 func init() {
-	rmbPay.L_rmbPay.Z注册接口(pay_易支付)
+	rmbPay.L_rmbPay.Z注册接口(pay_易支付2)
 }
 
-var pay_易支付 易支付
+var pay_易支付2 易支付2
 
-type 易支付 struct {
+type 易支付2 struct {
 }
 
-func (j 易支付) Q取通道名称() string {
-	return "易支付"
+func (j 易支付2) Q取通道名称() string {
+	return "易支付2"
 }
 
 // 当无法通过订单号,获取订单信息时将循环每个接口,尝试获取订单号
-func (j 易支付) Q取订单id(c *gin.Context, 参数 *m.PayParams) string {
-	var 局_支付配置 m.Z在线支付_易支付
+func (j 易支付2) Q取订单id(c *gin.Context, 参数 *m.PayParams) string {
+	var 局_支付配置 m.Z在线支付_易支付2
 	_ = json.Unmarshal(参数.Z支付配置, &局_支付配置)
 	//
 	//order_no=123456&subject=&pay_type=43&money=10.00&realmoney=10.00&result=success&xddpay_order=654321&app_id=10088&extra=abc
@@ -50,7 +50,7 @@ func (j 易支付) Q取订单id(c *gin.Context, 参数 *m.PayParams) string {
 		c.PostForm("extra"),
 	)
 
-	局_sign = utils2.Md5String(局_sign + 局_支付配置.Y易支付商户密钥KEY)
+	局_sign = utils2.Md5String(局_sign + 局_支付配置.Y易支付2商户密钥KEY)
 
 	if strings.ToUpper(局_sign) != strings.ToUpper(c.PostForm("sign")) {
 		return ""
@@ -58,27 +58,27 @@ func (j 易支付) Q取订单id(c *gin.Context, 参数 *m.PayParams) string {
 	return c.PostForm("order_no")
 }
 
-func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response m.Request, err error) {
-	var 局_支付配置 m.Z在线支付_易支付
+func (j 易支付2) D订单创建(c *gin.Context, 参数 *m.PayParams) (response m.Request, err error) {
+	var 局_支付配置 m.Z在线支付_易支付2
 	err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
-	if err != nil || !局_支付配置.Y易支付开关 {
-		err = errors.New(局_支付配置.Y易支付显示名称 + "支付方式已关闭")
+	if err != nil || !局_支付配置.Y易支付2开关 {
+		err = errors.New(局_支付配置.Y易支付2显示名称 + "支付方式已关闭")
 		return
 	}
-	if 局_支付配置.Y易支付网关 == "" || 局_支付配置.Y易支付商户密钥KEY == "" || 局_支付配置.Y易支付商户ID == "" {
-		err = errors.New(局_支付配置.Y易支付显示名称 + "服务端未配置参数")
+	if 局_支付配置.Y易支付2网关 == "" || 局_支付配置.Y易支付2商户密钥KEY == "" || 局_支付配置.Y易支付2商户ID == "" {
+		err = errors.New(局_支付配置.Y易支付2显示名称 + "服务端未配置参数")
 		return
 	}
 
 	if 参数.ProcessingType == constant.D订单类型_余额充值 || 参数.ProcessingType == constant.D订单类型_积分充值 { //余额充值 和 积分充值判断单次最大金额
-		if 参数.Rmb > float64(局_支付配置.Y易支付最大金额) {
-			err = errors.New("支付金额必须小于" + strconv.Itoa(局_支付配置.Y易支付最大金额))
+		if 参数.Rmb > float64(局_支付配置.Y易支付2最大金额) {
+			err = errors.New("支付金额必须小于" + strconv.Itoa(局_支付配置.Y易支付2最大金额))
 			return
 		}
 	}
 	//http://127.0.0.1:18888/Admin   获取http://127.0.0.1:18888 部分
 	// 解析网关URL获取基础地址
-	parsedURL, err := url.Parse(局_支付配置.Y易支付网关)
+	parsedURL, err := url.Parse(局_支付配置.Y易支付2网关)
 	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
 		err = errors.New("网关地址格式错误")
 		return
@@ -88,7 +88,7 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	if parsedURL.Path == "" {
 		parsedURL.Path = "/submit.php"
 	}
-	局_网址 := baseURL + parsedURL.Path //易支付v1通用
+	局_网址 := baseURL + parsedURL.Path //易支付2v1通用
 
 	Http请求 := req.SetRedirectPolicy(req.NoRedirectPolicy()).R()
 	values := url.Values{}
@@ -96,9 +96,9 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	values.Set("name", 参数.S商品名称)
 	values.Set("notify_url", 参数.Y异步回调地址)
 	values.Set("out_trade_no", 参数.PayOrder)
-	values.Set("pid", 局_支付配置.Y易支付商户ID)
-	values.Set("return_url", rmbPay.L_rmbPay.Z支付订单回调关键字转换(局_支付配置.Y易支付同步回调url, 参数))
-	values.Set("type", 局_支付配置.Y易支付支付方式)
+	values.Set("pid", 局_支付配置.Y易支付2商户ID)
+	values.Set("return_url", rmbPay.L_rmbPay.Z支付订单回调关键字转换(局_支付配置.Y易支付2同步回调url, 参数))
+	values.Set("type", 局_支付配置.Y易支付2支付方式)
 	values.Set("sitename", 参数.S商品名称)
 	values.Set("clientip", c.ClientIP())
 
@@ -125,7 +125,7 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	}
 
 	// 生成签名
-	局_sign := utils2.Md5String(拼接字符串.String() + 局_支付配置.Y易支付商户密钥KEY)
+	局_sign := utils2.Md5String(拼接字符串.String() + 局_支付配置.Y易支付2商户密钥KEY)
 
 	values.Set("sign", 局_sign)
 	values.Set("sign_type", "MD5")
@@ -214,10 +214,10 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	}
 	return
 }
-func (j 易支付) D订单退款(c *gin.Context, 参数 *m.PayParams) (err error) {
+func (j 易支付2) D订单退款(c *gin.Context, 参数 *m.PayParams) (err error) {
 	return errors.New("支付类型不支持退款")
 }
-func (j 易支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
+func (j 易支付2) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	defer func() {
 		if err == nil {
 			响应信息 = "success"
@@ -228,7 +228,7 @@ func (j 易支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响
 		}
 	}()
 
-	var 局_支付配置 m.Z在线支付_易支付
+	var 局_支付配置 m.Z在线支付_易支付2
 	if 参数.ReceivedUid == 0 {
 		err = json.Unmarshal(参数.Z支付配置, &局_支付配置)
 	} else {
@@ -237,10 +237,10 @@ func (j 易支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响
 			err = errors.Join(errors.New("Q取代理在线支付信息"), err2)
 			return
 		}
-		局_支付配置 = 局_临时.Z在线支付_易支付
+		局_支付配置 = 局_临时.Z在线支付_易支付2
 	}
 
-	// 参数获取方式改为GET（根据易支付文档确认）
+	// 参数获取方式改为GET（根据易支付2文档确认）
 	请求参数 := c.Request.URL.Query()
 	//pid=1002&trade_no=Y2025032610445366076&out_trade_no=250326104453000001&type=alipay&name=%E6%94%AF%E4%BB%98%E8%B4%AD%E5%8D%A1%3A_%E6%94%AF%E4%BB%98%E8%B4%AD%E5%8D%A1&money=0.02&trade_status=TRADE_SUCCESS&sign=5ec6401b4bb0b14bfc308b5e56d58b7b&sign_type=MD5
 	// 修改后的签名验证逻辑（包含所有参数）
@@ -267,12 +267,12 @@ func (j 易支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响
 			签名参数.WriteString("&")
 		}
 	}
-	签名参数.WriteString(局_支付配置.Y易支付商户密钥KEY) // 注意易支付密钥拼接方式
+	签名参数.WriteString(局_支付配置.Y易支付2商户密钥KEY) // 注意易支付2密钥拼接方式
 
 	局_sign := strings.ToUpper(utils2.Md5String(签名参数.String()))
 
 	if 局_sign != strings.ToUpper(请求参数.Get("sign")) {
-		err = errors.New("易支付异步回调签名验证失败")
+		err = errors.New("易支付2异步回调签名验证失败")
 		return
 	}
 
@@ -288,7 +288,7 @@ func (j 易支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响
 		return
 	}
 
-	// 记录易支付交易号
+	// 记录易支付2交易号
 	参数.PayOrder2 = 请求参数.Get("trade_no")
 
 	// 处理金额转换
@@ -301,6 +301,6 @@ func (j 易支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响
 	return
 }
 
-func (j 易支付) D订单退款回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
+func (j 易支付2) D订单退款回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {
 	return
 }
