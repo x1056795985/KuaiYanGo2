@@ -153,7 +153,7 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	//{"code":1,"msg":"success","trade_no":"20250926214316327191","qrcode":"https://render.alipay.com/p/s/i?scheme=alipays%3A%2F%2Fplatformapi%2Fstartapp%3FappId%3D20000116%26actionType%3DtoAccount%26goBack%3DNO%26amount%3D0.03%26userId%3D2088222179021701%26memo%3D20250926214316327191","urlscheme":"alipayqr://platformapi/startapp?appId=20000067\u0026url=https%3A%2F%2Frender.alipay.com%2Fp%2Fs%2Fi%3Fscheme%3Dalipays%253A%252F%252Fplatformapi%252Fstartapp%253FappId%253D20000116%2526actionType%253DtoAccount%2526goBack%253DNO%2526amount%253D0.03%2526userId%253D2088222179021701%2526memo%253D20250926214316327191","money":"0.03"}
 	//{"code":1,"trade_no":"2025092809224258719","qrcode":"weixin:\/\/wxpay\/bizpayurl?pr=PrU2C2Yz1"}
 	//判断是否为json
-
+	response.OrderId = 参数.PayOrder
 	err = json.Unmarshal(局_请求结果.Bytes(), &response.Other)
 	if err == nil {
 		局_json := gjson.New(局_请求结果.String())
