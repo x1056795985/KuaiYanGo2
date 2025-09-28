@@ -420,6 +420,10 @@ func UserApi_用户注册(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "绑定信息不能为空.")
 		return
 	}
+	if len(请求json.GetStringBytes("Key")) > 191 {
+		response.X响应状态消息(c, response.Status_操作失败, "绑定信息长度不能超过191")
+		return
+	}
 
 	if AppInfo.IsUserKeySame == 2 && Ser_AppUser.B绑定信息是否存在(AppInfo.AppId, string(请求json.GetStringBytes("Key"))) {
 		response.X响应状态消息(c, response.Status_绑定信息已被其他用户使用, "绑定信息已被其他用户绑定.")

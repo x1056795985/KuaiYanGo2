@@ -35,6 +35,11 @@ func UserApi_取注册送卡(c *gin.Context) {
 	var 局_卡 DB.DB_Ka
 
 	var err error
+	if len(请求json.GetStringBytes("Key")) > 191 {
+		response.X响应状态消息(c, response.Status_操作失败, "绑定信息长度不能超过191")
+		return
+	}
+
 	if blacklist.Is黑名单(string(请求json.GetStringBytes("Key")), AppInfo.AppId) {
 		response.X响应状态消息(c, response.Status_黑名单信息, "绑定信息为黑名单信息")
 		return
