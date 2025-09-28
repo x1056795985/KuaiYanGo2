@@ -98,6 +98,11 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_生成二维码并转base64", rmbPay.L_rmbPay.S生成二维码并转base64)
 	_ = vm.Set("$api_VMP计算授权码", jS_VMP计算授权码)
 
+	//定制接口
+	_ = vm.Set("$api_定制批量注册", jS_批量注册)
+	_ = vm.Set("$api_定制批量充值", jS_批量充值)
+	_ = vm.Set("$api_定制批量取账号信息", jS_批量取账号信息)
+
 	//处理载入外部js文件  'import "@/utils/utils";
 	if strings.Index(局_PublicJs.Value, "import '") != -1 || strings.Index(局_PublicJs.Value, `import "`) != -1 {
 		// 导入外部的模块
