@@ -31,10 +31,10 @@ type Request struct {
 	OrderId string `json:"OrderId"` //订单id
 	Status  int    `json:"Status"`  //状态码
 	//下边三个,视接口而定,有的接口可能没有,但是也就这三种类型
-	PayURL       string `json:"PayURL"`       //付款地址,比如支付宝pc
-	PayQRCode    string `json:"PayQRCode"`    //订单代码,比如微信的文本,
-	PayQRCodePNG string `json:"PayQRCodePNG"` //代码的二维码图片 base64格式
-	Other        string `json:"Other"`        //其他参数
+	PayURL       string                 `json:"PayURL"`       //付款地址,比如支付宝pc
+	PayQRCode    string                 `json:"PayQRCode"`    //订单代码,比如微信的文本,
+	PayQRCodePNG string                 `json:"PayQRCodePNG"` //代码的二维码图片 base64格式
+	Other        map[string]interface{} `json:"Other"`        //其他参数
 }
 
 type Z在线支付_支付宝PC struct {
@@ -107,6 +107,7 @@ type Z在线支付_易支付 struct {
 	Y易支付商户密钥KEY string `mapstructure:"易支付商户密钥KEY" json:"易支付商户密钥KEY" `
 	Y易支付最大金额    int    `mapstructure:"易支付最大金额" json:"易支付最大金额" `
 	Y易支付同步回调url string `mapstructure:"易支付同步回调url" json:"易支付同步回调url" `
+	Y易支付设备类型    string `mapstructure:"易支付设备类型" json:"易支付设备类型" `
 }
 
 type Z在线支付_易支付2 struct {
@@ -118,4 +119,5 @@ type Z在线支付_易支付2 struct {
 	Y易支付2商户密钥KEY string `mapstructure:"易支付2商户密钥KEY" json:"易支付2商户密钥KEY" `
 	Y易支付2最大金额    int    `mapstructure:"易支付2最大金额" json:"易支付2最大金额" `
 	Y易支付2同步回调url string `mapstructure:"易支付2同步回调url" json:"易支付2同步回调url" `
+	Y易支付2设备类型    string `mapstructure:"易支付2设备类型" json:"易支付2设备类型" `
 }

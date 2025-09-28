@@ -101,6 +101,7 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	values.Set("type", 局_支付配置.Y易支付支付方式)
 	values.Set("sitename", 参数.S商品名称)
 	values.Set("clientip", c.ClientIP())
+	values.Set("device", utils.S三元(局_支付配置.Y易支付设备类型 != "", 局_支付配置.Y易支付设备类型, utils2.Y易支付取设备类型(c.GetHeader("User-Agent"))))
 
 	// 过滤掉不需要参与签名的参数
 	var 参数列表 []string
@@ -150,40 +151,30 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 	//{"code":1,"msg":"","trade_no":"20250326195924890686","payurl":"","qrcode":"https://yz.mmlwo.cn/api/pay/toapp/20250326195924890686","urlscheme":"alipays://platformapi/startapp?appId=20000067\u0026url=https%3A%2F%2Frender.alipay.com%2Fp%2Fs%2Fi%3Fscheme%3Dalipays%253A%252F%252Fplatformapi%252Fstartapp%253FappId%253D20000180%2526url%253Dhttps%25253A%25252F%25252Fyz.mmlwo.cn%25252Fapi%25252Fpay%25252Ftoapp%25252F20250326195924890686","money":"0.02"}
 	//{"success":true,"msg":"","code":1,"trade_no":"499059861254979584","payurl":"https://alipaypage3glj1qtw0xz4.zhifu.fm.it88168.com/pay?orderNo=499059861254979584","qrcode":null,"extend_params":null}
 	//{"code":1,"msg":"success","trade_no":"20250926214316327191","qrcode":"https://render.alipay.com/p/s/i?scheme=alipays%3A%2F%2Fplatformapi%2Fstartapp%3FappId%3D20000116%26actionType%3DtoAccount%26goBack%3DNO%26amount%3D0.03%26userId%3D2088222179021701%26memo%3D20250926214316327191","urlscheme":"alipayqr://platformapi/startapp?appId=20000067\u0026url=https%3A%2F%2Frender.alipay.com%2Fp%2Fs%2Fi%3Fscheme%3Dalipays%253A%252F%252Fplatformapi%252Fstartapp%253FappId%253D20000116%2526actionType%253DtoAccount%2526goBack%253DNO%2526amount%253D0.03%2526userId%253D2088222179021701%2526memo%253D20250926214316327191","money":"0.03"}
+	//{"code":1,"trade_no":"2025092809224258719","qrcode":"weixin:\/\/wxpay\/bizpayurl?pr=PrU2C2Yz1"}
 	//判断是否为json
-	if strings.HasPrefix(局_请求结果.String(), "{") {
+
+	err = json.Unmarshal(局_请求结果.Bytes(), &response.Other)
+	if err == nil {
 		局_json := gjson.New(局_请求结果.String())
 		if 局_json.Get("code").Int() != 1 {
 			err = errors.New("支付地址获取失败:" + 局_请求结果.String())
 			return
 		}
 
-		if 局_json.Get("qrcode").String() != "" {
-			response = m.Request{
-				Status:       1,
-				PayURL:       局_json.Get("qrcode").String(),
-				OrderId:      参数.PayOrder,
-				PayQRCode:    局_json.Get("urlscheme").String(),
-				PayQRCodePNG: rmbPay.L_rmbPay.S生成二维码并转base64(局_json.Get("urlscheme").String()),
-			}
-		} else if 局_json.Get("payurl").String() != "" {
-			response = m.Request{
-				Status:       1,
-				PayURL:       局_json.Get("payurl").String(),
-				OrderId:      参数.PayOrder,
-				PayQRCode:    局_json.Get("qrcode").String(),
-				PayQRCodePNG: rmbPay.L_rmbPay.S生成二维码并转base64(局_json.Get("qrcode").String()),
-			}
-		} else { //二开后的格式太多了,返回给客户自己处理吧
-			response = m.Request{
-				Status:       1,
-				PayURL:       "",
-				OrderId:      参数.PayOrder,
-				PayQRCode:    "",
-				PayQRCodePNG: "",
-				Other:        局_请求结果.String(),
-			}
+		if 局_json.Get("payurl").String() != "" {
+			response.PayURL = 局_json.Get("payurl").String()
 		}
+
+		//如果 PayURL 值为空 且 qrcode 值左边为http,那就认为qrcode就是payurl
+		if response.PayURL == "" && strings.HasPrefix(局_json.Get("qrcode").String(), "http") {
+			response.PayURL = 局_json.Get("qrcode").String()
+		}
+
+		if 局_json.Get("qrcode").String() != "" && !strings.HasPrefix(局_json.Get("qrcode").String(), "http") {
+			response.PayQRCode = 局_json.Get("qrcode").String()
+		}
+
 		//判断response.PayQRCode  左边是否为http  如果不是http,就改生成 PayURL值的二维码
 		if !strings.HasPrefix(response.PayQRCode, "http") {
 			response.PayQRCodePNG = rmbPay.L_rmbPay.S生成二维码并转base64(response.PayURL)

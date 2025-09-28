@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -40,4 +41,63 @@ func GetCurrentAbPathByExecutable() string {
 	res, _ := filepath.EvalSymlinks(filepath.Dir(exePath))
 	return res
 }
- 
+
+func Y易支付取设备类型(ua string) string {
+	// pc	电脑浏览器
+	// mobile	手机浏览器
+	// qq	手机QQ内浏览器
+	// wechat	微信内浏览器
+	// alipay	支付宝客户端
+	// jump	仅返回支付跳转url
+
+	// 转换为小写以便匹配
+	ua = strings.ToLower(ua)
+
+	// 定义各类客户端的关键词
+	mobileKeywords := []string{
+		"mobile", "android", "iphone", "ipod", "ipad", "windows phone",
+	}
+
+	wechatKeywords := []string{
+		"micromessenger",
+	}
+
+	qqKeywords := []string{
+		"qq/", "qzone/",
+	}
+
+	alipayKeywords := []string{
+		"alipayclient",
+	}
+
+	// 检查是否为支付宝客户端
+	for _, keyword := range alipayKeywords {
+		if strings.Contains(ua, keyword) {
+			return "alipay" // alipay
+		}
+	}
+
+	// 检查是否为微信浏览器
+	for _, keyword := range wechatKeywords {
+		if strings.Contains(ua, keyword) {
+			return "wechat" // wechat
+		}
+	}
+
+	// 检查是否为QQ浏览器
+	for _, keyword := range qqKeywords {
+		if strings.Contains(ua, keyword) {
+			return "qq" // qq
+		}
+	}
+
+	// 检查是否为移动设备
+	for _, keyword := range mobileKeywords {
+		if strings.Contains(ua, keyword) {
+			return "mobile" // mobile
+		}
+	}
+
+	// 默认返回false，表示PC或其他未识别设备
+	return "pc"
+}

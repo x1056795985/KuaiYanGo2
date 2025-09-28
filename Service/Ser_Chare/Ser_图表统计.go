@@ -117,7 +117,7 @@ FROM (
                WHEN IPCity LIKE '%上海%' THEN '上海市'
                WHEN IPCity LIKE '%天津%' THEN '天津市'
                WHEN IPCity LIKE '%重庆%' THEN '重庆市'
-               WHEN IPCity LIKE '%河北%' THEN '河南省'
+               WHEN IPCity LIKE '%河北%' THEN '河北省'
                WHEN IPCity LIKE '%山西%' THEN '山西省'
                WHEN IPCity LIKE '%内蒙古%' THEN '内蒙古自治区'
                WHEN IPCity LIKE '%辽宁%' THEN '辽宁省'
