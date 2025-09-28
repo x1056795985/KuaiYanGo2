@@ -175,9 +175,15 @@ func (j 易支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 			response.PayQRCode = 局_json.Get("qrcode").String()
 		}
 
+		if 局_json.Get("urlscheme").String() != "" && !strings.HasPrefix(局_json.Get("urlscheme").String(), "http") {
+			response.PayQRCode = 局_json.Get("urlscheme").String()
+		}
+
 		//判断response.PayQRCode  左边是否为http  如果不是http,就改生成 PayURL值的二维码
 		if !strings.HasPrefix(response.PayQRCode, "http") {
 			response.PayQRCodePNG = rmbPay.L_rmbPay.S生成二维码并转base64(response.PayURL)
+		} else {
+			response.PayQRCodePNG = rmbPay.L_rmbPay.S生成二维码并转base64(response.PayQRCode)
 		}
 
 		return
