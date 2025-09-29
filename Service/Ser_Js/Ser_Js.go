@@ -32,6 +32,7 @@ import (
 	"server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
+	"server/utils/Qqwry"
 	"strconv"
 	"strings"
 	"time"
@@ -97,6 +98,7 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_时间_取现行时间戳13", S时间_取现行时间戳13)
 	_ = vm.Set("$api_生成二维码并转base64", rmbPay.L_rmbPay.S生成二维码并转base64)
 	_ = vm.Set("$api_VMP计算授权码", jS_VMP计算授权码)
+	_ = vm.Set("$api_ip查地区", Qqwry.Ip查信息2)
 
 	//定制接口
 	_ = vm.Set("$api_定制批量注册", jS_批量注册)
