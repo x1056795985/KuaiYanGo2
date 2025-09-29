@@ -1,6 +1,7 @@
 package rmbPay
 
 import (
+	"EFunc/utils"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -21,9 +22,13 @@ func (j *rmbPay) 获取新订单号() string {
 	当前时间戳 := time.Now().Unix()
 	if 当前时间戳 == j.订单号时间戳 {
 		j.订单号计数++
+		if j.订单号计数 > 999999 {
+			j.订单号计数 = 1
+		}
 	} else {
 		j.订单号时间戳 = 当前时间戳
-		j.订单号计数 = 1
+		j.订单号初始值 = utils.H汇编_取随机数(100, 899999) //随机一个初始值,防止每次都从1开始
+		j.订单号计数 = j.订单号初始值 + 1
 	}
 	局_计数 := j.订单号计数
 	j.锁.Unlock() //解锁
@@ -31,13 +36,12 @@ func (j *rmbPay) 获取新订单号() string {
 	var 最终订单号 = time.Unix(当前时间戳, 0).Format("20060102150405")
 	最终订单号 = 最终订单号[2:] //删除年左侧20两位
 
-	if 局_计数 > 999999 {
+	if 局_计数 == j.订单号初始值 {
+		//如果相等说明当前秒内,已经超过了99999 并重置为1 后递增到j.订单号初始值 的,所以实际已经达到999999了次调用了
 		fmt.Println("恭喜生成订单号大于每秒100w建议更换算法")
 		return ""
 	}
-
 	最终订单号 = 最终订单号 + strings.Repeat("0", 6-len(strconv.Itoa(局_计数))) + strconv.Itoa(局_计数)
-
 	return 最终订单号
 }
 

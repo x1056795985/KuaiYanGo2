@@ -47,6 +47,7 @@ func init() {
 type rmbPay struct {
 	// 逻辑中使用的某个变量
 	订单号计数  int
+	订单号初始值 int
 	订单号时间戳 int64
 	// 与变量对应的使用互斥锁
 	锁       sync.Mutex
