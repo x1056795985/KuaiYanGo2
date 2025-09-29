@@ -115,7 +115,7 @@ func jS_批量充值(局_在线信息 DB.DB_LinksToken, user, 卡号列表 []str
 	}
 
 	//先检查所有账号是否存在
-	for i := range 卡号列表 {
+	for i := range user {
 		局_uid := Ser_AppUser.User或卡号取Id(局_在线信息.LoginAppid, user[i])
 		if 局_uid == 0 {
 			return js对象_通用返回{IsOk: false, Err: "账号[" + user[i] + "不存在"}
