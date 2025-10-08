@@ -18,6 +18,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func init() {
@@ -102,7 +103,7 @@ func (j 易支付2) D订单创建(c *gin.Context, 参数 *m.PayParams) (response
 	values.Set("sitename", 参数.S商品名称)
 	values.Set("clientip", c.ClientIP())
 	values.Set("device", utils.S三元(局_支付配置.Y易支付2设备类型 != "", 局_支付配置.Y易支付2设备类型, utils2.Y易支付取设备类型(c.GetHeader("User-Agent"))))
-
+	values.Set("timestamp", strconv.FormatInt(time.Now().Unix(), 10))
 	// 过滤掉不需要参与签名的参数
 	var 参数列表 []string
 	for key, value := range values {
