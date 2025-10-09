@@ -995,8 +995,9 @@ func 取相对时间0点时间戳天(天数增减 int) string {
 }
 func 取相对时间0点时间戳月(月增减 int) string {
 	ts := time.Now().AddDate(0, 月增减, 0)
-	timeStampYesterday := time.Date(ts.Year(), ts.Month(), 0, 0, 0, 0, 0, ts.Location()).Unix()
-	return strconv.Itoa(int(timeStampYesterday))
+	// 使用1号而不是0号来获取当月的第一天
+	timeStampFirstDay := time.Date(ts.Year(), ts.Month(), 1, 0, 0, 0, 0, ts.Location()).Unix()
+	return strconv.Itoa(int(timeStampFirstDay))
 }
 
 func Get应用用户账号注册统计(c *gin.Context) []gin.H {
