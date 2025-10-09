@@ -11,9 +11,7 @@ import (
 )
 
 func Test_启动子程序(t *testing.T) {
-	/*	for i := 0; i < 99; i++ {
-		fmt.Println(Ser_RMBPayOrder.Get获取新订单号())
-	}*/
+
 	//插入测试用户()
 	//插入用户登录日志()
 	//插入余额充值日志()
