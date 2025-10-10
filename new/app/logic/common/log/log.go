@@ -53,13 +53,13 @@ func (j *log) S输出日志(c *gin.Context, logData interface{}) (err error) {
 
 		case DB.DB_LogVipNumber: //积分点数时间日志
 			if v.Time == 0 {
-				v.Time= time.Now().Unix()
+				v.Time = time.Now().Unix()
 			}
 			err3 = tx.Model(DB.DB_LogVipNumber{}).Create(&v).Error
 		case []DB.DB_LogVipNumber: //积分点数时间日志
 			for i := range v {
 				if v[i].Time == 0 {
-					v[i].Time= time.Now().Unix()
+					v[i].Time = time.Now().Unix()
 				}
 				err3 = tx.Model(DB.DB_LogVipNumber{}).Create(&v[i]).Error
 			}
@@ -113,25 +113,25 @@ func (j *log) S输出日志(c *gin.Context, logData interface{}) (err error) {
 			}
 		case DB.DB_LogUserMsg: //用户消息日志
 			if v.Time == 0 {
-				v.Time= time.Now().Unix()
+				v.Time = time.Now().Unix()
 			}
 			err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v).Error
 		case []DB.DB_LogUserMsg: //用户消息日志
 			for i := range v {
 				if v[i].Time == 0 {
-					v[i].Time= time.Now().Unix()
+					v[i].Time = time.Now().Unix()
 				}
 				err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v[i]).Error
 			}
 		case DB.DB_LogRiskControl: //风控日志
 			if v.Time == 0 {
-				v.Time= time.Now().Unix()
+				v.Time = time.Now().Unix()
 			}
 			err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v).Error
 		case []DB.DB_LogRiskControl: //风控日志
 			for i := range v {
 				if v[i].Time == 0 {
-					v[i].Time= time.Now().Unix()
+					v[i].Time = time.Now().Unix()
 				}
 				err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v[i]).Error
 			}
@@ -146,4 +146,10 @@ func isInterfaceAnArray(i interface{}) bool {
 
 	// 检查其 Kind 是否为数组
 	return value.Kind() == reflect.Array || value.Kind() == reflect.Slice
+}
+
+func (j *log) S上报异常(异常内容 string) (err error) {
+	global.Q快验.Z置新用户消息(2, 异常内容)
+	print(异常内容)
+	return err
 }

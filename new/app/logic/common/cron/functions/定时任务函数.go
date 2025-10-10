@@ -13,6 +13,7 @@ import (
 	"server/Service/Ser_TaskPool"
 	"server/global"
 	"server/new/app/logic/admin/L_pay"
+	"server/new/app/logic/common/log"
 	"server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -51,7 +52,7 @@ func S刷新数据库定时任务(主动 bool) error {
 		tx := *global.GVA_DB
 		infoArr, err := S.GetAllInfo(&tx, 1)
 		if err != nil {
-			global.GVA_LOG.Error("刷新数据库定时任务失败:" + err.Error())
+			log.L_log.S上报异常("刷新数据库定时任务失败:" + err.Error())
 			return err
 		}
 
@@ -73,7 +74,7 @@ func S刷新数据库定时任务(主动 bool) error {
 			if infoArr[索引].Status == 1 {
 				err = c.T添加集群任务(infoArr[索引], T通用任务包装函数)
 				if err != nil {
-					global.GVA_LOG.Error("T添加任务定时任务id:" + strconv.Itoa(infoArr[索引].Id) + ",失败:" + err.Error())
+					log.L_log.S上报异常("T添加任务定时任务id:" + strconv.Itoa(infoArr[索引].Id) + ",失败:" + err.Error())
 				}
 				//所有影响任务执行的参数,都需要加入哈希值
 				hashStr += strconv.Itoa(infoArr[索引].Id) + "|" + infoArr[索引].Cron + "|" + strconv.Itoa(infoArr[索引].IsLog) + "|" + strconv.Itoa(infoArr[索引].Type) + "|" + infoArr[索引].RunText
@@ -154,7 +155,7 @@ func T通用任务执行函数2(时间戳 int64, R任务数据 db.DB_Cron) (stri
 			ReturnText: 返回,
 		})
 		if err != nil {
-			global.GVA_LOG.Error("D定时任务_日志插入失败:" + err.Error())
+			log.L_log.S上报异常("D定时任务_日志插入失败:" + err.Error())
 		}
 	}
 	return 返回, err
@@ -168,7 +169,7 @@ func D定时任务_注销已过期的Token(c *gin.Context) {
 	s := service.NewLinksToken(c, &tx)
 	err := s.Z注销已过期的Token()
 	if err != nil {
-		global.GVA_LOG.Error("在线列表定时注销已过期失败:" + err.Error())
+		log.L_log.S上报异常("在线列表定时注销已过期失败:" + err.Error())
 	}
 }
 
@@ -181,7 +182,7 @@ func D定时任务_删除已过期的Token(c *gin.Context) {
 	s := service.NewLinksToken(c, &tx)
 	err := s.S删除已过期的Token()
 	if err != nil {
-		global.GVA_LOG.Error("在线列表定时删除已过期失败:" + err.Error())
+		log.L_log.S上报异常("在线列表定时删除已过期失败:" + err.Error())
 	}
 }
 func D定时任务_统计应用在线用户总数(c *gin.Context) {
@@ -199,7 +200,7 @@ func D定时任务_统计应用在线用户总数(c *gin.Context) {
     GROUP BY LoginAppid
 `).Scan(&results).Error
 	if err != nil {
-		global.GVA_LOG.Error("D定时任务_统计应用在线用户总数失败:" + err.Error())
+		log.L_log.S上报异常("D定时任务_统计应用在线用户总数失败:" + err.Error())
 		return
 	}
 	if len(results) == 0 {
@@ -220,7 +221,7 @@ func D定时任务_统计应用在线用户总数(c *gin.Context) {
 	})
 	err = s.BatchCreate(&results)
 	if err != nil {
-		global.GVA_LOG.Error("D定时任务_统计应用在线用户总数失败:" + err.Error())
+		log.L_log.S上报异常("D定时任务_统计应用在线用户总数失败:" + err.Error())
 	}
 	// 删除一年前的数据
 	err = tx.Where("createdAt < ?", time.Now().AddDate(0, 0, -365).Unix()).Delete(&db.DB_TongJiZaiXian{}).Error
@@ -302,7 +303,7 @@ func D定时任务_删除已过期唯一积分记录(c *gin.Context) {
 		s := service.NewUniqueNumLog(c, &tx, key)
 		局_数量, err := s.Delete已过期()
 		if err != nil {
-			global.GVA_LOG.Error("删除已过期唯一积分记录失败:" + err.Error())
+			log.L_log.S上报异常("删除已过期唯一积分记录失败:" + err.Error())
 		}
 		if 局_数量 > 0 {
 			global.GVA_LOG.Info("删除已过期唯一积分记录:" + strconv.Itoa(int(局_数量)))

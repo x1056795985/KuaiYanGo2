@@ -10,6 +10,7 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/log"
 	DB "server/structs/db"
 	"strconv"
 	"time"
@@ -267,7 +268,7 @@ func Id积分增减(AppId, Id int, 增减值 float64, is增加 bool) error {
 		//增加直接处理就可以了,不用事务
 		err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipNumber", gorm.Expr("VipNumber + ?", 增减值)).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(Id) + "Id积分增加失败:" + err.Error())
+			log.L_log.S上报异常(strconv.Itoa(Id) + "Id积分增加失败:" + err.Error())
 			return err
 		}
 		return nil
@@ -278,7 +279,7 @@ func Id积分增减(AppId, Id int, 增减值 float64, is增加 bool) error {
 	err := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipNumber", gorm.Expr("VipNumber - ?", 增减值)).Error
 	if err != nil {
 		db.Rollback() //出错回滚
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id积分减少失败:" + err.Error())
+		log.L_log.S上报异常(strconv.Itoa(Id) + "Id积分减少失败:" + err.Error())
 		return errors.New("积分减少失败查看服务器日志检查原因")
 	}
 	var 局_积分 float64
@@ -311,7 +312,7 @@ func Id点数增减(AppId, Id int, 增减值 int64, is增加 bool) error {
 		//增加直接处理就可以了,不用事务
 		err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime + ?", 增减值)).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(int(Id)) + "Id点数增加失败:" + err.Error())
+			log.L_log.S上报异常(strconv.Itoa(int(Id)) + "Id点数增加失败:" + err.Error())
 			return err
 		}
 		return nil
@@ -344,7 +345,7 @@ func Id点数增减(AppId, Id int, 增减值 int64, is增加 bool) error {
 	err := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime - ?", 增减值)).Error
 	if err != nil {
 		db.Rollback() //出错回滚
-		global.GVA_LOG.Error(strconv.Itoa(int(Id)) + "Id点数减少失败:" + err.Error())
+		log.L_log.S上报异常(strconv.Itoa(int(Id)) + "Id点数减少失败:" + err.Error())
 		return errors.New("点数减少失败查看服务器日志检查原因")
 	}
 	db.Commit() //操作完成提交事务

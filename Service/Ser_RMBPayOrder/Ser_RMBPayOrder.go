@@ -5,6 +5,7 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_User"
 	"server/global"
+	"server/new/app/logic/common/log"
 	DB "server/structs/db"
 	"strconv"
 	"sync"
@@ -66,7 +67,7 @@ func Order更新订单状态(订单号 string, 状态值 int) bool {
 	}
 	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 订单号).Update("Status", 状态值).Error
 	if err != nil {
-		global.GVA_LOG.Error(订单号 + "Order更新订单状态失败:" + err.Error())
+		log.L_log.S上报异常(订单号 + "Order更新订单状态失败:" + err.Error())
 		return false
 	}
 	return true

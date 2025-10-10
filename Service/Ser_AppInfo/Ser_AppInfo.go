@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"server/global"
 	"server/new/app/logic/common/cloudStorage"
+	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/publicData"
 	dbm "server/new/app/models/db"
 	DB "server/structs/db"
@@ -202,7 +203,7 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 	NewApp.CryptoKeyAes = rand_string.RandomLetter(24) //aes cbc 192长度固定24
 	err, 公钥base64, 私钥base64 := utils2.GetRsaKey()
 	if err != nil {
-		global.GVA_LOG.Error("新建app创建Rsa密匙失败:" + err.Error())
+		log.L_log.S上报异常("新建app创建Rsa密匙失败:" + err.Error())
 	}
 	NewApp.CryptoKeyPublic = 公钥base64
 	NewApp.CryptoKeyPrivate = 私钥base64

@@ -13,6 +13,7 @@ import (
 	"server/global"
 	"server/new/app/logic/common/cron"
 	"server/new/app/logic/common/cron/functions"
+	"server/new/app/logic/common/log"
 	utils2 "server/utils"
 )
 
@@ -139,12 +140,12 @@ func InitCron定时任务() {
 	//9  "0 0 0,1,2 * * ?" 表示每天的0点，1点，2点执行一次
 	err := global.Cron定时任务.T添加本机任务("快验心跳", "0 */5 * * * *", KuaiYan.K快验心跳)
 	if err != nil {
-		global.GVA_LOG.Error("T添加任务定时任务快验心跳失败:" + err.Error())
+		log.L_log.S上报异常("T添加任务定时任务快验心跳失败:" + err.Error())
 	} //5分钟心跳执行一次
 
 	err = global.Cron定时任务.T添加本机任务("定时刷新数据库定时任务2", "0 */1 * * * *", functions.S刷新数据库定时任务2)
 	if err != nil {
-		global.GVA_LOG.Error("定时刷新数据库定时任务2失败:" + err.Error())
+		log.L_log.S上报异常("定时刷新数据库定时任务2失败:" + err.Error())
 	}
 	_ = functions.S刷新数据库定时任务(true)
 	global.Cron定时任务.Cron.Start()

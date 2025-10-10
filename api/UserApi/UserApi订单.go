@@ -15,9 +15,9 @@ import (
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserClass"
 	"server/api/UserApi/response"
-	"server/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/kaClassUpPrice"
+	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -381,7 +381,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 		局_日志前缀 := fmt.Sprintf("用户:%s,余额制卡ID{%d}", 局_在线信息.User, 局_卡信息.Id)
 		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
+			log.L_log.S上报异常(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
 		}
 	}
 	if 局_在线信息.AgentUid > 0 && 局_卡类.AgentMoney > 0 {
@@ -391,7 +391,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 			局_日志前缀 := fmt.Sprintf("用户%s余额制卡ID:%d,", 局_在线信息.User, 局_卡信息.Id)
 			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_卡类.Money, 局_日志前缀)
 			if err != nil {
-				global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+				log.L_log.S上报异常(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 			}
 		}
 	}

@@ -17,6 +17,7 @@ import (
 	"server/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
+	"server/new/app/logic/common/log"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -534,7 +535,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 	err = Ser_AppUser.Z置状态_同步卡号修改(请求.AppId, 请求.Id, 请求.Status)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 
@@ -583,7 +584,7 @@ func (a *Api) Set批量维护_增减时间点数(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 
@@ -627,7 +628,7 @@ func (a *Api) Set批量维护_增减积分(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 
@@ -674,7 +675,7 @@ func (a *Api) Set批量维护_置云配置(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 	response.OkWithMessage("修改成功", c)
@@ -713,7 +714,7 @@ func (a *Api) Set批量维护_修改用户类型(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 	response.OkWithMessage("修改成功,数量:"+strconv.Itoa(int(局_数量)), c)
@@ -761,7 +762,7 @@ func (a *Api) Set批量维护_删除用户(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("操作失败:"+err.Error(), c)
-		global.GVA_LOG.Error("操作失败:" + err.Error())
+		log.L_log.S上报异常("操作失败:" + err.Error())
 		return
 	}
 

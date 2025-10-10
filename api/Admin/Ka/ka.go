@@ -14,6 +14,7 @@ import (
 	"server/Service/Ser_UserConfig"
 	"server/global"
 	"server/new/app/logic/common/ka"
+	"server/new/app/logic/common/log"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -455,7 +456,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 	err = Ser_Ka.Ka修改状态_同步卡号模式软件用户(请求.Id, 请求.Status)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 
@@ -486,7 +487,7 @@ func (a *Api) Set修改管理员备注(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 
@@ -510,7 +511,7 @@ func (a *Api) Set修改卡号生成模板(c *gin.Context) {
 	err = Ser_UserConfig.Z置值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId), 请求.KaTemplate)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 	response.OkWithMessage("模板已保存", c)
@@ -571,7 +572,7 @@ func (a *Api) Set批量维护_删除用户(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("操作失败:"+err.Error(), c)
-		global.GVA_LOG.Error("操作失败:" + err.Error())
+		log.L_log.S上报异常("操作失败:" + err.Error())
 		return
 	}
 

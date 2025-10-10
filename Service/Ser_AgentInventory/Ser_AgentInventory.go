@@ -13,6 +13,7 @@ import (
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/kaClassUpPrice"
+	"server/new/app/logic/common/log"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -149,7 +150,7 @@ func New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int, 有效期
 		局_日志前缀 := fmt.Sprintf("代理:%s,购买库存包ID{%d}", 局_代理详情.User, 库存卡包.Id)
 		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
+			log.L_log.S上报异常(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
 		}
 	}
 	if 局_价格组成.卡类金额 > 0 {
@@ -159,7 +160,7 @@ func New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int, 有效期
 			局_日志前缀 := fmt.Sprintf("代理:%s,购买库存包ID{%d}", 局_代理详情.User, 库存卡包.Id)
 			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_价格组成.卡类金额, 局_日志前缀)
 			if err != nil {
-				global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+				log.L_log.S上报异常(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 			}
 		}
 	}

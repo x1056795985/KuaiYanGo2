@@ -2,6 +2,7 @@ package blacklist
 
 import (
 	"server/global"
+	"server/new/app/logic/common/log"
 	"server/new/app/service"
 )
 
@@ -10,7 +11,7 @@ func Is黑名单(配置名 string, AppId int) bool {
 	tx := *global.GVA_DB
 	infos, err := db.InfoItemKey(&tx, 配置名)
 	if err != nil {
-		global.GVA_LOG.Error("黑名单查询报错:" + err.Error())
+		log.L_log.S上报异常("黑名单查询报错:" + err.Error())
 		return false //直接放行
 	}
 	for i, _ := range infos {

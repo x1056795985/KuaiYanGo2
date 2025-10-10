@@ -9,6 +9,7 @@ import (
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
 	"server/global"
+	"server/new/app/logic/common/log"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -274,7 +275,7 @@ func (a *Api) Set修改vip限制(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 

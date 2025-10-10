@@ -7,7 +7,7 @@ type DB_LogMoney struct {
 	Time  int64   `json:"Time" gorm:"column:Time;comment:时间"`
 	Ip    string  `json:"Ip" gorm:"column:Ip;size:191;comment:登录ip地址"`
 	Count float64 `json:"Count" gorm:"column:Count;type:decimal(10,2);default:0;comment:数值"`
-	Note  string  `json:"Note" gorm:"column:Note;size:1000;comment:原因"`
+	Note  string  `json:"Note" gorm:"column:Note;type:text;comment:原因"` // 修改此处
 }
 
 func (DB_LogMoney) TableName() string {

@@ -17,6 +17,7 @@ import (
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/kaClassUpPrice"
+	"server/new/app/logic/common/log"
 	dbm "server/new/app/models/db"
 	DB "server/structs/db"
 	"strconv"
@@ -155,14 +156,14 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 		// 减少余额
 		err = tx.Exec("UPDATE db_User SET RMB = RMB - ? WHERE Id = ?", 局_价格组成.总付款金额, 局_购卡人信息.Id).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(局_购卡人信息.Id) + "Id余额减少失败:" + err.Error())
+			log.L_log.S上报异常(strconv.Itoa(局_购卡人信息.Id) + "Id余额减少失败:" + err.Error())
 			return errors.New("余额减少失败查看服务器日志检查原因")
 		}
 
 		// 查询新余额
 		err = tx.Raw("SELECT RMB FROM db_User WHERE Id = ?", 局_购卡人信息.Id).Scan(&新余额).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(局_购卡人信息.Id) + "Id查询余额失败:" + err.Error())
+			log.L_log.S上报异常(strconv.Itoa(局_购卡人信息.Id) + "Id查询余额失败:" + err.Error())
 			return errors.New("查询余额失败查看服务器日志检查原因")
 		}
 
@@ -254,20 +255,21 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 		局_日志前缀 := fmt.Sprintf("下级代理:%s,制卡ID{%s}", 局_购卡人信息.User, 局_ID列表)
 		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
+			log.L_log.S上报异常(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
 		}
 	}
 	//然后再计算百分比的价格
 	代理分成数据, err2 := agent.L_agent.D代理分成计算(c, 局_购卡人信息.Id, 局_价格组成.总卡类价格)
 	if err2 != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成计算失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), 局_购卡人信息.UPAgentId, 局_价格组成.总卡类价格, 局_ID列表))
+		log.L_log.S上报异常(fmt.Sprintf("代理制卡分成计算失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), 局_购卡人信息.UPAgentId, 局_价格组成.总卡类价格, 局_ID列表))
 		return err2
 	}
 	if len(代理分成数据) >= 0 {
 		局_日志前缀 := fmt.Sprintf("下级代理:%s,制卡ID{%s},", 局_购卡人信息.User, 局_ID列表)
 		err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_价格组成.总卡类价格, 局_日志前缀)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+			log.L_log.S上报异常(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+
 		}
 	}
 	// 分成结束==============

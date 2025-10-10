@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	Db服务 "server/Service/Ser_AppInfo"
 	"server/global"
+	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/publicData"
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -174,7 +175,7 @@ func (a *Api) SaveDB_PublicData信息(c *gin.Context) {
 		response.FailWithMessage("变量不存在", c)
 		return
 	}
-	请求.Time= time.Now().Unix()
+	请求.Time = time.Now().Unix()
 	err = publicData.L_publicData.Z置值_原值(c, 请求)
 
 	if err != nil {
@@ -208,7 +209,7 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("变量名已存在", c)
 		return
 	}
-	请求.Time= time.Now().Unix()
+	请求.Time = time.Now().Unix()
 	//app_id 没有这个字段排除掉
 	err = publicData.L_publicData.C创建(c, 请求)
 	if err != nil {
@@ -241,7 +242,7 @@ func (a *Api) Set修改vip限制(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		log.L_log.S上报异常("修改失败:" + err.Error())
 		return
 	}
 

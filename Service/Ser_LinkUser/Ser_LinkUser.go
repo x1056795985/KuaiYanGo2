@@ -5,6 +5,7 @@ import (
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"gorm.io/gorm"
 	"server/global"
+	"server/new/app/logic/common/log"
 	"server/new/app/models/constant"
 	DB "server/structs/db"
 	"server/utils/Qqwry"
@@ -77,7 +78,7 @@ func Set自动注销超时时间(OutTIme int, id []int) error {
 func Token更新最后活动时间(Token string) {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).Update("LastTime", int(time.Now().Unix())).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Token更新最后活动时间失败:%v,%v", err.Error(), Token))
+		log.L_log.S上报异常(fmt.Sprintf("Token更新最后活动时间失败:%v,%v", err.Error(), Token))
 	}
 	return
 }
@@ -89,14 +90,14 @@ func Token更新在线ip(Token, Ip string) {
 	}
 	err = global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).Updates(map[string]interface{}{"Ip": Ip, "IPCity": IPCity}).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Token更新在线ip:%v,%v", err.Error(), Token))
+		log.L_log.S上报异常(fmt.Sprintf("Token更新在线ip:%v,%v", err.Error(), Token))
 	}
 	return
 }
 func Id更新当前版本号(Id int, 新应用版本号 string) {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", Id).Update("AppVer", 新应用版本号).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Id更新当前版本号失败:%v,%v", err.Error(), 新应用版本号))
+		log.L_log.S上报异常(fmt.Sprintf("Id更新当前版本号失败:%v,%v", err.Error(), 新应用版本号))
 	}
 	return
 }
@@ -104,14 +105,14 @@ func Id更新当前版本号(Id int, 新应用版本号 string) {
 func Token风控分增减(Token string, 增减值 int) {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).Update("RiskControl", gorm.Expr("RiskControl + ?", 增减值)).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Token风控分增减失败:%v,%v", err.Error(), Token))
+		log.L_log.S上报异常(fmt.Sprintf("Token风控分增减失败:%v,%v", err.Error(), Token))
 	}
 	return
 }
 func Set在线登录信息(Id, Uid int, 用户名, 绑定信息, 动态标签, 软件版本 string) error {
 	err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", Id).Updates(map[string]interface{}{"Uid": Uid, "User": 用户名, "Key": 绑定信息, "Tab": 动态标签, "AppVer": 软件版本}).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Set在线登录信息:%v,%v,%v,%v", err.Error(), Id, 用户名, 绑定信息, 动态标签))
+		log.L_log.S上报异常(fmt.Sprintf("Set在线登录信息:%v,%v,%v,%v", err.Error(), Id, 用户名, 绑定信息, 动态标签))
 	}
 	return err
 }

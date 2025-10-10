@@ -8,6 +8,7 @@ import (
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_LinkUser"
 	"server/global"
+	"server/new/app/logic/common/log"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 )
@@ -181,7 +182,7 @@ func (a *LinkUserApi) Del批量注销(c *gin.Context) {
 	err = Ser_LinkUser.Set批量注销(请求.Id, Ser_LinkUser.Z注销_管理员手动注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
-		global.GVA_LOG.Error("Del批量注销:" + err.Error())
+		log.L_log.S上报异常("Del批量注销:" + err.Error())
 		return
 	}
 
@@ -215,7 +216,7 @@ func (a *LinkUserApi) Del批量删除已注销(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("已注销删除失败", c)
-		global.GVA_LOG.Error("Del批量删除已注销:" + err.Error())
+		log.L_log.S上报异常("Del批量删除已注销:" + err.Error())
 		return
 	}
 

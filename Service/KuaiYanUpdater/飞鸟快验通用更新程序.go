@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"server/global"
+	"server/new/app/logic/common/log"
 	"strconv"
 	"strings"
 	"time"
@@ -206,7 +207,7 @@ func B宝塔_修改项目信息pid() {
 		pid := os.Getpid()
 		err = os.WriteFile(files[0], []byte(strconv.Itoa(pid)), 0644)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("写出pid失败:%v", err.Error()))
+			log.L_log.S上报异常(fmt.Sprintf("写出pid失败:%v", err.Error()))
 			return
 		}
 		global.GVA_LOG.Info(fmt.Sprintf("写出pid成功:%v", pid))
@@ -221,7 +222,7 @@ func B宝塔_修改项目信息() {
 	db, err := gorm.Open(sqlite.Open("/www/server/panel/data/default.db"), &gorm.Config{})
 	if err != nil {
 		// 处理错误
-		global.GVA_LOG.Error(err.Error())
+		log.L_log.S上报异常(err.Error())
 		return
 	}
 	pid := os.Getpid()
@@ -229,7 +230,7 @@ func B宝塔_修改项目信息() {
 	global.GVA_LOG.Info("执行文件名:" + 执行文件名)
 	dir, err := os.Getwd()
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("获取当前路径失败:%v", err.Error()))
+		log.L_log.S上报异常(fmt.Sprintf("获取当前路径失败:%v", err.Error()))
 		return
 	}
 
@@ -246,7 +247,7 @@ func B宝塔_修改项目信息() {
 	tx := db.Raw(SQL).First(&info)
 	if tx.Error != nil {
 		// 处理错误
-		global.GVA_LOG.Error(tx.Error.Error())
+		log.L_log.S上报异常(tx.Error.Error())
 		return
 	}
 	fmt.Printf("项目信息:%v", info)
@@ -257,7 +258,7 @@ func B宝塔_修改项目信息() {
 	//  /var/tmp/gopids  修改这个可以修改宝塔检测飞鸟的pid值,用来显示是否运行中
 	err = os.WriteFile("/var/tmp/gopids/"+info.Name+".pid", []byte(strconv.Itoa(pid)), 0644)
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("写出pid失败:%v", err.Error()))
+		log.L_log.S上报异常(fmt.Sprintf("写出pid失败:%v", err.Error()))
 		return
 	}
 
@@ -289,13 +290,13 @@ func B宝塔_修改项目信息() {
 	tx = db.Debug().Exec(SQL, path, json, info.Id)
 	if tx.Error != nil {
 		// 处理错误
-		global.GVA_LOG.Error(tx.Error.Error())
+		log.L_log.S上报异常(tx.Error.Error())
 		return
 	}
 	// 删除脚本就可以,启动时会自动再创建
 	err = utils.W文件_删除("/www/server/go_project/vhost/scripts/" + info.Name + ".sh")
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("脚本删除失败:" + err.Error()))
+		log.L_log.S上报异常(fmt.Sprintf("脚本删除失败:" + err.Error()))
 		return
 	}
 	global.GVA_LOG.Info(fmt.Sprintf("处理成功"))
