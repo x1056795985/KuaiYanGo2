@@ -57,14 +57,14 @@ func (j *rmbPay) S生成二维码并转base64(内容 string) string {
 func (j *rmbPay) Q取提示信息(参数 *common.PayParams) string {
 
 	if 参数.User == "" && 参数.ProcessingType == constant.D订单类型_支付购卡 {
-		return "支付购卡:" + 参数.User + "_" + Ser_RMBPayOrder.C处理类型[参数.ProcessingType]
+		return "支付购卡:" + Ser_RMBPayOrder.C处理类型[参数.ProcessingType]
 	}
 
 	if 参数.User == "" {
 		return "用户不存在"
 	}
 
-	return "用户:" + 参数.User + "_" + j.Map订单类型[参数.ProcessingType]
+	return "用户:" + utils.W文本_去除敏感信息(参数.User) + "_" + j.Map订单类型[参数.ProcessingType]
 }
 func (j *rmbPay) Z支付订单回调关键字转换(回调地址 string, 参数 *common.PayParams) string {
 	ReturnURL := strings.Replace(回调地址, "{OrderId}", 参数.PayOrder, -1)
