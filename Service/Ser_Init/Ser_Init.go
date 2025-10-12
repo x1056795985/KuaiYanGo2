@@ -100,6 +100,7 @@ func InitDbTables(c *gin.Context) {
 		DB.DB_LogRiskControl{},
 		DB.DB_LogVipNumber{},
 		DB.DB_LogAgentOtherFunc{},
+		dbm.DB_LogKey{},
 
 		//	代理相关
 		DB.Db_Agent_Level{},

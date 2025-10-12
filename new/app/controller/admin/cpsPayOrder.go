@@ -90,6 +90,7 @@ func (C *CpsPayOrder) Info(c *gin.Context) {
 func (C *CpsPayOrder) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List
+		RegisterTime []string `json:"RegisterTime"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -99,7 +100,7 @@ func (C *CpsPayOrder) GetList(c *gin.Context) {
 	var dataList []dbm.DB_CpsPayOrder
 	var 总数 int64
 	var err error
-	总数, dataList, err = service.NewCpsPayOrder(c, &tx).GetList(请求.List)
+	总数, dataList, err = service.NewCpsPayOrder(c, &tx).GetList(请求.List, 请求.RegisterTime)
 	if err != nil {
 		response.FailWithMessage(c, err.Error())
 		return

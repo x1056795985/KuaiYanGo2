@@ -185,6 +185,7 @@ func New用户信息(AppId int, Uid int, 绑定信息 string, 最大在线数量
 	局_AppUser.AgentUid = AgentUid
 
 	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Create(&局_AppUser).Error
+
 	return err
 }
 

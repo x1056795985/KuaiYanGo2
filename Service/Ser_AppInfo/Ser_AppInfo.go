@@ -157,6 +157,10 @@ func App修改信息(AppInfo DB.DB_AppInfo) error {
 		"Captcha",
 		"RegisterGiveKa",
 		"ApiHook",
+		"FreeUpKeyTime",
+		"FreeUpKeyInterval",
+		"UpKeyTime",
+		"UpKeyInterval",
 	).Omit("AppType", "AppWeb", "Sort")
 
 	err := db.Where("AppId= ?", AppInfo.AppId).Updates(AppInfo).Error

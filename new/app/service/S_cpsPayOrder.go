@@ -7,6 +7,7 @@ import (
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
 	"server/utils"
+	"strconv"
 )
 
 type CpsPayOrder struct {
@@ -67,7 +68,7 @@ func (s *CpsPayOrder) Q裂变订单(appId, 邀请人id int, 数量限制 int) (i
 }
 
 // 优化查询链式操作
-func (s *CpsPayOrder) GetList(请求 request.List) (int64, []dbm.DB_CpsPayOrder, error) {
+func (s *CpsPayOrder) GetList(请求 request.List, rangeTime []string) (int64, []dbm.DB_CpsPayOrder, error) {
 	// 创建查询构建器
 	db := s.db.Model(new(dbm.DB_CpsPayOrder))
 
@@ -76,6 +77,11 @@ func (s *CpsPayOrder) GetList(请求 request.List) (int64, []dbm.DB_CpsPayOrder,
 		db = db.Where("Id = ?", 请求.Keywords)
 	}
 
+	if rangeTime != nil && len(rangeTime) == 2 && rangeTime[0] != "" && rangeTime[1] != "" {
+		开始时间, _ := strconv.ParseInt(rangeTime[0], 10, 64)
+		结束时间, _ := strconv.ParseInt(rangeTime[1], 10, 64)
+		db.Where("time > ?", 开始时间).Where("time < ?", 结束时间+86400)
+	}
 	// 优化计数逻辑
 	var count int64
 	if 请求.Count > 0 && 请求.Count <= 500000 {

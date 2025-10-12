@@ -153,6 +153,13 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("cpsPayOrder/delete", 局_CpsPayOrder.Delete)
 		adminRouter.POST("cpsPayOrder/setNote", 局_CpsPayOrder.SerNote)
 	}
+	//绑定信息日志
+	局_logKey := controller.NewLogKeyController()
+	{
+		adminRouter.POST("logKey/getList", 局_logKey.GetList)
+		adminRouter.POST("logKey/info", 局_logKey.Info)
+		adminRouter.POST("logKey/delete", 局_logKey.Delete)
+	}
 	//签到管理
 	局_CheckIn := controller.NewCheckInInfoController()
 	{

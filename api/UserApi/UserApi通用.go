@@ -24,6 +24,8 @@ import (
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/publicData"
+	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -135,7 +137,7 @@ func UserApi_用户登录(c *gin.Context) {
 		局_Uid = 局_User.Id
 		局_卡号或用户名 = 局_User.User
 	}
-
+	db := *global.GVA_DB
 	var 局_AppUser DB.DB_AppUser
 	var 局_老用户 = Ser_AppUser.Uid是否存在(AppInfo.AppId, 局_Uid)
 	if 局_老用户 {
@@ -150,6 +152,21 @@ func UserApi_用户登录(c *gin.Context) {
 			}
 
 			Ser_AppUser.Set绑定信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")))
+
+			_, err = service.NewLogKey(c, &db).Create(&dbm.DB_LogKey{
+				Type:   constant.LogKey_绑定,
+				User:   局_卡号或用户名,
+				Uid:    局_Uid,
+				AppId:  AppInfo.AppId,
+				OldKey: 局_AppUser.Key,
+				NewKey: string(请求json.GetStringBytes("Key")),
+				Time:   time.Now().Unix(),
+				Ip:     c.ClientIP(),
+				Note:   "无绑定信息登陆自动绑定",
+			})
+			if err != nil {
+				global.GVA_LOG.Error("修改绑定信息日志写入失败:" + err.Error())
+			}
 			局_AppUser.Key = string(请求json.GetStringBytes("Key"))
 		}
 
@@ -213,6 +230,22 @@ func UserApi_用户登录(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_SQl错误, "New用户信息内部错误")
 			return
 		}
+
+		_, err = service.NewLogKey(c, &db).Create(&dbm.DB_LogKey{
+			Type:   constant.LogKey_绑定,
+			User:   局_卡号或用户名,
+			Uid:    局_Uid,
+			AppId:  AppInfo.AppId,
+			OldKey: "",
+			NewKey: string(请求json.GetStringBytes("Key")),
+			Time:   time.Now().Unix(),
+			Ip:     c.ClientIP(),
+			Note:   "新用户登陆自动绑定",
+		})
+		if err != nil {
+			global.GVA_LOG.Error("修改绑定信息日志写入失败:" + err.Error())
+		}
+
 		// 注册送卡  只有 账号模式才使用
 		if AppInfo.RegisterGiveKaClassId > 0 && (AppInfo.AppType == 1 || AppInfo.AppType == 2) {
 			_ = ka.L_ka.K卡类直冲_事务(c, AppInfo.RegisterGiveKaClassId, 局_Uid)
@@ -802,9 +835,16 @@ func UserApi_置新绑定信息(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "读取用户应用信息失败.可能刚注册还没登录成功")
 		return
 	}
+
+	err, 扣时间值 := 绑定信息更换规则校验(c, AppInfo, 局_Uid)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, err.Error())
+		return
+	}
+
 	// 如果换绑需要扣点,就执行扣点, 		且原来绑定信息不能为空
-	if AppInfo.UpKeyData > 0 && 局_AppUser.Key != "" {
-		err := Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(AppInfo.UpKeyData), false)
+	if 扣时间值 > 0 && 局_AppUser.Key != "" {
+		err = Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(扣时间值), false)
 		if err != nil {
 			response.X响应状态消息(c, response.Status_Vip已到期, "剩余会员时间或点数不足.")
 			return
@@ -814,17 +854,32 @@ func UserApi_置新绑定信息(c *gin.Context) {
 			if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
 				局_type = 2
 			}
-			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, D到数值(-AppInfo.UpKeyData), AppInfo.AppId, 局_type)
+			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, D到数值(-扣时间值), AppInfo.AppId, 局_type)
 
 		}
-	} else {
-		AppInfo.UpKeyData = 0
 	}
-	err := Ser_AppUser.Set绑定信息(AppInfo.AppId, 局_Uid, 局_信息绑定信息)
+	err = Ser_AppUser.Set绑定信息(AppInfo.AppId, 局_Uid, 局_信息绑定信息)
 	if err == nil {
-		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"ReduceVipTime": AppInfo.UpKeyData})
+		db := *global.GVA_DB
+		_, err = service.NewLogKey(c, &db).Create(&dbm.DB_LogKey{
+			Type:   constant.LogKey_换绑,
+			User:   Ser_AppUser.Uid取User(AppInfo.AppId, 局_Uid),
+			Uid:    局_Uid,
+			AppId:  AppInfo.AppId,
+			OldKey: 局_AppUser.Key,
+			NewKey: 局_信息绑定信息,
+			Time:   time.Now().Unix(),
+			Ip:     c.ClientIP(),
+			Count:  D到数值(-扣时间值),
+			Note:   "置新绑定信息",
+		})
+		if err != nil {
+			global.GVA_LOG.Error("修改绑定信息日志写入失败:" + err.Error())
+		}
+		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"ReduceVipTime": 扣时间值})
 	} else {
-		_ = Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(AppInfo.UpKeyData), true) //退还已经扣除的点数
+
+		_ = Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(扣时间值), true) //退还已经扣除的点数
 		response.X响应状态(c, response.Status_SQl错误)
 	}
 
@@ -884,9 +939,15 @@ func UserApi_解除绑定信息(c *gin.Context) {
 		return
 	}
 
+	err, 扣时间值 := 绑定信息更换规则校验(c, AppInfo, 局_Uid)
+	if err != nil {
+		response.X响应状态消息(c, response.Status_操作失败, err.Error())
+		return
+	}
+
 	// 如果换绑需要扣点,就执行扣点
-	if AppInfo.UpKeyData > 0 {
-		err := Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(AppInfo.UpKeyData), false)
+	if 扣时间值 > 0 {
+		err = Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(扣时间值), false)
 		if err != nil {
 			response.X响应状态消息(c, response.Status_Vip已到期, "剩余会员时间或点数不足.")
 			return
@@ -896,15 +957,32 @@ func UserApi_解除绑定信息(c *gin.Context) {
 			if AppInfo.AppType == 2 || AppInfo.AppType == 4 {
 				局_type = 2
 			}
-			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, D到数值(-AppInfo.UpKeyData), AppInfo.AppId, 局_type)
+			Ser_Log.Log_写积分点数时间日志(局_在线信息.User, c.ClientIP(), 局_日志, D到数值(-扣时间值), AppInfo.AppId, 局_type)
 		}
 	}
 
-	err := Ser_AppUser.Set绑定信息(AppInfo.AppId, 局_Uid, "")
+	err = Ser_AppUser.Set绑定信息(AppInfo.AppId, 局_Uid, "")
+
 	if err == nil {
-		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"ReduceVipTime": AppInfo.UpKeyData})
+		db := *global.GVA_DB
+		_, err = service.NewLogKey(c, &db).Create(&dbm.DB_LogKey{
+			Type:   constant.LogKey_解绑,
+			User:   Ser_AppUser.Uid取User(AppInfo.AppId, 局_Uid),
+			Uid:    局_Uid,
+			AppId:  AppInfo.AppId,
+			OldKey: 局_AppUser.Key,
+			NewKey: "",
+			Time:   time.Now().Unix(),
+			Ip:     c.ClientIP(),
+			Count:  D到数值(-扣时间值),
+			Note:   "解除绑定信息",
+		})
+		if err != nil {
+			global.GVA_LOG.Error("修改绑定信息日志写入失败:" + err.Error())
+		}
+		response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"ReduceVipTime": 扣时间值})
 	} else {
-		_ = Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(AppInfo.UpKeyData), true) //退还已经扣除的点数
+		_ = Ser_AppUser.Id点数增减(AppInfo.AppId, 局_AppUser.Id, int64(扣时间值), true) //退还已经扣除的点数
 		// 暂时想不出什么情况会修改失败 概率较低
 		response.X响应状态(c, response.Status_SQl错误)
 	}

@@ -101,7 +101,7 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
 	}
 	NewApp.CryptoKeyPublic = 公钥base64
 	NewApp.CryptoKeyPrivate = 私钥base64
-	NewApp.MaxOnline = 1
+
 	NewApp.ExceedMaxOnlineOut = 1 //超过在线最大数量处理方式 1踢掉最先登录的账号  2 提示登录数量超过限制
 	NewApp.RmbToVipNumber = 1     //1 人民币换多少积分
 
