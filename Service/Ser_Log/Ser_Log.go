@@ -48,6 +48,9 @@ func Log_写卡号操作日志(User, IP, Note string, Ka []string, 卡操作类�
 		}
 		logins = append(logins, login)
 	}
+	if len(logins) == 0 {
+		return
+	}
 	err := global.GVA_DB.Model(DB.DB_LogKa{}).Create(&logins).Error
 	if err != nil {
 		log.L_log.S上报异常(fmt.Sprintf("Log_写卡操作日志失败:%v,%v,%v,%v,%v,%v,", err.Error(), User, IP, Note, Ka, 卡操作类型, UserType))
@@ -149,8 +152,9 @@ func Log_写库存转移日志(操作库存ID, 数量, 类型 int, User1 string,
 		InventoryId: 操作库存ID,
 		Time:        time.Now().Unix(),
 		Note:        Note,
-		Ip:          IP + " " + Qqwry.Ip查信息2(IP),
+		Ip:          IP,
 	}
+
 	err := global.GVA_DB.Model(DB.Db_Agent_库存日志{}).Create(&Log).Error
 
 	if err != nil {
