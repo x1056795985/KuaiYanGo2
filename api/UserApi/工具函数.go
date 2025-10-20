@@ -139,7 +139,7 @@ func 绑定信息更换规则校验(c *gin.Context, AppInfo DB.DB_AppInfo, Uid i
 	// 计算免费换绑限制
 	免费时间内换绑次数 := 0
 	for _, key := range info.logKey {
-		if key.Type == constant.LogKey_换绑 { //绑定不算,只算解绑和换绑
+		if key.Type == constant.LogKey_绑定 { //绑定不算,只算解绑和换绑
 			continue
 		}
 		if 局_现行时间戳-key.Time <= AppInfo.FreeUpKeyTime {
@@ -157,7 +157,7 @@ func 绑定信息更换规则校验(c *gin.Context, AppInfo DB.DB_AppInfo, Uid i
 	// 计算总换绑次数（包括付费）
 	totalCount := 0
 	for _, key := range info.logKey {
-		if key.Type == constant.LogKey_换绑 { //绑定不算,只算解绑和换绑
+		if key.Type == constant.LogKey_绑定 { //绑定不算,只算解绑和换绑
 			continue
 		}
 		if 局_现行时间戳-key.Time <= AppInfo.UpKeyTime {
