@@ -13,7 +13,6 @@ import (
 	"server/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
-	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/setting"
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -443,7 +442,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		log.L_log.S上报异常("修改失败:" + err.Error())
+		global.GVA_LOG.Error("修改失败:" + err.Error())
 		return
 	}
 

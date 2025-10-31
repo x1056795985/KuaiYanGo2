@@ -325,7 +325,7 @@ func (a *Api) Set修改状态(c *gin.Context) {
 	err = global.GVA_DB.Model(DB.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 请求.Status).Error
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		log.L_log.S上报异常("修改失败:" + err.Error())
+		global.GVA_LOG.Error("修改失败:" + err.Error())
 		return
 	}
 

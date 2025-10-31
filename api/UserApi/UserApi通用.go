@@ -22,7 +22,6 @@ import (
 	"server/new/app/logic/common/appUser"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/ka"
-	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
@@ -1070,7 +1069,7 @@ func UserApi_取短信验证码信息(c *gin.Context) {
 
 	err := Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, 局_手机号)
 	if err != nil {
-		log.L_log.S上报异常(fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 局_手机号, err.Error()))
+		global.GVA_LOG.Error(fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 局_手机号, err.Error()))
 		response.X响应状态消息(c, response.Status_操作失败, err.Error())
 		return
 	}

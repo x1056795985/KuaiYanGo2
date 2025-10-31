@@ -122,7 +122,7 @@ func Id余额增减(Id int, 增减值 float64, is增加 bool) (新余额 float64
 		err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 			err = tx.Model(DB.DB_User{}).Where("Id = ?", Id).Update("RMB", gorm.Expr("RMB + ?", 增减值)).Error
 			if err != nil {
-				log.L_log.S上报异常(strconv.Itoa(Id) + "Id余额增加失败:" + err.Error())
+				global.GVA_LOG.Error(strconv.Itoa(Id) + "Id余额增加失败:" + err.Error())
 				return err
 			}
 			err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id=?", Id).First(&新余额).Error
@@ -140,7 +140,7 @@ func Id余额增减(Id int, 增减值 float64, is增加 bool) (新余额 float64
 	tx.Exec(sql, 增减值, Id)
 	if tx.Error != nil {
 		tx.Rollback()
-		log.L_log.S上报异常(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
 		return 0, errors.New("余额减少失败查看服务器日志检查原因")
 	}
 
@@ -149,7 +149,7 @@ func Id余额增减(Id int, 增减值 float64, is增加 bool) (新余额 float64
 	tx = tx.Raw(sql, Id).Scan(&新余额)
 	if tx.Error != nil {
 		tx.Rollback()
-		log.L_log.S上报异常(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
 		return 0, errors.New("查询余额失败查看服务器日志检查原因")
 	}
 
@@ -204,7 +204,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 
 	if tx.Error != nil {
 		tx.Rollback()
-		log.L_log.S上报异常(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
 		return 源新余额, 目标新余额, errors.New("余额减少失败查看服务器日志检查原因")
 	}
 
@@ -213,7 +213,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 	tx = tx.Raw(sql, Id).Scan(&源新余额)
 	if tx.Error != nil {
 		tx.Rollback()
-		log.L_log.S上报异常(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
 		return 源新余额, 目标新余额, errors.New("查询余额失败查看服务器日志检查原因")
 	}
 
@@ -229,7 +229,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 
 	if tx.Error != nil {
 		tx.Rollback()
-		log.L_log.S上报异常(strconv.Itoa(Id) + "目标Id余额增加失败:" + tx.Error.Error())
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "目标Id余额增加失败:" + tx.Error.Error())
 		return 源新余额, 目标新余额, errors.New("余额增加失败查看服务器日志检查原因")
 	}
 	// 查询新余额
@@ -237,7 +237,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 	tx = tx.Raw(sql, 目标id).Scan(&目标新余额)
 	if tx.Error != nil {
 		tx.Rollback()
-		log.L_log.S上报异常(strconv.Itoa(Id) + "目标id查询余额失败:" + tx.Error.Error())
+		global.GVA_LOG.Error(strconv.Itoa(Id) + "目标id查询余额失败:" + tx.Error.Error())
 		return 源新余额, 目标新余额, errors.New("目标id查询余额失败查看服务器日志检查原因")
 	}
 	tx.Commit() //操作完成提交事务

@@ -57,7 +57,7 @@ func (j *appUser) Uid积分减少(c *gin.Context, AppId, Uid int, 减少值 floa
 					局_唯一标识.EndTime = time.Now().Unix() + 唯一有效期
 					_, err = service.NewUniqueNumLog(c, tx, AppId).Update(局_唯一标识.Id, map[string]interface{}{"EndTime": 局_唯一标识.EndTime})
 					if err != nil { //如果更新失败了?? 感觉不太可能吧,
-						log.L_log.S上报异常(strconv.Itoa(Uid) + "Uid积分唯一标识更新失败:" + err.Error())
+						global.GVA_LOG.Error(strconv.Itoa(Uid) + "Uid积分唯一标识更新失败:" + err.Error())
 						return errors.New("唯一标识重复")
 					}
 				}
@@ -79,7 +79,7 @@ func (j *appUser) Uid积分减少(c *gin.Context, AppId, Uid int, 减少值 floa
 
 		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid = ?", Uid).Update("VipNumber", gorm.Expr("VipNumber - ?", 减少值)).Error
 		if err != nil {
-			log.L_log.S上报异常(strconv.Itoa(Uid) + "Uid积分减少失败:" + err.Error())
+			global.GVA_LOG.Error(strconv.Itoa(Uid) + "Uid积分减少失败:" + err.Error())
 			return errors.New("积分减少失败查看服务器日志检查原因")
 		}
 		var 局_积分 float64

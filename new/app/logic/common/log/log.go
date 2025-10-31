@@ -149,6 +149,9 @@ func isInterfaceAnArray(i interface{}) bool {
 }
 
 func (j *log) S上报异常(异常内容 string) (err error) {
+	if len(异常内容) >= 10000 {
+		return
+	}
 	global.Q快验.Z置新用户消息(2, 异常内容)
 	print(异常内容)
 	return err
