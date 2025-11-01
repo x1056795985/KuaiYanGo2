@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	Db服务 "server/Service/Ser_AppInfo"
 	"server/global"
-	"server/new/app/logic/common/log"
+
 	"server/new/app/logic/common/publicData"
 	"server/structs/Http/response"
 	DB "server/structs/db"

@@ -256,12 +256,12 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("SetBatchUserClass", App.Set批量维护_修改用户类型)
 		baseRouter.POST("SetBatchAllUserVipTime", App.P批量_全部用户增减时间点数)
 		baseRouter.POST("BatchSetAppUserKey", App.P批量_设置用户绑定信息)
+		baseRouter.POST("BatchSetAppUserNote", App.P批量_Set修改备注)
 
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("DeleteBatch", App.Set批量维护_删除用户)
 			baseRouter.POST("Delete", App.Del批量删除软件用户) // 删除信息
 		}
-
 	}
 	//软件用户类型===========================================
 	baseRouter = Router根Admin.Group("/UserClass")

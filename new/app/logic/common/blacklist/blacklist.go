@@ -2,7 +2,7 @@ package blacklist
 
 import (
 	"server/global"
-	"server/new/app/logic/common/log"
+
 	"server/new/app/service"
 )
 

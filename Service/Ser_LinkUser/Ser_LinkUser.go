@@ -5,7 +5,6 @@ import (
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"gorm.io/gorm"
 	"server/global"
-	"server/new/app/logic/common/log"
 	"server/new/app/models/constant"
 	DB "server/structs/db"
 	"server/utils/Qqwry"

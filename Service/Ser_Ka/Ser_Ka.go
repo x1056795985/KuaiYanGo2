@@ -17,7 +17,7 @@ import (
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/kaClassUpPrice"
-	"server/new/app/logic/common/log"
+
 	dbm "server/new/app/models/db"
 	DB "server/structs/db"
 	"strconv"

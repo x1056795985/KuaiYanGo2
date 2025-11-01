@@ -17,7 +17,7 @@ import (
 	"server/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
-	"server/new/app/logic/common/log"
+
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -860,5 +860,37 @@ func (a *Api) P批量_设置用户绑定信息(c *gin.Context) {
 		response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
 	}
 
+	return
+}
+
+// 批量修改备注
+func (a *Api) P批量_Set修改备注(c *gin.Context) {
+	var 请求 struct {
+		AppId int    `json:"AppId"`
+		Id    []int  `json:"Id"`
+		Note  string `json:"Note"`
+	}
+	err := c.ShouldBindJSON(&请求)
+	//解析失败
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+
+	if 请求.AppId < 10000 || !Ser_AppInfo.AppId是否存在(请求.AppId) {
+		response.FailWithMessage("AppId不存在", c)
+		return
+	}
+	if len(请求.Id) <= 0 {
+		response.FailWithMessage("id数量必须大于0", c)
+		return
+	}
+
+	影响数量, err2 := Ser_AppUser.X修改软件用户备注_批量(请求.AppId, 请求.Id, 请求.Note)
+	if err2 != nil {
+		response.FailWithMessage(err2.Error(), c)
+	} else {
+		response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
+	}
 	return
 }

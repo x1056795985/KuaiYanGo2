@@ -10,7 +10,7 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
 	"server/global"
-	"server/new/app/logic/common/log"
+
 	DB "server/structs/db"
 	"strconv"
 	"time"
@@ -602,5 +602,12 @@ func X修改用户绑定信息_批量(AppId int, Id []int, Key string) (int64, e
 	//因为无符号 转换正负数 比较乱容易精度错误,所以 增加一个 Is增加 形参 判断是增加还是减少
 	db := *global.GVA_DB
 	db2 := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("Key", Key)
+	return db2.RowsAffected, db2.Error
+}
+
+func X修改软件用户备注_批量(AppId int, Id []int, Note string) (int64, error) {
+	//因为无符号 转换正负数 比较乱容易精度错误,所以 增加一个 Is增加 形参 判断是增加还是减少
+	db := *global.GVA_DB
+	db2 := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("Note", Note)
 	return db2.RowsAffected, db2.Error
 }

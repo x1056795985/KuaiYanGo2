@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"server/Service/Ser_LinkUser"
 	"server/global"
-	"server/new/app/logic/common/log"
+
 	DB "server/structs/db"
 	"server/utils/Qqwry"
 	"strconv"
