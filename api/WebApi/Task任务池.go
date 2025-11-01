@@ -153,6 +153,64 @@ func RunJs(c *gin.Context) {
 	return
 }
 
+func RunJs2(c *gin.Context) {
+	defer func() {
+		if err2 := recover(); err2 != nil {
+			局_GoJa错误, ok := err2.(*goja.Exception)
+			if ok {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:"+局_GoJa错误.String(), c)
+			} else {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:js引擎未返回报错信息", c)
+			}
+			return
+		}
+	}()
+	var AppInfo DB.DB_AppInfo
+	var 局_在线信息 DB.DB_LinksToken
+	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	局_公共函数名 := c.Param("JsName") //取url内的参数
+
+	//判断请求是GET还是post 如果是GET就把url当做局_post否则就用 POST数据当做参数
+	var 局_post string
+	if c.Request.Method == "GET" {
+		局_post = c.Request.URL.String()
+	} else {
+		局_post = c.GetString("局_json明文")
+	}
+
+	//{'a':1}
+	局_耗时 := time.Now().UnixMilli()
+	var 局_PublicJs DB.DB_PublicJs
+	var err error
+	局_PublicJs, err = Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_公共函数, 局_公共函数名)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
+
+	_, err = vm.RunString(局_PublicJs.Value)
+	if 局_详细错误, ok := err.(*goja.Exception); ok {
+		response.FailWithMessage("JS代码运行失败:"+局_详细错误.String(), c)
+		return
+	}
+	var 局_待执行js函数名 func(string) interface{}
+	ret := vm.Get(局_PublicJs.Name)
+	if ret == nil {
+		response.FailWithMessage("Js中没有["+局_PublicJs.Name+"()]函数", c)
+		return
+	}
+	err = vm.ExportTo(ret, &局_待执行js函数名)
+	if err != nil {
+		response.FailWithMessage("Js绑定函数到变量失败", c)
+		return
+	}
+	局_return := 局_待执行js函数名(局_post)
+	response.OkWithDetailed(局_return, "运行成功,耗时:"+strconv.Itoa(int(time.Now().UnixMilli()-局_耗时)), c)
+	return
+}
+
 func R任务池_任务查询(c *gin.Context) {
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了

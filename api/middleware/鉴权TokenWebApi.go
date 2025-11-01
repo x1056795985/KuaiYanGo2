@@ -74,9 +74,27 @@ func IsTokenWebApi() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		//20251101  进行权限改变增加公共函数,更细致化权限控制 //因为权限长度不能超过191
+		//旧权限例子  任务处理获取(TaskPoolGetTask),任务处理返回(TaskPoolSetTask),任务池_任务创建(TaskPoolNewData),运行公共js函数(RunJs),取公共变量(GetPublicData),置公共变量(SetPublicData),任务池_任务查询(TaskPoolGetData),
+		//新权限例子  (TaskPoolGetTask)(TaskPoolSetTask)(TaskPoolNewData)(RunJs)(GetPublicData)(SetPublicData)(TaskPoolGetData)[公共函数名称][aaaxxx]
 
 		//判断令牌是否有接口权限
-		if strings.Index(DB_LinksToken.Key, utils.W文本_取文本右边(c.Request.URL.Path, "/WebApi/")) == -1 {
+		局_接口名称 := utils.W文本_取文本右边(c.Request.URL.Path, "/WebApi/")
+		//两种格式的接口,
+		//第一种  (接口名称)
+		//第二种  如果存在 (RunJs/:JsName)
+		//局_公共函数名 := c.Param("JsName") //取url内的参数
+		//在检测公共函数的名字 [公共函数名]
+		var 有权限 bool
+		if strings.HasPrefix(局_接口名称, "RunJs/") {
+			局_接口名称 = c.Param("JsName") //取url内的参数
+			//查找到,且不为空才有权限
+			有权限 = strings.Index(DB_LinksToken.Key, "["+局_接口名称+"]") != -1 && 局_接口名称 != ""
+		} else {
+			有权限 = strings.Index(DB_LinksToken.Key, "("+局_接口名称+")") != -1
+		}
+
+		if !有权限 {
 			response.FailTokenErr(gin.H{}, "令牌无本接口权限", c)
 			c.Abort()
 			return

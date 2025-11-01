@@ -527,7 +527,11 @@ func (a *Api) Get全部WebAPi(c *gin.Context) {
 	for 键名, 键值 := range webApi2.J集_UserAPi路由2 {
 		局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
 	}
-	response.OkWithDetailed(局_path数组, "获取成功", c)
+	//所有公共函数名也需要加入进去,因为token可以更细的进行权限控制了
+
+	局_PublicJsName := Ser_PublicJs.P取全部公共函数名称(1)
+
+	response.OkWithDetailed(gin.H{"api": 局_path数组, "publicJs": 局_PublicJsName}, "获取成功", c)
 	return
 
 }

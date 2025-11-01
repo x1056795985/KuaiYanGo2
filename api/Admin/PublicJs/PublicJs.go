@@ -238,9 +238,10 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("公共函数名已存在", c)
 		return
 	}
-
-	if W文本_是否包含关键字(请求.Name, "/") || W文本_是否包含关键字(请求.Name, ".") {
-		response.FailWithMessage("函数名不能包含[/]或[].]符号", c)
+	局_禁止字符串 := []string{"\\", "|", ":", "\"", "<", ">", "@", "&", "^", "%", "$", "#", "!", "`", "~", " "}
+	W文本_是否存在_任意(请求.Name, 局_禁止字符串)
+	if W文本_是否包含关键字(请求.Name, "/") || W文本_是否包含关键字(请求.Name, ".") || W文本_是否包含关键字(请求.Name, ".") {
+		response.FailWithMessage("函数名不能包含"+strings.Join(局_禁止字符串, ",")+"符号", c)
 		return
 	}
 

@@ -103,3 +103,11 @@ func P取值2(Appid int, Name string) (DB.DB_PublicJs, error) {
 
 	return 局_PublicJs, err
 }
+func P取全部公共函数名称(Appid int) []string {
+	var 局_PublicJs []string
+	err := global.GVA_DB.Model(DB.DB_PublicJs{}).Select("Name").Where("AppId=?", Appid).Find(&局_PublicJs).Error
+	if err != nil {
+		return []string{}
+	}
+	return 局_PublicJs
+}

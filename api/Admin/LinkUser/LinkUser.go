@@ -129,6 +129,12 @@ func (a *LinkUserApi) NewWebApiToken(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
+	//Data too long for column 'Key' at row 1
+	if len(请求.Key) > 191 {
+		response.FailWithMessage("权限太多了,数据库字段存不下,减少一些吧", c)
+		return
+	}
+
 	在线信息, err := Ser_LinkUser.NewWebApiToken(请求.OutTime, 请求.Key, 请求.Tab)
 	if err != nil {
 		response.FailWithMessage("创建失败:"+err.Error(), c)
