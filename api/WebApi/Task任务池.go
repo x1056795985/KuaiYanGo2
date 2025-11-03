@@ -73,7 +73,7 @@ func R任务池_任务处理返回(c *gin.Context) {
 
 	局_任务状态 := 请求json.GetInt("TaskStatus")
 	if 局_任务类型.HookReturnDataStart != "" {
-		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataStart, 局_任务数据, 局_任务状态)
+		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_任务池Hook处理(c, &AppInfo, &局_在线信息, 局_任务类型.HookReturnDataStart, 局_任务数据, 局_任务状态)
 		if err != nil {
 			response.FailWithMessage(err.Error(), c)
 			return
@@ -87,7 +87,7 @@ func R任务池_任务处理返回(c *gin.Context) {
 	}
 
 	if 局_任务类型.HookReturnDataEnd != "" {
-		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookReturnDataEnd, 局_任务数据, 局_任务状态)
+		局_任务数据, 局_任务状态, err = Ser_Js.JS引擎初始化_任务池Hook处理(c, &AppInfo, &局_在线信息, 局_任务类型.HookReturnDataEnd, 局_任务数据, 局_任务状态)
 		if err != nil {
 			response.FailWithMessage(err.Error(), c)
 			return
@@ -124,7 +124,7 @@ func RunJs(c *gin.Context) {
 		return
 	}
 
-	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
+	vm := Ser_Js.JS引擎初始化_用户(c, &AppInfo, &局_在线信息, &局_PublicJs)
 	局_云函数型参数 := ""
 	if 请求json.Get("Parameter").Type() == fastjson.TypeObject {
 		局_云函数型参数 = 请求json.Get("Parameter").String()
@@ -188,7 +188,7 @@ func RunJs2(c *gin.Context) {
 		return
 	}
 
-	vm := Ser_Js.JS引擎初始化_用户(&AppInfo, &局_在线信息, &局_PublicJs)
+	vm := Ser_Js.JS引擎初始化_用户(c, &AppInfo, &局_在线信息, &局_PublicJs)
 
 	_, err = vm.RunString(局_PublicJs.Value)
 	if 局_详细错误, ok := err.(*goja.Exception); ok {
@@ -271,7 +271,7 @@ func R任务池_任务创建(c *gin.Context) {
 		局_任务数据 = string(请求json.GetStringBytes("Parameter"))
 	}
 	if 局_任务类型.HookSubmitDataStart != "" {
-		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
+		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(c, &AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
 		if err != nil {
 			response.FailWithMessage(err.Error(), c)
 			return
@@ -283,7 +283,7 @@ func R任务池_任务创建(c *gin.Context) {
 		return
 	}
 	if 局_任务类型.HookSubmitDataEnd != "" {
-		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
+		局_任务数据, _, err = Ser_Js.JS引擎初始化_任务池Hook处理(c, &AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
 		if err != nil {
 			response.FailWithMessage(err.Error(), c)
 			return

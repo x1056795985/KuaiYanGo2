@@ -38,7 +38,7 @@ import (
 	"time"
 )
 
-func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, 局_PublicJs *DB.DB_PublicJs) *goja.Runtime {
+func JS引擎初始化_用户(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, 局_PublicJs *DB.DB_PublicJs) *goja.Runtime {
 	vm := goja.New() // 创建engine实例
 	_ = vm.Set("$用户在线信息", 在线信息)
 
@@ -105,6 +105,31 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 	_ = vm.Set("$api_定制批量充值", jS_批量充值)
 	_ = vm.Set("$api_定制批量取账号信息", jS_批量取账号信息)
 
+	Request := map[string]interface{}{"Url": gin.H{}, "Header": "", "Form": gin.H{}, "Host": "", "Body": "", "Method": ""}
+	if c.Request != nil {
+		明文信息 := c.Request.Body
+		headers := make([]string, 0, len(c.Request.Header))
+		for key, values := range c.Request.Header {
+			header := key + ": " + strings.Join(values, ", ")
+			headers = append(headers, header)
+		}
+
+		//HTTP 表单提交虽然支持多值情况,但是单值的使用频率更高,所以这里转换成单值,如果有多值需求,从URL内自己解析即可
+		局_url参数信息 := make(map[string]interface{})
+		for key, values := range c.Request.Form {
+			//如果post数据是json,则跳过这个数据
+			if len(values) >= 1 && values[0] == "" && strings.HasPrefix(key, "{") {
+				continue
+			}
+
+			if len(values) >= 1 {
+				局_url参数信息[key] = values[0]
+			}
+		}
+
+		Request = map[string]interface{}{"Url": c.Request.URL, "Form": 局_url参数信息, "Header": headers, "Host": c.Request.Host, "Body": 明文信息, "Method": c.Request.Method}
+	}
+	_ = vm.Set("$Request", Request)
 	//处理载入外部js文件  'import "@/utils/utils";
 	if strings.Index(局_PublicJs.Value, "import '") != -1 || strings.Index(局_PublicJs.Value, `import "`) != -1 {
 		// 导入外部的模块
@@ -133,13 +158,13 @@ func JS引擎初始化_用户(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksT
 
 	return vm
 }
-func JS引擎初始化_任务池Hook处理(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, Hook函数, 任务数据 string, 局_任务状态 int) (string, int, error) {
+func JS引擎初始化_任务池Hook处理(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, Hook函数, 任务数据 string, 局_任务状态 int) (string, int, error) {
 	局_PublicJs, err := Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_任务池Hook函数, Hook函数)
 	if err != nil {
 		return "", 局_任务状态, err
 	}
 
-	vm := JS引擎初始化_用户(AppInfo, 在线信息, &局_PublicJs)
+	vm := JS引擎初始化_用户(c, AppInfo, 在线信息, &局_PublicJs)
 	_ = vm.Set("$拦截原因", "")
 	_ = vm.Set("$任务状态", 局_任务状态)
 	_, err = vm.RunString(局_PublicJs.Value)
@@ -182,15 +207,8 @@ func JS引擎初始化_ApiHook处理(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB
 		return
 	}
 
-	vm := JS引擎初始化_用户(AppInfo, 在线信息, &局_PublicJs)
+	vm := JS引擎初始化_用户(c, AppInfo, 在线信息, &局_PublicJs)
 	_ = vm.Set("$拦截原因", "")
-	headers := make([]string, 0, len(c.Request.Header))
-	for key, values := range c.Request.Header {
-		header := key + ": " + strings.Join(values, ", ")
-		headers = append(headers, header)
-	}
-	Request := map[string]interface{}{"Url": c.Request.URL, "Header": headers, "Host": c.Request.Host, "Body": 明文信息, "Method": c.Request.Method}
-	_ = vm.Set("$Request", Request)
 
 	_, err = vm.RunString(局_PublicJs.Value)
 	if 局_详细错误, ok2 := err.(*goja.Exception); ok2 {
@@ -521,7 +539,7 @@ func jS_任务池_任务创建(局_在线信息 DB.DB_LinksToken, 任务类型ID
 	AppInfo := Ser_AppInfo.App取App详情(局_在线信息.LoginAppid)
 	if 局_任务类型.HookSubmitDataStart != "" {
 
-		局_任务数据, _, err = JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
+		局_任务数据, _, err = JS引擎初始化_任务池Hook处理(&gin.Context{}, &AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
 		if err != nil {
 			return js对象_通用返回{IsOk: false, Err: err.Error()}
 		}
@@ -533,7 +551,7 @@ func jS_任务池_任务创建(局_在线信息 DB.DB_LinksToken, 任务类型ID
 	}
 
 	if 局_任务类型.HookSubmitDataEnd != "" {
-		局_任务数据, _, err = JS引擎初始化_任务池Hook处理(&AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
+		局_任务数据, _, err = JS引擎初始化_任务池Hook处理(&gin.Context{}, &AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
 		if err != nil {
 			return js对象_通用返回{IsOk: false, Err: err.Error()}
 		}
