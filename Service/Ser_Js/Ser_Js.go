@@ -117,10 +117,10 @@ func JS引擎初始化_用户(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信�
 		//HTTP 表单提交虽然支持多值情况,但是单值的使用频率更高,所以这里转换成单值,如果有多值需求,从URL内自己解析即可
 		局_url参数信息 := make(map[string]interface{})
 		for key, values := range c.Request.Form {
-			//如果post数据是json,则跳过这个数据
-			if len(values) >= 1 && values[0] == "" && strings.HasPrefix(key, "{") {
-				continue
-			}
+			//如果post数据是json,则跳过这个数据// 会根据协议头自动处理所以不用自己处理 Content-Type:application/json 自然不会解析了
+			//if len(values) >= 1 && values[0] == "" && strings.HasPrefix(key, "{") {
+			//	continue
+			//}
 
 			if len(values) >= 1 {
 				局_url参数信息[key] = values[0]
