@@ -149,7 +149,7 @@ func RunJs(c *gin.Context) {
 		return
 	}
 	局_return := 局_待执行js函数名(局_云函数型参数)
-	response.OkWithDetailed(局_return, "运行成功,耗时:"+strconv.Itoa(int(time.Now().UnixMilli()-局_耗时)), c)
+	response.OkWithDetailed(局_return, "ok,ms:"+strconv.Itoa(int(time.Now().UnixMilli()-局_耗时)), c)
 	return
 }
 
@@ -207,7 +207,7 @@ func RunJs2(c *gin.Context) {
 		return
 	}
 	局_return := 局_待执行js函数名(局_post)
-	response.OkWithDetailed(局_return, "运行成功,耗时:"+strconv.Itoa(int(time.Now().UnixMilli()-局_耗时)), c)
+	response.OkWithDetailed(局_return, "ok,ms:"+strconv.Itoa(int(time.Now().UnixMilli()-局_耗时)), c)
 	return
 }
 

@@ -353,7 +353,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 		return
 	}
 
-	局_卡信息, err2 := Ser_Ka.Ka单卡创建(局_卡类.Id, 局_在线信息.User, "用户"+局_在线信息.User+"自助通过Api购卡", "", 0)
+	局_卡信息, err2 := Ser_Ka.Ka单卡创建(局_卡类.Id, 局_在线信息.Uid, 局_在线信息.User, "用户"+局_在线信息.User+"自助通过Api购卡", "", 0)
 	if err2 != nil {
 		新余额, err = Ser_User.Id余额增减(局_在线信息.Uid, 局_卡类.Money, true)
 		if err != nil {

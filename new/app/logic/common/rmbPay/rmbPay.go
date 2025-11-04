@@ -705,7 +705,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				return errors.Join(err, errors.New(fmt.Sprintf("AppId:%d取详情失败", 参数.E额外信息.Get("AppId").Int())))
 			}
 
-			info.卡号详情, err = ka.L_ka.Ka单卡创建(c, info.卡类详情.Id, "系统自动", "支付购卡订单ID:"+参数.PayOrder, "", 0)
+			info.卡号详情, err = ka.L_ka.Ka单卡创建(c, info.卡类详情.Id, -1, "系统自动", "支付购卡订单ID:"+参数.PayOrder, "", 0)
 			if err != nil {
 				return errors.Join(err, errors.New("卡号创建失败"))
 			}

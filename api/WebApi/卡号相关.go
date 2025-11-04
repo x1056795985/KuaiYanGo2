@@ -74,7 +74,7 @@ func New制新卡(c *gin.Context) {
 	数组_卡 := make([]DB.DB_Ka, 请求.Number) //make初始化,有3个元素的切片, len和cap都为3
 
 	用户名 := Ser_LinkUser.Token取Name(c.Request.Header.Get("Token"))
-	err = Ser_Ka.Ka批量创建(数组_卡[:], 请求.Id, 用户名, 请求.AdminNote, "", 0)
+	err = Ser_Ka.Ka批量创建(数组_卡[:], 请求.Id, -1, 用户名, 请求.AdminNote, "", 0)
 
 	if err != nil {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)

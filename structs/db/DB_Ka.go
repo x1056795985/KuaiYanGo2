@@ -6,6 +6,7 @@ type DB_Ka struct {
 	KaClassId    int     `json:"KaClassId" gorm:"column:KaClassId;comment:卡类id"`
 	Name         string  `json:"Name" gorm:"column:Name;comment:卡号;size:191;uniqueIndex:AppidName"`
 	Status       int     `json:"Status" gorm:"column:Status;default:1;comment:卡号状态"` // 1正常 2冻结
+	RegisterId   int     `json:"RegisterId" gorm:"column:RegisterId;default:0;comment:制卡人id,负数为管理员或webApi"`
 	RegisterUser string  `json:"RegisterUser" gorm:"column:RegisterUser;size:180;comment:制卡人账号"`
 	RegisterTime int64   `json:"RegisterTime" gorm:"column:RegisterTime;comment:制卡时间戳"`
 	AdminNote    string  `json:"AdminNote" gorm:"column:AdminNote;size:1000;comment:管理员备注"`

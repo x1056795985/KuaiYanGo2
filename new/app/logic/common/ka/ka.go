@@ -189,7 +189,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 }
 
 // 有效期 0=9999999999 无限制
-func (j *ka) Ka单卡创建(c *gin.Context, 卡类id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) (卡信息切片 DB.DB_Ka, err error) {
+func (j *ka) Ka单卡创建(c *gin.Context, 卡类id, 制卡人Id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) (卡信息切片 DB.DB_Ka, err error) {
 	var info struct {
 		卡类信息 dbm.DB_KaClass
 	}
@@ -222,6 +222,7 @@ func (j *ka) Ka单卡创建(c *gin.Context, 卡类id int, 制卡人账号 string
 	卡信息切片.AppId = info.卡类信息.AppId
 	卡信息切片.KaClassId = info.卡类信息.Id
 	卡信息切片.Status = 1
+	卡信息切片.RegisterId = 制卡人Id
 	卡信息切片.RegisterUser = 制卡人账号
 	卡信息切片.RegisterTime = time.Now().Unix()
 	卡信息切片.AdminNote = 管理员备注

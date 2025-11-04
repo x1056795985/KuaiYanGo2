@@ -50,7 +50,7 @@ func UserApi_取注册送卡(c *gin.Context) {
 		return
 	}
 
-	局_卡, err = Ser_Ka.Ka单卡创建(AppInfo.RegisterGiveKaClassId, Ser_Admin.Id取User(1), "key测试卡:"+string(请求json.GetStringBytes("Key")), "", 0)
+	局_卡, err = Ser_Ka.Ka单卡创建(AppInfo.RegisterGiveKaClassId, -1, Ser_Admin.Id取User(1), "key测试卡:"+string(请求json.GetStringBytes("Key")), "", 0)
 	if err != nil {
 		response.X响应状态消息(c, response.Status_操作失败, "卡号创建失败")
 		return

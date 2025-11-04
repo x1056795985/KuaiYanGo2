@@ -317,7 +317,7 @@ func (a *Api) New(c *gin.Context) {
 	数组_卡 := make([]DB.DB_Ka, 请求.Number) //make初始化,有3个元素的切片, len和cap都为3
 
 	用户名 := Ser_LinkUser.Token取Name(c.Request.Header.Get("Token"))
-	err = Ser_Ka.Ka批量创建(数组_卡[:], 请求.Id, 用户名, 请求.AdminNote, "", 0)
+	err = Ser_Ka.Ka批量创建(数组_卡[:], 请求.Id, -c.GetInt("Uid"), 用户名, 请求.AdminNote, "", 0)
 
 	if err != nil {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
@@ -383,7 +383,7 @@ func (a *Api) BatchKaNameNew(c *gin.Context) {
 	}
 
 	用户名 := Ser_LinkUser.Token取Name(c.Request.Header.Get("Token"))
-	err = Ser_Ka.Ka批量创建(数组_卡[:], 局_卡类信息.Id, 用户名, 请求.AdminNote, "", 0)
+	err = Ser_Ka.Ka批量创建(数组_卡[:], 局_卡类信息.Id, -c.GetInt("Uid"), 用户名, 请求.AdminNote, "", 0)
 
 	if err != nil {
 		response.FailWithMessage("导入失败:"+err.Error(), c)

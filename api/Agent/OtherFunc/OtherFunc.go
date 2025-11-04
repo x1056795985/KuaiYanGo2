@@ -58,6 +58,11 @@ func (a *Api) SetAppUserKey(c *gin.Context) {
 		return
 	}
 
+	if 局_用户详情.AgentUid != 0 && 局_用户详情.AgentUid != c.GetInt("Uid") {
+		response.FailWithMessage("只能操作自己的归属用户", c)
+		return
+	}
+
 	err = Ser_AppUser.Set绑定信息(请求.AppId, 局_用户详情.Uid, 请求.Key)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)

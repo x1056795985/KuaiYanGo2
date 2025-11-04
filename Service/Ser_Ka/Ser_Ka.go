@@ -34,7 +34,7 @@ func KaId是否存在(Appid int, id int) bool {
 
 // Ka批量创建 切片可以直接传址 所以放切片  卡信息切片[:]
 // 有效期 0=9999999999 无限制
-func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) error {
+func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id, 制卡人id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) error {
 	if len(卡信息切片) >= 2621 { //65535 / 25 ≈ 2621.4。所以一次最多只能插入2621条记录
 		return errors.New("每批次最大数量不能超过2621")
 	}
@@ -74,6 +74,7 @@ func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id int, 制卡人账号 st
 			卡信息切片[i].AppId = KaClass详细信息.AppId
 			卡信息切片[i].KaClassId = KaClass详细信息.Id
 			卡信息切片[i].Status = 1
+			卡信息切片[i].RegisterId = 制卡人id
 			卡信息切片[i].RegisterUser = 制卡人账号
 			卡信息切片[i].RegisterTime = time.Now().Unix()
 			卡信息切片[i].AdminNote = 管理员备注
@@ -200,6 +201,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 			卡信息切片[i].AppId = KaClass详细信息.AppId
 			卡信息切片[i].KaClassId = KaClass详细信息.Id
 			卡信息切片[i].Status = 1
+			卡信息切片[i].RegisterId = 局_购卡人信息.Id
 			卡信息切片[i].RegisterUser = 局_购卡人信息.User
 			卡信息切片[i].RegisterTime = time.Now().Unix()
 			卡信息切片[i].AdminNote = ""
@@ -351,6 +353,7 @@ func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库�
 			卡信息切片[i].AppId = KaClass详细信息.AppId
 			卡信息切片[i].KaClassId = KaClass详细信息.Id
 			卡信息切片[i].Status = 1
+			卡信息切片[i].RegisterId = 购卡人Id
 			卡信息切片[i].RegisterUser = 局_购卡人User
 			卡信息切片[i].RegisterTime = time.Now().Unix()
 			卡信息切片[i].AdminNote = ""
@@ -399,7 +402,7 @@ func Q取总数() int64 {
 }
 
 // 有效期 0=9999999999 无限制
-func Ka单卡创建(卡类id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) (卡信息切片 DB.DB_Ka, err error) {
+func Ka单卡创建(卡类id, 制卡人ID int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) (卡信息切片 DB.DB_Ka, err error) {
 
 	KaClass详细信息, err := Ser_KaClass.KaClass取详细信息(卡类id)
 	if err != nil { //估计是卡类不存在
@@ -421,6 +424,7 @@ func Ka单卡创建(卡类id int, 制卡人账号 string, 管理员备注 string
 	卡信息切片.AppId = KaClass详细信息.AppId
 	卡信息切片.KaClassId = KaClass详细信息.Id
 	卡信息切片.Status = 1
+	卡信息切片.RegisterId = 制卡人ID
 	卡信息切片.RegisterUser = 制卡人账号
 	卡信息切片.RegisterTime = time.Now().Unix()
 	卡信息切片.AdminNote = 管理员备注
