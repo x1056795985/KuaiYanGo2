@@ -91,7 +91,7 @@ func IsTokenWebApi() gin.HandlerFunc {
 			//查找到,且不为空才有权限
 			有权限 = strings.Index(DB_LinksToken.Key, "["+局_接口名称+"]") != -1 && 局_接口名称 != ""
 		} else {
-			有权限 = strings.Index(DB_LinksToken.Key, "("+局_接口名称+")") != -1
+			有权限 = strings.Index(DB_LinksToken.Key, 局_接口名称+")") != -1 //不能带左括号,因为可能出现  /前缀的情况
 		}
 
 		if !有权限 {
