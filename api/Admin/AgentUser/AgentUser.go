@@ -149,6 +149,7 @@ type DB_AgentUser_简化 struct {
 	LoginTime           int64   `json:"LoginTime" gorm:"column:LoginTime;comment:登录时间"`
 	LoginIp             string  `json:"LoginIp" gorm:"column:LoginIp;comment:登录ip"`
 	Role                int     `json:"Role" gorm:"column:Role;comment:角色"`
+	Note                string  `json:"Note" gorm:"column:Note;comment:备注"`
 	Sort                int64   `json:"Sort" gorm:"column:Sort;default:0;comment:排序权重; "`
 }
 
