@@ -16,6 +16,7 @@ import (
 	"server/new/app/logic/common/appInfo"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
+	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/router/webApi2"
 	"server/new/app/service"
@@ -241,7 +242,7 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 	}
 	//私钥被改变 写入到用户消息,方便误操作找回,因为私钥丢失无法恢复,必须记录一下,不然客户全部需要换公钥
 	if 局_旧AppInfo.CryptoKeyPrivate != 请求.AppData.CryptoKeyPrivate {
-		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_其他, Ser_Admin.Id取User(1), 请求.AppData.AppName, "", "防误操作应用"+strconv.Itoa(局_旧AppInfo.AppId)+"更换私钥旧私钥:"+局_旧AppInfo.CryptoKeyPrivate, c.ClientIP())
+		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_其他, constant.APPID_管理平台, Ser_Admin.Id取User(1), 请求.AppData.AppName, "", "防误操作应用"+strconv.Itoa(局_旧AppInfo.AppId)+"更换私钥旧私钥:"+局_旧AppInfo.CryptoKeyPrivate, c.ClientIP())
 	}
 	//=====网页用户中心配置============
 	tx := *global.GVA_DB

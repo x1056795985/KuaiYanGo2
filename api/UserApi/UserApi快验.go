@@ -59,7 +59,7 @@ func KyApiSendSms(c *gin.Context) {
 	新余额2, err2 := Ser_User.Id余额增减(局_User.Id, 局_增减值, true) // 'mark 隐患,增加值会失败,后期重构放事务内'
 	if err2 != nil {
 		局_log := fmt.Sprintf("%s|金额%v", "快验系统ApiSendSms"+局_手机号+","+局_参数验证码+"发送失败补偿单失败了,原因"+err2.Error(), 局_增减值)
-		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, 局_User.User, AppInfo.AppName, 局_在线信息.AppVer, 局_log, c.ClientIP())
+		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, AppInfo.AppId, 局_User.User, AppInfo.AppName, 局_在线信息.AppVer, 局_log, c.ClientIP())
 	} else {
 		go Ser_Log.Log_写余额日志(局_User.User, c.ClientIP(), fmt.Sprintf("%s|新余额%v", "快验系统ApiSendSms"+局_手机号+","+局_参数验证码+"发送失败补偿,原因"+err.Error()+"", 新余额2), 局_增减值)
 	}

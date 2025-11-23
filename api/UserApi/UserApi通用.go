@@ -51,7 +51,7 @@ func UserApi_GetToken(c *gin.Context) {
 	在线信息, err2 := Ser_LinkUser.New(0, 1, AppInfo.AppId, AppInfo.OutTime, "游客", "", "", c.ClientIP(), 局_通讯AES密钥)
 
 	if err2 != nil {
-		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", AppInfo.AppName, "", fmt.Sprintf("用户获取Token插入新值失败:%v", err2.Error()), c.ClientIP())
+		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, AppInfo.AppId, "系统", AppInfo.AppName, "", fmt.Sprintf("用户获取Token插入新值失败:%v", err2.Error()), c.ClientIP())
 		response.X响应状态(c, response.Status_SQl错误)
 		return
 	}
@@ -225,7 +225,7 @@ func UserApi_用户登录(c *gin.Context) {
 		}
 
 		if err != nil {
-			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, 局_卡号或用户名, AppInfo.AppName, 局_在线信息.AppVer, "新添加软件用户时失败报错信息:"+err.Error(), c.ClientIP())
+			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, constant.APPID_管理平台, 局_卡号或用户名, AppInfo.AppName, 局_在线信息.AppVer, "新添加软件用户时失败报错信息:"+err.Error(), c.ClientIP())
 			response.X响应状态消息(c, response.Status_SQl错误, "New用户信息内部错误")
 			return
 		}
@@ -1008,7 +1008,7 @@ func UserApi_置新用户消息(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_操作失败, "消息内容不能为空")
 		return
 	}
-	go Ser_Log.Log_写用户消息(局_消息类型, 局_在线信息.User, AppInfo.AppName, 局_在线信息.AppVer, 局_消息内容, c.ClientIP())
+	go Ser_Log.Log_写用户消息(局_消息类型, AppInfo.AppId, 局_在线信息.User, AppInfo.AppName, 局_在线信息.AppVer, 局_消息内容, c.ClientIP())
 	response.X响应状态(c, c.GetInt("局_成功Status"))
 	return
 }

@@ -302,9 +302,9 @@ func InitDbTable数据(c *gin.Context) {
 	if 局_例子记录.DbLogusermsg < 局_例子版本 {
 		global.GVA_DB.Model(DB.DB_LogUserMsg{}).Count(&局_数量)
 		if 局_数量 == 0 {
-			Ser_Log.Log_写用户消息(3, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.0", "建议做个自动赚钱的功能,启动软件后,微信余额就蹭蹭涨", "127.0.0.1")
-			Ser_Log.Log_写用户消息(2, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.0", `捕获到异常bug文件名:EDV8FCC.tmp句柄数:508,ExceptionText：运行时出错!\r\n\r\n错误代码：0\r\n\r\n错误信息：分配 1073741832 字节内存失败!\r\n0, 0\r\n\r\nCallStack:\r\n 0x024B7B4C\r\n  0x10063260\r\n   0x024A0410\r\n    0x024B5254\r\n     0x024B51B8\r\n      0x024B52A3\r\n       0x02300015\r\n\r\n异常调用过程： 0x024B8656\r\n  0x024B8A65\r\n   0x024AB2F5\r\n    0x024B7CA3\r\n     0x024B7B4C\r\n      0x024B7D74\r\n       0x10063260\r\n        0x024A0410\r\n         0x024B5254\r\n          0x024B51B8\r\n           0x024B52A3\r\n            0x02300015\r\n\r\n当前调用过程： 0x024B7B4C\r\n  0x10063260\r\n   0x024A0410\r\n    0x024B5254\r\n     0x024B51B8\r\n      0x024B52A3\r\n       0x02300015\r\n`, "127.0.0.1")
-			Ser_Log.Log_写用户消息(2, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.3", "内存写入错误错误信息:11191919;2424233", "127.0.0.1")
+			Ser_Log.Log_写用户消息(3, 10001, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.0", "建议做个自动赚钱的功能,启动软件后,微信余额就蹭蹭涨", "127.0.0.1")
+			Ser_Log.Log_写用户消息(2, 10001, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.0", `捕获到异常bug文件名:EDV8FCC.tmp句柄数:508,ExceptionText：运行时出错!\r\n\r\n错误代码：0\r\n\r\n错误信息：分配 1073741832 字节内存失败!\r\n0, 0\r\n\r\nCallStack:\r\n 0x024B7B4C\r\n  0x10063260\r\n   0x024A0410\r\n    0x024B5254\r\n     0x024B51B8\r\n      0x024B52A3\r\n       0x02300015\r\n\r\n异常调用过程： 0x024B8656\r\n  0x024B8A65\r\n   0x024AB2F5\r\n    0x024B7CA3\r\n     0x024B7B4C\r\n      0x024B7D74\r\n       0x10063260\r\n        0x024A0410\r\n         0x024B5254\r\n          0x024B51B8\r\n           0x024B52A3\r\n            0x02300015\r\n\r\n当前调用过程： 0x024B7B4C\r\n  0x10063260\r\n   0x024A0410\r\n    0x024B5254\r\n     0x024B51B8\r\n      0x024B52A3\r\n       0x02300015\r\n`, "127.0.0.1")
+			Ser_Log.Log_写用户消息(2, 10001, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.3", "内存写入错误错误信息:11191919;2424233", "127.0.0.1")
 		}
 		局_例子记录.DbLogusermsg = 局_例子版本
 	}
@@ -817,6 +817,15 @@ func 数据库兼容旧版本(c *gin.Context) {
 			AutoMigrate(&dbm.DB_UniqueNumLog{}); err != nil {
 			fmt.Println("积分记录表创建失败: ", err.Error())
 		}
+	}
+	//用户消息新增 AppID字段所以要处理一下 先判断 AppId 字段是否有值为0的 如果有值为0的 则操作更新,更新成功后,再删除值为0的
+	//UPDATE db_log_usermsg  AS a SET  AppId=(SELECT AppId FROM db_app_info WHERE AppName =a.App)
+
+	_ = db.Model(DB.DB_LogUserMsg{}).Where("AppId = ?", 0).Count(&局_总数).Error
+	if 局_总数 > 0 {
+		db.Exec("UPDATE db_log_usermsg  AS a SET  AppId=(SELECT AppId FROM db_app_info WHERE AppName =a.App)")
+		err = db.Model(DB.DB_LogUserMsg{}).Where("AppId = ?", 0).Update("AppId", gorm.Expr("App")).Error
+		err = db.Model(DB.DB_LogUserMsg{}).Where("AppId IS NULL").Delete(&DB.DB_LogUserMsg{}).Error
 	}
 
 }

@@ -83,11 +83,12 @@ const Log用户消息类型_bug提交 = 2
 const Log用户消息类型_投诉建议 = 4
 const Log用户消息类型_系统执行错误 = 4
 
-func Log_写用户消息(消息类型 int, User, App名称, AppVer, 消息内容, IP string) {
+func Log_写用户消息(消息类型, AppId int, User, App名称, AppVer, 消息内容, IP string) {
 	login := DB.DB_LogUserMsg{
 		Id:           0,
 		User:         User,
 		App:          App名称,
+		AppId:        AppId,
 		AppVer:       AppVer,
 		MsgType:      消息类型,
 		Time:         time.Now().Unix(),

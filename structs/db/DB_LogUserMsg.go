@@ -5,6 +5,7 @@ type DB_LogUserMsg struct {
 	Id           int    `json:"Id" gorm:"column:Id;primarykey"`
 	User         string `json:"User" gorm:"column:User;size:191;index;comment:用户"`
 	App          string `json:"App" gorm:"column:App;index;size:191;comment:App名称"`
+	AppId        int    `json:"AppId" gorm:"column:AppId;index;default:0;  comment:AppId"`
 	AppVer       string `json:"AppVer" gorm:"column:AppVer;size:191;comment:App版本"`
 	MsgType      int    `json:"MsgType" gorm:"column:MsgType;comment:消息类型"` //  1 其他 2 bug提交  3 投诉建议 4 系统执行错误  //其他自己扩展
 	Time         int64  `json:"Time" gorm:"column:Time;comment:时间"`

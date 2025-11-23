@@ -117,7 +117,7 @@ func (C *User) GetPwSendSms(c *gin.Context) {
 	局_验证码ID := "Note" + utils2.Md5String(info.user.Phone)[:16] + W文本_取随机字符串(15)
 	err = Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, info.user.Phone)
 	if err != nil {
-		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, 请求.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, info.user.Phone, err.Error()), c.ClientIP())
+		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, constant.APPID_Web用户中心, 请求.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, info.user.Phone, err.Error()), c.ClientIP())
 		response.FailWithMessage(c, "发送失败")
 		return
 	}
@@ -326,7 +326,7 @@ func (C *User) SendSms(c *gin.Context) {
 	局_验证码ID := "Note" + utils2.Md5String(请求.Phone)[:16] + W文本_取随机字符串(15)
 	err = Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, 请求.Phone)
 	if err != nil {
-		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.likeInfo.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 请求.Phone, err.Error()), c.ClientIP())
+		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, constant.APPID_Web用户中心, info.likeInfo.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 请求.Phone, err.Error()), c.ClientIP())
 		response.FailWithMessage(c, "发送失败")
 		return
 	}

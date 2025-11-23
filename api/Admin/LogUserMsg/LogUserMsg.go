@@ -44,6 +44,7 @@ type 结构请求_GetDB_LogUserMsgList struct {
 	Order        int      `json:"Order"`        // 0 倒序 1 正序
 	RegisterTime []string `json:"RegisterTime"` // 开始时间 结束时间
 	Count        int64    `json:"Count"`        // 总数
+	AppId        int      `json:"AppId"`        // appid
 }
 
 // GetDB_LogUserMsgList
@@ -64,6 +65,7 @@ func (a *Api) GetLogList(c *gin.Context) {
 	} else {
 		局_DB.Order("Id DESC")
 	}
+
 	if 请求.RegisterTime != nil && len(请求.RegisterTime) == 2 && 请求.RegisterTime[0] != "" && 请求.RegisterTime[1] != "" {
 		制卡开始时间, _ := strconv.ParseInt(请求.RegisterTime[0], 10, 64)
 		制卡结束时间, _ := strconv.ParseInt(请求.RegisterTime[1], 10, 64)
@@ -84,6 +86,9 @@ func (a *Api) GetLogList(c *gin.Context) {
 		局_DB.Where("MsgType  = ? ", 请求.MsgType)
 	}
 
+	if 请求.AppId > 0 {
+		局_DB.Where("AppId  = ? ", 请求.AppId)
+	}
 	var DB_LogUserMsg []DB.DB_LogUserMsg
 	var 总数 int64
 	//Count(&总数) 必须放在where 后面 不然值会被清0

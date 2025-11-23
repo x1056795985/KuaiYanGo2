@@ -9,6 +9,7 @@ import (
 	"server/Service/Ser_Admin"
 	"server/Service/Ser_Log"
 	"server/global"
+	"server/new/app/models/constant"
 
 	DB "server/structs/db"
 	. "server/utils"
@@ -379,7 +380,7 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		err = tx.Model(DB.DB_User{}).Create(&局_User).Error
 		if err != nil {
-			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, "系统", "系统", global.X系统信息.B版本号当前, "New用户信息非预计错误:"+err.Error(), Ip)
+			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, constant.APPID_管理平台, "系统", "系统", global.X系统信息.B版本号当前, "New用户信息非预计错误:"+err.Error(), Ip)
 			return errors.New("添加失败")
 		}
 		if 局_User.UPAgentId == 0 {

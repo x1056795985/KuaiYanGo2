@@ -305,7 +305,7 @@ func UserApi_余额购买积分(c *gin.Context) {
 	if err != nil {
 		新余额, err = Ser_User.Id余额增减(局_在线信息.Uid, 局_花费金额, true)
 		if err != nil {
-			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, 局_在线信息.User, AppInfo.AppName, 局_在线信息.AppVer, "用户余额购买积分,减余额成功,增加积分失败,请手动处理,本次错误原因:"+err.Error(), c.ClientIP())
+			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, AppInfo.AppId, 局_在线信息.User, AppInfo.AppName, 局_在线信息.AppVer, "用户余额购买积分,减余额成功,增加积分失败,请手动处理,本次错误原因:"+err.Error(), c.ClientIP())
 			response.X响应状态消息(c, response.Status_操作失败, "扣费成功,但是积分增加失败,请联系开发者手动处理")
 		} else {
 			response.X响应状态消息(c, response.Status_操作失败, "购买积分失败,请重试")

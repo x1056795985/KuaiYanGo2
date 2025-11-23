@@ -73,7 +73,7 @@ func UserApi_取注册送卡(c *gin.Context) {
 	}
 
 	if err != nil {
-		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, 局_卡.Name, AppInfo.AppName, 局_在线信息.AppVer, "新添加软件用户时失败报错信息:"+err.Error(), c.ClientIP())
+		go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, AppInfo.AppId, 局_卡.Name, AppInfo.AppName, 局_在线信息.AppVer, "新添加软件用户时失败报错信息:"+err.Error(), c.ClientIP())
 		response.X响应状态消息(c, response.Status_SQl错误, "New用户信息内部错误")
 		return
 	}

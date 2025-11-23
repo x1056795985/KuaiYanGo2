@@ -157,7 +157,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		}
 
 		if err != nil {
-			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, 请求.UserOrKa, info.appInfo.AppName, info.DB_links_user.AppVer, "新添加软件用户时失败报错信息:"+err.Error(), c.ClientIP())
+			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.appInfo.AppId, 请求.UserOrKa, info.appInfo.AppName, info.DB_links_user.AppVer, "新添加软件用户时失败报错信息:"+err.Error(), c.ClientIP())
 			response.FailWithMessage(c, "New用户信息内部错误")
 			return
 		}
@@ -192,7 +192,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		_, err = service.NewUser(c, &tx).Update(info.appInfo.AppId, map[string]interface{}{"LoginAppid": constant.APPID_Web用户中心, "LoginIp": c.ClientIP(), "LoginTime": time.Now().Unix()})
 		if err != nil {
 			局_log := "账号模式登录成功把登录最后时间信息写到账号表失败:" + err.Error()
-			Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, 请求.UserOrKa, "webUser", strconv.Itoa(请求.AppId), 局_log, c.ClientIP())
+			Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.appInfo.AppId, 请求.UserOrKa, "webUser", strconv.Itoa(请求.AppId), 局_log, c.ClientIP())
 			return
 		}
 	}
@@ -293,7 +293,7 @@ func (C *Base) LoginKey(c *gin.Context) {
 		_, err = service.NewUser(c, &tx).Update(info.appInfo.AppId, map[string]interface{}{"LoginAppid": constant.APPID_Web用户中心, "LoginIp": c.ClientIP(), "LoginTime": time.Now().Unix()})
 		if err != nil {
 			局_log := "账号模式登录成功把登录最后时间信息写到账号表失败:" + err.Error()
-			Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.来源links_user.User, "webUser", strconv.Itoa(info.appInfo.AppId), 局_log, c.ClientIP())
+			Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.appInfo.AppId, info.来源links_user.User, "webUser", strconv.Itoa(info.appInfo.AppId), 局_log, c.ClientIP())
 		}
 	}
 
