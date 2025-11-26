@@ -371,7 +371,7 @@ func (j *agent) Z执行调价信息分成(c *gin.Context, 调价详情 []dbm.DB_
 	})
 	return
 }
-func (j *agent) Z执行百分比代理分成(c *gin.Context, 分成结构 []m.D代理分成结构, 总额度 float64, 日志前缀 string) (err error) {
+func (j *agent) Z执行百分比代理分成(c *gin.Context, 分成结构 []m.D代理分成结构, 总额度 float64, 日志前缀 string, isShowLog bool) (err error) {
 	if len(分成结构) == 0 {
 		return
 	}
@@ -404,9 +404,19 @@ func (j *agent) Z执行百分比代理分成(c *gin.Context, 分成结构 []m.D�
 			局_临时日志.Time = time.Now().Unix()
 			局_临时日志.Ip = c.ClientIP() + " " + Qqwry.Ip查信息2(c.ClientIP())
 			//分成:¥%s (¥%s*(%d%%-%d%%)),|新余额≈%s",
-			局_临时日志.Note = 日志前缀 + fmt.Sprintf(",分成:¥%s (¥%s(实价)*(%d%%-%d%%)),|新余额≈%s",
-				Float64到文本(d.S实际分成金额, 2),
-				Float64到文本(总额度, 2), d.F分成百分比, d.F分给下级百分比, Float64到文本(局_userInfo.Rmb, 2))
+			if isShowLog || 分成结构[0].Uid == d.Uid { //一级代理也显示
+				局_临时日志.Note = 日志前缀 + fmt.Sprintf(",分成:¥%s (¥%s(实价)*(%d%%-%d%%)),|新余额≈%s",
+					Float64到文本(d.S实际分成金额, 2),
+					Float64到文本(总额度, 2),
+					d.F分成百分比,
+					d.F分给下级百分比,
+					Float64到文本(局_userInfo.Rmb, 2))
+			} else {
+				局_临时日志.Note = 日志前缀 + fmt.Sprintf(",分成:¥%s,|新余额≈%s",
+					Float64到文本(d.S实际分成金额, 2),
+					Float64到文本(局_userInfo.Rmb, 2))
+			}
+
 			日志记录集 = append(日志记录集, 局_临时日志)
 		}
 

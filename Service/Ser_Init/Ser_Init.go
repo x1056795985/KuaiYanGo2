@@ -818,9 +818,9 @@ func 数据库兼容旧版本(c *gin.Context) {
 			fmt.Println("积分记录表创建失败: ", err.Error())
 		}
 	}
-	//用户消息新增 AppID字段所以要处理一下 先判断 AppId 字段是否有值为0的 如果有值为0的 则操作更新,更新成功后,再删除值为0的
-	//UPDATE db_log_usermsg  AS a SET  AppId=(SELECT AppId FROM db_app_info WHERE AppName =a.App)
 
+	//2025/03/29  用户消息新增 AppID字段所以要处理一下 先判断 AppId 字段是否有值为0的 如果有值为0的 则操作更新,更新成功后,再删除值为0的
+	//UPDATE db_log_usermsg  AS a SET  AppId=(SELECT AppId FROM db_app_info WHERE AppName =a.App)
 	_ = db.Model(DB.DB_LogUserMsg{}).Where("AppId = ?", 0).Count(&局_总数).Error
 	if 局_总数 > 0 {
 		db.Exec("UPDATE db_log_usermsg  AS a SET  AppId=(SELECT AppId FROM db_app_info WHERE AppName =a.App)")

@@ -268,7 +268,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 	}
 	if len(代理分成数据) >= 0 {
 		局_日志前缀 := fmt.Sprintf("下级代理:%s,制卡ID{%s},", 局_购卡人信息.User, 局_ID列表)
-		err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_价格组成.总卡类价格, 局_日志前缀)
+		err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_价格组成.总卡类价格, 局_日志前缀, 局_价格组成.总调价 == 0)
 		if err != nil {
 			global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 

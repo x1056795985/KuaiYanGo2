@@ -15,6 +15,7 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_User"
+	"server/api/Admin/Panel"
 	"server/global"
 	"server/structs/Http/response"
 	utils2 "server/utils"
@@ -482,9 +483,9 @@ func (a *Api) Y余额充值(c *gin.Context) {
 }
 
 type 结构请求_余额充值 struct {
-	Type  string  `json:"Type"` //选择支付通道
+	Type      string  `json:"Type"` //选择支付通道
 	C充值金额 float64 `json:"RMB"`
-	D订单ID string  `json:"OrderId"`
+	D订单ID   string  `json:"OrderId"`
 }
 
 func (a *Api) Q取支付通道状态(c *gin.Context) {
@@ -529,16 +530,27 @@ func K快验心跳() {
 		//已过期
 	}
 	//统计信息
-	局_动态标记 := fmt.Sprintf("%s %dH %d协程,用户数:%d,卡总数:%d,在线数:%d",
+	局_设备信息, err := Panel.GetServerInfo()
+	if err != nil {
+		return
+	}
+
+	局_动态标记 := fmt.Sprintf("%s %dH%dG %dG %d协程,用户数:%d,卡总数:%d,在线数:%d",
 		utils.S三元(global.Q快验.J集_连接方式 == 0, "直连", "网关"),
 		runtime.NumCPU(),
+		局_设备信息.Ram.TotalMB/1024,
+		局_设备信息.Disk.UsedGB,
+		局_设备信息.Disk.TotalGB,
 		runtime.NumGoroutine(),
 		Ser_User.Q取总数(),
 		Ser_Ka.Q取总数(),
 		Ser_LinkUser.Get取在线总数(true, true),
 	)
+	if 局_设备信息.Os.GOOS != "linux" {
+		局_动态标记 += " " + 局_设备信息.Os.GOOS
+	}
 	global.Q快验.Z置动态标记(局_动态标记)
-	//获取系统核心数数量,内存大小
+	//获取硬件相关信息
 
 	//fmt.Printf("定时K快验心跳状态:%v\n", 当前状态)
 }

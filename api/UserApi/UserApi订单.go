@@ -389,7 +389,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 		代理分成数据, err3 := agent.L_agent.D代理分成计算(c, 局_在线信息.AgentUid, 局_卡类.Money)
 		if err3 == nil {
 			局_日志前缀 := fmt.Sprintf("用户%s余额制卡ID:%d,", 局_在线信息.User, 局_卡信息.Id)
-			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_卡类.Money, 局_日志前缀)
+			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_卡类.Money, 局_日志前缀, 局_价格组成.总调价 == 0)
 			if err != nil {
 				global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 			}
