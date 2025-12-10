@@ -6,6 +6,7 @@ import (
 	"server/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
+	DB "server/structs/db"
 	"server/utils"
 	"strconv"
 )
@@ -72,9 +73,34 @@ func (s *CpsPayOrder) GetList(请求 request.List, rangeTime []string) (int64, [
 	// 创建查询构建器
 	db := s.db.Model(new(dbm.DB_CpsPayOrder))
 
-	// 关键字搜索
-	if 请求.Keywords != "" && 请求.Type == 1 {
-		db = db.Where("Id = ?", 请求.Keywords)
+	//关键字筛选
+	if 请求.Keywords != "" {
+		var 用户详情 DB.DB_User
+
+		switch 请求.Type {
+		case 1: //消费者
+			tx := s.db.Model(new(dbm.DB_CpsPayOrder))
+			_ = tx.Model(DB.DB_User{}).Where("User =?", 请求.Keywords).First(&用户详情).Error
+			db.Where("uid = ?", 用户详情.Id)
+		case 2: //备注
+			db.Where("note LIKE ?", "%"+请求.Keywords+"%")
+		case 3: //邀请人
+			tx := s.db.Model(new(dbm.DB_CpsPayOrder))
+			_ = tx.Model(DB.DB_User{}).Where("User =?", 请求.Keywords).First(&用户详情).Error
+			db.Where("inviterId = ? ", 用户详情.Id)
+		case 4: //邀请上级
+			tx := s.db.Model(new(dbm.DB_CpsPayOrder))
+			_ = tx.Model(DB.DB_User{}).Where("User =?", 请求.Keywords).First(&用户详情).Error
+			db.Where("grandpaId = ? ", 用户详情.Id)
+		case 5: //订单编号
+			db.Where("payOrder LIKE ?", "%"+请求.Keywords+"%")
+		case 6: //金额
+			db.Where("Rmb = ? ", 请求.Keywords)
+		case 7: //用户名
+			tx := s.db.Model(new(dbm.DB_CpsPayOrder))
+			_ = tx.Model(DB.DB_User{}).Where("User =?", 请求.Keywords).First(&用户详情).Error
+			db.Where("(inviterId = ? OR uid = ? OR grandpaId = ?)", 用户详情.Id, 用户详情.Id, 用户详情.Id)
+		}
 	}
 
 	if rangeTime != nil && len(rangeTime) == 2 && rangeTime[0] != "" && rangeTime[1] != "" {

@@ -36,12 +36,17 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 		response.FailWithMessage(c, "用户不存在")
 		return
 	}
-
-	info.userClass, err = service.NewUserClass(c, &tx).Info(info.appUser.UserClassId)
-	if err != nil {
-		info.userClass.Name = "已删类型id" + strconv.Itoa(info.appUser.UserClassId)
+	if info.appUser.UserClassId == 0 {
+		info.userClass.Name = "未分类"
 		info.userClass.Id = info.appUser.UserClassId
+	} else {
+		info.userClass, err = service.NewUserClass(c, &tx).Info(info.appUser.UserClassId)
+		if err != nil {
+			info.userClass.Name = "已删类型id" + strconv.Itoa(info.appUser.UserClassId)
+			info.userClass.Id = info.appUser.UserClassId
+		}
 	}
+
 	var 局_userInfo DB.DB_User
 	if info.appInfo.AppType <= 2 {
 		局_userInfo, err = service.NewUser(c, &tx).Info(info.likeInfo.Uid)

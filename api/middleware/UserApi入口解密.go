@@ -78,16 +78,12 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"GetPayOrderStatus": {"订单_取状态", UserApi.UserApi_订单_取状态, true},
 	"PayKaUsa":          {"订单_购卡直冲", UserApi.UserApi_订单_购卡直冲, true},
 	"PayUserMoney":      {"订单_余额充值", UserApi.UserApi_订单_余额充值, true},
-	//下方接口为历史遗留20250402 已移除 充值类功能集中使用卡类充值方便代理分成等实现
-	//"PayUserVipNumber":  {"订单_积分充值", UserApi.UserApi_订单_积分充值, true},
-	"PayGetKa": {"订单_支付购卡", UserApi.UserApi_订单_支付购卡, true},
-	//下方接口为历史遗留20240429 已移除
-	//"GetAliPayPC":         {"订单_余额充值_支付宝PC支付", UserApi.UserApi_订单_余额充值_支付宝PC支付, true},
-	//"GetWXPayPC":          {"订单_余额充值_微信支付支付", UserApi.UserApi_订单_余额充值_微信支付支付, true},
-	"GetPayStatus":          {"取支付通道状态", UserApi.UserApi_取支付通道状态, true},
-	"GetPayKaList":          {"取可购买卡类列表", UserApi.UserApi_取可购买卡类列表, true},
-	"GetPurchasedKaList":    {"取已购买充值卡列表", UserApi.UserApi_取已购买充值卡列表, true},
-	"PayMoneyToVipNumber":   {"余额购买积分", UserApi.UserApi_余额购买积分, true},
+
+	"PayGetKa":           {"订单_支付购卡", UserApi.UserApi_订单_支付购卡, true},
+	"GetPayStatus":       {"取支付通道状态", UserApi.UserApi_取支付通道状态, true},
+	"GetPayKaList":       {"取可购买卡类列表", UserApi.UserApi_取可购买卡类列表, true},
+	"GetPurchasedKaList": {"取已购买充值卡列表", UserApi.UserApi_取已购买充值卡列表, true},
+
 	"PayMoneyToKa":          {"余额购买充值卡", UserApi.UserApi_余额购买充值卡, true},
 	"GetUserClassList":      {"取用户类型列表", UserApi.UserApi_取用户类型列表, true},
 	"SetUserClass":          {"置用户类型", UserApi.UserApi_置用户类型, true},
@@ -100,7 +96,7 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"TaskPoolGetTypeStatus": {"任务池_取类型状态", UserApi.UserApi_任务池_取类型状态, true},
 	"GetUserConfig":         {"取用户云配置", UserApi.UserApi_取用户云配置, true},
 	"SetUserConfig":         {"置用户云配置", UserApi.UserApi_置用户云配置, true},
-	"SetAgentUid":           {"置代理标识", UserApi.UserApi_置代理标志, true},
+	"SetAgentUid":           {"置代理标志", UserApi.UserApi_置代理标志, true},
 	"GetKaInfo":             {"取卡号详情", UserApi.UserApi_取卡号详情, true},
 	"GetJwtToken":           {"取jwt令牌", UserApi.UserApi_取jwtToken, true},
 	"GetUploadToken":        {"云存储_取文件上传授权", UserApi.UserApi_云存储_取文件上传授权, true},

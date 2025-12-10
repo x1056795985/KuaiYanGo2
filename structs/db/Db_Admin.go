@@ -2,7 +2,7 @@ package DB
 
 // db_admin  管理员表 结构体
 type DB_Admin struct {
-	Id            int     `json:"Id" gorm:"column:Id;primarykey"`                            // 用户ID
+	Id            int     `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`             // 用户ID
 	User          string  `json:"User" gorm:"column:User;index;size:191;comment:用户登录名"`      // 用户登录名
 	PassWord      string  `json:"-" gorm:"column:PassWord;size:191; comment:用户登录密码"`         // 用户登录密码
 	Phone         string  `json:"phone" gorm:"column:phone;size:191;comment:用户手机号"`          // 用户手机号

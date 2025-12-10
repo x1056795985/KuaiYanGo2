@@ -2,7 +2,7 @@ package db
 
 // 绑定信息日志表
 type DB_LogKey struct {
-	Id     int     `json:"id" gorm:"column:id;primarykey"`
+	Id     int     `json:"id" gorm:"column:id;primarykey;AUTO_INCREMENT"`
 	Type   int     `json:"type" gorm:"column:type;comment:1 绑定,2解绑,3换绑"`
 	User   string  `json:"user" gorm:"column:user;size:191;index;comment:用户名"`
 	Uid    int     `json:"uid" gorm:"column:uid;comment:uid;index:idx_uid_app_id"`

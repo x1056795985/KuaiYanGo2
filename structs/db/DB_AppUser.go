@@ -1,7 +1,7 @@
 package DB
 
 type DB_AppUser struct {
-	Id           int     `json:"Id" gorm:"column:Id;primarykey"`
+	Id           int     `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`
 	Uid          int     `json:"Uid" gorm:"column:Uid;index;UNIQUE;comment:用户的id关联到user表"`
 	Status       int     `json:"Status" gorm:"column:Status;default:1;comment:本应用用户状态 1正常 2冻结"`
 	Key          string  `json:"Key" gorm:"column:Key;comment:绑定信息"` // key是mysql关键字,踩坑点, 下次重构处理吧

@@ -2,7 +2,7 @@ package DB
 
 // DB_LogRiskControl 风控日志
 type DB_LogRiskControl struct {
-	Id   int    `json:"Id" gorm:"column:Id;primarykey"`
+	Id   int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`
 	LId  int    `json:"LId" gorm:"column:触发在线id;"`
 	User string `json:"User" gorm:"column:User;size:191;index;comment:用户名"`
 	Type int    `json:"Type" gorm:"column:Type;comment:风控规则类型"`

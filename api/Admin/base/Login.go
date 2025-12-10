@@ -53,7 +53,7 @@ func (b *BaseApi) Login(c *gin.Context) {
 		j校验验证码 = true
 	}
 
-	_ = global.H缓存.Increment(客户端ip, 1) //这个ip防爆次数 + 1
+	_ = global.H缓存.Increment(客户端ip, 2) //这个ip防爆次数 + 1
 	// j校验验证码
 	if j校验验证码 {
 		//验证码验证码正确 = 真

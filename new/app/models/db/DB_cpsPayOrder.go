@@ -2,7 +2,7 @@ package db
 
 // cps分销订单信息  客户支付后,用于统计cps拉新的客户分成信息
 type DB_CpsPayOrder struct {
-	Id       int     `json:"id" gorm:"column:id;primarykey"`
+	Id       int     `json:"id" gorm:"column:id;primarykey;AUTO_INCREMENT"`
 	PayOrder string  `json:"payOrder" gorm:"column:payOrder;size:191;uniqueIndex;comment:余额充值订单id"` //唯一索引,那个线程插入成功,那个处理
 	Time     int64   `json:"time" gorm:"column:time;index;comment:时间"`
 	AppId    int     `json:"appId" gorm:"column:appId;comment:应用id"`

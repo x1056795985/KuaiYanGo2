@@ -11,6 +11,7 @@ import (
 	"server/Service/Ser_Log"
 	"server/api/UserApi/response"
 	"server/new/app/logic/common/blacklist"
+	"server/new/app/logic/common/ka"
 	DB "server/structs/db"
 	"time"
 )
@@ -61,11 +62,11 @@ func UserApi_取注册送卡(c *gin.Context) {
 	switch AppInfo.AppType {
 	case 3:
 		//注册送卡一定是系统制卡,不会有制卡人 只能为在线代理标志uid
-		err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, 1, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_在线信息.AgentUid)
+		err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, 1, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 		_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 	case 4:
 		//注册送卡一定是系统制卡,不会有制卡人 只能为在线代理标志uid
-		err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, 1, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_在线信息.AgentUid)
+		err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, 1, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 		_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 	default:
 		//???应该不会到这里
@@ -77,7 +78,7 @@ func UserApi_取注册送卡(c *gin.Context) {
 		response.X响应状态消息(c, response.Status_SQl错误, "New用户信息内部错误")
 		return
 	}
-
+	ka.L_ka.Z置归属代理(c, AppInfo.AppId, 局_Uid, 局_在线信息.AgentUid) //失败也不影响
 	//局_AppUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid) //充值之后重新读取一遍
 	//这里吧成功的状态
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{

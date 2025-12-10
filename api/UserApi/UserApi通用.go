@@ -197,27 +197,20 @@ func UserApi_用户登录(c *gin.Context) {
 				return
 			}
 		}
-		局_归属代理uid := 0
-		if AppInfo.AppType == 3 || AppInfo.AppType == 4 {
-			//账号模式,制卡人就是归属代理 如果是管理员制造的卡, 就使用代理标志为归属uid
-			局_归属代理uid = Ser_User.User用户名取id(局_卡.RegisterUser)
-			if 局_归属代理uid == 0 {
-				局_归属代理uid = 局_在线信息.AgentUid
-			}
-		}
+
 		//没有这个用户,应该是第一次登录应用,添加进去
 		switch AppInfo.AppType {
 		case 1:
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), 1, time.Now().Unix(), 0, 0, "", 局_在线信息.AgentUid)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), 1, time.Now().Unix(), 0, 0, "")
 		case 2: //账号限时
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), 1, 0, 0, 0, "", 局_在线信息.AgentUid)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), 1, 0, 0, 0, "")
 		case 3:
 			//卡号模式,制卡人就是归属代理 如果是管理员制造的卡, 就使用代理标志为归属uid
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, 1, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_归属代理uid)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, 1, 局_卡.MaxOnline), time.Now().Unix()+局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		case 4:
 			//卡号模式,制卡人就是归属代理
-			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, 1, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote, 局_归属代理uid)
+			err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), S三元(局_卡.MaxOnline == 0, 1, 局_卡.MaxOnline), 局_卡.VipTime, 局_卡.VipNumber, 局_卡.UserClassId, 局_卡.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{局_Uid})
 		default:
 			//???应该不会到这里
@@ -229,7 +222,17 @@ func UserApi_用户登录(c *gin.Context) {
 			response.X响应状态消息(c, response.Status_SQl错误, "New用户信息内部错误")
 			return
 		}
-
+		局_归属代理uid := 0
+		if AppInfo.AppType == 3 || AppInfo.AppType == 4 {
+			//账号模式,制卡人就是归属代理 如果是管理员制造的卡, 就使用代理标志为归属uid
+			局_归属代理uid = Ser_User.User用户名取id(局_卡.RegisterUser)
+			if 局_归属代理uid == 0 {
+				局_归属代理uid = 局_在线信息.AgentUid
+			}
+		} else {
+			局_归属代理uid = 局_在线信息.AgentUid
+		}
+		ka.L_ka.Z置归属代理(c, AppInfo.AppId, 局_Uid, S三元(AppInfo.AppType <= 2, 局_在线信息.AgentUid, 局_归属代理uid)) //失败也不影响
 		_, err = service.NewLogKey(c, &db).Create(&dbm.DB_LogKey{
 			Type:   constant.LogKey_绑定,
 			User:   局_卡号或用户名,
@@ -255,6 +258,7 @@ func UserApi_用户登录(c *gin.Context) {
 		}
 
 	}
+
 	局_AppUser, _ = Ser_AppUser.Uid取详情(AppInfo.AppId, 局_Uid) //充值之后重新读取一遍
 	if 局_AppUser.Status == 2 {
 		go Ser_Log.Log_写登录日志(局_卡号或用户名, c.ClientIP(), "已冻结无法登录", 局_在线信息.LoginAppid)
@@ -316,7 +320,7 @@ func UserApi_用户登录(c *gin.Context) {
 	}
 	//没有归属代理,但是在线信息已经有代理标志了 赋予软件用户归属代理
 	if 局_AppUser.AgentUid == 0 && 局_在线信息.AgentUid != 0 {
-		_, err = service.NewAppUser(c, &tx, 局_在线信息.LoginAppid).UpdateUid(局_Uid, map[string]interface{}{"AgentUid": 局_在线信息.AgentUid})
+		err = ka.L_ka.Z置归属代理(c, 局_在线信息.LoginAppid, 局_Uid, 局_在线信息.AgentUid) //失败也不影响
 		if err != nil {
 			response.X响应状态消息(c, response.Status_操作失败, err.Error())
 			return

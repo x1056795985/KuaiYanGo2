@@ -41,7 +41,7 @@ func (s *CpsInvitingRelation) Q取归属邀请人(指定AppId, 被邀请人id in
 
 	// 查询直接邀请人 含二级
 
-	err = s.db.Debug().Model(dbm.DB_CpsInvitingRelation{}).
+	err = s.db.Model(dbm.DB_CpsInvitingRelation{}).
 		Where("inviteeAppId = ?", 指定AppId).
 		Where("inviteeId = ?", 被邀请人id).Find(&数组).Error
 

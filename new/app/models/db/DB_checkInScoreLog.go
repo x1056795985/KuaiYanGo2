@@ -2,7 +2,7 @@ package db
 
 // 签到分日志
 type DB_CheckInScoreLog struct {
-	Id           int    `json:"id" gorm:"column:id;primarykey;comment:自增ID"`
+	Id           int    `json:"id" gorm:"column:id;primarykey;AUTO_INCREMENT;comment:自增ID"`
 	AppId        int    `json:"appId" gorm:"column:appId;comment:appId;"`
 	UserId       int    `json:"userId" gorm:"column:userId;comment:用户ID"` // 明确用户ID
 	CreatedAt    int64  `json:"createdAt" gorm:"column:createdAt;comment:创建时间"`

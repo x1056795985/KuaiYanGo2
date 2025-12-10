@@ -54,7 +54,7 @@ func jS_批量注册(局_在线信息 DB.DB_LinksToken, user []string, 密码 st
 			})
 			continue
 		}
-		err = Ser_AppUser.New用户信息(appInfo.AppId, 用户信息.Id, "", 1, time.Now().Unix(), 0, 0, "", 0)
+		err = Ser_AppUser.New用户信息(appInfo.AppId, 用户信息.Id, "", 1, time.Now().Unix(), 0, 0, "")
 		if err != nil {
 			局_软件用户信息 = append(局_软件用户信息, 临时{
 				User: 用户信息,

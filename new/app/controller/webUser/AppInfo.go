@@ -29,12 +29,21 @@ func (C *AppInfo) GetAppBaseInfo(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		appInfo     DB.DB_AppInfo
-		appInfoUser dbm.DB_AppInfoWebUser
+		appInfo        DB.DB_AppInfo
+		appInfoWebUser dbm.DB_AppInfoWebUser
+		appInfoUser    dbm.DB_AppInfoWebUser
 	}{}
 	var err error
 	tx := *global.GVA_DB
 
+	if info.appInfoWebUser, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId); err != nil {
+		response.FailWithMessage(c, "未开启网页用户中心")
+		return
+	}
+	if info.appInfoWebUser.Status != 1 {
+		response.FailWithMessage(c, "未开启网页用户中心")
+		return
+	}
 	if info.appInfo, err = service.NewAppInfo(c, &tx).Info(请求.AppId); err != nil {
 		response.FailWithMessage(c, "AppId不存在")
 		return
@@ -81,11 +90,19 @@ func (C *AppInfo) GetAppGongGao(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		appInfo DB.DB_AppInfo
+		appInfo        DB.DB_AppInfo
+		appInfoWebUser dbm.DB_AppInfoWebUser
 	}{}
 	var err error
 	tx := *global.GVA_DB
-
+	if info.appInfoWebUser, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId); err != nil {
+		response.FailWithMessage(c, "未开启网页用户中心")
+		return
+	}
+	if info.appInfoWebUser.Status != 1 {
+		response.FailWithMessage(c, "未开启网页用户中心")
+		return
+	}
 	if info.appInfo, err = service.NewAppInfo(c, &tx).Info(请求.AppId); err != nil {
 		response.FailWithMessage(c, "AppId不存在")
 		return

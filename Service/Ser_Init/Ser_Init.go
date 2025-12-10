@@ -121,6 +121,7 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_ShortUrl{},
 		dbm.DB_CpsInvitingRelation{},
 		dbm.DB_CpsUser{},
+		dbm.DB_CpsCode{},
 		dbm.DB_CpsPayOrder{},
 
 		dbm.DB_CheckInInfo{},
@@ -194,7 +195,7 @@ func InitDbTable数据(c *gin.Context) {
 		global.GVA_DB.Model(DB.DB_AppInfo{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			_ = appInfo.L_appInfo.NewApp信息(c, 10001, 1, "演示对接账密限时Rsa交换密匙")
-			Ser_AppUser.New用户信息(10001, 1, "测试绑定", 1, time.Now().Unix(), 11.02, 0, "", 0)
+			Ser_AppUser.New用户信息(10001, 1, "测试绑定", 1, time.Now().Unix(), 11.02, 0, "")
 			卡类ID, _ := Ser_KaClass.KaClass创建New(10001, "天卡", "Y30", 2592000, 2592000, 0.01, 1.01, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 			卡类ID, _ = Ser_KaClass.KaClass创建New(10001, "月卡", "Y30", 2592000, 2592000, 0.01, 1.01, 100, 100, 0, 1, 25, 1, 1, 1, 1)
 			卡信息, _ := Ser_Ka.Ka单卡创建(卡类ID, -1, Ser_Admin.Id取User(1), "演示创建", "", 0)

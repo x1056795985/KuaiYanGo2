@@ -1,7 +1,7 @@
 package DB
 
 type DB_Ka struct {
-	Id           int     `json:"Id" gorm:"column:Id;primarykey"`
+	Id           int     `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`
 	AppId        int     `json:"AppId" gorm:"column:AppId;comment:所属应用 ;uniqueIndex:AppidName"`
 	KaClassId    int     `json:"KaClassId" gorm:"column:KaClassId;comment:卡类id"`
 	Name         string  `json:"Name" gorm:"column:Name;comment:卡号;size:191;uniqueIndex:AppidName"`

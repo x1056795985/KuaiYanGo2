@@ -33,6 +33,7 @@ func (C *CheckInUser) Info(c *gin.Context) {
 	info.checkInUser, err = service.NewCheckInUser(c, &tx).Info(info.appInfo.AppId, info.likeInfo.Uid)
 	//判断是否存在,如果不存在,插入默认数据
 	if err != nil && err.Error() == "record not found" {
+		tx = *global.GVA_DB
 		info.checkInUser.UserId = info.likeInfo.Uid
 		info.checkInUser.AppId = info.appInfo.AppId
 		info.checkInUser.CreatedAt = time.Now().Unix()

@@ -37,7 +37,6 @@ func init() {
 		Map订单类型: map[int]string{
 			constant.D订单类型_余额充值: "余额充值",
 			constant.D订单类型_购卡直冲: "购卡直冲",
-			constant.D订单类型_积分充值: "积分充值",
 			constant.D订单类型_支付购卡: "支付购卡",
 		},
 	}
@@ -166,6 +165,13 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 		return
 	}
 	req = 局_通道数据
+	//余额支付单独处理,直接回调
+	if 局_通道.Q取通道名称() == "余额支付" {
+		c.Set("余额支付payOrder", 参数.PayOrder)
+		响应信息, 响应代码 := j.D订单回调(c)
+		fmt.Print(响应信息, 响应代码)
+	}
+
 	return
 }
 
@@ -305,34 +311,6 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 					Note:  fmt.Sprintf("管理员操作退款,订单:%s,扣除软件用户积分|新积分≈%s", 参数.PayOrder, Float64到文本(info.软件用户详情.VipNumber, 2)),
 				})
 			}
-		}
-		if 追回资产 && 参数.ProcessingType == constant.D订单类型_积分充值 { //追回积分
-			if info.app详情, err = service.NewAppInfo(c, tx).Info(参数.E额外信息.Get("AppId").Int()); err != nil {
-				return errors.Join(err, errors.New(fmt.Sprintf("AppId:%d取详情失败", 参数.E额外信息.Get("AppId").Int())))
-			}
-			局_增加积分 := Float64乘int64(参数.Rmb, int64(info.app详情.RmbToVipNumber))
-			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+参数.E额外信息.Get("AppId").String()).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Uid = ?", 参数.E额外信息.Get("AppUserUid").Int()).First(&info.软件用户详情).Error
-			if err != nil {
-				return errors.New("应用:" + 参数.E额外信息.Get("AppId").String() + "软件用户id" + 参数.E额外信息.Get("AppUserUid").String() + "已不存在")
-			}
-			info.软件用户详情.VipNumber -= 局_增加积分
-			_, err = service.NewAppUser(c, tx, 参数.E额外信息.Get("AppId").Int()).UpdateUid(info.软件用户详情.Uid, map[string]interface{}{
-				"VipNumber": info.软件用户详情.VipNumber,
-			})
-			if err != nil {
-				return errors.Join(err, errors.New("扣除积分失败"))
-			}
-
-			info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
-				User:  参数.User,
-				AppId: 参数.E额外信息.Get("AppId").Int(),
-				Type:  constant.Log_type_积分,
-				Time:  time.Now().Unix(),
-				Ip:    c.ClientIP(),
-				Count: 局_增加积分,
-				Note:  fmt.Sprintf("管理员操作退款,订单:%s,扣除软件用户积分(积分rmb比例:%d)|新积分≈%s", 参数.PayOrder, info.app详情.RmbToVipNumber, Float64到文本(info.软件用户详情.VipNumber, 2)),
-			})
-
 		}
 
 		if 追回资产 && 参数.ProcessingType == constant.D订单类型_支付购卡 { //追回积分
@@ -945,6 +923,7 @@ func (j *rmbPay) Pay_取支付通道基本信息() []支付通道基本信息 {
 		{Id: 6, Name: "虎皮椒", Alias: 支付配置.H虎皮椒支付显示名称, Status: 支付配置.H虎皮椒支付开关, RMB: 支付配置.H虎皮椒单次最大金额},
 		{Id: 7, Name: "易支付", Alias: 支付配置.Y易支付显示名称, Status: 支付配置.Y易支付开关, RMB: 支付配置.Y易支付最大金额},
 		{Id: 8, Name: "易支付2", Alias: 支付配置.Y易支付2显示名称, Status: 支付配置.Y易支付2开关, RMB: 支付配置.Y易支付2最大金额},
+		{Id: 9, Name: "余额支付", Alias: 支付配置.Y余额支付显示名称, Status: 支付配置.Y余额支付开关, RMB: 99999999},
 	}
 	return 支付通道列表
 }

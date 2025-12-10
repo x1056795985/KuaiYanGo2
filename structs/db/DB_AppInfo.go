@@ -8,6 +8,8 @@ type DB_AppInfo struct {
 	AppStatusMessage      string `json:"AppStatusMessage" gorm:"column:AppStatusMessage;comment:状态原因"`
 	AppVer                string `json:"AppVer"  gorm:"column:AppVer;default:1.0.0;comment:软件版本"`
 	RegisterGiveKaClassId int    `json:"RegisterGiveKaClassId"  gorm:"column:RegisterGiveKaClassId;comment:注册赠送卡类id"`
+	AgentGiftKaClassId    int    `json:"AgentGiftKaClassId"  gorm:"column:AgentGiftKaClassId;default:0;comment:归属代理赠卡类id"`
+	AgentKaUseModel       int    `json:"AgentKaUseModel"  gorm:"column:AgentKaUseModel;default:0;comment:代理卡充值模式,0无限制,1限归属用户"`
 
 	VerifyKey     int `json:"VerifyKey"  gorm:"column:VerifyKey;default:1;comment:绑定模式"`                 //1 免验证可以换绑 2 免验证禁止换绑 3 验证可以换绑  4 验证禁止换绑
 	IsUserKeySame int `json:"IsUserKeySame"  gorm:"column:IsUserKeySame;default:1;comment:绑定信息不同用户可否相同"` //1 不同用户可以相同 2 不同用户不可相同
@@ -23,12 +25,12 @@ type DB_AppInfo struct {
 	CryptoKeyPrivate string `json:"CryptoKeyPrivate"  gorm:"column:CryptoKeyPrivate;size:1024;comment:加密通信私钥签名"`
 	CryptoKeyPublic  string `json:"CryptoKeyPublic"  gorm:"column:CryptoKeyPublic;size:1024;comment:加密通信公钥验签"`
 	//MaxOnline          int    `json:"MaxOnline"  gorm:"column:MaxOnline;default:999;comment:默认在线最大数量"`                     //在线最大数量 这个是默认 只有用户最大值是0时才用这个
-	ExceedMaxOnlineOut int    `json:"ExceedMaxOnlineOut"  gorm:"column:ExceedMaxOnlineOut;default:1;comment:超过在线最大数量处理方式"` //1踢掉最先登录的账号  2 直接提示
-	AppType            int    `json:"AppType"  gorm:"column:AppType;default:1;comment:软件类型"`                               //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
-	RmbToVipNumber     int    `json:"RmbToVipNumber"  gorm:"column:RmbToVipNumber;default:1;comment:1人民币换多少积分"`
-	Captcha            string `json:"Captcha"  gorm:"column:Captcha;size:1000;comment:需要验证码的接口"`
-	ApiHook            string `json:"ApiHook"  gorm:"column:ApiHook;size:1000;comment:Api接口Hook函数"`
-	Sort               int64  `json:"Sort" gorm:"column:Sort;default:0;comment:排序权重; "`
+	ExceedMaxOnlineOut int `json:"ExceedMaxOnlineOut"  gorm:"column:ExceedMaxOnlineOut;default:1;comment:超过在线最大数量处理方式"` //1踢掉最先登录的账号  2 直接提示
+	AppType            int `json:"AppType"  gorm:"column:AppType;default:1;comment:软件类型"`                               //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
+	//RmbToVipNumber     int    `json:"RmbToVipNumber"  gorm:"column:RmbToVipNumber;default:1;comment:1人民币换多少积分"`
+	Captcha string `json:"Captcha"  gorm:"column:Captcha;size:1000;comment:需要验证码的接口"`
+	ApiHook string `json:"ApiHook"  gorm:"column:ApiHook;size:1000;comment:Api接口Hook函数"`
+	Sort    int64  `json:"Sort" gorm:"column:Sort;default:0;comment:排序权重; "`
 
 	//()秒免费换绑次数
 	FreeUpKeyTime     int64 `json:"FreeUpKeyTime" gorm:"column:FreeUpKeyTime;default:86400;comment:X秒内可免费换绑"`

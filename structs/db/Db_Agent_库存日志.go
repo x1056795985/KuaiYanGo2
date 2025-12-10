@@ -1,7 +1,7 @@
 package DB
 
 type Db_Agent_库存日志 struct {
-	ID          int    `json:"Id" gorm:"column:Id;primaryKey;comment:Id"`
+	ID          int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT;comment:Id"`
 	User1       string `json:"User1" gorm:"column:User1;size:191;comment:来源用户ID"`
 	User1Role   int    `json:"User1Role" gorm:"column:User1Role;comment:来源用户ID角色"`
 	User2       string `json:"User2" gorm:"column:User2;size:191;comment:去向用户ID"`

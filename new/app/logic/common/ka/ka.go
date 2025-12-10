@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm/clause"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
-	"server/Service/Ser_User"
 	"server/global"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/userClass"
@@ -309,6 +308,17 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		err = errors.New("应用不存在")
 		return
 	}
+
+	//只有代理的卡号,才需要判断这个,webapi和管理员的卡号不用
+	if info.app用户详情.AgentUid > 0 && info.卡号详情.RegisterId > 0 {
+		//判断卡号制卡人,是否为当前用户的归属代理,无归属代理可以充值,有归属代理,只允许充值归属代理的卡号
+		switch info.app详情.AgentKaUseModel {
+		case 1: //仅限充值自己的卡号
+			if info.卡号详情.RegisterId != info.app用户详情.AgentUid {
+				return errors.New("卡号异常,非该用户归属代理制卡")
+			}
+		}
+	}
 	info.is卡号 = S三元(info.app详情.AppType == 3 || info.app详情.AppType == 4, true, false)
 	info.is计点 = S三元(info.app详情.AppType == 2 || info.app详情.AppType == 4, true, false)
 
@@ -427,14 +437,6 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 
 		if info.卡号详情.MaxOnline > 0 {
 			客户expr["MaxOnline"] = info.卡号详情.MaxOnline //最大在线数直接赋值处理即可
-		}
-
-		//卡号充值时,如果充值的用户没有归属代理,则自动设置该卡号的制卡人为归属代理
-		if info.app用户详情.AgentUid == 0 {
-			局_制卡人uid := Ser_User.User用户名取id(info.卡号详情.RegisterUser)
-			if 局_制卡人uid >= 0 {
-				客户expr["AgentUid"] = 局_制卡人uid
-			}
 		}
 
 		局_现行时间戳 := time.Now().Unix()
@@ -589,6 +591,11 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		if err = log.L_log.S输出日志(c, info.logVipNumber); err != nil {
 			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
 		}
+	}
+
+	//卡号充值时,如果充值的用户没有归属代理,则自动设置该卡号的制卡人为归属代理
+	if info.app用户详情.AgentUid == 0 && info.卡号详情.RegisterId > 0 {
+		j.Z置归属代理(c, info.卡号详情.AppId, info.app用户详情.Uid, info.卡号详情.RegisterId) //失败也不影响
 	}
 
 	return err
@@ -905,6 +912,81 @@ func (j *ka) S删除耗尽次数卡号(c *gin.Context, AppId int) (数量 int64,
 		if err = log.L_log.S输出日志(c, info.LogKa); err != nil {
 			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
 		}
+	}
+
+	return
+}
+func (j *ka) Z置归属代理(c *gin.Context, AppId int, Uid int, AgentUid int) (err error) {
+
+	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(AppId)
+	var info struct {
+		AppInfo DB.DB_AppInfo
+		AppUser DB.DB_AppUser
+
+		LogMoney     []DB.DB_LogMoney
+		LogVipNumber []DB.DB_LogVipNumber
+	}
+	var tx *gorm.DB
+	if tempObj, ok := c.Get("tx"); ok {
+		tx = tempObj.(*gorm.DB)
+	} else {
+		db := *global.GVA_DB
+		tx = &db
+	}
+
+	info.AppInfo, err = service.NewAppInfo(c, tx).Info(AppId)
+	if err != nil {
+		return errors.New("应用不存在")
+	}
+	info.AppUser, err = service.NewAppUser(c, tx, AppId).InfoUid(Uid)
+	if err != nil {
+		return errors.New("用户不存在")
+	}
+	if info.AppUser.AgentUid > 0 {
+		return errors.New("用户已有归属代理")
+	}
+
+	if AgentUid <= 0 {
+		return errors.New("归属代理id不能为空")
+	}
+	//修改软件用户信息, 并充值送卡卡号
+	err = tx.Transaction(func(tx2 *gorm.DB) error {
+		//先修改软件用户
+		err = tx2.Table(表名_AppUser).Where("Uid = ? ", Uid).Update("AgentUid", AgentUid).Error
+		if err != nil {
+			return err
+		}
+		//开始充值 卡号
+		if info.AppInfo.AgentGiftKaClassId > 0 {
+			// 子查询获取所有软件用户的Uid 在修改卡号
+			if err = j.K卡类直冲_事务(c, info.AppInfo.AgentGiftKaClassId, Uid); err != nil {
+				return err
+			}
+		}
+
+		if 临时数据, ok := c.Get("logMoney"); ok { //判断是否有rmb充值的日志
+			info.LogMoney = append(info.LogMoney, 临时数据.(DB.DB_LogMoney))
+			info.LogMoney[len(info.LogMoney)-1].Note = "归属代理送卡,卡类id:" + strconv.Itoa(info.AppInfo.AgentGiftKaClassId) + info.LogMoney[len(info.LogMoney)-1].Note
+		}
+
+		if 临时数据, ok := c.Get("logVipNumber"); ok { //判断是否有积分充值的日志
+			info.LogVipNumber = append(info.LogVipNumber, 临时数据.(DB.DB_LogVipNumber))
+			info.LogVipNumber[len(info.LogVipNumber)-1].Note = "归属代理送卡,卡类id:" + strconv.Itoa(info.AppInfo.AgentGiftKaClassId) + info.LogVipNumber[len(info.LogVipNumber)-1].Note
+		}
+
+		return err
+	})
+
+	if err != nil {
+		return err
+	}
+
+	//最后写出日志
+	if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
+		global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+	}
+	if err = log.L_log.S输出日志(c, info.LogVipNumber); err != nil {
+		global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
 	}
 
 	return

@@ -12,7 +12,6 @@ import (
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
-	"strconv"
 	"time"
 )
 
@@ -41,8 +40,11 @@ func (C *ShortUrl) Jump(c *gin.Context) {
 	//跳转到中间页 //http://localhost:9000/user/10001/ ,然后
 
 	var 局_跳转url string
-
-	局_跳转url = info.ShortUrl.BaseUrl + "#/pages/other/jump?type=1&cpsCode=" + strconv.Itoa(info.ShortUrl.Uid) + "&routerUrl=" + url.QueryEscape(info.ShortUrl.RouterUrl)
+	局_cpsCode, err := service.NewCpsCode(c, &tx).InfoUserId(info.ShortUrl.Uid)
+	if err != nil {
+		局_cpsCode = dbm.DB_CpsCode{}
+	}
+	局_跳转url = info.ShortUrl.BaseUrl + "#/pages/other/jump?type=1&cpsCode=" + 局_cpsCode.CpsCode + "&routerUrl=" + url.QueryEscape(info.ShortUrl.RouterUrl)
 	//跳转到本地中间页写入本地推荐人数据然后跳转
 	c.Redirect(302, 局_跳转url)
 	//根据不同类型进行后处理

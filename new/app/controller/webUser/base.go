@@ -140,16 +140,16 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		//没有这个用户,应该是第一次登录应用,添加进去
 		switch info.appInfo.AppType {
 		case 1:
-			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", 1, time.Now().Unix(), 0, 0, "", info.DB_links_user.AgentUid)
+			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", 1, time.Now().Unix(), 0, 0, "")
 		case 2: //账号限时
-			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", 1, 0, 0, 0, "", info.DB_links_user.AgentUid)
+			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", 1, 0, 0, 0, "")
 		case 3:
 			//卡号模式,制卡人就是归属代理 如果是管理员制造的卡, 就使用代理标志为归属uid
-			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), time.Now().Unix()+info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote, info.DB_links_user.AgentUid)
+			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), time.Now().Unix()+info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{info.Uid})
 		case 4:
 			//卡号模式,制卡人就是归属代理
-			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote, info.DB_links_user.AgentUid)
+			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote)
 			_ = Ser_Ka.Ka修改已用次数加一([]int{info.Uid})
 		default:
 			//???应该不会到这里
@@ -165,6 +165,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		if info.appInfo.RegisterGiveKaClassId > 0 && (info.appInfo.AppType == 1 || info.appInfo.AppType == 2) {
 			_ = ka.L_ka.K卡类直冲_事务(c, info.appInfo.RegisterGiveKaClassId, info.Uid)
 		}
+		ka.L_ka.Z置归属代理(c, info.appInfo.AppId, info.Uid, info.DB_links_user.AgentUid) //失败也不影响
 		//重新读取用户信息
 		info.appUser, err = service.NewAppUser(c, &tx, 请求.AppId).InfoUid(info.Uid)
 	}

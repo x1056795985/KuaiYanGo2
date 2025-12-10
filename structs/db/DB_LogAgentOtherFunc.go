@@ -2,7 +2,7 @@ package DB
 
 // DB_LogAgentOtherFunc 代理操作日志
 type DB_LogAgentOtherFunc struct {
-	Id        int    `json:"Id" gorm:"column:Id;primarykey"`
+	Id        int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`
 	AgentType int    `json:"AgentType" gorm:"column:AgentType;comment:用户类型"` //0 普通用户  1 2 3 级代理  4  管理员
 	AgentUid  int    `json:"AgentUid" gorm:"column:AgentUid;comment:代理uid"`
 	AppId     int    `json:"AppId" gorm:"column:AppId;comment:应用id"`

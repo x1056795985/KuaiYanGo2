@@ -204,3 +204,140 @@ func (C *Pay) PayKaUsa(c *gin.Context) {
 	return
 
 }
+func (C *Pay) GetBalancePayStatus(c *gin.Context) {
+	var 请求 struct {
+		AppId int `json:"AppId" binging:"required,min=10000"` // Appid 必填`
+	}
+	//解析失败
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	var info = struct {
+		appInfoWebUser dbm.DB_AppInfoWebUser
+	}{}
+	var err error
+	tx := *global.GVA_DB
+
+	if info.appInfoWebUser, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId); err != nil {
+		response.FailWithMessage(c, "未开启网页用户中心")
+		return
+	}
+	if info.appInfoWebUser.Status != 1 {
+		response.FailWithMessage(c, "未开启网页用户中心")
+		return
+	}
+
+	data := gin.H{
+		"balancePay": info.appInfoWebUser.BalancePay,
+	}
+	response.OkWithData(c, data)
+	return
+}
+
+//func (a *Pay) Y余额购卡直冲(c *gin.Context) {
+//	var info = struct {
+//		likeInfo DB.DB_LinksToken
+//		appInfo  DB.DB_AppInfo
+//		appUser  DB.DB_AppUser
+//		KaClass  dbm.DB_KaClass
+//	}{}
+//	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
+//
+//	var 请求 struct {
+//		KaClassId int `json:"KaClassId" binging:"required"` //  必填`
+//	}
+//	//解析失败
+//	if !C.ToJSON(c, &请求) {
+//		return
+//	}
+//
+//	if info.appInfo.AppType > 2 {
+//		response.FailWithMessage(c, "本接口仅限应用账密模式可用")
+//		return
+//	}
+//
+//	if info.likeInfo.Uid == 0 {
+//		response.FailWithMessage(c, "本接口仅限登陆后可用")
+//		return
+//	}
+//	var err error
+//	db := *global.GVA_DB
+//	info.KaClass, err = service.NewKaClass(c, &db).Info(请求.KaClassId)
+//
+//	if err != nil {
+//		response.FailWithMessage(c, "要购买的充值卡类型ID不存在")
+//		return
+//	}
+//	if info.appInfo.AppId != info.KaClass.AppId || info.KaClass.Money <= 0 {
+//		response.FailWithMessage(c, "普通用户无法购买本类型充值卡")
+//		return
+//	}
+//
+//	//开始处理调价信息
+//	var 局_价格组成 struct {
+//		总调价  float64
+//		调价详情 []dbm.DB_KaClassUpPrice
+//		购买数量 int64
+//
+//		付款金额 float64
+//	}
+//
+//	局_价格组成.总调价, 局_价格组成.调价详情, err = kaClassUpPrice.L_kaClassUpPrice.J计算代理调价(c, info.KaClass.Id, info.likeInfo.AgentUid)
+//	if err != nil {
+//		response.FailWithMessage(c, err.Error())
+//		return
+//	}
+//	局_价格组成.付款金额 = Float64加float64(info.KaClass.Money, 局_价格组成.总调价, 2)
+//	局_价格组成.购买数量 = 1
+//
+//	新余额, err := Ser_User.Id余额增减(info.likeInfo.Uid, 局_价格组成.付款金额, false)
+//	if err != nil {
+//		response.FailWithMessage(c, "购买失败,"+err.Error())
+//		return
+//	}
+//
+//	局_卡信息, err2 := Ser_Ka.Ka单卡创建(info.KaClass.Id, info.likeInfo.Uid, info.likeInfo.User, "用户"+info.likeInfo.User+"自助通过Api购卡", "", 0)
+//	if err2 != nil {
+//		新余额, err = Ser_User.Id余额增减(info.likeInfo.Uid, info.KaClass.Money, true)
+//		if err != nil {
+//			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, AppInfo.AppId, info.likeInfo.User, AppInfo.AppName, info.likeInfo.AppVer, "用户余额购卡,减余额成功,制卡失败,请手动处理,本次错误原因:"+err.Error(), c.ClientIP())
+//			response.FailWithMessage(c, "购卡失败,费用退还失败,请联系开发者手动处理")
+//		} else {
+//			response.FailWithMessage(c, "购卡失败,请重试")
+//		}
+//		return
+//	}
+//	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AppId": 局_卡信息.AppId, "KaClassId": 局_卡信息.KaClassId, "KaClassName": 局_卡类.Name, "KaName": 局_卡信息.Name})
+//	//输出日志
+//	str := fmt.Sprintf("自助购卡->:%s,->卡ID:%d,卡号:%s|新余额≈%s",
+//		AppInfo.AppName,
+//		局_卡信息.Id,
+//		局_卡信息.Name,
+//		Float64到文本(新余额, 2),
+//	)
+//	go Ser_Log.Log_写余额日志(info.likeInfo.User, c.ClientIP(), str, Float64取负值(局_价格组成.付款金额))
+//	局_文本 := fmt.Sprintf("自助购卡应用:%s,卡类:%s,消费:%.2f)", AppInfo.AppName, info.KaClass.Name, 局_价格组成)
+//	go Ser_Log.Log_写卡号操作日志(info.likeInfo.User, c.ClientIP(), 局_文本, []string{局_卡信息.Name}, 1, 0)
+//	//代理分成 		//开始分利润 20240202 mark处理重构以后改事务
+//	//先分成 代理调价信息的价格
+//	if 局_价格组成.总调价 > 0 {
+//		局_日志前缀 := fmt.Sprintf("用户:%s,余额制卡ID{%d}", info.likeInfo.User, 局_卡信息.Id)
+//		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
+//		if err != nil {
+//			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
+//		}
+//	}
+//	if info.likeInfo.AgentUid > 0 && info.KaClass.AgentMoney > 0 {
+//		//然后再计算百分比的价格
+//		代理分成数据, err3 := agent.L_agent.D代理分成计算(c, info.likeInfo.AgentUid, info.KaClass.Money)
+//		if err3 == nil {
+//			局_日志前缀 := fmt.Sprintf("用户%s余额制卡ID:%d,", info.likeInfo.User, 局_卡信息.Id)
+//			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, info.KaClass.Money, 局_日志前缀, 局_价格组成.总调价 == 0)
+//			if err != nil {
+//				global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+//			}
+//		}
+//	}
+//	// 分成结束==============
+//	return
+//}

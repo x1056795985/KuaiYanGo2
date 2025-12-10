@@ -2,7 +2,7 @@ package db
 
 // App活动配置表
 type DB_AppPromotionConfig struct {
-	Id               int    `json:"id" gorm:"column:id;primarykey;comment:ID"`
+	Id               int    `json:"id" gorm:"column:id;primarykey;AUTO_INCREMENT;comment:ID"`
 	Name             string `json:"name" gorm:"column:name;comment:活动名称"` //比如教师节活动
 	AppId            int    `json:"appId" gorm:"column:appId;index;comment:关联appId"`
 	CreateTime       int64  `json:"createTime" gorm:"column:createTime;comment:创建时间戳"`

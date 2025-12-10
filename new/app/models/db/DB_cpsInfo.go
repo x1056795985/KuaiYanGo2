@@ -15,6 +15,7 @@ type DB_CpsInfo struct {
 	NarrowPic          string `json:"widePic" gorm:"column:widePic;comment:素材_窄图,url或云存储地址"`
 	DetailPic          string `json:"detailPic" gorm:"column:detailPic;comment:素材_详情图,url或云存储地址"`
 	BindingDay         int64  `json:"bindingDay" gorm:"column:bindingDay;comment:绑定天数"`
+	BindGiveKaClassId  int    `json:"bindGiveKaClassId" gorm:"column:bindGiveKaClassId;comment:绑定奖励卡类id"`
 }
 
 func (DB_CpsInfo) TableName() string {

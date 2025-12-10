@@ -265,6 +265,7 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 			"captchaReg":     请求.AppInfoWebUser.CaptchaReg,
 			"captchaSendSms": 请求.AppInfoWebUser.CaptchaSendSms,
 			"webUserDomain":  请求.AppInfoWebUser.WebUserDomain,
+			"balancePay":     请求.AppInfoWebUser.BalancePay,
 		})
 	}
 	if err != nil {
@@ -494,7 +495,7 @@ func (a *Api) Get全部用户APi(c *gin.Context) {
 	局_path数组 = append(局_path数组, []string{"GetPayOrderStatus", "订单_取状态"})
 	局_path数组 = append(局_path数组, []string{"PayKaUsa", "订单_购卡直冲"})
 	局_path数组 = append(局_path数组, []string{"PayUserMoney", "订单_余额充值"})
-	局_path数组 = append(局_path数组, []string{"PayUserVipNumber", "订单_积分充值"})
+	//局_path数组 = append(局_path数组, []string{"PayUserVipNumber", "订单_积分充值"})
 	局_path数组 = append(局_path数组, []string{"PayGetKa", "订单_支付购卡"})
 
 	for 键名, 键值 := range middleware.J集_UserAPi路由 {

@@ -2,7 +2,7 @@ package DB
 
 // DB_LogUserMsg 用户消息日志
 type DB_LogUserMsg struct {
-	Id           int    `json:"Id" gorm:"column:Id;primarykey"`
+	Id           int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`
 	User         string `json:"User" gorm:"column:User;size:191;index;comment:用户"`
 	App          string `json:"App" gorm:"column:App;index;size:191;comment:App名称"`
 	AppId        int    `json:"AppId" gorm:"column:AppId;index;default:0;  comment:AppId"`

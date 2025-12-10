@@ -15,6 +15,7 @@ type Z在线支付 struct {
 	Z在线支付_虎皮椒         //id 6
 	Z在线支付_易支付         //id7
 	Z在线支付_易支付2        //id8
+	Z在线支付_余额支付        //id9
 }
 type PayParams struct {
 	DB.DB_LogRMBPayOrder
@@ -120,4 +121,8 @@ type Z在线支付_易支付2 struct {
 	Y易支付2最大金额    int    `mapstructure:"易支付2最大金额" json:"易支付2最大金额" `
 	Y易支付2同步回调url string `mapstructure:"易支付2同步回调url" json:"易支付2同步回调url" `
 	Y易支付2设备类型    string `mapstructure:"易支付2设备类型" json:"易支付2设备类型" `
+}
+type Z在线支付_余额支付 struct {
+	Y余额支付开关   bool   `mapstructure:"余额支付开关" json:"余额支付开关"`
+	Y余额支付显示名称 string `mapstructure:"余额支付显示名称" json:"余额支付显示名称" `
 }

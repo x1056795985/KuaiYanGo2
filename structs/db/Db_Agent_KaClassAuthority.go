@@ -20,7 +20,7 @@ const D代理功能_卡类调价 = -15
 const D代理功能_制卡 = -16
 
 type Db_Agent_卡类授权 struct {
-	ID   int    `json:"Id" gorm:"column:Id;primaryKey;comment:Id"`
+	ID   int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT;comment:Id"`
 	Uid  int    `json:"Uid" gorm:"column:Uid;comment:代理用户ID"`
 	KId  int    `json:"KId" gorm:"column:KId;comment:授权制卡的卡类Id"`
 	Info string `json:"Info" gorm:"column:Info;comment:附加信息功能描述对应参数等等"`

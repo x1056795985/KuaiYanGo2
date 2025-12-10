@@ -67,7 +67,7 @@ func (j 小叮当) D订单创建(c *gin.Context, 参数 *m.PayParams) (response 
 		err = errors.New(局_支付配置.X小叮当支付显示名称 + "服务端未配置参数")
 		return
 	}
-	if 参数.ProcessingType == constant.D订单类型_余额充值 || 参数.ProcessingType == constant.D订单类型_积分充值 { //余额充值 和 积分充值判断单次最大金额
+	if 参数.ProcessingType == constant.D订单类型_余额充值 { //余额充值单次最大金额
 		if 参数.Rmb > float64(局_支付配置.X小叮当单次最大金额) {
 			err = errors.New("支付金额必须小于" + strconv.Itoa(局_支付配置.X小叮当单次最大金额))
 			return

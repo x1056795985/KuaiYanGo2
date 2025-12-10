@@ -1,7 +1,7 @@
 package DB
 
 type Db_Agent_库存卡包 struct {
-	Id             int    `json:"Id" gorm:"column:Id;primaryKey;comment:Id"`
+	Id             int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT;comment:Id"`
 	Uid            int    `json:"Uid" gorm:"column:Uid;comment:所属用户ID"`
 	KaClassId      int    `json:"KaClassId" gorm:"column:KaClassId;comment:卡类Id"`
 	Num            int    `json:"Num" gorm:"column:Num;comment:库存数量"`

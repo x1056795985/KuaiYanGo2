@@ -2,7 +2,7 @@ package db
 
 // 定时任务日志表
 type DB_Cron_log struct {
-	Id         int    `json:"Id" gorm:"column:Id;primarykey;comment:id"`
+	Id         int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT;comment:id"`
 	CronID     int    `json:"CronID" gorm:"column:CronID;comment:定时任务id"`
 	RunTime    int64  `json:"RunTime" gorm:"column:RunTime;comment:执行时间戳"`
 	Type       int    `json:"Type" gorm:"column:Type;comment:任务类型,1,http请求,2公共js函数,3 shell"`

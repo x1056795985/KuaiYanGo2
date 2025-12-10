@@ -41,10 +41,19 @@ func (C *CpsInfo) Info(c *gin.Context) {
 		response.FailWithMessage(c, err.Error())
 		return
 	}
+	//把info.CpsInfo 结构体转为 gin.H 并添加新字段 BindGiveKaClassName
+	局_临时 := struct {
+		dbm.DB_CpsInfo
+		BindGiveKaClassName string `json:"bindGiveKaClassName"`
+	}{info.CpsInfo, ""}
+	KaClass, err := service.NewKaClass(c, &tx).Info(info.CpsInfo.BindGiveKaClassId)
+	if err == nil {
+		局_临时.BindGiveKaClassName = KaClass.Name
+	}
 
 	response.OkWithData(c, gin.H{
 		"appPromotionConfig": info.AppPromotionConfig,
-		"cps":                info.CpsInfo,
+		"cps":                局_临时,
 	})
 	return
 }

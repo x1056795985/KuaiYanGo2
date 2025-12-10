@@ -1,7 +1,7 @@
 package DB
 
 type DB_UserClass struct {
-	Id     int    `json:"Id" gorm:"column:Id;primarykey"`
+	Id     int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`
 	AppId  int    `json:"AppId" gorm:"column:AppId;index;comment:属于哪个软件的用户分类"`
 	Name   string `json:"Name" gorm:"column:Name;size:191;comment:分类名称"` //  vip1 初级中级高级
 	Mark   int    `json:"Mark" gorm:"column:Mark;comment:分类整数代号"`

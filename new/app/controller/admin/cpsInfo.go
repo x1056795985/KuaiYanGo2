@@ -61,7 +61,8 @@ func (C *CpsInfo) Update(c *gin.Context) {
 		GrandsonKickback   int `json:"grandsonKickback" binding:"min=0,max=100" zh:"徒孙分成比例"`
 		//NarrowPic          string `json:"widePic" binding:"required" zh:"素材_窄图"`
 		//DetailPic          string `json:"detailPic" binding:"required" zh:"素材_详情图"`
-		BindingDay int `json:"bindingDay" binding:"required" zh:"绑定天数"`
+		BindingDay        int `json:"bindingDay" binding:"required" zh:"绑定天数"`
+		BindGiveKaClassId int `json:"bindGiveKaClassId" binding:"min=0" zh:"绑定奖励卡类id"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
@@ -79,8 +80,9 @@ func (C *CpsInfo) Update(c *gin.Context) {
 		"grandsonKickback":   请求.GrandsonKickback,
 		//"narrowPic":          请求.NarrowPic,
 		//"detailPic":          请求.DetailPic,
-		"updateTime": time.Now().Unix(),
-		"bindingDay": 请求.BindingDay,
+		"updateTime":        time.Now().Unix(),
+		"bindingDay":        请求.BindingDay,
+		"BindGiveKaClassId": 请求.BindGiveKaClassId,
 	})
 
 	if err != nil {

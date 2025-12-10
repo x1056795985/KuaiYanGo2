@@ -2,7 +2,7 @@ package db
 
 // 定时任务表
 type DB_Cron struct {
-	Id      int    `json:"Id" gorm:"column:Id;primarykey;comment:id"`
+	Id      int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT;comment:id"`
 	Name    string `json:"Name" gorm:"column:Name;comment:任务名称"`
 	Status  int    `json:"Status" gorm:"column:Status;comment:状态,1启用,2停用"`
 	IsLog   int    `json:"IsLog" gorm:"column:IsLog;comment:是否写出日志,1写日志,2忽略"`

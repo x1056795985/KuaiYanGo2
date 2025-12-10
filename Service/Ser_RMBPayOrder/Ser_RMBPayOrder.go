@@ -85,7 +85,7 @@ func Order更新订单备注_批量(订单号 []string, 备注 string) error {
 var C处理类型 = map[int]string{
 	0: "余额充值",
 	1: "购卡直冲",
-	2: "积分充值",
+	//2: "积分充值",
 	3: "支付购卡",
 }
 

@@ -23,7 +23,7 @@ func NewCpsInvitingRelationController() *CpsInvitingRelation {
 // 设置邀请关系
 func (C *CpsInvitingRelation) Set(c *gin.Context) {
 	var 请求 struct {
-		PromotionCode int `json:"promotionCode"  binding:"required" zh:"邀请代码"`
+		PromotionCode string `json:"promotionCode"  binding:"required" zh:"邀请代码"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -32,38 +32,43 @@ func (C *CpsInvitingRelation) Set(c *gin.Context) {
 	var info = struct {
 		appInfo  DB.DB_AppInfo
 		likeInfo DB.DB_LinksToken
-		上级     dbm.DB_CpsInvitingRelation
+		上级       dbm.DB_CpsInvitingRelation
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	//查询是否拥有邀请人   如果已设置过,需要删除,因为有唯一索引
 	tx := *global.GVA_DB
+	局_cpsCode, err := service.NewCpsCode(c, &tx).InfoCode(请求.PromotionCode)
+	if err != nil {
+		response.FailWithMessage(c, "邀请码不存在")
+		return
+	}
 	info.上级, _, err = service.NewCpsInvitingRelation(c, &tx).Q取归属邀请人(info.appInfo.AppId, info.likeInfo.Uid)
 	if info.上级.Id == 0 { //没有推荐人,才设置
-		if info.likeInfo.Uid == 请求.PromotionCode {
+		if info.likeInfo.Uid == 局_cpsCode.UserId {
 			response.FailWithMessage(c, "不能邀请自己")
 			return
 		}
 
-		err = cpsInvitingRelation.L_CpsInvitingRelation.S设置邀请人(c, info.appInfo.AppId, 请求.PromotionCode, info.likeInfo.Uid, c.GetHeader("Referer"))
+		err = cpsInvitingRelation.L_CpsInvitingRelation.S设置邀请人(c, info.appInfo.AppId, 局_cpsCode.UserId, info.likeInfo.Uid, c.GetHeader("Referer"))
 		if err != nil {
 			response.FailWithMessage(c, err.Error())
 			return
 		}
-
+		info.上级.InviterId = 局_cpsCode.UserId
+		err = cpsInvitingRelation.L_CpsInvitingRelation.F发放被邀奖励卡(c, info.appInfo.AppId, info.likeInfo.Uid)
 	}
-	response.Ok(c)
+	response.OkWithData(c, gin.H{"bindGive": err == nil, "inviterId": info.上级.InviterId})
 }
 func (C *CpsInvitingRelation) Get(c *gin.Context) {
 	var info = struct {
-		appInfo   DB.DB_AppInfo
-		likeInfo  DB.DB_LinksToken
-		Y邀请关系 dbm.DB_CpsInvitingRelation
+		appInfo  DB.DB_AppInfo
+		likeInfo DB.DB_LinksToken
+		Y邀请关系    dbm.DB_CpsInvitingRelation
 	}{}
 
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	tx := *global.GVA_DB
 	info.Y邀请关系, _, _ = service.NewCpsInvitingRelation(c, &tx).Q取归属邀请人(info.appInfo.AppId, info.likeInfo.Uid)
-
 	response.OkWithData(c, gin.H{
 		"isInput":   info.appInfo.AppType <= 2, //只有账号模式才需要填写
 		"inviterId": info.Y邀请关系.InviterId,
@@ -74,9 +79,9 @@ func (C *CpsInvitingRelation) Get(c *gin.Context) {
 
 func (C *CpsInvitingRelation) GetInvitingList(c *gin.Context) {
 	var info = struct {
-		appInfo   DB.DB_AppInfo
-		likeInfo  DB.DB_LinksToken
-		Y邀请关系 []dbm.DB_CpsInvitingRelation
+		appInfo  DB.DB_AppInfo
+		likeInfo DB.DB_LinksToken
+		Y邀请关系    []dbm.DB_CpsInvitingRelation
 	}{}
 
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)

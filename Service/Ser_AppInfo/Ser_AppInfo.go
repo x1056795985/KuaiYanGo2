@@ -153,7 +153,6 @@ func App修改信息(AppInfo DB.DB_AppInfo) error {
 		"CryptoKeyPublic",
 		"MaxOnline",
 		"ExceedMaxOnlineOut",
-		"RmbToVipNumber",
 		"Captcha",
 		"RegisterGiveKa",
 		"ApiHook",
@@ -161,6 +160,8 @@ func App修改信息(AppInfo DB.DB_AppInfo) error {
 		"FreeUpKeyInterval",
 		"UpKeyTime",
 		"UpKeyInterval",
+		"AgentGiftKaClassId",
+		"AgentKaUseModel",
 	).Omit("AppType", "AppWeb", "Sort")
 
 	err := db.Where("AppId= ?", AppInfo.AppId).Updates(AppInfo).Error

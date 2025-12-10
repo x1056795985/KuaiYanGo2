@@ -2,7 +2,7 @@ package DB
 
 // DB_LogVipNumber 积分点数变化日志
 type DB_LogVipNumber struct {
-	Id    int     `json:"Id" gorm:"column:Id;primarykey"`
+	Id    int     `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`
 	User  string  `json:"User" gorm:"column:User;size:191;index;comment:用户名"`
 	AppId int     `json:"AppId" gorm:"column:AppId;comment:AppId"`
 	Type  int     `json:"Type" gorm:"column:Type;comment:类型1积分2点数3时间"`

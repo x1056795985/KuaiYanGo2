@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/shopspring/decimal"
 	"github.com/valyala/fastjson"
 	"server/Service/Captcha"
 	"server/Service/Ser_AppInfo"
@@ -265,59 +264,60 @@ func UserApi_取用户余额(c *gin.Context) {
 	return
 }
 
-func UserApi_余额购买积分(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-	if !检测_账密模式专用(c, AppInfo) {
-		return
-	}
-
-	if !检测用户登录在线正常(&局_在线信息) {
-		response.X响应状态(c, response.Status_未登录)
-		return
-	}
-
-	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
-
-	局_花费金额 := 请求json.GetFloat64("Money")
-	if 局_花费金额 <= 0 {
-		response.X响应状态消息(c, response.Status_操作失败, "花费金额要求大于0")
-		return
-	}
-	局_AppUser, ok := Ser_AppUser.Uid取详情(AppInfo.AppId, 局_在线信息.Uid)
-	if !ok {
-		response.X响应状态消息(c, response.Status_操作失败, "应用用户不存在")
-		return
-	}
-	新余额, err := Ser_User.Id余额增减(局_在线信息.Uid, 局_花费金额, false)
-	if err != nil {
-		response.X响应状态消息(c, response.Status_操作失败, err.Error())
-		return
-	}
-
-	局_精确花费金额 := decimal.NewFromFloat(局_花费金额)
-	局_精确乘数 := decimal.NewFromInt(int64(AppInfo.RmbToVipNumber))
-	局_增减积分, _ := 局_精确花费金额.Mul(局_精确乘数).Float64()
-
-	go Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("购买积分:%.2f|新余额≈%.2f", 局_增减积分, 新余额), Float64取负值(局_花费金额))
-	err = Ser_AppUser.Id积分增减(AppInfo.AppId, 局_AppUser.Id, 局_增减积分, true)
-	if err != nil {
-		新余额, err = Ser_User.Id余额增减(局_在线信息.Uid, 局_花费金额, true)
-		if err != nil {
-			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, AppInfo.AppId, 局_在线信息.User, AppInfo.AppName, 局_在线信息.AppVer, "用户余额购买积分,减余额成功,增加积分失败,请手动处理,本次错误原因:"+err.Error(), c.ClientIP())
-			response.X响应状态消息(c, response.Status_操作失败, "扣费成功,但是积分增加失败,请联系开发者手动处理")
-		} else {
-			response.X响应状态消息(c, response.Status_操作失败, "购买积分失败,请重试")
-			Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("购买积分失败:%.2f|新余额≈%.2f", 局_增减积分, 新余额), 局_花费金额)
-
-		}
-		return
-
-	}
-	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AddVipNumber": 局_增减积分})
-	return
-}
+// 20251209 已废弃,集中使用 充值卡充值资源
+//func UserApi_余额购买积分(c *gin.Context) {
+//	var AppInfo DB.DB_AppInfo
+//	var 局_在线信息 DB.DB_LinksToken
+//	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+//	if !检测_账密模式专用(c, AppInfo) {
+//		return
+//	}
+//
+//	if !检测用户登录在线正常(&局_在线信息) {
+//		response.X响应状态(c, response.Status_未登录)
+//		return
+//	}
+//
+//	请求json, _ := fastjson.Parse(c.GetString("局_json明文")) //必定是json 不然中间件就报错参数错误了
+//
+//	局_花费金额 := 请求json.GetFloat64("Money")
+//	if 局_花费金额 <= 0 {
+//		response.X响应状态消息(c, response.Status_操作失败, "花费金额要求大于0")
+//		return
+//	}
+//	局_AppUser, ok := Ser_AppUser.Uid取详情(AppInfo.AppId, 局_在线信息.Uid)
+//	if !ok {
+//		response.X响应状态消息(c, response.Status_操作失败, "应用用户不存在")
+//		return
+//	}
+//	新余额, err := Ser_User.Id余额增减(局_在线信息.Uid, 局_花费金额, false)
+//	if err != nil {
+//		response.X响应状态消息(c, response.Status_操作失败, err.Error())
+//		return
+//	}
+//
+//	局_精确花费金额 := decimal.NewFromFloat(局_花费金额)
+//	局_精确乘数 := decimal.NewFromInt(int64(AppInfo.RmbToVipNumber))
+//	局_增减积分, _ := 局_精确花费金额.Mul(局_精确乘数).Float64()
+//
+//	go Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("购买积分:%.2f|新余额≈%.2f", 局_增减积分, 新余额), Float64取负值(局_花费金额))
+//	err = Ser_AppUser.Id积分增减(AppInfo.AppId, 局_AppUser.Id, 局_增减积分, true)
+//	if err != nil {
+//		新余额, err = Ser_User.Id余额增减(局_在线信息.Uid, 局_花费金额, true)
+//		if err != nil {
+//			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, AppInfo.AppId, 局_在线信息.User, AppInfo.AppName, 局_在线信息.AppVer, "用户余额购买积分,减余额成功,增加积分失败,请手动处理,本次错误原因:"+err.Error(), c.ClientIP())
+//			response.X响应状态消息(c, response.Status_操作失败, "扣费成功,但是积分增加失败,请联系开发者手动处理")
+//		} else {
+//			response.X响应状态消息(c, response.Status_操作失败, "购买积分失败,请重试")
+//			Ser_Log.Log_写余额日志(局_在线信息.User, c.ClientIP(), fmt.Sprintf("购买积分失败:%.2f|新余额≈%.2f", 局_增减积分, 新余额), 局_花费金额)
+//
+//		}
+//		return
+//
+//	}
+//	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"AddVipNumber": 局_增减积分})
+//	return
+//}
 
 func UserApi_订单_余额充值(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
@@ -450,12 +450,12 @@ func UserApi_用户注册(c *gin.Context) {
 
 	//没有这个用户,应该是第一次登录应用,添加进去
 	局_Uid := Ser_User.User用户名取id(string(请求json.GetStringBytes("User")))
-	err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), 1, 局_VipNumber, 0, 0, "", 局_在线信息.AgentUid)
+	err = Ser_AppUser.New用户信息(AppInfo.AppId, 局_Uid, string(请求json.GetStringBytes("Key")), 1, 局_VipNumber, 0, 0, "")
 	if err != nil {
 		response.X响应状态消息(c, response.Status_SQl错误, "New用户信息内部错误,用户注册成功,注册软件用户失败"+err.Error())
 		return
 	}
-
+	ka.L_ka.Z置归属代理(c, AppInfo.AppId, 局_Uid, 局_在线信息.AgentUid) //失败也不影响
 	// 注册送卡
 	if AppInfo.RegisterGiveKaClassId > 0 {
 		_ = ka.L_ka.K卡类直冲_事务(c, AppInfo.RegisterGiveKaClassId, 局_Uid)
