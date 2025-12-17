@@ -760,6 +760,9 @@ func UserApi_取应用基础信息(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	db := global.GVA_DB
+	var AppInfoWebUser dbm.DB_AppInfoWebUser
+	AppInfoWebUser, _ = service.NewAppInfoWebUser(c, db).Info(AppInfo.AppId)
 
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{
 		"AppId":            AppInfo.AppId,
@@ -768,6 +771,8 @@ func UserApi_取应用基础信息(c *gin.Context) {
 		"AppWeb":           AppInfo.AppWeb,
 		"Status":           AppInfo.Status,
 		"AppStatusMessage": AppInfo.AppStatusMessage,
+		"WebUserStatus":    AppInfoWebUser.Status,
+		"WebUserDomain":    S三元(AppInfoWebUser.Status == 1, AppInfoWebUser.WebUserDomain, ""),
 	})
 	return
 }

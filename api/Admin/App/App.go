@@ -265,7 +265,6 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 			"captchaReg":     请求.AppInfoWebUser.CaptchaReg,
 			"captchaSendSms": 请求.AppInfoWebUser.CaptchaSendSms,
 			"webUserDomain":  请求.AppInfoWebUser.WebUserDomain,
-			"balancePay":     请求.AppInfoWebUser.BalancePay,
 		})
 	}
 	if err != nil {

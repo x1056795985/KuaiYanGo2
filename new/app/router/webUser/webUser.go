@@ -69,7 +69,6 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 	局_pay := controller.NewPayController()
 	{
 		根路由.POST("pay/getPayStatus", 局_pay.GetPayStatus)
-		根路由.POST("pay/getBalancePayStatus", 局_pay.GetBalancePayStatus)
 		根路由.POST("pay/getPayOrderStatus", 局_pay.GetPayOrderStatus)
 		根路由.POST("pay/getPayKaList", 局_pay.GetPayKaList)
 		根路由.POST("pay/payKaUsa", 局_pay.PayKaUsa)

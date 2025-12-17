@@ -204,35 +204,6 @@ func (C *Pay) PayKaUsa(c *gin.Context) {
 	return
 
 }
-func (C *Pay) GetBalancePayStatus(c *gin.Context) {
-	var 请求 struct {
-		AppId int `json:"AppId" binging:"required,min=10000"` // Appid 必填`
-	}
-	//解析失败
-	if !C.ToJSON(c, &请求) {
-		return
-	}
-	var info = struct {
-		appInfoWebUser dbm.DB_AppInfoWebUser
-	}{}
-	var err error
-	tx := *global.GVA_DB
-
-	if info.appInfoWebUser, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId); err != nil {
-		response.FailWithMessage(c, "未开启网页用户中心")
-		return
-	}
-	if info.appInfoWebUser.Status != 1 {
-		response.FailWithMessage(c, "未开启网页用户中心")
-		return
-	}
-
-	data := gin.H{
-		"balancePay": info.appInfoWebUser.BalancePay,
-	}
-	response.OkWithData(c, data)
-	return
-}
 
 //func (a *Pay) Y余额购卡直冲(c *gin.Context) {
 //	var info = struct {
