@@ -12,6 +12,7 @@ import (
 const Js类型_公共函数 = 1
 const Js类型_任务池Hook函数 = 2
 const Js类型_ApiHook函数 = 3
+const Js类型_webSocket = 4
 
 func Id是否存在(Id int) bool {
 	var Count int64

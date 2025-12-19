@@ -127,3 +127,12 @@ func (s *LinksToken) Set批量注销Uid数组(UId []int, AppId int, 注销原因
 	err = db.Updates(map[string]interface{}{"OutTime": 0, "Status": 2, "LogoutCode": 注销原因}).Error
 	return
 }
+
+// 查
+func (s *LinksToken) InfoToken(Token string) (info DB.DB_LinksToken, err error) {
+	tx := s.db.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).First(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}

@@ -5,6 +5,7 @@ import (
 	"server/new/app/router/admin"
 	"server/new/app/router/agent"
 	"server/new/app/router/webApi2"
+	"server/new/app/router/webSocket"
 	"server/new/app/router/webUser"
 )
 
@@ -27,8 +28,10 @@ func RouterInit(gin *gin.RouterGroup) *gin.RouterGroup {
 	routerWebApi := webApi2.AllRouter{}
 	routerWebApi.InitWebApiRouter(Router) //初始化WEBAPi路由
 
-	routerwebUser := webUser.AllRouter{}
-	routerwebUser.InitWebUserRouter(Router) //初始化WEBAPi路由
+	routerWebUser := webUser.AllRouter{}
+	routerWebUser.InitWebUserRouter(Router) //初始化WEBUser路由
 
+	routerWebSocket := webSocket.AllRouter{}
+	routerWebSocket.InitWebSocketRouter(Router) //初始化WebSocket路由
 	return gin
 }
