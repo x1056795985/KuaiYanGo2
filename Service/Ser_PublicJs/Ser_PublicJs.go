@@ -1,7 +1,7 @@
 package Ser_PublicJs
 
 import (
-	"EFunc/utils"
+	. "EFunc/utils"
 	"errors"
 	"server/global"
 	DB "server/structs/db"
@@ -12,8 +12,8 @@ import (
 const Js类型_公共函数 = 1
 const Js类型_任务池Hook函数 = 2
 const Js类型_ApiHook函数 = 3
-const Js类型_webSocket = 4
 
+// 不要再继续添加了,一切以Appid为准
 func Id是否存在(Id int) bool {
 	var Count int64
 	result := global.GVA_DB.Model(DB.DB_PublicJs{}).Select("1").Where("Id=?", Id).First(&Count)
@@ -50,7 +50,7 @@ func Z置值(id int, Value string) error {
 }
 func Z置值2(PublicJs DB.DB_PublicJs) error {
 	//注意宝塔写文件 文件会在 /www/server/panel 文件夹
-	err := utils.W文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
+	err := W文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func Z置值2(PublicJs DB.DB_PublicJs) error {
 }
 func C创建(PublicJs DB.DB_PublicJs) error {
 	//注意宝塔写文件 文件会在 /www/server/panel 文件夹
-	err := utils.W文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
+	err := W文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
 	if err != nil {
 		return errors.New("Js写入文件失败:" + err.Error())
 	}
@@ -86,6 +86,7 @@ func P批量修改IsVip(Id []int, IsVip int) error {
 func P取值2(Appid int, Name string) (DB.DB_PublicJs, error) {
 	var 局_PublicJs DB.DB_PublicJs
 	err := global.GVA_DB.Model(DB.DB_PublicJs{}).Where("AppId=?", Appid).Where("Name=?", Name).First(&局_PublicJs).Error
+
 	if err != nil {
 		return 局_PublicJs, errors.New("[" + Name + "],Hook函数不存在")
 	}
@@ -94,8 +95,8 @@ func P取值2(Appid int, Name string) (DB.DB_PublicJs, error) {
 	if ok {
 		局_PublicJs.Value = 局_临时.(string)
 	} else {
-		if utils.W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
-			局_PublicJs.Value = string(utils.W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
+		if W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value) {
+			局_PublicJs.Value = string(W文件_读入文件(global.GVA_CONFIG.Q取运行目录 + 局_PublicJs.Value))
 			global.H缓存.Set(global.GVA_CONFIG.Q取运行目录+局_PublicJs.Value, 局_PublicJs.Value, time.Hour*720)
 		} else {
 			return 局_PublicJs, errors.New(Name + ".js文件读取失败可能被删除,请重新编辑公共函数")

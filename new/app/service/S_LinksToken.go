@@ -136,3 +136,8 @@ func (s *LinksToken) InfoToken(Token string) (info DB.DB_LinksToken, err error) 
 	}
 	return
 }
+
+func (s *LinksToken) Updates(ids []int, 数据 map[string]interface{}) (row int64, err error) {
+	tx := s.db.Model(DB.DB_LinksToken{}).Where("Id IN ?", ids).Updates(&数据)
+	return tx.RowsAffected, tx.Error
+}

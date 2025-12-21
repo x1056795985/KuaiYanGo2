@@ -142,7 +142,7 @@ func (a *Api) GetAgentInventoryList(c *gin.Context) {
 		Offset((请求.Page - 1) * 请求.Size).
 		Find(&数组_库存卡包).Error
 
-	局_map := Ser_AppInfo.AppInfo取map列表Int()
+	局_map := Ser_AppInfo.AppInfo取map列表Int(true)
 	for 索引, _ := range 数组_库存卡包 {
 		数组_库存卡包[索引].AppName = 局_map[数组_库存卡包[索引].AppId]
 	}

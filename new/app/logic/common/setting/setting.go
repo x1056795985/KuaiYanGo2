@@ -152,25 +152,6 @@ func Q例子写出记录() config.Test {
 	return 配置值
 }
 
-func Z置MQTT配置(配置值 *config.MQTT配置) error {
-	return Z文本("MQTT配置", 配置值)
-}
-
-func Q取MQTT配置() config.MQTT配置 {
-	var 配置名 = "MQTT配置"
-	var 配置值 = config.MQTT配置{}
-	配置值.L连接状态 = false
-	配置值.F服务器地址 = "broker.emqx.io"
-	配置值.F服务器端口 = 1883
-	配置值.Y用户名 = ""
-	配置值.M密码 = ""
-
-	局_临时配置值, err := Q获取配置[config.MQTT配置](配置名)
-	if err == nil {
-		配置值 = 局_临时配置值
-	}
-	return 配置值
-}
 func Z云存储配置(配置值 *config.Y云存储配置) error {
 	//处理一下七牛云外链域名只取域名部分
 

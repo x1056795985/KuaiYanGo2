@@ -79,7 +79,8 @@ func WebSocketHandler(c *gin.Context) {
 	var 局_在线信息_新 DB.DB_LinksToken
 	局_在线信息_新.Uid = 局_在线信息_旧.Uid
 	局_在线信息_新.User = 局_在线信息_旧.User
-	局_在线信息_新.Tab = strconv.Itoa(局_在线信息_旧.LoginAppid)
+	局_在线信息_新.AppIdEx = 局_在线信息_旧.LoginAppid
+	局_在线信息_新.Tab = ""
 	局_在线信息_新.Key = ""
 	局_在线信息_新.Ip = c.ClientIP()
 	省市, 运行商, err := Qqwry.Ip查信息(局_在线信息_新.Ip)

@@ -113,7 +113,10 @@ func IsTokenWebApi() gin.HandlerFunc {
 		c.Set("局_在线信息", DB_LinksToken)
 		c.Set("局_json明文", string(data))
 		c.Set("DB_LinksToken", DB_LinksToken)
-		global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
+		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
+			global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
+		}
+
 		// 继续处理请求
 		c.Next()
 	}

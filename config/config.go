@@ -76,13 +76,6 @@ type 极验行为验证4 struct {
 	Y验证_KEY string `mapstructure:"验证_KEY" json:"验证_KEY" `
 }
 
-type MQTT配置 struct {
-	L连接状态  bool   `json:"连接状态"`
-	F服务器地址 string `json:"服务器地址"`
-	F服务器端口 int    `json:"服务器端口"`
-	Y用户名   string `json:"用户名"`
-	M密码    string `json:"密码"`
-}
 type Y云存储配置 struct {
 	D当前选择    int      `mapstructure:"当前选择" json:"当前选择" ` // 1 S3通用协议 2 七牛云
 	S3兼容协议   S3兼容协议   `mapstructure:"S3兼容协议" json:"S3兼容协议" `

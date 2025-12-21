@@ -205,7 +205,7 @@ func (a *Api) GetUserList(c *gin.Context) {
 		return
 	}
 
-	var AppName = Ser_AppInfo.App取map列表String()
+	var AppName = Ser_AppInfo.App取map列表String(true)
 
 	for 索引 := range DB_User_简化实例 {
 		DB_User_简化实例[索引].LoginAppName = AppName[DB_User_简化实例[索引].LoginAppid]

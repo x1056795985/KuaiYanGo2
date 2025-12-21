@@ -94,7 +94,7 @@ func (a *Api) GetLogLoginList(c *gin.Context) {
 		return
 	}
 
-	var AppName = App服务.AppInfo取map列表Int()
+	var AppName = App服务.AppInfo取map列表Int(true)
 	var AppNameMap = make(map[string]string, len(AppName))
 	//不直接传全部应用数据,只传有的数据
 	for 索引 := range DB_LogLogin {

@@ -7,6 +7,7 @@ type DB_LinksToken struct {
 	Status           int    `json:"Status" gorm:"column:Status;index;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
 	Token            string `json:"-" gorm:"column:Token;index;size:191;comment:令牌"`
 	LoginAppid       int    `json:"LoginAppid" gorm:"column:LoginAppid;comment:登录位置id"` //1管理员后台 2代理后天  3WebApi令牌
+	AppIdEx          int    `json:"AppIdEx" gorm:"column:AppIdEx;"`                     // 扩展id wenUser 和webSocket使用
 	AppVer           string `json:"AppVer" gorm:"column:AppVer;size:128;comment:软件版本"`
 	LoginTime        int64  `json:"LoginTime" gorm:"column:LoginTime;comment:登录时间"`
 	LastTime         int64  `json:"LastTime" gorm:"column:LastTime;comment:最上次活动时间戳"`

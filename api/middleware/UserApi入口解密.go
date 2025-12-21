@@ -241,8 +241,10 @@ func UserApi解密() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		if time.Now().Unix()-局_在线信息.LastTime > 60 { //超过1分钟,更新最后活动时间
+			go Ser_LinkUser.Token更新最后活动时间(Token)
+		}
 
-		go Ser_LinkUser.Token更新最后活动时间(Token)
 		if 局_在线信息.Ip != c.ClientIP() {
 			go Ser_LinkUser.Token更新在线ip(Token, c.ClientIP())
 			//go Ser_Log.Log_写登录日志(局_在线信息.User, c.ClientIP(), "在线用户更换ip"+局_在线信息.Ip+"->"+c.ClientIP(), 局_在线信息.LoginAppid)

@@ -2,6 +2,7 @@ package PublicJs
 
 import (
 	. "EFunc/utils"
+	json2 "encoding/json"
 	"fmt"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,7 @@ import (
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
 	"server/global"
+	"server/new/app/models/constant"
 
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -48,6 +50,7 @@ func (a *Api) GetInfo(c *gin.Context) {
 }
 
 type 结构请求_GetDB_PublicJsList struct {
+	AppId    int    `json:"AppId"`    //
 	Page     int    `json:"Page"`     // 页
 	Size     int    `json:"Size"`     // 页数量
 	Type     int    `json:"Type"`     // 关键字类型  1 Id   2 函数名
@@ -56,7 +59,34 @@ type 结构请求_GetDB_PublicJsList struct {
 }
 
 // GetDB_PublicJsList
+func (a *Api) GetPublicAppList(c *gin.Context) {
 
+	//fmt.Println(global.GVA_DB)
+	var 局_appid []int
+	//过滤重复,每个值只需要获取一个就行
+	_ = global.GVA_DB.Model(DB.DB_PublicJs{}).Select("AppId").Group("AppId").Find(&局_appid).Error
+
+	var AppName = Db服务.AppInfo取map列表Int(false)
+
+	type name struct {
+		AppId   int
+		AppName string
+	}
+	var 局_arr = make([]name, 0, len(局_appid)+4)
+	for 索引 := range 局_appid {
+		if 局_appid[索引] < 10000 {
+			continue
+		}
+		局_arr = append(局_arr, name{AppId: 局_appid[索引], AppName: AppName[局_appid[索引]]})
+	}
+	局_arr = append(局_arr, name{1, "全局"})
+	局_arr = append(局_arr, name{2, "任务池Hook"})
+	局_arr = append(局_arr, name{3, "ApiHook"})
+	局_arr = append(局_arr, name{11, "webSocket"})
+
+	response.OkWithDetailed(局_arr, "ok", c)
+	return
+}
 func (a *Api) GetPublicJsList(c *gin.Context) {
 	var 请求 结构请求_GetDB_PublicJsList
 	//{"AppId":2,"Type":2,"Size":10,"Page":1,"Status":1,"keywords":"1"}
@@ -74,6 +104,10 @@ func (a *Api) GetPublicJsList(c *gin.Context) {
 		局_DB.Order("Id ASC")
 	} else if 请求.Order == 2 {
 		局_DB.Order("Id DESC")
+	}
+
+	if 请求.AppId > 0 {
+		局_DB.Where("AppId = ?", 请求.AppId)
 	}
 
 	if 请求.Keywords != "" {
@@ -94,10 +128,11 @@ func (a *Api) GetPublicJsList(c *gin.Context) {
 		return
 	}
 
-	var AppName = Db服务.App取map列表String()
+	var AppName = Db服务.App取map列表String(false)
 	AppName["1"] = "全局"
 	AppName["2"] = "任务池Hook"
 	AppName["3"] = "ApiHook"
+	AppName["11"] = "webSocket"
 
 	for 索引 := range DB_PublicJs {
 		//fmt.Printf("Id:%v:%v", strconv.Itoa(DB_PublicJs[索引].AppId), AppName[strconv.Itoa(DB_PublicJs[索引].AppId)])
@@ -222,6 +257,11 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("公共函数名不能为空", c)
 		return
 	}
+	//公共函数名不能为纯数字
+	if W文本_是否为数字(请求.Name) {
+		response.FailWithMessage("公共函数名不能为纯数字", c)
+		return
+	}
 
 	if strings.Index(请求.Name, "$api_") != -1 {
 		response.FailWithMessage("公共函数名不能包含$api_", c)
@@ -337,7 +377,6 @@ func (a *Api) C测试执行(c *gin.Context) {
 
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
-	局_云函数型参数 := "{}"
 
 	vm := Ser_Js.JS引擎初始化_用户(c, &AppInfo, &局_在线信息, &局_PublicJs)
 
@@ -346,19 +385,33 @@ func (a *Api) C测试执行(c *gin.Context) {
 		response.FailWithMessage("JS代码运行失败:"+局_详细错误.String(), c)
 		return
 	}
-	var 局_待执行js函数名 func(string) interface{}
+	var 局_待执行js函数名 func(interface{}) string
 	ret := vm.Get(局_PublicJs.Name)
 	if ret == nil {
 		response.FailWithMessage("Js中没有["+局_PublicJs.Name+"()]函数", c)
 		return
 	}
+
 	err = vm.ExportTo(ret, &局_待执行js函数名)
+
 	if err != nil {
 		response.FailWithMessage("Js绑定函数到变量失败", c)
 		return
 	}
-	局_return := 局_待执行js函数名(局_云函数型参数)
+	var 局_返回 string
+	if 局_PublicJs.AppId == constant.APPID_WebSocket {
+		局_返回 = 局_待执行js函数名(map[string]interface{}{"aaa": 11, "bbb": "22", "cc": []string{"111", "222"}})
+	} else {
+		局_返回 = 局_待执行js函数名("{}")
+	}
 	局_耗时 = time.Now().UnixMilli() - 局_耗时
-	response.OkWithDetailed(gin.H{"Return": 局_return, "Time": 局_耗时}, "执行成功,耗时:"+strconv.FormatInt(局_耗时, 10), c)
+	var mapkv map[string]interface{}
+
+	if W文本_可能为json(局_返回) && 局_PublicJs.AppId == constant.APPID_WebSocket && json2.Unmarshal([]byte(局_返回), &mapkv) == nil {
+		response.OkWithDetailed(gin.H{"Return": mapkv, "Time": 局_耗时}, "执行成功,耗时:"+strconv.FormatInt(局_耗时, 10), c)
+	} else {
+		response.OkWithDetailed(gin.H{"Return": 局_返回, "Time": 局_耗时}, "执行成功,耗时:"+strconv.FormatInt(局_耗时, 10), c)
+	}
+
 	return
 }

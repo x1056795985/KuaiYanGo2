@@ -47,7 +47,6 @@ type TaskPool_类型 struct {
 	HookSubmitDataEnd   string `json:"HookSubmitDataEnd" gorm:"column:HookSubmitDataEnd;comment:hook创建入库后函数名"`
 	HookReturnDataStart string `json:"HookReturnDataStart" gorm:"column:HookReturnDataStart;comment:hook执行入库前函数名"`
 	HookReturnDataEnd   string `json:"HookReturnDataEnd" gorm:"column:HookReturnDataEnd;comment:hook执行入库后函数名"`
-	MqttTopicMsg        string `json:"MqttSendMsg" gorm:"column:MqttSendMsg;comment:新任务mqtt通知主题"`
 	Sort                int64  `json:"Sort" gorm:"column:Sort;default:0;comment:排序权重; "`
 }
 

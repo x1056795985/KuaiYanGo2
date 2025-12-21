@@ -545,7 +545,7 @@ type 结构请求_批量修改备注 struct {
 // GetAppIdNameList 取appid和名字数组
 func (a *Api) GetAppIdNameList(c *gin.Context) {
 
-	AppIdName := Ser_AppInfo.App取map列表String()
+	AppIdName := Ser_AppInfo.App取map列表String(true)
 
 	var Name = make([]键值对, 0, len(AppIdName))
 	局_可操作应用Id := agent.L_agent.Id取代理可操作应用AppId列表(c, c.GetInt("Uid"))

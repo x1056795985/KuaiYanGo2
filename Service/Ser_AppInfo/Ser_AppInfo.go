@@ -22,15 +22,20 @@ import (
 	"unicode/utf8"
 )
 
-func AppInfo取map列表Int() map[int]string {
+func AppInfo取map列表Int(基础id bool) map[int]string {
 
 	var DB_AppInfo []DB.DB_AppInfo
 	var 总数 int64
 	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppId", "AppName").Count(&总数).Find(&DB_AppInfo).Error
-	var AppName = make(map[int]string, 总数+2)
-	AppName[1] = "管理平台"
-	AppName[2] = "代理平台"
-	AppName[3] = "WebApi"
+	var AppName = make(map[int]string, 总数+4)
+	if 基础id {
+		AppName[1] = "管理平台"
+		AppName[2] = "代理平台"
+		AppName[3] = "WebApi"
+		AppName[10] = "WebUser"
+		AppName[11] = "WebSocket"
+	}
+
 	//吧 id 和 app名字 放入map
 	for 索引 := range DB_AppInfo {
 		AppName[DB_AppInfo[索引].AppId] = DB_AppInfo[索引].AppName
@@ -38,21 +43,24 @@ func AppInfo取map列表Int() map[int]string {
 
 	return AppName
 }
-func App取map列表String() map[string]string {
+func App取map列表String(基础id bool) map[string]string {
 
-	var DB_AppInfo []DB.DB_AppInfo
-	var 总数 int64
+	局map := AppInfo取map列表Int(基础id)
+	var 总数 = len(局map)
+	var AppName = make(map[string]string, 总数)
+	var AppName2 = make(map[string]string, 总数)
+	//将map[int]string 转换成 map[string]string
+	//需要按键名排序小于10000 的放到最后面
+	for key, value := range 局map {
+		if key < 10000 {
+			AppName2[strconv.Itoa(key)] = value
+		} else {
+			AppName[strconv.Itoa(key)] = value
+		}
+	}
 
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppId", "AppName").Count(&总数).Find(&DB_AppInfo).Error
-	//.Order("Sort DESC, AppId ASC")  排序没啥用, 后面也会被排序
-	var AppName = make(map[string]string, 总数+2)
-	AppName["1"] = "管理平台"
-	AppName["2"] = "代理平台"
-	AppName["3"] = "WebApi"
-
-	//吧 id 和 app名字 放入map
-	for 索引 := range DB_AppInfo {
-		AppName[strconv.Itoa(DB_AppInfo[索引].AppId)] = DB_AppInfo[索引].AppName
+	for key, value := range AppName2 {
+		AppName[key] = value
 	}
 
 	return AppName

@@ -226,7 +226,6 @@ func (a *Api) Save(c *gin.Context) {
 		"HookReturnDataEnd":   请求.HookReturnDataEnd,
 		"HookSubmitDataStart": 请求.HookSubmitDataStart,
 		"HookSubmitDataEnd":   请求.HookSubmitDataEnd,
-		"MqttTopicMsg":        请求.MqttTopicMsg,
 	}
 
 	var db = global.GVA_DB.Model(DB.TaskPool_类型{}).Where("Id=?", 请求.Id).Updates(&m)
@@ -263,7 +262,7 @@ func (a *Api) New(c *gin.Context) {
 		response.FailWithMessage("类型名称长度必须>4", c)
 		return
 	}
-	err = Ser_TaskPool.Task类型创建(请求.Name, 请求.HookSubmitDataStart, 请求.HookSubmitDataEnd, 请求.HookReturnDataStart, 请求.HookReturnDataEnd, 请求.MqttTopicMsg)
+	err = Ser_TaskPool.Task类型创建(请求.Name, 请求.HookSubmitDataStart, 请求.HookSubmitDataEnd, 请求.HookReturnDataStart, 请求.HookReturnDataEnd)
 
 	if err != nil {
 		response.FailWithMessage("添加失败:"+err.Error(), c)

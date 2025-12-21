@@ -8,6 +8,7 @@ type DB_PublicJs struct {
 	Type  int    `json:"Type" gorm:"column:Type;comment:数据类型"`                        //数据类型 1=普通函数  2=Hook函数
 	IsVip int    `json:"IsVip" gorm:"column:IsVip;comment:Vip点数或用户类型代号限制;default:0 "` //Vip点数大于值才可以获取 或可扩展指定用户类型代号(id不能,必须代号因为代号可以自己编辑,Id不能自己编辑)可以用
 	Note  string `json:"Note" gorm:"column:Note;size:1000;comment:备注; "`
+	Sort  int64  `json:"Sort" gorm:"column:Sort;default:0;comment:排序权重; "`
 }
 
 func (DB_PublicJs) TableName() string {

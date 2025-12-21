@@ -292,7 +292,7 @@ func InitDbTable数据(c *gin.Context) {
 	if 局_例子记录.Taskpool < 局_例子版本 {
 		global.GVA_DB.Model(DB.TaskPool_类型{}).Count(&局_数量)
 		if 局_数量 == 0 {
-			_ = Ser_TaskPool.Task类型创建("测试任务1", "hook模板_任务创建入库前", "", "", "", "")
+			_ = Ser_TaskPool.Task类型创建("测试任务1", "hook模板_任务创建入库前", "", "", "")
 		}
 		局_例子记录.Taskpool = 局_例子版本
 	}
@@ -719,7 +719,7 @@ func 数据库兼容旧版本(c *gin.Context) {
 	//2023/9/9  把支付方式  微信PC修改成 微信支付
 	_ = db.Model(DB.DB_LogRMBPayOrder{}).Where("Type = ? ", "微信PC").Update("Type", "微信支付").Error
 	//2023/9/16  把appUser 积分 字段类型 修改成  双精度小数型
-	局_已有AppID := Ser_AppInfo.App取map列表String()
+	局_已有AppID := Ser_AppInfo.App取map列表String(true)
 	for 值 := range 局_已有AppID {
 		columnType := ""
 		err := db.Raw("SELECT data_type FROM information_schema.columns WHERE table_name = 'db_AppUser_" + 值 + "' AND column_name = 'VipNumber'").Scan(&columnType).Error

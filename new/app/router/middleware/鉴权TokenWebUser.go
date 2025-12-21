@@ -63,7 +63,7 @@ func IsTokenWebUser() gin.HandlerFunc {
 		}
 		db := *global.GVA_DB
 		var 局_网页用户中心配置 dbm.DB_AppInfoWebUser
-		局_网页用户中心配置, err = service.NewAppInfoWebUser(c, &db).Info(D到整数(DB_LinksToken.Tab))
+		局_网页用户中心配置, err = service.NewAppInfoWebUser(c, &db).Info(D到整数(DB_LinksToken.AppIdEx))
 		if err != nil || 局_网页用户中心配置.Status != 1 {
 			response.FailTokenErr(c, gin.H{"reload": true}, "应用未开放网页用户中心,请联系管理员")
 			c.Abort()
@@ -81,7 +81,9 @@ func IsTokenWebUser() gin.HandlerFunc {
 		c.Set("DB_LinksToken", DB_LinksToken)
 		c.Set("网页用户中心配置", 局_网页用户中心配置)
 		//更新最后活动时间
-		global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
+		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
+			global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
+		}
 		// 继续处理请求
 		c.Next()
 	}

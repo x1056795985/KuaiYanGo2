@@ -97,9 +97,9 @@ func (a *Api) GetPublicDataList(c *gin.Context) {
 		return
 	}
 
-	var AppName = Db服务.App取map列表String()
+	var AppName = Db服务.App取map列表String(false)
 	AppName["1"] = "全局"
-
+ 
 	for 索引 := range DB_PublicData {
 		//fmt.Printf("Id:%v:%v", strconv.Itoa(DB_PublicData[索引].AppId), AppName[strconv.Itoa(DB_PublicData[索引].AppId)])
 		DB_PublicData[索引].AppName = AppName[strconv.Itoa(DB_PublicData[索引].AppId)]

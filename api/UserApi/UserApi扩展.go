@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
@@ -21,7 +20,6 @@ import (
 	"server/global"
 	"server/new/app/logic/common/VMP"
 	"server/new/app/logic/common/cloudStorage"
-	"server/new/app/logic/common/mqttClient"
 	"server/new/app/logic/webUser/appInfoWebUser"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -89,12 +87,7 @@ func UserApi_任务池_任务创建(c *gin.Context) {
 			return
 		}
 	}
-	//新任务,使用mqtt通知
-	if 局_任务类型.MqttTopicMsg != "" {
-		局_临时文本 := fmt.Sprintf(`{"taskId":%d,"time":%d}`, 局_任务类型.Id, time.Now().Unix())
-		//因为有网络通讯单开协程处理,不能卡请求耗时
-		go mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
-	}
+
 	response.X响应状态带数据(c, c.GetInt("局_成功Status"), gin.H{"TaskUuid": 任务Id})
 	return
 }
@@ -490,7 +483,7 @@ func UserApi_VMP计算授权码(c *gin.Context) {
 	VmpRsa.RsaBase64私钥 = B编码_BASE64编码(VMP.S十进制解码(privateKey.D))
 	VmpRsa.RsaBase64模数 = B编码_BASE64编码(VMP.S十进制解码(privateKey.N))
 
-	局_Base64产品代码字节 := Int32ToBytes(int32(局_在线信息.Uid))                                     //共计8个字节,前四个字节为在线用户用户uid 防山寨
+	局_Base64产品代码字节 := Int32ToBytes(int32(局_在线信息.Uid))                                         //共计8个字节,前四个字节为在线用户用户uid 防山寨
 	局_Base64产品代码字节 = append(局_Base64产品代码字节, Int32ToBytes(请求json.Get("AppId").Int32())...) //补appid 4个字节 后四个字节为用户appid 防止用户串应用
 	VmpRsa.Base64产品代码 = B编码_BASE64编码(局_Base64产品代码字节)
 
@@ -531,7 +524,7 @@ func UserApi_VMP计算授权码防山寨(c *gin.Context) {
 	}
 
 	_, ok := global.H缓存.Get("VMP计算code_" + strconv.Itoa(局_在线信息.Id)) //获取
-	if ok {                                                         //如果ok说明已经存在这个记录了
+	if ok {                                                                  //如果ok说明已经存在这个记录了
 		go Ser_Log.Log_写风控日志(局_在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_在线信息.User, c.ClientIP(), "用户一次登陆,多次重复计算VMP授权码,可能在尝试转发请求破解")
 		response.X响应状态消息(c, response.Status_操作失败, "禁止重复计算授权")
 		//写风控日志

@@ -172,7 +172,8 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 
 	info.DB_links_user.Uid = info.appUser.Uid
 	info.DB_links_user.User = 请求.UserOrKa
-	info.DB_links_user.Tab = strconv.Itoa(请求.AppId)
+	info.DB_links_user.Tab = ""
+	info.DB_links_user.AppIdEx = 请求.AppId
 	info.DB_links_user.Key = info.appUser.Key
 	info.DB_links_user.Ip = c.ClientIP()
 	省市, 运行商, err := Qqwry.Ip查信息(info.DB_links_user.Ip)
@@ -271,7 +272,8 @@ func (C *Base) LoginKey(c *gin.Context) {
 	}
 	info.DB_links_user.Uid = info.来源links_user.Uid
 	info.DB_links_user.User = info.来源links_user.User
-	info.DB_links_user.Tab = strconv.Itoa(info.来源links_user.LoginAppid)
+	info.DB_links_user.Tab = ""
+	info.DB_links_user.AppIdEx = info.来源links_user.LoginAppid
 	info.DB_links_user.Key = info.来源links_user.Key
 	info.DB_links_user.Ip = c.ClientIP()
 	if 省市, 运行商, err2 := Qqwry.Ip查信息(info.DB_links_user.Ip); err2 == nil && 省市 != "" {

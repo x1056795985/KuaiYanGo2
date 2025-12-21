@@ -93,7 +93,7 @@ func (a *Api) GetList(c *gin.Context) {
 		return
 	}
 
-	var AppName = Ser_AppInfo.App取map列表String()
+	var AppName = Ser_AppInfo.App取map列表String(true)
 	AppName["50"] = "代理云配置"
 
 	var AdminIdNameMap = make(map[int]string) //cache 优化防止多次读库

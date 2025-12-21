@@ -294,7 +294,7 @@ func D定时任务_删除已过期唯一积分记录(c *gin.Context) {
 	}
 
 	tx := *global.GVA_DB
-	局_全部应用 := App服务.AppInfo取map列表Int()
+	局_全部应用 := App服务.AppInfo取map列表Int(true)
 
 	for key, _ := range 局_全部应用 {
 		if key <= 10000 { //过滤掉其他的

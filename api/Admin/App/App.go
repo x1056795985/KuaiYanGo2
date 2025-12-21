@@ -430,10 +430,8 @@ type 响应_AppIdMax struct {
 // GetAppIdNameList 取appid和名字数组
 func (a *Api) GetAppIdNameList(c *gin.Context) {
 
-	AppIdName := Ser_AppInfo.App取map列表String()
-	delete(AppIdName, "1")
-	delete(AppIdName, "2")
-	delete(AppIdName, "3")
+	AppIdName := Ser_AppInfo.App取map列表String(false)
+
 	var 临时Int int
 	var Name []键值对
 

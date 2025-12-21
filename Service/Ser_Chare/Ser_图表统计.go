@@ -200,7 +200,7 @@ func Get在线用户统计(c *gin.Context) []gin.H {
 
 	局_耗时 := time.Now().Unix()
 	var 局_appId列表 []int
-	var 局_appId名称 = Ser_AppInfo.AppInfo取map列表Int()
+	var 局_appId名称 = Ser_AppInfo.AppInfo取map列表Int(true)
 	_ = global.GVA_DB.Model(DB.DB_LinksToken{}).Distinct("LoginAppid").Find(&局_appId列表).Error
 	var Data = make([]gin.H, 0, len(局_appId列表))
 	var 局_数量 int64
@@ -480,10 +480,7 @@ func Get应用用户统计(c *gin.Context) [][]string {
 		return Data缓存.([][]string)
 	}
 	局_耗时 := time.Now().Unix()
-	var 局_appId列表 = Ser_AppInfo.AppInfo取map列表Int()
-	delete(局_appId列表, 1) //删除开发者管理平台
-	delete(局_appId列表, 2) //删除代理平台
-	delete(局_appId列表, 3) //删除WebApi
+	var 局_appId列表 = Ser_AppInfo.AppInfo取map列表Int(false)
 	var 局_appId用户数量 = make([]临时应用id总数键值对, len(局_appId列表))
 	局_I := 0
 	for 键名, _ := range 局_appId列表 {
@@ -548,10 +545,8 @@ func Get卡号列表统计应用卡可用已用(c *gin.Context) [][]string {
 		return Data缓存.([][]string)
 	}
 	局_耗时 := time.Now().Unix()
-	var 局_appId列表 = Ser_AppInfo.AppInfo取map列表Int()
-	delete(局_appId列表, 1) //删除开发者管理平台
-	delete(局_appId列表, 2) //删除代理平台
-	delete(局_appId列表, 3) //删除WebApi
+	var 局_appId列表 = Ser_AppInfo.AppInfo取map列表Int(false)
+
 	var 局_appId卡号数量 = make([]临时应用id总数键值对, len(局_appId列表))
 	局_I := 0
 	for 键名, _ := range 局_appId列表 {

@@ -56,7 +56,7 @@ func (j 余额支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 	info.likeInfo = 局_临时通用.(DB.DB_LinksToken)
 	db := *global.GVA_DB
 	if info.likeInfo.LoginAppid == constant.APPID_Web用户中心 {
-		局_临时通用, err = service.NewAppInfo(c, &db).Info(D到整数(info.likeInfo.Tab))
+		局_临时通用, err = service.NewAppInfo(c, &db).Info(D到整数(info.likeInfo.AppIdEx))
 		info.appInfo = 局_临时通用.(DB.DB_AppInfo)
 	} else {
 		局_临时通用, err = service.NewAppInfo(c, &db).Info(info.likeInfo.LoginAppid)

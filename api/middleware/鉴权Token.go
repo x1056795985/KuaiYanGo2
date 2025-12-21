@@ -6,16 +6,12 @@ import (
 	"server/Service/Ser_User"
 	"server/global"
 	"server/new/app/logic/common/setting"
+	"server/new/app/models/constant"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strings"
 	"time"
 )
-
-const 管理员后台 = 1
-const 代理后台 = 2
-const WEBApi = 3
-const WebUser = 4
 
 // Token有效的才放行,否则返回Ttoken失效
 func IsTokenAdmin() gin.HandlerFunc {
@@ -44,14 +40,16 @@ func IsTokenAdmin() gin.HandlerFunc {
 			return
 		}
 
-		if DB_LinksToken.LoginAppid != 管理员后台 {
+		if DB_LinksToken.LoginAppid != constant.APPID_管理平台 {
 			response.FailTokenErr(gin.H{"reload": true}, "非管理员后台令牌,请重新登录.", c)
 			c.Abort()
 			return
 		}
 		//fmt.Println(DB_LinksToken)
 		//更新最后活动时间
-		global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("LastTime", int(time.Now().Unix()))
+		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
+			global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("LastTime", int(time.Now().Unix()))
+		}
 		//把 userID 保存到上下文,这样逻辑层就不用再查询了
 		c.Set("Uid", DB_LinksToken.Uid)
 		c.Set("User", DB_LinksToken.User)
@@ -149,13 +147,15 @@ func IsTokenAgent() gin.HandlerFunc {
 			return
 		}
 
-		if DB_LinksToken.LoginAppid != 代理后台 {
+		if DB_LinksToken.LoginAppid != constant.APPID_代理平台 {
 			response.FailTokenErr(gin.H{"reload": true}, "非代理后台令牌,请重新登录.", c)
 			c.Abort()
 			return
 		}
 		//更新最后活动时间
-		global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("LastTime", time.Now().Unix())
+		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
+			global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("LastTime", time.Now().Unix())
+		}
 		go Ser_User.Id置最后登录AppId(DB_LinksToken.Uid, 2, c.ClientIP())
 		//把 userID 保存到上下文,这样逻辑层就不用再查询了
 		c.Set("Uid", DB_LinksToken.Uid)

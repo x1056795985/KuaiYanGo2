@@ -82,7 +82,7 @@ func (a *LinkUserApi) GetLinkUserList(c *gin.Context) {
 		return
 	}
 
-	var AppName = App服务.AppInfo取map列表Int()
+	var AppName = App服务.AppInfo取map列表Int(true)
 
 	for 索引 := range DB_LinksToken {
 		DB_LinksToken[索引].AppName = AppName[DB_LinksToken[索引].LoginAppid]

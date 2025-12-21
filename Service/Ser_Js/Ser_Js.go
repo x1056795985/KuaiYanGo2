@@ -25,10 +25,12 @@ import (
 	"server/global"
 	"server/new/app/logic/common/VMP"
 	"server/new/app/logic/common/cloudStorage"
-	"server/new/app/logic/common/mqttClient"
+	"server/new/app/logic/common/cycleNot"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/rmbPay"
+	"server/new/app/logic/webSocket"
 	"server/new/app/models/common"
+	"server/new/app/models/constant"
 	"server/new/app/models/db"
 	"server/new/app/service"
 	DB "server/structs/db"
@@ -38,6 +40,10 @@ import (
 	"time"
 )
 
+func init() {
+	// 注册初始化函数
+	cycleNot.SetJsEngineInitializer(JS引擎初始化_用户)
+}
 func JS引擎初始化_用户(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, 局_PublicJs *DB.DB_PublicJs) *goja.Runtime {
 	vm := goja.New() // 创建engine实例
 	_ = vm.Set("$用户在线信息", 在线信息)
@@ -79,12 +85,16 @@ func JS引擎初始化_用户(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信�
 	_ = vm.Set("$api_置缓存", jS_置缓存)
 	_ = vm.Set("$api_置黑名单", jS_置黑名单)
 	_ = vm.Set("$api_置软件用户状态", jS_置软件用户状态)
-	_ = vm.Set("$api_mqtt发送消息", jS_mqtt发送消息)
+
 	_ = vm.Set("$api_任务池Uuid添加到队列", jS_任务池Uuid添加到队列)
 	_ = vm.Set("$api_任务池_取队列长度", jS_任务池_取队列长度)
 	_ = vm.Set("$api_Jwt生成", jS_Jwt生成)
 	_ = vm.Set("$api_云存储_取外链", jS_云存储_取外链)
 	_ = vm.Set("$api_云存储_取文件上传授权", jS_云存储_取文件上传授权)
+
+	_ = vm.Set("$api_ws_发送消息", jS_ws_发送消息)
+	_ = vm.Set("$api_ws_发送消息_批量", jS_ws_发送消息_批量)
+	_ = vm.Set("$api_ws_筛选id", jS_ws_筛选id)
 
 	_ = vm.Set("$api_编码_BASE64编码", B编码_BASE64编码)
 	_ = vm.Set("$api_编码_BASE64解码", B编码_BASE64解码)
@@ -557,12 +567,6 @@ func jS_任务池_任务创建(局_在线信息 DB.DB_LinksToken, 任务类型ID
 		}
 	}
 
-	//新任务,使用mqtt通知
-	if 局_任务类型.MqttTopicMsg != "" {
-		局_临时文本 := fmt.Sprintf(`{"taskId":%d,"time":%d}`, 局_任务类型.Id, time.Now().Unix())
-		go mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
-	}
-
 	return js对象_通用返回{IsOk: true, Err: "", Data: gin.H{"TaskUuid": 任务Id}}
 
 }
@@ -658,16 +662,6 @@ func jS_置黑名单(AppId int, 黑名单信息, 备注 string) js对象_通用�
 	var S = service.S_Blacklist{}
 	tx := *global.GVA_DB
 	err := S.Create(&tx, db.DB_Blacklist{AppId: AppId, ItemKey: 黑名单信息, Note: 备注})
-	if err != nil {
-		return js对象_通用返回{IsOk: false, Err: err.Error()}
-	}
-	return js对象_通用返回{IsOk: true, Err: "成功"}
-}
-
-func jS_mqtt发送消息(主题 string, 消息 string) js对象_通用返回 {
-
-	err := mqttClient.L_mqttClient.F发送消息(nil, 主题, 消息)
-
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
@@ -779,4 +773,48 @@ func jS_置软件用户状态(局_在线信息 DB.DB_LinksToken, 状态 int) js�
 		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_在线信息.Uid}, 局_在线信息.LoginAppid, Ser_LinkUser.Z注销_管理员手动注销)
 	}
 	return js对象_通用返回{IsOk: true, Err: "成功"}
+}
+
+func jS_ws_发送消息(id int, 消息 string) js对象_通用返回 {
+	err := webSocket.L_webSocket.F发送消息(id, []byte(消息))
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	} else {
+		return js对象_通用返回{IsOk: true, Err: "ok", Data: []string{}}
+	}
+}
+
+func jS_ws_发送消息_批量(id []int, 消息 string) js对象_通用返回 {
+	err := webSocket.L_webSocket.F发送消息_批量(id, []byte(消息))
+	局_结果 := make([]string, len(err))
+	for i, v := range err {
+		if v == nil {
+			局_结果[i] = "成功"
+		} else {
+			局_结果[i] = v.Error()
+		}
+	}
+	return js对象_通用返回{IsOk: true, Err: "ok", Data: 局_结果}
+}
+func jS_ws_筛选id(AppIdEx, uid int, tap string) js对象_通用返回 {
+	db := *global.GVA_DB
+	var 返回 []int
+	tx := &db
+	tx = tx.Model(DB.DB_LinksToken{}).Select("Id").Where("LoginAppid = ?", constant.APPID_WebSocket).Where("Status = ?", 1)
+	if uid != 0 {
+		tx = tx.Where("Uid = ?", uid)
+	}
+	if AppIdEx != 0 {
+		tx = tx.Where("AppIdEx = ?", AppIdEx)
+	}
+	if tap != "" {
+		tx = tx.Where("tap like ?", "%"+tap+"%")
+	}
+	err := tx.Find(&返回).Error
+
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	} else {
+		return js对象_通用返回{IsOk: true, Err: "ok", Data: 返回}
+	}
 }

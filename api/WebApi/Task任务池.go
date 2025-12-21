@@ -2,14 +2,13 @@ package WebApi
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
-	"server/new/app/logic/common/mqttClient"
+
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -289,12 +288,7 @@ func R任务池_任务创建(c *gin.Context) {
 			return
 		}
 	}
-	//新任务,使用mqtt通知
-	if 局_任务类型.MqttTopicMsg != "" {
-		局_临时文本 := fmt.Sprintf(`{"taskId":%d,"time":%d}`, 局_任务类型.Id, time.Now().Unix())
-		//因为有网络通讯单开协程处理,不能卡请求耗时
-		go mqttClient.L_mqttClient.F发送消息(nil, 局_任务类型.MqttTopicMsg, 局_临时文本)
-	}
+
 	response.OkWithData(gin.H{"TaskUuid": 任务Id}, c)
 	return
 }
