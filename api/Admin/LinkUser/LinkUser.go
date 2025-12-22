@@ -8,6 +8,7 @@ import (
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_LinkUser"
 	"server/global"
+	"server/new/app/logic/webSocket"
 
 	"server/structs/Http/response"
 	DB "server/structs/db"
@@ -190,6 +191,10 @@ func (a *LinkUserApi) Del批量注销(c *gin.Context) {
 		response.FailWithMessage("注销失败", c)
 		global.GVA_LOG.Error("Del批量注销:" + err.Error())
 		return
+	}
+	// 有个特殊情况,注销wenSocket 时需要同时断开连接
+	for _, v := range 请求.Id {
+		webSocket.L_webSocket.RemoveConnection(v)
 	}
 
 	response.OkWithMessage("注销成功", c)

@@ -297,17 +297,34 @@ func jS_取软件用户详情(局_在线信息 DB.DB_LinksToken) DB.DB_AppUser {
 }
 func jS_在线注销(局_在线信息 DB.DB_LinksToken) js对象_通用返回 {
 	var err error
+	var 局_数组_在线 []DB.DB_LinksToken
+	db := *global.GVA_DB
 	if 局_在线信息.Id != 0 {
-		err = Ser_LinkUser.Set批量注销([]int{局_在线信息.Id}, Ser_LinkUser.Z注销_管理员手动注销)
+		局_数组_在线, err = service.NewLinksToken(&gin.Context{}, &db).Infos(map[string]interface{}{"Id": 局_在线信息.Id})
+
 	} else if 局_在线信息.Uid != 0 {
-		err = Ser_LinkUser.Set批量注销Uid(局_在线信息.Uid, Ser_LinkUser.Z注销_管理员手动注销)
+		局_数组_在线, err = service.NewLinksToken(&gin.Context{}, &db).Infos(map[string]interface{}{"Uid": 局_在线信息.Uid})
 	} else if 局_在线信息.User != "" {
-		err = Ser_LinkUser.Set批量注销User数组([]string{局_在线信息.User}, Ser_LinkUser.Z注销_管理员手动注销)
+		局_数组_在线, err = service.NewLinksToken(&gin.Context{}, &db).Infos(map[string]interface{}{"User": 局_在线信息.User})
 	} else {
 		err = errors.New("在线信息缺少,Id,Uid,User,任意一个参数")
 	}
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	}
+	局_ids := make([]int, 0, len(局_数组_在线))
+	// 有个特殊情况,注销wenSocket 时需要同时断开连接
+	for _, v := range 局_数组_在线 {
+		局_ids = append(局_ids, v.Id)
+	}
+	err = Ser_LinkUser.Set批量注销(局_ids, Ser_LinkUser.Z注销_管理员手动注销)
+	if err != nil {
+		return js对象_通用返回{IsOk: false, Err: err.Error()}
+	}
+	for _, v := range 局_数组_在线 {
+		if v.LoginAppid == constant.APPID_WebSocket {
+			webSocket.L_webSocket.RemoveConnection(v.Id)
+		}
 	}
 	return js对象_通用返回{IsOk: true, Err: "注销成功"}
 
