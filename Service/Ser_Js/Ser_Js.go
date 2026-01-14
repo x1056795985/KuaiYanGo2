@@ -825,7 +825,7 @@ func jS_ws_筛选id(AppIdEx, uid int, tap string) js对象_通用返回 {
 		tx = tx.Where("AppIdEx = ?", AppIdEx)
 	}
 	if tap != "" {
-		tx = tx.Where("tap like ?", "%"+tap+"%")
+		tx = tx.Where("Tab LIKE ?", "%"+tap+"%")
 	}
 	err := tx.Find(&返回).Error
 

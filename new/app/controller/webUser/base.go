@@ -4,6 +4,7 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/tools/rand_string"
+	"net/http"
 	"server/Service/Captcha"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
@@ -302,10 +303,25 @@ func (C *Base) LoginKey(c *gin.Context) {
 
 	//不管登陆成功还是失败,都需要跳转到这里
 结束开始跳转:
-	//设置临时token 前端路由守卫,会把cook放到token内 httpOnly 必须为false 否则js无法读取cookies
-	c.SetCookie("tempToken", info.DB_links_user.Token, 36000, "/", ".", false, false)
+
 	//设置302跳转
-	局_jumpUrl = appInfoWebUser.L_appInfoWebUser.Q用户中心域名(c, info.网页用户中心配置.Id) + "/user/" + strconv.Itoa(info.来源links_user.LoginAppid) + "/#/" + 局_jumpUrl
+	局_jumpUrl = appInfoWebUser.L_appInfoWebUser.Q用户中心域名(c, info.网页用户中心配置.Id) + "/user/" + strconv.Itoa(info.来源links_user.LoginAppid) + "/#/" + 局_jumpUrl + "?tempToken=" + info.DB_links_user.Token
+	//判断左边是否为https
+
+	//设置临时token 前端路由守卫,会把cook放到token内 httpOnly 必须为false 否则js无法读取cookies
+	cookie := &http.Cookie{
+		Name:     "tempToken",
+		Value:    info.DB_links_user.Token,
+		MaxAge:   36000,
+		Path:     "/",
+		Domain:   "",                                    // 根据需要设置具体域名
+		Secure:   strings.HasPrefix(局_jumpUrl, "https"), // 重要：SameSite=None 必须配合 HTTPS
+		HttpOnly: false,                                 // 根据前端需求设置
+		SameSite: http.SameSiteNoneMode,
+	}
+
+	c.Header("Set-Cookie", cookie.String())
+
 	c.Redirect(302, 局_jumpUrl)
 	return
 }
