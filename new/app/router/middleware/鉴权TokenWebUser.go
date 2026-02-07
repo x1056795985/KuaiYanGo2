@@ -78,7 +78,7 @@ func IsTokenWebUser() gin.HandlerFunc {
 		}
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data)) // 关键点 //通过这写回post数据,就可以多次读取了
 
-		c.Set("DB_LinksToken", DB_LinksToken)
+		c.Set("局_在线信息", DB_LinksToken)
 		c.Set("网页用户中心配置", 局_网页用户中心配置)
 		//更新最后活动时间
 		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间

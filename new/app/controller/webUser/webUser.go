@@ -10,7 +10,7 @@ import (
 )
 
 func Y用户数据信息还原(c *gin.Context, 在线信息 *DB.DB_LinksToken, AppInfo *DB.DB_AppInfo) {
-	局_临时通用, _ := c.Get("DB_LinksToken")
+	局_临时通用, _ := c.Get("局_在线信息")
 	*在线信息 = 局_临时通用.(DB.DB_LinksToken)
 	if AppInfo != nil {
 		db := *global.GVA_DB

@@ -52,8 +52,12 @@ func (j 余额支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 		appInfo  DB.DB_AppInfo
 		userInfo DB.DB_User
 	}{}
-	局_临时通用, _ := c.Get("DB_LinksToken")
+	局_临时通用, _ := c.Get("局_在线信息")
 	info.likeInfo = 局_临时通用.(DB.DB_LinksToken)
+	if info.likeInfo.Uid <= 0 {
+		err = errors.New("余额支付仅限已登陆后使用")
+		return
+	}
 	db := *global.GVA_DB
 	if info.likeInfo.LoginAppid == constant.APPID_Web用户中心 {
 		局_临时通用, err = service.NewAppInfo(c, &db).Info(D到整数(info.likeInfo.AppIdEx))

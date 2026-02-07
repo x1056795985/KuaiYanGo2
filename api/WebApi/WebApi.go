@@ -31,7 +31,7 @@ type 路由信息 struct {
 func Y用户数据信息还原(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken) {
 	db := *global.GVA_DB
 	*AppInfo, _ = service.NewAppInfo(c, &db).Info(3)
-	局_临时通用, _ := c.Get("DB_LinksToken")
+	局_临时通用, _ := c.Get("局_在线信息")
 	*在线信息 = 局_临时通用.(DB.DB_LinksToken)
 	return
 }
