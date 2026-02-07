@@ -48,12 +48,35 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
+	var info = struct {
+		Uid           int
+		appInfo       DB.DB_AppInfo
+		appUser       DB.DB_AppUser
+		DB_links_user DB.DB_LinksToken
+		kaInfo        DB.DB_Ka
+		user          DB.DB_User
+		网页用户中心配置      dbm.DB_AppInfoWebUser
+	}{}
 
 	客户端ip := c.ClientIP()
 	// 判断验证码是否开启
-	openCaptcha := global.GVA_CONFIG.Captcha.OpenCaptcha // 是否开启防暴次数
-	openCaptchaTimeOut := 10                             // 缓存超时时间
-	v, ok := global.H缓存.Get(客户端ip)                       // 获取这个ip已经被请求次数
+	var err error
+	tx := *global.GVA_DB
+
+	if info.appInfo, err = service.NewAppInfo(c, &tx).Info(请求.AppId); err != nil {
+		response.FailWithMessage(c, "AppId不存在")
+
+		return
+	}
+	info.网页用户中心配置, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId)
+	if err != nil || info.网页用户中心配置.Status != 1 {
+		response.FailWithMessage(c, constant.C常_关闭提示)
+		c.Abort()
+		return
+	}
+	openCaptcha := info.网页用户中心配置.CaptchaLogin // 是否开启防暴次数
+	openCaptchaTimeOut := 10                  // 缓存超时时间
+	v, ok := global.H缓存.Get(客户端ip)            // 获取这个ip已经被请求次数
 	if !ok {
 		// 获取这个ip已经被请求次数  如果没请求过, 设置值为1
 		global.H缓存.Set(客户端ip, 1, time.Second*time.Duration(openCaptchaTimeOut))
@@ -73,30 +96,6 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]验证码错误:"+请求.Captcha, constant.APPID_Web用户中心)
 			return
 		}
-	}
-
-	var info = struct {
-		Uid           int
-		appInfo       DB.DB_AppInfo
-		appUser       DB.DB_AppUser
-		DB_links_user DB.DB_LinksToken
-		kaInfo        DB.DB_Ka
-		user          DB.DB_User
-		网页用户中心配置      dbm.DB_AppInfoWebUser
-	}{}
-	var err error
-	tx := *global.GVA_DB
-
-	if info.appInfo, err = service.NewAppInfo(c, &tx).Info(请求.AppId); err != nil {
-		response.FailWithMessage(c, "AppId不存在")
-
-		return
-	}
-	info.网页用户中心配置, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId)
-	if err != nil || info.网页用户中心配置.Status != 1 {
-		response.FailWithMessage(c, constant.C常_关闭提示)
-		c.Abort()
-		return
 	}
 
 	if info.appInfo.AppType >= 3 {
