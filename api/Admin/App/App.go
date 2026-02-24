@@ -256,6 +256,7 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 			CaptchaReg:     请求.AppInfoWebUser.CaptchaReg,
 			CaptchaSendSms: 请求.AppInfoWebUser.CaptchaSendSms,
 			WebUserDomain:  请求.AppInfoWebUser.WebUserDomain,
+			AgentOnlyOrder: 请求.AppInfoWebUser.AgentOnlyOrder,
 		})
 	} else {
 		_, err = service.NewAppInfoWebUser(c, &tx).Update(局_旧AppInfo.AppId, map[string]interface{}{
@@ -265,6 +266,7 @@ func (a *Api) SaveApp信息(c *gin.Context) {
 			"captchaReg":     请求.AppInfoWebUser.CaptchaReg,
 			"captchaSendSms": 请求.AppInfoWebUser.CaptchaSendSms,
 			"webUserDomain":  请求.AppInfoWebUser.WebUserDomain,
+			"agentOnlyOrder": 请求.AppInfoWebUser.AgentOnlyOrder,
 		})
 	}
 	if err != nil {

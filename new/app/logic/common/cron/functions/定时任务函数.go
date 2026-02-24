@@ -125,7 +125,7 @@ func T通用任务执行函数2(时间戳 int64, R任务数据 db.DB_Cron) (stri
 	case -5: //删除已过期唯一积分记录
 		D定时任务_删除已过期唯一积分记录(&c)
 		return "", err
-	case -6: //删除已过期唯一积分记录
+	case -6:
 		D定时任务_统计应用在线用户总数(&c)
 		return "", err
 	case 1: //1,http请求,2公共js函数,3 SQL 4 shell"`

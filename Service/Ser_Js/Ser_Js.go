@@ -413,7 +413,7 @@ func jS_网页访问_GET(Url string, 协议头一行一个 string, Cookies strin
 	client := req.C().EnableInsecureSkipVerify().SetTimeout(time.Duration(超时秒数) * time.Second).EnableForceHTTP1()
 	// 禁止所有重定向
 	client = client.SetRedirectPolicy(req.NoRedirectPolicy())
-
+	client = client.EnableForceHTTP1() // 强制为http1.1 有事http2 会返回错误,比如请求火山的接口就会返回401
 	if 代理ip != "" {
 		client.SetProxyURL(代理ip)
 	}
@@ -464,6 +464,7 @@ func jS_网页访问_POST(Url, post string, 协议头一行一个 string, Cookie
 	client := req.C().EnableInsecureSkipVerify().SetTimeout(time.Duration(超时秒数) * time.Second)
 	// 禁止所有重定向
 	client = client.SetRedirectPolicy(req.NoRedirectPolicy())
+	client = client.EnableForceHTTP1() // 强制为http1.1 有事http2 会返回错误,比如请求火山的接口就会返回401
 	if 代理ip != "" {
 		client.SetProxyURL(代理ip)
 	}

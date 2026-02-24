@@ -100,8 +100,8 @@ func (C *CronLog) GetList(c *gin.Context) {
 // @show  2
 func (C *CronLog) DeleteBatch(c *gin.Context) {
 	var 请求 struct {
-		Type    int    `json:"Type" binding:"required,min=1"`
-		Keyword string `json:"Keyword" `
+		Type     int    `json:"Type" binding:"required,min=1"`
+		Keywords string `json:"Keywords" `
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -110,7 +110,7 @@ func (C *CronLog) DeleteBatch(c *gin.Context) {
 	var 影响行数 int64
 	var S = service.S_CronLog{}
 	tx := *global.GVA_DB
-	影响行数, err := S.DeleteType(&tx, 请求.Type, 请求.Keyword)
+	影响行数, err := S.DeleteType(&tx, 请求.Type, 请求.Keywords)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return

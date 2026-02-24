@@ -122,10 +122,11 @@ func (C *Pay) GetPayOrderStatus(c *gin.Context) {
 
 func (C *Pay) PayKaUsa(c *gin.Context) {
 	var info = struct {
-		likeInfo DB.DB_LinksToken
-		appInfo  DB.DB_AppInfo
-		appUser  DB.DB_AppUser
-		KaClass  dbm.DB_KaClass
+		likeInfo       DB.DB_LinksToken
+		appInfo        DB.DB_AppInfo
+		appUser        DB.DB_AppUser
+		KaClass        dbm.DB_KaClass
+		appInfoWebUser dbm.DB_AppInfoWebUser
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	var 请求 struct {
@@ -163,6 +164,11 @@ func (C *Pay) PayKaUsa(c *gin.Context) {
 
 	if info.appUser.UserClassId != 0 && info.KaClass.NoUserClass == 2 && info.appUser.UserClassId != info.KaClass.UserClassId {
 		response.FailWithMessage(c, "禁止购买，充值卡用户类型与当前用户类型不相同，请重新选择！")
+		return
+	}
+	info.appInfoWebUser, err = service.NewAppInfoWebUser(c, &tx).Info(info.appInfo.AppId)
+	if info.appInfoWebUser.AgentOnlyOrder == 1 && info.appUser.AgentUid == 0 {
+		response.FailWithMessage(c, "无归属,暂不可充值,请联系客服")
 		return
 	}
 
