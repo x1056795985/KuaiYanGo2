@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"math/rand"
 	"server/Service/Ser_AgentInventory"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
@@ -49,8 +48,8 @@ func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id, 制卡人id int, 制�
 			if 卡信息切片[i].Name == "" {
 				for I := 0; I < 10; I++ {
 					卡信息切片[i].Name = KaClass详细信息.Prefix
-					卡信息切片[i].Name += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix)-1, KaClass详细信息.KaStringType)
-					卡信息切片[i].Name += 生成校验字符(卡信息切片[i].Name)
+					卡信息切片[i].Name += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix), KaClass详细信息.KaStringType)
+
 					var Count int64
 					err = tx.Select("1").Model(DB.DB_Ka{}).Where("Name=?", 卡信息切片[i].Name).Scan(&Count).Error
 					if Count == 0 {
@@ -61,9 +60,7 @@ func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id, 制卡人id int, 制�
 					}
 				}
 			} else {
-				if !Ka校验卡号(卡信息切片[i].Name) {
-					return errors.New("卡号:" + 卡信息切片[i].Name + "不符合校验规则,仅可指定系统生成后删除的卡号")
-				}
+
 				var Count int64
 				err = tx.Select("1").Model(DB.DB_Ka{}).Where("Name=?", 卡信息切片[i].Name).Scan(&Count).Error
 				if Count == 1 {
@@ -177,8 +174,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 			if 卡信息切片[i].Name == "" {
 				for I := 0; I < 10; I++ {
 					卡信息切片[i].Name = KaClass详细信息.Prefix
-					卡信息切片[i].Name += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix)-1, KaClass详细信息.KaStringType)
-					卡信息切片[i].Name += 生成校验字符(卡信息切片[i].Name)
+					卡信息切片[i].Name += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix), KaClass详细信息.KaStringType)
 					var Count int64
 					err = tx.Select("1").Model(DB.DB_Ka{}).Where("Name=?", 卡信息切片[i].Name).Scan(&Count).Error
 					if Count == 0 {
@@ -189,9 +185,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 					}
 				}
 			} else {
-				if !Ka校验卡号(卡信息切片[i].Name) {
-					return errors.New("卡号:" + 卡信息切片[i].Name + "不符合校验规则,仅可指定系统生成后删除的卡号")
-				}
+
 				var Count int64
 				err = tx.Select("1").Model(DB.DB_Ka{}).Where("Name=?", 卡信息切片[i].Name).Scan(&Count).Error
 				if Count == 1 {
@@ -329,8 +323,8 @@ func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库�
 			if 卡信息切片[i].Name == "" {
 				for I := 0; I < 10; I++ {
 					卡信息切片[i].Name = KaClass详细信息.Prefix
-					卡信息切片[i].Name += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix)-1, KaClass详细信息.KaStringType)
-					卡信息切片[i].Name += 生成校验字符(卡信息切片[i].Name)
+					卡信息切片[i].Name += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix), KaClass详细信息.KaStringType)
+
 					var Count int64
 					err = tx.Select("1").Model(DB.DB_Ka{}).Where("Name=?", 卡信息切片[i].Name).Scan(&Count).Error
 					if Count == 0 {
@@ -341,9 +335,7 @@ func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库�
 					}
 				}
 			} else {
-				if !Ka校验卡号(卡信息切片[i].Name) {
-					return errors.New("卡号:" + 卡信息切片[i].Name + "不符合校验规则,仅可指定系统生成后删除的卡号")
-				}
+
 				var Count int64
 				err = tx.Select("1").Model(DB.DB_Ka{}).Where("Name=?", 卡信息切片[i].Name).Scan(&Count).Error
 				if Count == 1 {
@@ -411,8 +403,8 @@ func Ka单卡创建(卡类id, 制卡人ID int, 制卡人账号 string, 管理员
 
 	for I := 0; I < 10; I++ {
 		卡信息切片.Name = KaClass详细信息.Prefix
-		卡信息切片.Name += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix)-1, KaClass详细信息.KaStringType)
-		卡信息切片.Name += 生成校验字符(卡信息切片.Name)
+		卡信息切片.Name += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix), KaClass详细信息.KaStringType)
+
 		if !Ka卡号是否存在(卡信息切片.Name) {
 			break
 		}
@@ -450,54 +442,6 @@ func Ka单卡创建(卡类id, 制卡人ID int, 制卡人账号 string, 管理员
 		卡信息切片.EndTime = 有效期时间戳
 	}
 	return 卡信息切片, global.GVA_DB.Model(DB.DB_Ka{}).Create(&卡信息切片).Error
-}
-
-func 生成校验字符(str string) string {
-
-	ArrInt := []byte(str)
-	Int := 0
-	for _, 值 := range ArrInt {
-		Int += int(值)
-	}
-	Int = Int % len(str)
-
-	return string(str[Int])
-}
-func Ka校验卡号(str string) bool {
-	return true // 因为要导入旧卡, 这个校验卡号影响相关功能, 所以直接关闭全部都返回校验通过
-	if len(str) < 2 {
-		return false
-	}
-	局_待校验文本 := str[0 : len(str)-1]
-	局_校验值 := string(str[len(str)-1])
-
-	return 生成校验字符(局_待校验文本) == 局_校验值
-}
-
-func 生成随机字符串(lenNum int, 类型 int) string {
-
-	var CHARS []string
-	switch 类型 {
-	case 2:
-		CHARS = []string{"A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-			"1", "2", "3", "4", "5", "6", "7", "8", "9"} //删除一些容易误会的字符,大写的i 小写的l o O
-	case 3:
-		CHARS = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-			"1", "2", "3", "4", "5", "6", "7", "8", "9"} //删除一些容易误会的字符,大写的i 小写的l o O
-	case 4:
-		CHARS = []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
-	default:
-		CHARS = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "m", "n", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-			"A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-			"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"} //删除一些容易误会的字符,大写的i 小写的l o O
-	}
-
-	str := strings.Builder{}
-	length := len(CHARS)
-	for i := 0; i < lenNum; i++ {
-		str.WriteString(CHARS[rand.Intn(length)])
-	}
-	return str.String()
 }
 
 func Ka修改状态(id []int, status int) error {
@@ -611,8 +555,8 @@ func Ka更换卡号(c *gin.Context, id, 代理Id int, ip string) error {
 	var 局_新卡号 = ""
 	for I := 0; I < 10; I++ {
 		局_新卡号 = KaClass详细信息.Prefix
-		局_新卡号 += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix)-1, KaClass详细信息.KaStringType)
-		局_新卡号 += 生成校验字符(局_新卡号)
+		局_新卡号 += 生成随机字符串(KaClass详细信息.KaLength-len(KaClass详细信息.Prefix), KaClass详细信息.KaStringType)
+
 		if !Ka卡号是否存在(局_新卡号) {
 			break
 		}
