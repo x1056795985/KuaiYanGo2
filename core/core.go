@@ -3,6 +3,7 @@ package core
 import (
 	"EFunc/utils"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -148,5 +149,6 @@ func InitCron定时任务() {
 		global.GVA_LOG.Error("定时刷新数据库定时任务2失败:" + err.Error())
 	}
 	_ = functions.S刷新数据库定时任务(true)
+	functions.D定时任务_统计初始化日活月活(&gin.Context{})
 	global.Cron定时任务.Cron.Start()
 }

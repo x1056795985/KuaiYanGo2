@@ -4,6 +4,7 @@ import (
 	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
@@ -220,93 +221,55 @@ func Get在线用户统计(c *gin.Context) []gin.H {
 	return Data
 }
 
-func Get在线用户统计登录活动时间(c *gin.Context) []gin.H {
-	局_type := 结构_请求类型{Type: 1, AppId: 1}
+func Get统计用户日活月活(c *gin.Context) []gin.H {
+
+	局_type := 结构_请求类型{Type: 1, AppId: 0}
 	_ = c.ShouldBindJSON(&局_type)
-	var 时间处理函数 func(int) string
-	if 局_type.Type == 2 {
-		时间处理函数 = 取相对时间0点时间戳月
-	} else if 局_type.Type == 3 {
-		时间处理函数 = 取相对时间0点时间戳时
-	} else {
-		时间处理函数 = 取相对时间0点时间戳天
-	}
 
-	var Data = make([]gin.H, 2)
-	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
-		//Data[0] = gin.H{"name": "登录统计", "type": "line", "data": []int{1, 2, 3, 4, 5, 6, 7}}
-		//Data[1] = gin.H{"name": "活动统计", "type": "line", "data": []int{7, 6, 5, 4, 3, 2, 1}}
-		return Data
-	}
-
-	Data缓存, ok := global.H缓存.Get("Get在线用户统计登录时间" + strconv.Itoa(局_type.Type))
+	Data缓存, ok := global.H缓存.Get("Get在线用户统计登录时间" + strconv.Itoa(局_type.Type) + "|" + strconv.Itoa(局_type.AppId))
 	if ok {
 		return Data缓存.([]gin.H)
 	}
 
 	局_耗时 := time.Now().Unix()
-	var 局_临时 = make(map[string]interface{})
-
-	局_sql := make([]string, func() int {
-		if 局_type.Type == 3 {
-			return 24
-		}
-		return 7
-	}())
-
-	for 索引 := range 局_sql {
-		//fmt.Printf("负值开始%v,结束%v索引%v\n", -(len(局_sql) - 索引 - 1), -(len(局_sql) - 索引 - 2), 索引+1)
-		//fmt.Printf("负值开始%v,结束%v索引%v\n", 时间处理函数(-(len(局_sql) - 索引 - 1)), 时间处理函数(-(len(局_sql) - 索引 - 2)), 索引+1)
-		局_sql[索引] = fmt.Sprintf("Count(case when ( LoginTime between %s and %s ) then 1 else null end) as  '%d' ", 时间处理函数(-(len(局_sql) - 索引 - 1)), 时间处理函数(-(len(局_sql) - 索引 - 2)), 索引+1)
+	局_活动数量 := make([]int, 30) // 30天 或12个月
+	if 局_type.Type == 2 {
+		局_活动数量 = make([]int, 12) // 30天 或12个月
 	}
 
-	global.GVA_DB.Model(DB.DB_LinksToken{}).Select(局_sql).
-		First(&局_临时)
+	db := *global.GVA_DB
+	局_where := make(map[string]interface{}, 2)
 
-	var 局_登录数量 = make([]int, len(局_临时))
-	for 键名, 值 := range 局_临时 {
-		索引, _ := strconv.Atoi(键名)
-		if 值 == nil {
-			局_登录数量[索引-1] = 0
+	if 局_type.AppId > 10000 {
+		局_where["appId"] = 局_type.AppId
+	}
+	for i := range len(局_活动数量) {
+		if 局_type.Type == 1 {
+			局_时间 := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
+			局_where["DateStr"] = 局_时间
 		} else {
-			a, _ := strconv.Atoi(string(值.([]uint8)))
-			局_登录数量[索引-1] = a
+			局_时间 := time.Now().AddDate(0, -i, 0).Format("2006-01")
+			局_where["DateStr"] = 局_时间
 		}
-	}
-	//fmt.Println(局_登录数量)
-	Data[0] = gin.H{"name": "登录统计", "type": "line", "data": 局_登录数量}
-
-	局_sql = make([]string, func() int {
-		if 局_type.Type == 3 {
-			return 24
+		var 局_值 *int
+		err := db.Model(&dbm.DB_LogUserActive{}).Select("SUM(count) as total").Where(局_where).Scan(&局_值).Error
+		if err != nil {
+			log.Println(err)
 		}
-		return 7
-	}())
-	for 索引 := range 局_sql {
-		//fmt.Printf("负值开始%v,结束%v索引%v\n", -(len(局_sql) - 索引 - 1), -(len(局_sql) - 索引 - 2), 索引+1)
-		//fmt.Printf("负值开始%v,结束%v索引%v\n", 时间处理函数(-(len(局_sql) - 索引 - 1)), 时间处理函数(-(len(局_sql) - 索引 - 2)), 索引+1)
-		局_sql[索引] = fmt.Sprintf("Count(case when ( LastTime between %s and %s ) then 1 else null end) as  '%d' ", 时间处理函数(-(len(局_sql) - 索引 - 1)), 时间处理函数(-(len(局_sql) - 索引 - 2)), 索引+1)
-	}
-
-	global.GVA_DB.Model(DB.DB_LinksToken{}).Select(局_sql).
-		First(&局_临时)
-	var 局_活动数量 = make([]int, len(局_临时)) //注意一定要新建一个变量局_活动数量,  make创建的变量这个会传指针
-	for 键名, 值 := range 局_临时 {
-		索引, _ := strconv.Atoi(键名)
-
-		if 值 == nil {
-			局_活动数量[索引-1] = 0
+		if 局_值 != nil {
+			局_活动数量[len(局_活动数量)-i-1] = *局_值
 		} else {
-			a, _ := strconv.Atoi(string(值.([]uint8)))
-			局_活动数量[索引-1] = a
-		}
+			局_活动数量[len(局_活动数量)-i-1] = 0
 
+		}
 	}
+
+	Data := make([]gin.H, 1)
 	//fmt.Println(局_活动数量)
-	Data[1] = gin.H{"name": "活动统计", "type": "line", "data": 局_活动数量} //注意一定要新建一个变量局_活动数量,  make创建的变量这个会传指针
+	Data[0] = gin.H{"name": "活动统计", "type": "line", "data": 局_活动数量} //注意一定要新建一个变量局_活动数量,  make创建的变量这个会传指针
 
 	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
-		global.H缓存.Set("Get在线用户统计登录时间"+strconv.Itoa(局_type.Type), Data, time.Minute*5)
+		global.H缓存.Set("Get在线用户统计登录时间"+strconv.Itoa(局_type.Type)+"|"+strconv.Itoa(局_type.AppId), Data, time.Minute*5)
 	}
 
 	return Data
@@ -315,13 +278,16 @@ func Get统计分时段在线总数(c *gin.Context) []gin.H {
 	请求 := 结构_请求类型{Type: 1, AppId: 0}
 	_ = c.ShouldBindJSON(&请求)
 	var 局_开始时间戳 int64
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
 	switch 请求.Type {
-	case 1: //24小时
-		局_开始时间戳 = time.Now().Unix() - 86400
-	case 2: // 30天
-		局_开始时间戳 = time.Now().Unix() - 86400*30
-	case 3: //365天
-		局_开始时间戳 = time.Now().Unix() - 86400*365
+	case 1:
+		局_开始时间戳 = today.Unix()
+	case 2:
+		局_开始时间戳 = today.AddDate(0, 0, -1).Unix()
+	case 3:
+		局_开始时间戳 = today.AddDate(0, 0, -2).Unix()
 	}
 
 	Data缓存, ok := global.H缓存.Get("Get统计分时段在线总数" + strconv.Itoa(请求.Type))
@@ -333,67 +299,20 @@ func Get统计分时段在线总数(c *gin.Context) []gin.H {
 	var 局_临时 = []dbm.DB_TongJiZaiXian{}
 
 	tx := global.GVA_DB
-	tx.Model(dbm.DB_TongJiZaiXian{}).Where("appId=?", 请求.AppId).Where("createdAt>?", 局_开始时间戳).Order("createdAt ASC").Find(&局_临时)
+	tx.Model(dbm.DB_TongJiZaiXian{}).Where("appId=?", 请求.AppId).Where("createdAt>=?", 局_开始时间戳).Where("createdAt<?", 局_开始时间戳+86400).Order("createdAt ASC").Find(&局_临时)
 
-	var 局_登录数量 = make([]int64, 0, 32)
-	var 局_登录时间 = make([]string, 0, 32)
-	var 局_时间 int
-	var S计数 int64
+	var 局_登录数量 = make([]int64, 0, 24)
+	var 局_登录时间 = make([]string, 0, 24)
+	for v := range 24 {
+		局_登录数量 = append(局_登录数量, 0)
+		局_登录时间 = append(局_登录时间, strconv.Itoa(v)+"时")
+	}
+
 	for I, _ := range 局_临时 {
 		//将时间戳转为时间 类型
-		S时间 := time.Unix(局_临时[I].CreatedAt, 0)
-
-		switch 请求.Type {
-		case 1: //24小时
-			if 局_时间 == 0 {
-				局_时间 = S时间.Hour()
-			}
-			if S时间.Hour() == 局_时间 {
-				S计数 += 局_临时[I].Count
-			} else {
-				局_登录数量 = append(局_登录数量, S计数)
-				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"时")
-				局_时间 = S时间.Hour()
-				S计数 = 局_临时[I].Count
-			}
-		case 2: // 30天
-			if 局_时间 == 0 {
-				局_时间 = S时间.Day()
-			}
-			if S时间.Day() == 局_时间 {
-				S计数 += 局_临时[I].Count
-			} else {
-				局_登录数量 = append(局_登录数量, S计数)
-				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"天")
-				局_时间 = S时间.Day()
-				S计数 = 局_临时[I].Count
-			}
-		case 3: //365天
-			if 局_时间 == 0 {
-				局_时间 = int(S时间.Month())
-			}
-			if int(S时间.Month()) == 局_时间 {
-				S计数 += 局_临时[I].Count
-			} else {
-				局_登录数量 = append(局_登录数量, S计数)
-				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"月")
-				局_时间 = int(S时间.Month())
-				S计数 = 局_临时[I].Count
-			}
-
-		}
-		if len(局_临时) == I+1 {
-			局_登录数量 = append(局_登录数量, S计数)
-			switch 请求.Type {
-			case 1:
-				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"时")
-			case 2:
-				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"日")
-			case 3:
-				局_登录时间 = append(局_登录时间, strconv.Itoa(局_时间)+"月")
-			}
-		}
-
+		局_时 := time.Unix(局_临时[I].CreatedAt, 0).Hour()
+		fmt.Println("时", 局_时)
+		局_登录数量[局_时] = 局_临时[I].Count
 	}
 	//fmt.Println(局_登录数量)
 	Data := []gin.H{

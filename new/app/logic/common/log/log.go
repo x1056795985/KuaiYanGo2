@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"reflect"
 	"server/global"
+	dbm "server/new/app/models/db"
 	DB "server/structs/db"
 	"time"
 )
@@ -155,4 +156,27 @@ func (j *log) S上报异常(异常内容 string) (err error) {
 	global.Q快验.Z置新用户消息(2, 异常内容)
 	print(异常内容)
 	return err
+}
+
+// 用户登陆后调用, 检测登陆日志,当日是否登陆过,当月是否登陆过,如果没有 ,则日活表 值+1
+func (j *log) R日活月活增加_登陆处理(AppId int, user string) (err error) {
+
+	db := *global.GVA_DB // 创建用户活跃服务
+	//上次登陆日志
+	var 时间戳 DB.DB_LogLogin
+	db.Model(DB.DB_LogLogin{}).Where("LoginType = ? and user = ?  AND (Note=? OR Note =?)", AppId, user, "用户登录", "新用户登录注册").
+		Order("Id DESC").First(&时间戳)
+	//如果不是今日,则日活+1
+	DateStr := time.Now().Format("2006-01-02")
+	if 时间戳.Id == 0 || time.Unix(时间戳.Time, 0).Format("2006-01-02") != DateStr {
+		db.Model(dbm.DB_LogUserActive{}).Where("AppId = ? and DateStr = ?", AppId, DateStr).UpdateColumn("count", gorm.Expr("count + ?", 1))
+	}
+
+	//如果不是今月,则月活+1
+	DateStr = time.Now().Format("2006-01")
+	if 时间戳.Id == 0 || time.Unix(时间戳.Time, 0).Format("2006-01") != DateStr {
+		db.Model(dbm.DB_LogUserActive{}).Where("AppId = ? and DateStr = ?", AppId, DateStr).UpdateColumn("count", gorm.Expr("count + ?", 1))
+	}
+
+	return nil
 }

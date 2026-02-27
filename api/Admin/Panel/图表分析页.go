@@ -12,8 +12,8 @@ func (s *Api) Get在线统计(c *gin.Context) {
 func (s *Api) Get在线用户Ip地图分布统计(c *gin.Context) {
 	response.OkWithDetailed(Ser_Chare.Get在线用户Ip地图分布统计(c), "获取成功", c)
 }
-func (s *Api) Get在线用户统计登录活动时间(c *gin.Context) {
-	response.OkWithDetailed(Ser_Chare.Get在线用户统计登录活动时间(c), "获取成功", c)
+func (s *Api) Get统计用户日活月活(c *gin.Context) {
+	response.OkWithDetailed(Ser_Chare.Get统计用户日活月活(c), "获取成功", c)
 }
 func (s *Api) Get统计分时段在线总数(c *gin.Context) {
 	response.OkWithDetailed(Ser_Chare.Get统计分时段在线总数(c), "获取成功", c)

@@ -2,7 +2,8 @@ package DB
 
 // DB_LogLogin 登录日志
 type DB_LogLogin struct {
-	Id        int    `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`
+	Id int `json:"Id" gorm:"column:Id;primarykey;AUTO_INCREMENT"`
+	//Uid       string `json:"Uid" gorm:"column:Uid;index;comment:uid"`
 	User      string `json:"User" gorm:"column:User;index;size:191;comment:用户名"`
 	Time      int64  `json:"Time" gorm:"column:Time;comment:时间"`
 	Ip        string `json:"Ip" gorm:"column:Ip;size:191;comment:登录ip地址"`

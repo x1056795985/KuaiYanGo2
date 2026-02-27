@@ -22,6 +22,7 @@ import (
 	"server/new/app/logic/common/appUser"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/ka"
+	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
@@ -335,6 +336,7 @@ func UserApi_用户登录(c *gin.Context) {
 	}
 
 	//登录成功写日志
+	_ = log.L_log.R日活月活增加_登陆处理(AppInfo.AppId, 局_卡号或用户名) //需要先处理日活,在写日志
 	if 局_老用户 {
 		go Ser_Log.Log_写登录日志(局_卡号或用户名, c.ClientIP(), "用户登录", 局_在线信息.LoginAppid)
 	} else {

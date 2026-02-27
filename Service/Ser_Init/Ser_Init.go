@@ -94,6 +94,7 @@ func InitDbTables(c *gin.Context) {
 
 		DB.DB_LogMoney{},
 		DB.DB_LogLogin{},
+
 		DB.DB_LogUserMsg{},
 		DB.DB_LogRMBPayOrder{},
 		DB.DB_LogKa{},
@@ -131,6 +132,7 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_CheckInTaskLog{},
 
 		//统计数据用的表
+		dbm.DB_LogUserActive{},
 		dbm.DB_TongJiZaiXian{},
 
 		//任务池数据库
