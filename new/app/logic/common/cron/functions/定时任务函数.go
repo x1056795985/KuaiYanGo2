@@ -245,7 +245,7 @@ func D定时任务_统计初始化日活月活(c *gin.Context) {
     FROM db_App_Info 
 `).Scan(&AppIds).Error
 	for _, v := range AppIds {
-		局_时间 := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+		局_时间 := time.Now().AddDate(0, 0, 0).Format("2006-01-02")
 		var 日活记录 dbm.DB_LogUserActive //查看有没有
 		err = tx.Raw(` SELECT * FROM db_Log_UserActive WHERE AppId=? AND ActiveType=1 AND DateStr=? `, v, 局_时间).Scan(&日活记录).Error
 		if 日活记录.Id == 0 {
@@ -266,7 +266,7 @@ func D定时任务_统计初始化日活月活(c *gin.Context) {
 		}
 
 		var 月活记录 dbm.DB_LogUserActive //查看有没有
-		局_时间 = time.Now().AddDate(0, 0, -1).Format("2006-01")
+		局_时间 = time.Now().AddDate(0, 0, 0).Format("2006-01")
 		err = tx.Raw(` SELECT * FROM db_Log_UserActive WHERE AppId=? AND ActiveType=2 AND DateStr=? `, v, 局_时间).Scan(&月活记录).Error
 
 		if 月活记录.Id == 0 {
