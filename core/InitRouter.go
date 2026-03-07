@@ -420,10 +420,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		App := Api.Admin.LogLogin                       //实现路由的 具体方法位置
 		baseRouter.POST("GetList", App.GetLogLoginList) // 获取列表
 		baseRouter.POST("GetInfo", App.GetInfo)         // 获取详细信息
-		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
-			baseRouter.POST("Delete", App.Delete) // 删除信息
-		}
-
+		baseRouter.POST("Delete", App.Delete)           // 删除信息
 	}
 	//余额日志===========================================
 	baseRouter = Router根Admin.Group("/LogMoney")

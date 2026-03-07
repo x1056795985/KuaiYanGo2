@@ -62,7 +62,7 @@ func 生成随机字符串(lenNum int, 类型 int) string {
 func 检测敏感词(文本 string) bool {
 	// 检测是否包含不可出现的字符串
 	//拼多多可能会检测所以需要屏蔽掉 cnm|qq|wx|i|I|l|v|nm|jb|sb|nm
-	var 敏感词列表 = []string{"cnm", "qq", "wx", "i", "I", "l", "v", "nm", "jb", "sb", "nm"}
+	var 敏感词列表 = []string{"cnm", "qq", "wx", "i", "I", "l", "v", "nm", "jb", "sb", "nm", "sm", "ms", "tb"}
 	文本小写 := strings.ToLower(文本)
 	for _, 敏感词 := range 敏感词列表 {
 		if strings.Contains(文本小写, strings.ToLower(敏感词)) {
