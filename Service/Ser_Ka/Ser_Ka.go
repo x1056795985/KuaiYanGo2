@@ -172,7 +172,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 	var 局_价格组成 struct {
 		总卡类价格 float64
 
-		总调价   float64 //这个是已经*数量的
+		总调价  float64 //这个是已经*数量的
 		调价详情 []dbm.DB_KaClassUpPrice
 		购买数量 int64
 
@@ -668,8 +668,8 @@ func Ka修改状态_同步卡号模式软件用户(id []int, status int) error {
 			}
 
 			//判断是否存在键,不存在创建内存空间
-			if _, ok := 局_map[局_最终AppId]; ok {
-				局_map[局_最终AppId] = make([]int, len(id))
+			if _, ok := 局_map[局_最终AppId]; !ok {
+				局_map[局_最终AppId] = make([]int, 0, len(id))
 			}
 			//把 卡id追加到 appid的键值内
 			局_map[局_最终AppId] = append(局_map[局_最终AppId], 值.Id)
@@ -683,11 +683,15 @@ func Ka修改状态_同步卡号模式软件用户(id []int, status int) error {
 			}
 
 			//判断是否存在键,不存在创建内存空间
-			if _, ok := 局_map[局_最终AppId]; ok {
+			if _, ok := 局_map[局_最终AppId]; !ok {
 				局_map[局_最终AppId] = make([]int, len(id))
 			}
-			//把 卡id追加到 appid的键值内
-			局_map[局_最终AppId] = append(局_map[局_最终AppId], 值.Id)
+			//不是卡号模式的 卡Id 直接赋值AppId 1   一会一起处理
+			if !utils.S数组_整数是否存在(局_map[局_最终AppId], 值.Id) {
+				//把 卡id追加到 appid的键值内
+				局_map[局_最终AppId] = append(局_map[局_最终AppId], 值.Id)
+			}
+
 		}
 		// 通appid 的卡id 合并完毕,开始冻结解冻
 
