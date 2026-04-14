@@ -70,6 +70,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 	}
 	//到这里基本就都没问题了,开启事务,增加卡使用次数,更新用户信息就可以了
 	// 开启事务,检测上层是否有事务,如果有直接使用,没有就创建一个
+	//20260414 如果在事务内执行,一定要传递tx 不然可能造成死锁,
 	var tx *gorm.DB
 	if tempObj, ok := c.Get("tx"); ok {
 		tx = tempObj.(*gorm.DB)
@@ -951,6 +952,10 @@ func (j *ka) Z置归属代理(c *gin.Context, AppId int, Uid int, AgentUid int) 
 	}
 	//修改软件用户信息, 并充值送卡卡号
 	err = tx.Transaction(func(tx2 *gorm.DB) error {
+		c.Set("tx", tx2) //防止 K卡类直冲_事务 死锁
+		defer func() {
+			delete(c.Keys, "tx") // 删除 tx
+		}()
 		//先修改软件用户
 		err = tx2.Table(表名_AppUser).Where("Uid = ? ", Uid).Update("AgentUid", AgentUid).Error
 		if err != nil {

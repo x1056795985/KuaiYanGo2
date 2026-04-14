@@ -589,7 +589,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 	//先加锁修改为待处理
 	err = db.Transaction(func(tx *gorm.DB) error {
 		//重新加锁,确定状态
-		c.Set("tx", tx)
+		c.Set("tx", tx) //防止 K卡类直冲_事务 死锁
 		defer delete(c.Keys, "tx")
 
 		var 局_订单信息 DB.DB_LogRMBPayOrder

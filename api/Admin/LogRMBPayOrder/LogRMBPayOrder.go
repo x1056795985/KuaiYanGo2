@@ -249,6 +249,7 @@ func (a *Api) New手动充值(c *gin.Context) {
 	新订单.Rmb = 请求.RMB
 	新订单.Note = 请求.Note
 	新订单.PayOrder = Ser_RMBPayOrder.Get获取新订单号()
+	新订单.UidType = 1
 
 	err = global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Create(&新订单).Error
 	if err != nil {
@@ -267,7 +268,7 @@ func (a *Api) New手动充值(c *gin.Context) {
 		return
 	}
 
-	response.OkWithMessage("操作成功", c)
+	response.OkWithMessage("成功,为保证规范该接口后续将删除,后续请到用户列表,勾选->更多->on批量增减余额", c)
 	return
 }
 

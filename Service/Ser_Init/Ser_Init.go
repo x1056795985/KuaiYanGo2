@@ -60,6 +60,8 @@ func InitGormMysql() (*gorm.DB, error) {
 		sqlDB.SetMaxOpenConns(m.MaxOpenConns) //允许空闲数
 		//设定数据库连接的最大生命周期 Mysql默认120秒 所以gorm 设置个比这个值小的数 防止断开连接时操作数据库失败
 		sqlDB.SetConnMaxLifetime(100 * time.Second)
+		//设置空闲连接的最大存活时间，防止空闲连接被服务端关闭后客户端仍在使用
+		sqlDB.SetConnMaxIdleTime(90 * time.Second)
 		return db, nil //返回连接好的db池
 		//获取gorm db对象，其他包需要执行数据库查询的时候，只要通过	global.GVA_DB 获取db对象即可。
 		//不用担心协程并发使用同样的db对象会共用同一个连接，db对象在调用他的方法的时候会从数据库连接池中获取新的连接

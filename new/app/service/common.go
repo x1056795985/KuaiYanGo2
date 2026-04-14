@@ -88,6 +88,9 @@ func (s *BaseService[T]) Infos(where map[string]interface{}) (info []T, err erro
 func (s *BaseService[T]) GetList(请求 request.List) (int64, []T, error) {
 	// 创建查询构建器
 	db := s.db.Model(new(T))
+	if 请求.Page == 0 {
+		请求.Page = 1
+	}
 
 	// 关键字搜索
 	if 请求.Keywords != "" && 请求.Type == 1 {

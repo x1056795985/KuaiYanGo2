@@ -158,7 +158,10 @@ func (C *CheckInInfo) RedeemReward(c *gin.Context) {
 
 	//开始执行卡类充值 事务
 	err = db.Transaction(func(tx *gorm.DB) error {
-
+		c.Set("tx", tx) //防止 K卡类直冲_事务 死锁
+		defer func() {
+			delete(c.Keys, "tx") // 删除 tx
+		}()
 		// 加锁重新查签到分
 		err = tx.Model(dbm.DB_CheckInUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", info.checkInUser.Id).First(&info.checkInUser).Error
 		if err != nil {

@@ -377,7 +377,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 		局_日志前缀 := fmt.Sprintf("下级代理:%s,制卡ID{%s}", 局_购卡人信息.User, 局_ID列表)
 		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
+			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:%s", err.Error()))
 		}
 	}
 	//然后再计算百分比的价格

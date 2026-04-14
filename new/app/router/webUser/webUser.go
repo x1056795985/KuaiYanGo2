@@ -97,6 +97,11 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 		根路由.POST("cpsInvitingRelation/getInvitingList", 局_cpsInvitingRelation.GetInvitingList)
 	}
 
+	局_订单信息 := controller.NewPayOrderController()
+	{
+		根路由.POST("payOrder/getList", 局_订单信息.List)
+	}
+
 	局_cpsUser := controller.NewCpsUserController()
 	{
 		根路由.Group("", mid2.Is存在活动_cps()).POST("cpsUser/info", 局_cpsUser.Info)
@@ -124,4 +129,5 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 		根路由.Group("", mid2.Is存在活动_签到()).POST("checkInInfo/info", 局_checkInInfo.Info)
 		根路由.Group("", mid2.Is存在活动_签到()).POST("checkInInfo/redeemReward", 局_checkInInfo.RedeemReward)
 	}
+
 }
