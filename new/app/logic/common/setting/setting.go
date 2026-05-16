@@ -193,3 +193,20 @@ func Q用户消息配置() config.Y用户消息配置 {
 	}
 	return 配置值
 }
+
+func ZAI配置(配置值 *config.XAIConfig) error {
+	return Z文本("AI配置", 配置值)
+}
+
+func QAI配置() config.XAIConfig {
+	var 配置名 = "AI配置"
+	var 配置值 = config.XAIConfig{
+		ApiUrl: "https://api.deepseek.com/v1/chat/completions",
+		Model:  "deepseek-chat",
+	}
+	局_临时配置值, err := Q获取配置[config.XAIConfig](配置名)
+	if err == nil {
+		配置值 = 局_临时配置值
+	}
+	return 配置值
+}

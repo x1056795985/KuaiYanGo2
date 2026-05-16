@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	zhTranslations "github.com/go-playground/validator/v10/translations/zh"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"reflect"
@@ -33,8 +33,8 @@ import (
 func InitRouters() *gin.Engine {
 
 	if !(global.GVA_Viper.GetInt("系统模式") == 1056795985) {
-		gin.DefaultWriter = ioutil.Discard //禁止控制台输出
-		gin.SetMode(gin.ReleaseMode)       //设置为生产模式
+		gin.DefaultWriter = io.Discard //禁止控制台输出
+		gin.SetMode(gin.ReleaseMode)   //设置为生产模式
 	}
 
 	Router := gin.Default() //返回路由实例
@@ -133,7 +133,7 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 	}
 
 	Router根Admin := Router.Group(局_管理入口) //127.0.0.1:18080/  这个后面第一个不需要 / 符号
-	Router根Admin.Use(middleware.IsAdminHost())
+	//Router根Admin.Use(middleware.IsAdminHost()) //已删除,因为现在支持自定义入口地址了效果更好,这个,精简掉,
 
 	//打包静态VueAdmin文件============================
 	html := VueAdmin.NewHtmlHandler()
@@ -405,11 +405,13 @@ func RouterAdmin(Router *gin.RouterGroup) *gin.RouterGroup {
 		baseRouter.POST("GetInfoCloudStorage", App.GetInfo云存储设置)
 		baseRouter.POST("SaveInfoCloudStorage", App.Save云存储设置)
 		baseRouter.POST("GetUserMsgConfig", App.Get用户消息配置)
+		baseRouter.POST("GetInfoAiConfig", App.GetInfoAiConfig)
 
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			baseRouter.POST("SaveInfoSystem", App.Save信息System)
 			baseRouter.POST("SaveInfoPay", App.Save信息在线支付) // 保存详细信息
 			baseRouter.POST("SaveUserMsgConfig", App.Save用户消息配置)
+			baseRouter.POST("SaveInfoAiConfig", App.SaveInfoAiConfig)
 		}
 	}
 	//登录日志===========================================
@@ -587,7 +589,7 @@ func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
 
 	Router根Agent := Router.Group(局_代理入口) //127.0.0.1:18080/  这个后面第一个不需要 / 符号
 	//Router根Agent.Use(middleware.AA())
-	Router根Agent.Use(middleware.IsAgentHost())
+	//Router根Agent.Use(middleware.IsAgentHost()) //已删除,因为现在支持自定义入口地址了效果更好,这个,精简掉,
 
 	Router根Agent.Use(middleware.IsAgent是否关闭())
 

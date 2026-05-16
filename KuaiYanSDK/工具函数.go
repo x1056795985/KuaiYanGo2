@@ -48,7 +48,14 @@ func (k *Api快验_类) X响应校验时间状态(请求 map[string]interface{},
 		k.集_错误信息 = string(响应.GetStringBytes("Msg"))
 		return false
 	}
-	局_耗时 := 请求["Time"].(int64) - 响应.GetInt64("Time")
+    局_临时 ,ok := 请求["Time"].(int64)
+    if !ok {
+		k.集_错误代码 = 107
+		k.集_错误信息 = "封包时间异常"
+		return false
+	}
+
+	局_耗时 := 局_临时 - 响应.GetInt64("Time")
 
 	if 局_耗时 > 1800 { // ' 发包和收包时间超过30分钟,就有点不对了吧,和服务器时间再差也不会差这么多
 		if string(响应.GetStringBytes("Msg")) == "" {
@@ -67,7 +74,12 @@ func (k *Api快验_类) 加密并签名(postJson map[string]interface{}) string 
 	postJson["Time"] = time.Now().Unix()
 	局_随机数, _ := rand.Int(rand.Reader, big.NewInt(89999))
 	postJson["Status"] = 局_随机数.Int64() + 10000
-	局_Api := postJson["Api"].(string) // 如果没有Api 会报恐慌
+	局_Api,ok  := postJson["Api"].(string)
+	if !ok {
+	panic("Api 字段必须是字符串")
+		return ""
+	}
+
 
 	// 验证码id可能会缓存.所以必须是有验证码值时才携带 ,并清除缓存
 	if k.集_验证码值 != "" && k.集_验证码ID != "" {

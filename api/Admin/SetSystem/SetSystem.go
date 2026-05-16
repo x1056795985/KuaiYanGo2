@@ -168,6 +168,8 @@ func (a *Api) F发送短信平台测试(c *gin.Context) {
 		err = Captcha.Q七牛云_sms发送短信验证码([]string{utils.W文本_取随机字符串_数字(6)}, 请求.Phone)
 	case 4:
 		err = Captcha.K快验_sms发送短信验证码([]string{utils.W文本_取随机字符串_数字(6)}, 请求.Phone)
+	case 5:
+		err = Captcha.ALY阿里云_sms发送短信验证码([]string{utils.W文本_取随机字符串_数字(6)}, 请求.Phone)
 	default:
 		err = errors.New("短信平台配置.当前选择配置无效")
 	}
@@ -230,6 +232,29 @@ func (a *Api) Save用户消息配置(c *gin.Context) {
 		return
 	}
 	err = setting.Z用户消息配置(&请求)
+	if err != nil {
+		response.FailWithMessage("保存失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("保存成功", c)
+	return
+}
+
+// AI配置 ============================================
+
+func (a *Api) GetInfoAiConfig(c *gin.Context) {
+	response.OkWithDetailed(setting.QAI配置(), "获取成功", c)
+	return
+}
+
+func (a *Api) SaveInfoAiConfig(c *gin.Context) {
+	var 请求 config.XAIConfig
+	err := c.ShouldBindJSON(&请求)
+	if err != nil {
+		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	err = setting.ZAI配置(&请求)
 	if err != nil {
 		response.FailWithMessage("保存失败:"+err.Error(), c)
 		return

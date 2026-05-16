@@ -32,7 +32,7 @@ func IsTokenAdmin() gin.HandlerFunc {
 
 		var DB_LinksToken DB.DB_LinksToken
 		//这里如果报错  invalid memory address or nil pointer dereference   可能是配置文件数据库配置北山,global.GVA_DB 值为空
-		err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).Find(&DB_LinksToken).Error
+		err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
 		// 没查到数据 或状态不正常
 		if err != nil || DB_LinksToken.Status != 1 {
 			response.FailTokenErr(gin.H{"reload": true}, "令牌已失效", c)
@@ -92,34 +92,34 @@ func IsTokenAdmin() gin.HandlerFunc {
 	}
 }
 
-func IsAdminHost() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		if global.GVA_DB == nil { //没配置数据库直接放行
-			c.Next()
-			return
-		}
-		//需要处理 外网->宝塔->Nginx转发->快验,这种情况host会变成127.0.0.1,所以检测  Origin Referer 也没有域名才拦截
-		局_host := setting.Q系统设置().G管理员后台Host
-		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
-			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行
-			if c.Request.Method == "GET" && len(c.Request.Host) >= 10 && c.Request.Host[:10] == "127.0.0.1:" {
-				c.Next()
-				return
-			}
-
-			if global.GVA_Viper.GetInt("系统模式") == 1056795985 {
-				c.String(404, fmt.Sprintf("%v", c.Request))
-			} else {
-				c.String(404, "") //fmt.Sprintf("%v", c.Request)
-			}
-			c.Abort()
-			return
-		}
-		// 继续处理请求
-		c.Next()
-	}
-}
+//func IsAdminHost() gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//
+//		if global.GVA_DB == nil { //没配置数据库直接放行
+//			c.Next()
+//			return
+//		}
+//		//需要处理 外网->宝塔->Nginx转发->快验,这种情况host会变成127.0.0.1,所以检测  Origin Referer 也没有域名才拦截
+//		局_host := setting.Q系统设置().G管理员后台Host
+//		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
+//			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行
+//			if c.Request.Method == "GET" && len(c.Request.Host) >= 10 && c.Request.Host[:10] == "127.0.0.1:" {
+//				c.Next()
+//				return
+//			}
+//
+//			if global.GVA_Viper.GetInt("系统模式") == 1056795985 {
+//				c.String(404, fmt.Sprintf("%v", c.Request))
+//			} else {
+//				c.String(404, "") //fmt.Sprintf("%v", c.Request)
+//			}
+//			c.Abort()
+//			return
+//		}
+//		// 继续处理请求
+//		c.Next()
+//	}
+//}
 
 // Token有效的才放行,否则返回Ttoken失效
 func IsTokenAgent() gin.HandlerFunc {
@@ -139,7 +139,7 @@ func IsTokenAgent() gin.HandlerFunc {
 		}
 		var DB_LinksToken DB.DB_LinksToken
 		//这里如果报错  invalid memory address or nil pointer dereference   可能是配置文件数据库配置北山,global.GVA_DB 值为空
-		err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).Find(&DB_LinksToken).Error
+		err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
 		// 没查到数据 或状态不正常
 		if err != nil || DB_LinksToken.Status != 1 {
 			response.FailTokenErr(gin.H{"reload": true}, "令牌已失效", c)
@@ -166,33 +166,34 @@ func IsTokenAgent() gin.HandlerFunc {
 		c.Next()
 	}
 }
-func IsAgentHost() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if global.GVA_DB == nil { //没配置数据库直接放行
-			c.Next()
-			return
-		}
-		//需要处理 外网->宝塔->Nginx转发->快验,这种情况host会变成127.0.0.1,所以检测  Origin Referer 也没有域名才拦截
-		局_host := setting.Q系统设置().D代理后台Host
-		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
-			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行
-			if c.Request.Method == "GET" && len(c.Request.Host) >= 10 && c.Request.Host[:10] == "127.0.0.1:" {
-				c.Next()
-				return
-			}
 
-			if global.GVA_Viper.GetInt("系统模式") == 1056795985 {
-				c.String(404, fmt.Sprintf("%v", c.Request))
-			} else {
-				c.String(404, "") //fmt.Sprintf("%v", c.Request)
-			}
-			c.Abort()
-			return
-		}
-		// 继续处理请求
-		c.Next()
-	}
-}
+//func IsAgentHost() gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//		if global.GVA_DB == nil { //没配置数据库直接放行
+//			c.Next()
+//			return
+//		}
+//		//需要处理 外网->宝塔->Nginx转发->快验,这种情况host会变成127.0.0.1,所以检测  Origin Referer 也没有域名才拦截
+//		局_host := setting.Q系统设置().D代理后台Host
+//		if 局_host != "" && 局_host != c.Request.Host && strings.Index(c.Request.Header.Get("Origin"), "://"+局_host) == -1 && strings.Index(c.Request.Header.Get("Referer"), "://"+局_host+"/Admin") == -1 {
+//			//Get没有Origin Referer 所以如果是Get并且内部访问直接放行
+//			if c.Request.Method == "GET" && len(c.Request.Host) >= 10 && c.Request.Host[:10] == "127.0.0.1:" {
+//				c.Next()
+//				return
+//			}
+//
+//			if global.GVA_Viper.GetInt("系统模式") == 1056795985 {
+//				c.String(404, fmt.Sprintf("%v", c.Request))
+//			} else {
+//				c.String(404, "") //fmt.Sprintf("%v", c.Request)
+//			}
+//			c.Abort()
+//			return
+//		}
+//		// 继续处理请求
+//		c.Next()
+//	}
+//}
 
 func IsAgent是否关闭() gin.HandlerFunc {
 	return func(c *gin.Context) {

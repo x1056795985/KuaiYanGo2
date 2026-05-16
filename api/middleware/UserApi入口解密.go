@@ -124,9 +124,7 @@ var 集_UserAPi路由强制RSA = map[string]int{
 	"GetVipData":          1,
 }
 
-func init() {
-	fmt.Sprintln("集_UserAPi路由被初始化了")
-}
+
 
 var J集_UserAPi路由_加密 加密路由信息
 

@@ -22,9 +22,7 @@ type X系统设置 struct {
 	X系统名称      string `mapstructure:"系统名称" json:"系统名称" ` // 系统名称
 	X系统地址      string `mapstructure:"系统地址" json:"系统地址" `
 	Y用户API加密盐  string `mapstructure:"用户API加密盐" json:"用户API加密盐" `
-	G管理员后台Host string `mapstructure:"管理员后台Host" json:"管理员后台Host" `
 	WebApiHost string `mapstructure:"WebApiHost" json:"WebApiHost" `
-	D代理后台Host  string `mapstructure:"代理后台Host" json:"代理后台Host" `
 	X系统开关      bool   `mapstructure:"系统开关" json:"系统开关" `
 	X系统关闭提示    string `mapstructure:"系统关闭提示" json:"系统关闭提示" `
 	Y用户中心开关    bool   `mapstructure:"用户中心开关" json:"用户中心开关" `
@@ -39,6 +37,7 @@ type D短信平台配置 struct {
 	TX云短信Sms TX云短信Sms `mapstructure:"TX云Sms" json:"TX云Sms" `
 	Sms短信宝   Sms短信宝   `mapstructure:"Sms短信宝" json:"Sms短信宝" `
 	Sms七牛云   Sms七牛云   `mapstructure:"Sms七牛云" json:"Sms七牛云" `
+	Sms阿里云   Sms阿里云   `mapstructure:"Sms阿里云" json:"Sms阿里云" `
 }
 
 //id:1
@@ -64,6 +63,14 @@ type Sms七牛云 struct {
 	SecretKey   string `json:"SecretKey" `
 	SignatureID string `json:"SignatureID" ` //签名id
 	TemplateID  string `json:"TemplateID" `  //模板id
+}
+
+// Id:5
+type Sms阿里云 struct {
+	AccessKeyId     string `mapstructure:"AccessKeyId" json:"AccessKeyId" `
+	AccessKeySecret string `mapstructure:"AccessKeySecret" json:"AccessKeySecret" `
+	D短信签名           string `mapstructure:"短信签名" json:"短信签名" `
+	Z正文模板Code       string `mapstructure:"正文模板Code" json:"正文模板Code" `
 }
 
 type X行为验证码平台配置 struct {
@@ -98,4 +105,12 @@ type S3兼容协议 struct {
 }
 type Y用户消息配置 struct {
 	MsgTypeList string `  json:"MsgTypeList" `
+}
+
+// AI助手配置
+type XAIConfig struct {
+	ApiUrl       string `json:"apiUrl" mapstructure:"apiUrl"`
+	ApiKey       string `json:"apiKey" mapstructure:"apiKey"`
+	Model        string `json:"model" mapstructure:"model"`
+	SystemPrompt string `json:"systemPrompt" mapstructure:"systemPrompt"`
 }

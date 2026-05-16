@@ -311,8 +311,7 @@ func Get统计分时段在线总数(c *gin.Context) []gin.H {
 	for I, _ := range 局_临时 {
 		//将时间戳转为时间 类型
 		局_时 := time.Unix(局_临时[I].CreatedAt, 0).Hour()
-		fmt.Println("时", 局_时)
-		局_登录数量[局_时] = 局_临时[I].Count
+		局_登录数量[局_时] += 局_临时[I].Count
 	}
 	//fmt.Println(局_登录数量)
 	Data := []gin.H{
