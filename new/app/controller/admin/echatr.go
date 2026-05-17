@@ -18,7 +18,7 @@ func NewChartController() *Echart {
 
 func (C *Echart) Q取余额消费排行榜(c *gin.Context) {
 	var 请求 struct {
-		Type int64 `json:"Type" binding:"required"`
+		Type int64 `json:"type" binding:"required"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -36,7 +36,7 @@ func (C *Echart) Q取余额消费排行榜(c *gin.Context) {
 }
 func (C *Echart) Q取余额增长排行榜(c *gin.Context) {
 	var 请求 struct {
-		Type int64 `json:"Type" binding:"required"`
+		Type int64 `json:"type" binding:"required"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -54,7 +54,7 @@ func (C *Echart) Q取余额增长排行榜(c *gin.Context) {
 }
 func (C *Echart) Q取积分消费排行榜(c *gin.Context) {
 	var 请求 struct {
-		Type int64 `json:"Type" binding:"required"`
+		Type int64 `json:"type" binding:"required"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return

@@ -64,8 +64,8 @@ func (C *LogKey) Info(c *gin.Context) {
 func (C *LogKey) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List
-		RegisterTime []string `json:"RegisterTime"` // 制卡开始时间 制卡结束时间
-		Appid        int      `json:"Appid"`
+		RegisterTime []string `json:"registerTime"` // 制卡开始时间 制卡结束时间
+		Appid        int      `json:"appid"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return

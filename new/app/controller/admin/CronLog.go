@@ -72,9 +72,9 @@ func (C *CronLog) Info(c *gin.Context) {
 func (C *CronLog) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List
-		TaskType     int      `json:"TaskType"`
-		Result       int8     `json:"Result"`
-		RegisterTime []string `json:"RegisterTime"` // 开始时间 结束时间
+		TaskType     int      `json:"taskType"`
+		Result       int8     `json:"result"`
+		RegisterTime []string `json:"registerTime"` // 开始时间 结束时间
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -100,8 +100,8 @@ func (C *CronLog) GetList(c *gin.Context) {
 // @show  2
 func (C *CronLog) DeleteBatch(c *gin.Context) {
 	var 请求 struct {
-		Type     int    `json:"Type" binding:"required,min=1"`
-		Keywords string `json:"Keywords" `
+		Type     int    `json:"type" binding:"required,min=1"`
+		Keywords string `json:"keywords" `
 	}
 	if !C.ToJSON(c, &请求) {
 		return

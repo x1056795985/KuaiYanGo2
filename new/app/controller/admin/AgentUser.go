@@ -26,13 +26,13 @@ func NewAgentUserController() *AgentUser {
 // 销售统计
 func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 	var 请求 struct {
-		AppId        int      `json:"AppId"`
-		Num          int      `json:"Num"`
-		RegisterTime []string `json:"RegisterTime"`
-		UseTime      []string `json:"UseTime"`
-		KaClassId    int      `json:"KaClassId"`
-		AgentLv      int      `json:"AgentLv"`
-		AgentName    string   `json:"AgentName"`
+		AppId        int      `json:"appId"`
+		Num          int      `json:"num"`
+		RegisterTime []string `json:"registerTime"`
+		UseTime      []string `json:"useTime"`
+		KaClassId    int      `json:"kaClassId"`
+		AgentLv      int      `json:"agentLv"`
+		AgentName    string   `json:"agentName"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
@@ -169,8 +169,8 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 // 修改app排序
 func (C *AgentUser) SetSort(c *gin.Context) {
 	var 请求 struct {
-		Id   int   `json:"Id"`
-		Sort int64 `json:"Sort"`
+		Id   int   `json:"id"`
+		Sort int64 `json:"sort"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {

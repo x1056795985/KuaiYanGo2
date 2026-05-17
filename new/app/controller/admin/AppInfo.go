@@ -20,8 +20,8 @@ func NewAppInfoController() *AppInfo {
 // 修改app排序
 func (C *AppInfo) SetAppSort(c *gin.Context) {
 	var 请求 struct {
-		AppId int   `json:"AppId"`
-		Sort  int64 `json:"Sort"`
+		AppId int   `json:"appId"`
+		Sort  int64 `json:"sort"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {

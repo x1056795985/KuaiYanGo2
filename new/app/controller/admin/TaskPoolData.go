@@ -26,7 +26,7 @@ func NewTaskPoolDataController() *TaskPoolData {
 func (C *TaskPoolData) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List
-		Tid int `json:"Tid"`
+		Tid int `json:"tid"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -51,7 +51,7 @@ func (C *TaskPoolData) GetList(c *gin.Context) {
 // @show  2
 func (C *TaskPoolData) Delete(c *gin.Context) {
 	var 请求 struct {
-		UuidS []string `json:"Uuids" binding:"required,min=1"` //id数组
+		UuidS []string `json:"uuids" binding:"required,min=1"` //id数组
 	}
 	if !C.ToJSON(c, &请求) {
 		return

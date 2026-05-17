@@ -29,8 +29,8 @@ func NewCloudStorageController() *CloudStorage {
 func (C *CloudStorage) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List
-		Path      string `json:"Path"`
-		Delimiter string `json:"Delimiter"`
+		Path      string `json:"path"`
+		Delimiter string `json:"delimiter"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -52,7 +52,7 @@ func (C *CloudStorage) GetList(c *gin.Context) {
 // @show  1
 func (C *CloudStorage) GetUpToken(c *gin.Context) {
 	var 请求 struct {
-		Path string `json:"Path"`
+		Path string `json:"path"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -74,8 +74,8 @@ func (C *CloudStorage) GetUpToken(c *gin.Context) {
 // @show  1
 func (C *CloudStorage) MoveTo(c *gin.Context) {
 	var 请求 struct {
-		Path1 string `json:"Path1"`
-		Path2 string `json:"Path2"`
+		Path1 string `json:"path1"`
+		Path2 string `json:"path2"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -96,7 +96,7 @@ func (C *CloudStorage) MoveTo(c *gin.Context) {
 // @show  2
 func (C *CloudStorage) Delete(c *gin.Context) {
 	var 请求 struct {
-		Path []string `json:"Path"`
+		Path []string `json:"path"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -117,7 +117,7 @@ func (C *CloudStorage) Delete(c *gin.Context) {
 // @show  2
 func (C *CloudStorage) Download(c *gin.Context) {
 	var 请求 struct {
-		Path string `json:"Path"`
+		Path string `json:"path"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -137,8 +137,8 @@ func (C *CloudStorage) Download(c *gin.Context) {
 // @show  2
 func (C *CloudStorage) GetDownloadUrl(c *gin.Context) {
 	var 请求 struct {
-		Path     string `json:"Path"`
-		LongTime int64  `json:"LongTime"`
+		Path     string `json:"path"`
+		LongTime int64  `json:"longTime"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -201,8 +201,8 @@ func (C *CloudStorage) Info(c *gin.Context) {
 // @show  2
 func (C *CloudStorage) DeleteBatch(c *gin.Context) {
 	var 请求 struct {
-		Type    int    `json:"Type" binding:"required,min=1"`
-		Keyword string `json:"Keyword" `
+		Type    int    `json:"type" binding:"required,min=1"`
+		Keyword string `json:"keyword" `
 	}
 	if !C.ToJSON(c, &请求) {
 		return

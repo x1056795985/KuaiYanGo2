@@ -19,7 +19,6 @@ import (
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_TaskPool"
 	"server/Service/Ser_User"
-	"server/api/Admin/App"
 	"server/config"
 	"server/global"
 	"server/new/app/logic/common/appInfo"
@@ -632,7 +631,11 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 	Ser_PublicJs.C创建(DB.DB_PublicJs{
 		AppId: 3,
 		Name:  "Hook_ApiHOOk执行前例子",
-		Value: `function Hook_Api执行前HOOk例子` + App.Api之前Hook函数模板,
+		Value: `function Hook_Api执行前HOOk例子` + `(JSON请求明文) {
+    if (局_返回.Body !== "") {
+    }
+    return JSON请求明文
+}`,
 		Type:  2,
 		IsVip: 0,
 		Note:  "ApiHook例子,这个是演示hook登录接口进入前,先判断是否能访问百度,如果不能直接拦截响应失败,",
@@ -640,7 +643,9 @@ const js对象_通用返回 = { //api函数返回基本都是这个
 	Ser_PublicJs.C创建(DB.DB_PublicJs{
 		AppId: 3,
 		Name:  "Hook_ApiHOOk执行后例子",
-		Value: `function Hook_Api执行后HOOk例子` + App.Api之后Hook函数模板,
+		Value: `function Hook_Api执行后HOOk例子` + `(JSON响应明文) {
+    return JSON响应明文
+}`,
 		Type:  2,
 		IsVip: 0,
 		Note:  "ApiHook例子,这个是演示hook登录结束后,修改响应明文的例子,",

@@ -112,3 +112,23 @@ func (s *KaClass) GetList(请求 request.List, AppId int, ids []int) (int64, []d
 	}
 	return 总数, 局_数组, err
 }
+
+// Delete 按Id数组删除卡类
+func (s *KaClass) Delete(Ids []int) (int64, error) {
+	tx := s.db.Model(dbm.DB_KaClass{}).Where("Id IN ?", Ids).Delete("")
+	return tx.RowsAffected, tx.Error
+}
+
+// GetListAll 按AppId获取全部卡类（不分页）
+func (s *KaClass) GetListAll(AppId int) ([]dbm.DB_KaClass, error) {
+	var list []dbm.DB_KaClass
+	err := s.db.Model(dbm.DB_KaClass{}).Where("AppId = ?", AppId).Find(&list).Error
+	return list, err
+}
+
+// IsIdExists 卡类Id是否存在
+func (s *KaClass) IsIdExists(id int) bool {
+	var count int64
+	s.db.Model(dbm.DB_KaClass{}).Select("1").Where("Id = ?", id).Count(&count)
+	return count > 0
+}

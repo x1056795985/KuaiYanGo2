@@ -24,8 +24,8 @@ func (C *CheckInScoreLog) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List2
 		AppId        int     `json:"appId"`
-		UserId       int     `json:"UserId"`
-		RegisterTime []int64 `json:"RegisterTime"`
+		UserId       int     `json:"userId"`
+		RegisterTime []int64 `json:"registerTime"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return

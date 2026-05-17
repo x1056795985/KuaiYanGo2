@@ -9,11 +9,12 @@ import (
 	"go.uber.org/zap/zapcore"
 	"os"
 	"runtime"
-	"server/api/Admin/KuaiYan"
+
 	"server/core/internal"
 	"server/global"
 	"server/new/app/logic/common/cron"
 	"server/new/app/logic/common/cron/functions"
+	kuaiyanctrl "server/new/app/controller/admin"
 
 	utils2 "server/utils"
 )
@@ -139,7 +140,7 @@ func InitCron定时任务() {
 	//7  "0 0 1 1 * ?"  表示每月1号凌晨1点执行一次
 	//8  "0 1,2,3 * * * ?" 表示在1分，2分，3分执行一次
 	//9  "0 0 0,1,2 * * ?" 表示每天的0点，1点，2点执行一次
-	err := global.Cron定时任务.T添加本机任务("快验心跳", "0 */5 * * * *", KuaiYan.K快验心跳)
+	err := global.Cron定时任务.T添加本机任务("快验心跳", "0 */5 * * * *", kuaiyanctrl.K快验心跳)
 	if err != nil {
 		global.GVA_LOG.Error("T添加任务定时任务快验心跳失败:" + err.Error())
 	} //5分钟心跳执行一次

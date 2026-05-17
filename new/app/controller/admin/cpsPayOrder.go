@@ -49,7 +49,7 @@ func (C *CpsPayOrder) Delete(c *gin.Context) {
 func (C *CpsPayOrder) SerNote(c *gin.Context) {
 	var 请求 struct {
 		Ids  []int  `json:"ids"`  //用户id数组
-		Note string `json:"Note"` //
+		Note string `json:"note"` //
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
@@ -90,7 +90,7 @@ func (C *CpsPayOrder) Info(c *gin.Context) {
 func (C *CpsPayOrder) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List
-		RegisterTime []string `json:"RegisterTime"`
+		RegisterTime []string `json:"registerTime"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return

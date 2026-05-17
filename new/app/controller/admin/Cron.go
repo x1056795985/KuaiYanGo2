@@ -33,13 +33,13 @@ func NewCronController() *Cron {
 func (C *Cron) Create(c *gin.Context) {
 
 	var 请求 struct {
-		Name    string `json:"Name" binding:"required"`
-		Status  int    `json:"Status" binding:"required"`
-		IsLog   int    `json:"IsLog" binding:"required"`
-		Cron    string `json:"Cron" binding:"required"`
-		Type    int    `json:"Type" binding:"required" zh:"类型"`
-		RunText string `json:"RunText" binding:"required,min=1,max=1000" zh:"运行数据"`
-		Note    string `json:"Note" binding:"max=1000" zh:"备注"`
+		Name    string `json:"name" binding:"required"`
+		Status  int    `json:"status" binding:"required"`
+		IsLog   int    `json:"isLog" binding:"required"`
+		Cron    string `json:"cron" binding:"required"`
+		Type    int    `json:"type" binding:"required" zh:"类型"`
+		RunText string `json:"runText" binding:"required,min=1,max=1000" zh:"运行数据"`
+		Note    string `json:"note" binding:"max=1000" zh:"备注"`
 	}
 
 	if !C.ToJSON(c, &请求) {
@@ -142,7 +142,7 @@ func (C *Cron) Info(c *gin.Context) {
 func (C *Cron) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List
-		AppId int `json:"AppId"`
+		AppId int `json:"appId"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -168,7 +168,7 @@ func (C *Cron) GetList(c *gin.Context) {
 // @show  2
 func (C *Cron) DeleteBatch(c *gin.Context) {
 	var 请求 struct {
-		Type int `json:"Type" binding:"required,min=1"`
+		Type int `json:"type" binding:"required,min=1"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -193,8 +193,8 @@ func (C *Cron) DeleteBatch(c *gin.Context) {
 // @show  2
 func (C *Cron) UpdateStatus(c *gin.Context) {
 	var 请求 struct {
-		Id     int `json:"Id" binding:"required"`
-		Status int `json:"Status" binding:"required" zh:"状态"`
+		Id     int `json:"id" binding:"required"`
+		Status int `json:"status" binding:"required" zh:"状态"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {

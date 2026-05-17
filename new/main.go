@@ -1,9 +1,9 @@
 package new
 
 import (
-	_ "server/new/app/init"
+	appinit "server/new/app/init"
 )
 
 func Main() {
-
+	appinit.InitWebSocket()
 }

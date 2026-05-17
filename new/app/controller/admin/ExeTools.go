@@ -28,7 +28,7 @@ func NewExeToolsController() *ExeTools {
 // 获取文件上传token
 func (C *ExeTools) GetUploadToken(c *gin.Context) {
 	var 请求 struct {
-		Path string `json:"Path" binding:"required"`
+		Path string `json:"path" binding:"required"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -57,11 +57,11 @@ func (C *ExeTools) GetUploadToken(c *gin.Context) {
 // 创建exe加验证任务
 func (C *ExeTools) CreateExeAddFNKYTask(c *gin.Context) {
 	var 请求 struct {
-		Path     string `json:"Path" binding:"required"`
+		Path     string `json:"path" binding:"required"`
 		FileName string `json:"fileName" binding:"required"`
-		AppId    int    `json:"AppId" binding:"required"`
-		Ui       int    `json:"Ui" binding:"required"`
-		VMP一机一码  bool   `json:"VMP一机一码" `
+		AppId    int    `json:"appId" binding:"required"`
+		Ui       int    `json:"ui" binding:"required"`
+		VMP一机一码  bool   `json:"vMP一机一码" `
 		J检测调试器   bool   `json:"检测调试器" `
 		J内存保护    bool   `json:"内存保护" `
 		J导入表保护   bool   `json:"导入表保护" `
@@ -142,8 +142,8 @@ func (C *ExeTools) GetList(c *gin.Context) {
 	}
 	var 局_返回 string
 	var 局_map struct {
-		List  []exe_list_item `json:"List"`  // 列表
-		Count int64           `json:"Count"` // 总数
+		List  []exe_list_item `json:"list"`  // 列表
+		Count int64           `json:"count"` // 总数
 	}
 	if !global.Q快验.R任务池_取任务列表(&局_返回, 请求.Page, 请求.Order, 请求.Size, 10) {
 		response.FailWithMessage(global.Q快验.Q取错误信息(nil), c)
@@ -207,18 +207,18 @@ func (C *ExeTools) GetUiList(c *gin.Context) {
 }
 
 type exe_list_item struct {
-	Uuid        string `json:"Uuid"`
-	Status      int    `json:"Status"`
-	TimeStart   int64  `json:"TimeStart"`
-	TimeEnd     int64  `json:"TimeEnd"`
-	FileName    string `json:"FileName"`
-	Path        string `json:"Path"`
-	Ui          int    `json:"Ui"`
-	AppId       int    `json:"AppId"`
-	AppName     string `json:"AppName"`
-	DownloadUrl string `json:"DownloadUrl"`
-	ExeMd5      string `json:"ExeMd5"`
-	Err         string `json:"Err"`
+	Uuid        string `json:"uuid"`
+	Status      int    `json:"status"`
+	TimeStart   int64  `json:"timeStart"`
+	TimeEnd     int64  `json:"timeEnd"`
+	FileName    string `json:"fileName"`
+	Path        string `json:"path"`
+	Ui          int    `json:"ui"`
+	AppId       int    `json:"appId"`
+	AppName     string `json:"appName"`
+	DownloadUrl string `json:"downloadUrl"`
+	ExeMd5      string `json:"exeMd5"`
+	Err         string `json:"err"`
 }
 
 // 获取任务池状态

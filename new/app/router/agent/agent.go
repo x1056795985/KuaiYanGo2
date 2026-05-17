@@ -60,4 +60,28 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_卡类调价})).POST("KaClassUpPrice/Delete", 局_KaClassUpPrice.Delete)
 	}
 
+	// ========== 以下为从旧架构迁移的代理端日志模块（路由路径与旧架构完全一致） ==========
+
+	//余额日志（代理端，按当前用户过滤）
+	局_AgentLogMoney := controller.NewAgentLogMoneyController()
+	{
+		agentRouter.POST("LogMoney/GetList", 局_AgentLogMoney.GetList)
+		agentRouter.POST("LogMoney/GetInfo", 局_AgentLogMoney.Info)
+		agentRouter.POST("LogMoney/Delete", 局_AgentLogMoney.Delete)
+	}
+	//制卡日志（代理端，按当前用户过滤）
+	局_AgentLogRegisterKa := controller.NewAgentLogRegisterKaController()
+	{
+		agentRouter.POST("LogRegisterKa/GetList", 局_AgentLogRegisterKa.GetList)
+		agentRouter.POST("LogRegisterKa/GetInfo", 局_AgentLogRegisterKa.Info)
+		agentRouter.POST("LogRegisterKa/Delete", 局_AgentLogRegisterKa.Delete)
+	}
+	//库存日志（代理端，按User1 OR User2过滤）
+	局_AgentLogAgentInventory := controller.NewAgentLogAgentInventoryController()
+	{
+		agentRouter.POST("LogAgentInventory/GetList", 局_AgentLogAgentInventory.GetList)
+		agentRouter.POST("LogAgentInventory/GetInfo", 局_AgentLogAgentInventory.Info)
+		agentRouter.POST("LogAgentInventory/Delete", 局_AgentLogAgentInventory.Delete)
+	}
+
 }

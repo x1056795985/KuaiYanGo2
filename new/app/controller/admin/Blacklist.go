@@ -25,9 +25,9 @@ func NewBlacklistController() *Blacklist {
 }
 
 type 请求_Create struct {
-	AppId   int    `json:"AppId" binding:"required"`
-	ItemKey string `json:"ItemKey" binding:"required,min=1,max=190" zh:"拉黑信息"` // 索引最大长度767字节 除4 就是191  否则INNODB引擎报错  Specified key wastoo long; max key length is 767 bytes
-	Note    string `json:"Note" binding:"max=1000" zh:"备注"`
+	AppId   int    `json:"appId" binding:"required"`
+	ItemKey string `json:"itemKey" binding:"required,min=1,max=190" zh:"拉黑信息"` // 索引最大长度767字节 除4 就是191  否则INNODB引擎报错  Specified key wastoo long; max key length is 767 bytes
+	Note    string `json:"note" binding:"max=1000" zh:"备注"`
 }
 
 // Create
@@ -116,7 +116,7 @@ func (C *Blacklist) Info(c *gin.Context) {
 
 type 结构请求_GetList struct {
 	request.List
-	AppId int `json:"AppId"`
+	AppId int `json:"appId"`
 }
 
 // Index
@@ -144,7 +144,7 @@ func (C *Blacklist) GetList(c *gin.Context) {
 }
 
 type 请求_批量删除 struct {
-	Type int `json:"Type" binding:"required,min=1"`
+	Type int `json:"type" binding:"required,min=1"`
 }
 
 // DeleteBatch

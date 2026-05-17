@@ -29,8 +29,8 @@ func NewAppUserController() *AppUser {
 func (C *AppUser) BatchAddUser(c *gin.Context) {
 	//{"AppId":2,"Type":2,"Size":10,"Page":1,"Status":1,"keywords":"1"}
 	var 请求 struct {
-		AppId int    `json:"AppId"`
-		Note  string `json:"Note"`
+		AppId int    `json:"appId"`
+		Note  string `json:"note"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return

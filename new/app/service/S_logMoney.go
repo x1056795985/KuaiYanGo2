@@ -2,95 +2,166 @@ package service
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"server/global"
+	"server/new/app/models/db"
 	"server/new/app/models/request"
-	DB "server/structs/db"
+	"server/utils"
+	"strconv"
 	"time"
 )
 
-type LogMoney struct {
-	db *gorm.DB
-	c  *gin.Context
+type S_LogMoney struct{}
+
+func (s *S_LogMoney) Info(tx *gorm.DB, Id int) (db.DB_LogMoney, error) {
+	var value db.DB_LogMoney
+	err := tx.Model(db.DB_LogMoney{}).Where("Id = ?", Id).First(&value).Error
+	return value, err
 }
 
-// NewLogMoney 创建 LogMoney 实例
-func NewLogMoney(c *gin.Context, db *gorm.DB) *LogMoney {
-	return &LogMoney{
-		db: db,
-		c:  c,
+func (s *S_LogMoney) GetList(tx *gorm.DB, 请求 request.List) (int64, []db.DB_LogMoney, error) {
+	局_DB := tx.Model(db.DB_LogMoney{})
+	if 请求.Order == 1 {
+		局_DB.Order("Id ASC")
+	} else {
+		局_DB.Order("Id DESC")
 	}
-}
-
-// 增
-func (s *LogMoney) Create(info DB.DB_LogMoney) (row int64, err error) {
-	//创建会自动重新赋值info.Id为新插入的数据id
-	info.Time= time.Now().Unix()
-	tx := s.db.Model(DB.DB_LogMoney{}).Create(&info)
-	return tx.RowsAffected, tx.Error
-}
-
-// 删除 支持 数组,和id
-func (s *LogMoney) Delete(Id interface{}) (影响行数 int64, error error) {
-	var tx2 *gorm.DB
-	switch k := Id.(type) {
-	case int:
-		tx2 = s.db.Model(DB.DB_LogMoney{}).Where("Id = ?", k).Delete("")
-	case []int:
-		tx2 = s.db.Model(DB.DB_LogMoney{}).Where("Id IN ?", k).Delete("")
-	default:
-		return 0, errors.New("错误的数据")
-	}
-	return tx2.RowsAffected, tx2.Error
-}
-
-// 获取列表
-func (s *LogMoney) GetList(请求 request.List, Status int) (int64, []DB.DB_LogMoney, error) {
-	tx := s.db
-	if Status > 0 {
-		tx = tx.Where("Status = ?", Status)
-	}
-
 	if 请求.Keywords != "" {
 		switch 请求.Type {
-		case 1: //id
-			tx = tx.Where("Id = ?", 请求.Keywords)
-		case 2: //任务名称
-			tx = tx.Where("Name LIKE ? ", "%"+请求.Keywords+"%")
+		case 1: //用户名
+			局_DB.Where("User = ?", 请求.Keywords)
+		case 2: //消息
+			局_DB.Where("LOCATE(?, Note)>0", 请求.Keywords)
+		case 3: //ip
+			局_DB.Where("Ip = ?", 请求.Keywords)
+		case 4: //金额
+			局_DB.Where("Count = ?", 请求.Keywords)
+		}
+	}
+
+	var 总数 int64
+	if 请求.Count > 500000 {
+		总数 = 请求.Count
+	} else {
+		局_DB.Count(&总数)
+	}
+	var dataList []db.DB_LogMoney
+	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
+	if err != nil {
+		global.GVA_LOG.Error(utils.Q取包名结构体方法(s) + ":" + err.Error())
+	}
+	return 总数, dataList, err
+}
+
+// BatchDelete 批量删除日志
+func (s *S_LogMoney) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords string) (int64, error) {
+	var 影响行数 int64
+	var d = tx.Model(db.DB_LogMoney{})
+
+	if Type <= 0 || Type > 7 {
+		return 0, errors.New("Type错误")
+	}
+
+	switch Type {
+	case 1:
+		if len(Id) == 0 {
+			return 0, errors.New("Id数组没有要删除的ID")
+		}
+		影响行数 = d.Where("Id IN ?", Id).Delete(db.DB_LogMoney{}).RowsAffected
+	case 2:
+		影响行数 = d.Where("User = ?", Keywords).Delete(db.DB_LogMoney{}).RowsAffected
+	case 3:
+		影响行数 = d.Where("1=1").Delete(db.DB_LogMoney{}).RowsAffected
+	case 4:
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(db.DB_LogMoney{}).RowsAffected
+	case 5:
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(db.DB_LogMoney{}).RowsAffected
+	case 6:
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(db.DB_LogMoney{}).RowsAffected
+	case 7:
+		if len(Keywords) == 0 {
+			return 0, errors.New("关键字不能为空")
+		}
+		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(db.DB_LogMoney{}).RowsAffected
+	}
+
+	if d.Error != nil {
+		return 0, d.Error
+	}
+	return 影响行数, nil
+}
+
+// GetListByUser Agent端按用户过滤的列表查询（带时间范围）
+func (s *S_LogMoney) GetListByUser(tx *gorm.DB, 请求 request.ListLog, User string) (int64, []db.DB_LogMoney, error) {
+	局_DB := tx.Model(db.DB_LogMoney{}).Where("User = ?", User)
+	if 请求.Order == 1 {
+		局_DB.Order("Id ASC")
+	} else {
+		局_DB.Order("Id DESC")
+	}
+	if 请求.RegisterTime != nil && len(请求.RegisterTime) == 2 && 请求.RegisterTime[0] != "" && 请求.RegisterTime[1] != "" {
+		制卡开始时间, _ := strconv.ParseInt(请求.RegisterTime[0], 10, 64)
+		制卡结束时间, _ := strconv.ParseInt(请求.RegisterTime[1], 10, 64)
+		局_DB.Where("Time > ?", 制卡开始时间).Where("Time < ?", 制卡结束时间+86400)
+	}
+	if 请求.Keywords != "" {
+		switch 请求.Type {
+		case 1: //用户名
+			局_DB.Where("User = ?", 请求.Keywords)
+		case 2: //消息
+			局_DB.Where("LOCATE(?, Note)>0", 请求.Keywords)
+		case 3: //ip
+			局_DB.Where("Ip = ?", 请求.Keywords)
 		}
 	}
 	var 总数 int64
-	//Count(&总数) 必须放在where 后面 不然值会被清0
-	if 请求.Count > 500000 { //如果数据大于50万 直接使用,不重新查询了 优化速度
+	if 请求.Count > 500000 {
 		总数 = 请求.Count
 	} else {
-		tx.Count(&总数)
+		局_DB.Count(&总数)
 	}
-	//处理排序
-	switch 请求.Order {
-	default:
-		tx = tx.Order("Id ASC")
+	var dataList []db.DB_LogMoney
+	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
+	if err != nil {
+		global.GVA_LOG.Error(utils.Q取包名结构体方法(s) + ":" + err.Error())
+	}
+	return 总数, dataList, err
+}
+
+// BatchDeleteByUser Agent端按用户过滤的批量删除
+func (s *S_LogMoney) BatchDeleteByUser(tx *gorm.DB, Id []int, Type int, Keywords string, User string) (int64, error) {
+	var 影响行数 int64
+	var d = tx.Model(db.DB_LogMoney{}).Where("User = ?", User)
+
+	if Type <= 0 || Type > 7 {
+		return 0, errors.New("Type错误")
+	}
+
+	switch Type {
+	case 1:
+		if len(Id) == 0 {
+			return 0, errors.New("Id数组没有要删除的ID")
+		}
+		影响行数 = d.Where("Id IN ?", Id).Delete(db.DB_LogMoney{}).RowsAffected
 	case 2:
-		tx = tx.Order("Id DESC")
+		影响行数 = d.Where("User = ?", Keywords).Delete(db.DB_LogMoney{}).RowsAffected
+	case 3:
+		影响行数 = d.Where("1=1").Delete(db.DB_LogMoney{}).RowsAffected
+	case 4:
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(db.DB_LogMoney{}).RowsAffected
+	case 5:
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(db.DB_LogMoney{}).RowsAffected
+	case 6:
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(db.DB_LogMoney{}).RowsAffected
+	case 7:
+		if len(Keywords) == 0 {
+			return 0, errors.New("关键字不能为空")
+		}
+		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(db.DB_LogMoney{}).RowsAffected
 	}
-	var 局_数组 []DB.DB_LogMoney
-	tx = tx.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组)
 
-	return 总数, 局_数组, tx.Error
-}
-
-// 查
-func (s *LogMoney) Info(id int) (info DB.DB_LogMoney, err error) {
-	tx := s.db.Model(DB.DB_LogMoney{}).Where("Id = ?", id).First(&info)
-	if tx.Error != nil {
-		err = tx.Error
+	if d.Error != nil {
+		return 0, d.Error
 	}
-	return
-}
-
-// 改
-func (s *LogMoney) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
-
-	tx := s.db.Model(DB.DB_LogMoney{}).Where("Id = ?", Id).Updates(&数据)
-	return tx.RowsAffected, tx.Error
+	return 影响行数, nil
 }

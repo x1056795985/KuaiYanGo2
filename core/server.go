@@ -6,7 +6,7 @@ import (
 	"github.com/imroc/req/v3"
 	"net/http"
 	"server/Service/KuaiYanUpdater"
-	"server/api/middleware"
+	"server/new/app/router/middleware"
 	utils2 "server/utils"
 
 	"server/global"

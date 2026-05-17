@@ -27,6 +27,14 @@ type Ids struct {
 	Ids []int `json:"Ids" binding:"required,min=1"` //id数组
 }
 
+// 日志列表请求（带时间范围）
+type ListLog struct {
+	List
+	RegisterTime []string `json:"RegisterTime"` // 开始时间 结束时间
+	MsgType     int      `json:"MsgType"`      // 消息类型（LogUserMsg专用）
+	AppId       int      `json:"AppId"`        // AppId筛选
+}
+
 // 列表请求通用参数
 type List2 struct {
 	Page     int    `json:"page" binding:"required"` // 页

@@ -28,7 +28,7 @@ func NewApkToolsController() *ApkTools {
 // 获取文件上传token
 func (C *ApkTools) GetUploadToken(c *gin.Context) {
 	var 请求 struct {
-		Path string `json:"Path" binding:"required"`
+		Path string `json:"path" binding:"required"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -57,11 +57,11 @@ func (C *ApkTools) GetUploadToken(c *gin.Context) {
 // 创建apk加验证任务
 func (C *ApkTools) CreateApkAddFNKYTask(c *gin.Context) {
 	var 请求 struct {
-		Path     string `json:"Path" binding:"required"`
+		Path     string `json:"path" binding:"required"`
 		FileName string `json:"fileName" binding:"required"`
-		AppId    int    `json:"AppId" binding:"required"`
+		AppId    int    `json:"appId" binding:"required"`
 		Q签名方式    int    `json:"签名方式" binding:"required"`
-		Activity string `json:"Activity"`
+		Activity string `json:"activity"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -111,8 +111,8 @@ func (C *ApkTools) GetList(c *gin.Context) {
 	}
 	var 局_返回 string
 	var 局_map struct {
-		List  []list_item `json:"List"`  // 列表
-		Count int64       `json:"Count"` // 总数
+		List  []list_item `json:"list"`  // 列表
+		Count int64       `json:"count"` // 总数
 	}
 	if !global.Q快验.R任务池_取任务列表(&局_返回, 请求.Page, 请求.Order, 请求.Size, 9) {
 		response.FailWithMessage(global.Q快验.Q取错误信息(nil), c)
@@ -144,17 +144,17 @@ func (C *ApkTools) GetList(c *gin.Context) {
 }
 
 type list_item struct {
-	Uuid        string `json:"Uuid"`
-	Status      int    `json:"Status"`
-	TimeStart   int64  `json:"TimeStart"`
-	TimeEnd     int64  `json:"TimeEnd"`
-	FileName    string `json:"FileName"`
-	Path        string `json:"Path"`
+	Uuid        string `json:"uuid"`
+	Status      int    `json:"status"`
+	TimeStart   int64  `json:"timeStart"`
+	TimeEnd     int64  `json:"timeEnd"`
+	FileName    string `json:"fileName"`
+	Path        string `json:"path"`
 	Q签名方式       int    `json:"签名方式"`
-	AppId       int    `json:"AppId"`
-	AppName     string `json:"AppName"`
-	DownloadUrl string `json:"DownloadUrl"`
-	Err         string `json:"Err"`
+	AppId       int    `json:"appId"`
+	AppName     string `json:"appName"`
+	DownloadUrl string `json:"downloadUrl"`
+	Err         string `json:"err"`
 }
 
 // 获取任务池状态
