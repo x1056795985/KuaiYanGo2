@@ -14,6 +14,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 //go:embed qqwry.dat
@@ -50,8 +51,9 @@ const (
 )
 
 type cache struct {
-	City string
-	Isp  string
+	City      string
+	Isp       string
+	Timestamp int64 // 缓存写入时间戳
 }
 
 func byte3ToUInt32(data []byte) uint32 {
@@ -184,7 +186,7 @@ func QueryIP(queryIp string) (city string, isp string, err error) {
 			}
 		}
 	}
-	ipCache.Store(queryIp, cache{City: city, Isp: isp})
+	ipCache.Store(queryIp, cache{City: city, Isp: isp, Timestamp: time.Now().Unix()})
 	return
 }
 
@@ -202,4 +204,20 @@ func LoadFile(filepath string) (err error) {
 	}
 	dataLen = uint32(len(data))
 	return
+}
+
+// 定期清理超过6小时的IP缓存，防止内存无限增长
+func init() {
+	go func() {
+		ticker := time.NewTicker(1 * time.Hour)
+		for range ticker.C {
+			now := time.Now().Unix()
+			ipCache.Range(func(key, value interface{}) bool {
+				if now-value.(cache).Timestamp > 6*3600 {
+					ipCache.Delete(key)
+				}
+				return true
+			})
+		}
+	}()
 }
