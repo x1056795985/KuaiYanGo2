@@ -268,6 +268,7 @@ func (j *webSocket) ProcessTextMessage(ws *websocket.Conn, linkId int, message *
 	if 局_PublicJs.IsVip > 0 && 局_在线信息.Uid == 0 {
 		response.Msg = "未登录,请使用登陆后Token链接"
 		j.sendResponse(ws, &response)
+		j.RemoveConnection(linkId) // 断开链接
 		return
 	}
 

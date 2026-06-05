@@ -19,6 +19,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="web3" />
-    <orderEntry type="module" module-name="webUser" />
+    <orderEntry type="module" module-name="web后台代理端2" />
   </component>
 </module>
