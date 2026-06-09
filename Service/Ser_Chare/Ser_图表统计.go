@@ -1213,50 +1213,60 @@ func Get任务池任务Id分析(c *gin.Context) [][]string {
 	}{}
 	_ = c.ShouldBindJSON(&局_type)
 
-	var TaskDataList []DB.DB_TaskPoolData
-	global.GVA_DB.Model(DB.DB_TaskPoolData{}).Select("TimeStart,Status").
-		Where("Tid = ?", 局_type.TaskId).
-		Find(&TaskDataList)
+	局_总开始 := time.Now()
 
-	// 初始化30天数据容器（从今天往前推29天）
+	// 覆盖索引(Tid,TimeStart,Status)下单次查询即可,不需要回表
 	now := time.Now()
-	dayStats := make(map[string]*dailyStat)
-	for i := 0; i < 30; i++ {
-		date := now.AddDate(0, 0, -i).Format("01-02")
-		dayStats[date] = &dailyStat{}
-	}
+	时间戳30天前 := now.AddDate(0, 0, -30).Unix()
 
-	// 统计每日数据
-	for _, task := range TaskDataList {
-		taskDate := time.Unix(int64(task.TimeStart), 0).Format("01-02")
-		if stat, exists := dayStats[taskDate]; exists {
-			if task.Status == 3 { // 3表示成功
-				stat.success++
-			} else if task.Status == 4 { // 4表示失败
-				stat.fail++
-			}
-		}
+	type 局_日统计 struct {
+		DayNum  int `json:"DayNum"`
+		Success int `json:"Success"`
+		Fail    int `json:"Fail"`
+	}
+	var 局_统计结果 []局_日统计
+	err := global.GVA_DB.Model(DB.DB_TaskPoolData{}).
+		Select("TimeStart DIV 86400 AS DayNum, "+
+			"SUM(CASE WHEN Status = 3 THEN 1 ELSE 0 END) AS Success, "+
+			"SUM(CASE WHEN Status = 4 THEN 1 ELSE 0 END) AS Fail").
+		Where("Tid = ? AND TimeStart >= ?", 局_type.TaskId, 时间戳30天前).
+		Group("DayNum").
+		Find(&局_统计结果).Error
+	_ = err
+
+	global.GVA_LOG.Info(fmt.Sprintf("[任务Id分析] Tid=%d 查询耗时=%v 结果数=%d", 局_type.TaskId, time.Since(局_总开始), len(局_统计结果)))
+
+	// 构建日期->统计映射
+	局_Map := make(map[string]*局_日统计, len(局_统计结果))
+	for i := range 局_统计结果 {
+		dateKey := time.Unix(int64(局_统计结果[i].DayNum)*86400, 0).Format("01-02")
+		局_Map[dateKey] = &局_统计结果[i]
 	}
 
 	// 构建结果数组（按时间倒序：最近→最早）
+	weekdays := []string{"日", "一", "二", "三", "四", "五", "六"}
 	Data := [][]string{{"日期", "失败", "成功", "总数"}}
-	weekdays := []string{"日", "一", "二", "三", "四", "五", "六"} // 添加中文星期缩写数组
 	for i := 29; i >= 0; i-- {
 		t := now.AddDate(0, 0, -i)
 		day := t.Day()
-		weekday := weekdays[t.Weekday()] // 获取中文星期缩写
-		// 修改日期格式为 "日(周几)"
+		weekday := weekdays[t.Weekday()]
 		displayDate := fmt.Sprintf("%d|%s", day, weekday)
 		dateKey := t.Format("01-02")
-		stat := dayStats[dateKey]
-		total := stat.success + stat.fail
+		success := 0
+		fail := 0
+		if stat, exists := 局_Map[dateKey]; exists {
+			success = stat.Success
+			fail = stat.Fail
+		}
+		total := success + fail
 		Data = append(Data, []string{
 			displayDate,
-			strconv.Itoa(stat.fail),
-			strconv.Itoa(stat.success),
+			strconv.Itoa(fail),
+			strconv.Itoa(success),
 			strconv.Itoa(total),
 		})
 	}
 
+	global.GVA_LOG.Info(fmt.Sprintf("[任务Id分析] Tid=%d 总耗时=%v", 局_type.TaskId, time.Since(局_总开始)))
 	return Data
 }
