@@ -11,7 +11,6 @@ import (
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
-	"strings"
 )
 
 type TaskPoolFull struct {
@@ -109,48 +108,95 @@ func (C *TaskPoolFull) GetList(c *gin.Context) {
 		return
 	}
 
-	sql := `
-  SELECT  db_TaskPoolType.*,
-           (SELECT  COUNT(*) FROM db_TaskPoolQueue WHERE  db_TaskPoolQueue.Tid =db_TaskPoolType.Id) AS QueueCount,
-          (SELECT  COUNT(*) FROM db_TaskPoolData WHERE  db_TaskPoolData.Tid =db_TaskPoolType.Id AND TimeStart>"{时间戳}") AS TaskCount
-    FROM db_TaskPoolType
-`
-	sql = strings.Replace(sql, `"{时间戳}"`, strconv.Itoa(int(utils.S时间_取现行时间戳()-(86400*30))), 1)
-
+	// 第1步: 只查任务类型表(小表,毫秒级),拿到当前页的Tid列表
+	局_DB := global.GVA_DB.Model(DB.TaskPool_类型{})
 	if 请求.Keywords != "" {
 		switch 请求.Type {
-		case 1:
-			sql += " WHERE db_TaskPoolType.Id = ?"
-		case 2:
-			sql += " WHERE LOCATE(?, db_TaskPoolType.Name) > 0"
+		case 1: //id
+			局_DB.Where("Id = ?", 请求.Keywords)
+		case 2: //任务类型名称
+			局_DB.Where("LOCATE(?, Name) > 0", 请求.Keywords)
 		}
 	}
 
-	if 请求.Order == 1 {
-		sql += " ORDER BY db_TaskPoolType.Sort DESC,db_TaskPoolType.Id ASC"
-	} else {
-		sql += " ORDER BY db_TaskPoolType.Sort DESC,db_TaskPoolType.Id DESC"
+	var 总数 int64
+	err := 局_DB.Count(&总数).Error
+	if err != nil {
+		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
+		return
 	}
 
-	sql += " LIMIT ? OFFSET ?"
+	if 请求.Order == 1 {
+		局_DB.Order("Sort DESC, Id ASC")
+	} else {
+		局_DB.Order("Sort DESC, Id DESC")
+	}
+
+	var 局_类型列表 []DB.TaskPool_类型
+	err = 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_类型列表).Error
+	if err != nil {
+		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
+		return
+	}
+
+	if len(局_类型列表) == 0 {
+		response.OkWithDetailed(响应_TaskPoolGetList{[]TaskPool_类型带数量{}, 总数}, "获取成功", c)
+		return
+	}
+
+	// 第2步: 只对当前页出现的Tid统计数量,而不是全表关联子查询
+	局_Tid列表 := make([]int, len(局_类型列表))
+	for i, item := range 局_类型列表 {
+		局_Tid列表[i] = item.Id
+	}
+
+	type 结构_数量统计 struct {
+		Tid   int `json:"Tid"`
+		Count int `json:"Count"`
+	}
+	var 局_队列数量 []结构_数量统计
+	var 局_任务数量 []结构_数量统计
+
+	// 查队列数量 - 只查当前页的Tid
+	err = global.GVA_DB.Model(DB.TaskPool_队列{}).
+		Select("Tid, COUNT(*) AS Count").
+		Where("Tid IN ?", 局_Tid列表).
+		Group("Tid").
+		Find(&局_队列数量).Error
+	if err != nil {
+		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
+		return
+	}
+
+	// 查任务数量 - 只查当前页的Tid + 30天时间筛选
+	时间戳30天前 := int(utils.S时间_取现行时间戳() - (86400 * 30))
+	err = global.GVA_DB.Model(DB.DB_TaskPoolData{}).
+		Select("Tid, COUNT(*) AS Count").
+		Where("Tid IN ? AND TimeStart > ?", 局_Tid列表, 时间戳30天前).
+		Group("Tid").
+		Find(&局_任务数量).Error
+	if err != nil {
+		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
+		return
+	}
+
+	// 构建Tid->Count映射,组装最终结果
+	局_队列Map := make(map[int]int, len(局_队列数量))
+	for _, v := range 局_队列数量 {
+		局_队列Map[v.Tid] = v.Count
+	}
+	局_任务Map := make(map[int]int, len(局_任务数量))
+	for _, v := range 局_任务数量 {
+		局_任务Map[v.Tid] = v.Count
+	}
 
 	var TaskPool []TaskPool_类型带数量
-	var 总数 int64
-	var err error
-	if 请求.Keywords != "" && (请求.Type == 1 || 请求.Type == 2) {
-		err = global.GVA_DB.Raw(sql, 请求.Keywords, 请求.Size, (请求.Page-1)*请求.Size).Scan(&TaskPool).Error
-	} else {
-		err = global.GVA_DB.Raw(sql, 请求.Size, (请求.Page-1)*请求.Size).Scan(&TaskPool).Error
-	}
-	if err != nil {
-		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		return
-	}
-
-	err = global.GVA_DB.Model(DB.TaskPool_类型{}).Count(&总数).Error
-	if err != nil {
-		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		return
+	for _, item := range 局_类型列表 {
+		TaskPool = append(TaskPool, TaskPool_类型带数量{
+			QueueCount:   局_队列Map[item.Id],
+			TaskCount:    局_任务Map[item.Id],
+			TaskPool_类型: item,
+		})
 	}
 
 	response.OkWithDetailed(响应_TaskPoolGetList{TaskPool, 总数}, "获取成功", c)
