@@ -128,7 +128,7 @@ func (s *KaClass) GetListAll(AppId int) ([]dbm.DB_KaClass, error) {
 
 // IsIdExists 卡类Id是否存在
 func (s *KaClass) IsIdExists(id int) bool {
-	var count int64
-	s.db.Model(dbm.DB_KaClass{}).Select("1").Where("Id = ?", id).Count(&count)
-	return count > 0
+	var 局_id int64
+	s.db.Model(dbm.DB_KaClass{}).Select("id").Where("Id = ?", id).Take(&局_id)
+	return 局_id > 0
 }
