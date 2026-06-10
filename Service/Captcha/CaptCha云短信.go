@@ -48,19 +48,19 @@ func TX云_sms发送短信验证码(模板变量 []string, 接收短信手机号
 	}
 
 	SecretKey := 局_配置.TX云短信Sms.SECRET_KEY
-	if SecretId == "" {
+	if SecretKey == "" {
 		return 系统错误.New("TX短信配置无效SECRET_KEY")
 	}
 	短信应用ID := 局_配置.TX云短信Sms.D短信应用ID
-	if SecretId == "" {
+	if 短信应用ID == "" {
 		return 系统错误.New("TX短信配置无效短信应用ID")
 	}
 	短信签名 := 局_配置.TX云短信Sms.D短信签名
-	if SecretId == "" {
+	if 短信签名 == "" {
 		return 系统错误.New("TX短信配置无效短信签名")
 	}
 	正文模板id := 局_配置.TX云短信Sms.Z正文模板ID
-	if SecretId == "" {
+	if 正文模板id == "" {
 		return 系统错误.New("TX短信配置无效正文模板id")
 	}
 
