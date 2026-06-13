@@ -27,6 +27,7 @@ var L_webSocket webSocket
 // 定义连接存储结构
 type WSConnection struct {
 	ws              *websocket.Conn //ws连接
+	wsMu            sync.Mutex      //写锁,防止并发写websocket连接
 	linkId          int             //在线id,数据库对应在线记录id
 	lastTime        int64           //最后心跳时间  //可以降低数据库的读取次数,不用每次扫描都读库
 	lastWriteDbTime int64           //最后更新在线信息时间
@@ -42,13 +43,20 @@ type webSocket struct {
 	heartbeatRunning uint32   // 使用原子操作标志位替代互斥锁
 }
 
+// safeWrite 安全地写入WebSocket消息，防止并发写
+func (c *WSConnection) safeWrite(messageType int, data []byte) error {
+	c.wsMu.Lock()
+	defer c.wsMu.Unlock()
+	return c.ws.WriteMessage(messageType, data)
+}
+
 func (j *webSocket) F发送消息给所有连接用户(c *gin.Context, message []byte) {
 	j.wsObj.Range(func(key, value interface{}) bool {
 		conn, ok2 := value.(*WSConnection)
 		if !ok2 {
 			return true
 		}
-		if err := conn.ws.WriteMessage(websocket.TextMessage, message); err != nil {
+		if err := conn.safeWrite(websocket.TextMessage, message); err != nil {
 			// 处理发送失败的情况，可能需要清理无效连接
 			j.wsObj.Delete(key)
 		}
@@ -62,7 +70,7 @@ func (j *webSocket) F发送消息(linkId int, message []byte) error {
 		if !ok2 {
 			return errors.New("id链接异常")
 		}
-		return conn.ws.WriteMessage(websocket.TextMessage, message)
+		return conn.safeWrite(websocket.TextMessage, message)
 
 	}
 	return errors.New("id链接不存在")
@@ -77,7 +85,7 @@ func (j *webSocket) F发送消息_批量(linkIds []int, message []byte) []error 
 				continue
 			}
 
-			局_结果[i] = conn.ws.WriteMessage(websocket.TextMessage, message)
+			局_结果[i] = conn.safeWrite(websocket.TextMessage, message)
 		} else {
 			局_结果[i] = errors.New("id链接不存在")
 		}
@@ -102,7 +110,7 @@ func (j *webSocket) F发送ping消息给所有连接用户() (剩余数量 int) 
 		}
 		// 超过30秒发送ping
 		if 局_time-conn.lastTime > 30 {
-			if err := conn.ws.WriteMessage(websocket.PingMessage, []byte("ping")); err != nil {
+			if err := conn.safeWrite(websocket.PingMessage, []byte("ping")); err != nil {
 				// 处理发送失败的情况，可能需要清理无效连接
 				j.RemoveConnection(conn.linkId)
 			}
@@ -198,7 +206,9 @@ func (j *webSocket) HandleConnection(ws *websocket.Conn, linkId int) {
 		switch messageType {
 		case websocket.TextMessage:
 			if len(p) == 1 && string(p) == "1" { //响应心跳
-				_ = ws.WriteMessage(websocket.TextMessage, []byte("2"))
+				if conn, ok := j.GetConnection(linkId); ok {
+					_ = conn.safeWrite(websocket.TextMessage, []byte("2"))
+				}
 			} else {
 				//fmt.Printf("处理文本消息, %s\n", string(p))
 				// 可以在这里调用业务逻辑处理函数
@@ -210,7 +220,9 @@ func (j *webSocket) HandleConnection(ws *websocket.Conn, linkId int) {
 			// 处理二进制消息 //不支持二进制消息 因为 js无法处理
 			返回 := `{"code":200,"msg":"不支持二进制消息"}`
 
-			_ = ws.WriteMessage(websocket.TextMessage, []byte(返回))
+			if conn, ok := j.GetConnection(linkId); ok {
+				_ = conn.safeWrite(websocket.TextMessage, []byte(返回))
+			}
 
 		case websocket.CloseMessage:
 			//fmt.Println("关闭websocket连接")
@@ -219,7 +231,9 @@ func (j *webSocket) HandleConnection(ws *websocket.Conn, linkId int) {
 
 		case websocket.PingMessage:
 			//fmt.Println("处理ping消息")
-			ws.WriteMessage(websocket.PongMessage, []byte("pong"))
+			if conn, ok := j.GetConnection(linkId); ok {
+				_ = conn.safeWrite(websocket.PongMessage, []byte("pong"))
+			}
 
 		case websocket.PongMessage:
 			//fmt.Println("处理pong消息")
@@ -318,7 +332,18 @@ func (j *webSocket) sendResponse(ws *websocket.Conn, response *common.WsMsgRespo
 	if err != nil {
 		return
 	}
-	_ = ws.WriteMessage(websocket.TextMessage, 返回)
+	// 从wsObj中查找对应的WSConnection以使用安全写入
+	j.wsObj.Range(func(key, value interface{}) bool {
+		conn, ok2 := value.(*WSConnection)
+		if !ok2 {
+			return true
+		}
+		if conn.ws == ws {
+			_ = conn.safeWrite(websocket.TextMessage, 返回)
+			return false
+		}
+		return true
+	})
 }
 
 // GetConnection 获取连接信息
