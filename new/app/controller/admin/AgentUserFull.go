@@ -200,7 +200,7 @@ func (C *AgentUserFull) Save(c *gin.Context) {
 		response.FailWithMessage("email邮箱格式不正确", c)
 		return
 	}
-	if 请求.SuperPassWord != "" {
+	if 请求.SuperPassWord != "" && !utils.Z正则_校验密码(请求.SuperPassWord, &msg) {
 		response.FailWithMessage("超级密码"+msg, c)
 		return
 	}
