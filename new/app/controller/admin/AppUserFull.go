@@ -742,11 +742,27 @@ func (C *AppUserFull) Delete(c *gin.Context) {
 
 	var 软件用户Uid = Ser_AppUser.Id取Uid_批量(请求.AppId, 请求.Id)
 	var db = global.GVA_DB
-	影响行数 := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
-	if db.Error != nil {
-		response.FailWithMessage("删除失败", c)
-		return
+	var 影响行数 int64
+	// 分批删除AppUser，避免占位符超限
+	for i := 0; i < len(请求.Id); i += 5000 {
+		end := i + 5000
+		if end > len(请求.Id) {
+			end = len(请求.Id)
+		}
+		tx := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id IN ? ", 请求.Id[i:end]).Delete("")
+		if tx.Error != nil {
+			response.FailWithMessage("删除失败", c)
+			return
+		}
+		影响行数 += tx.RowsAffected
 	}
-	_ = db.Model(DB.DB_UserConfig{}).Where("AppId = ? ", 请求.AppId).Where("Uid IN ? ", 软件用户Uid).Delete("").RowsAffected
+	// 分批删除UserConfig，避免占位符超限
+	for i := 0; i < len(软件用户Uid); i += 5000 {
+		end := i + 5000
+		if end > len(软件用户Uid) {
+			end = len(软件用户Uid)
+		}
+		_ = db.Model(DB.DB_UserConfig{}).Where("AppId = ? ", 请求.AppId).Where("Uid IN ? ", 软件用户Uid[i:end]).Delete("").RowsAffected
+	}
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
 }

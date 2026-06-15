@@ -68,7 +68,16 @@ func Id取Uid(AppId, id int) int {
 }
 func Id取Uid_批量(AppId int, id []int) []int {
 	var Uid []int
-	global.GVA_DB.Raw("SELECT `Uid` FROM `db_AppUser_"+strconv.Itoa(AppId)+"` WHERE `Id` IN  ? ", id).Scan(&Uid)
+	// 分批查询，避免占位符超限
+	for i := 0; i < len(id); i += 5000 {
+		end := i + 5000
+		if end > len(id) {
+			end = len(id)
+		}
+		var batch []int
+		global.GVA_DB.Raw("SELECT `Uid` FROM `db_AppUser_"+strconv.Itoa(AppId)+"` WHERE `Id` IN  ? ", id[i:end]).Scan(&batch)
+		Uid = append(Uid, batch...)
+	}
 	return Uid
 }
 
@@ -392,18 +401,43 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 	if len(ids) == 0 {
 		return
 	}
+	// 分批查询卡号名称，避免占位符超限
 	var KaNames []string
-	err = db.Model(DB.DB_Ka{}).Select("Name").Where("Uid IN ? ", ids).Find(&KaNames).Error
+	for i := 0; i < len(ids); i += 5000 {
+		end := i + 5000
+		if end > len(ids) {
+			end = len(ids)
+		}
+		var batch []string
+		err = db.Model(DB.DB_Ka{}).Select("Name").Where("Uid IN ? ", ids[i:end]).Find(&batch).Error
+		if err != nil {
+			return
+		}
+		KaNames = append(KaNames, batch...)
+	}
 	id = int64(len(ids))
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ?", ids).Delete("").Error
-		if err != nil {
-			return errors.New("删除应用用户失败:" + err.Error())
+		// 分批删除AppUser，避免占位符超限
+		for i := 0; i < len(ids); i += 5000 {
+			end := i + 5000
+			if end > len(ids) {
+				end = len(ids)
+			}
+			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ?", ids[i:end]).Delete("").Error
+			if err != nil {
+				return errors.New("删除应用用户失败:" + err.Error())
+			}
 		}
-
-		err = tx.Model(DB.DB_Ka{}).Where("AppId = ?", AppId).Where("id IN ?", ids).Delete("").Error
-		if err != nil {
-			return errors.New("删除应用卡号失败:" + err.Error())
+		// 分批删除Ka，避免占位符超限
+		for i := 0; i < len(ids); i += 5000 {
+			end := i + 5000
+			if end > len(ids) {
+				end = len(ids)
+			}
+			err = tx.Model(DB.DB_Ka{}).Where("AppId = ?", AppId).Where("id IN ?", ids[i:end]).Delete("").Error
+			if err != nil {
+				return errors.New("删除应用卡号失败:" + err.Error())
+			}
 		}
 		return nil
 	})
@@ -442,9 +476,21 @@ func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64,
 	if len(Uids) == 0 {
 		return 0, nil
 	}
-	db = *global.GVA_DB.Model(DB.DB_AppUser{})
-	db2 := db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids).Delete("")
-	return db2.RowsAffected, db2.Error
+	// 分批删除，避免占位符超限
+	var total int64
+	for i := 0; i < len(Uids); i += 5000 {
+		end := i + 5000
+		if end > len(Uids) {
+			end = len(Uids)
+		}
+		db = *global.GVA_DB.Model(DB.DB_AppUser{})
+		tx := db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids[i:end]).Delete("")
+		if tx.Error != nil {
+			return total, tx.Error
+		}
+		total += tx.RowsAffected
+	}
+	return total, nil
 }
 
 func Z置状态_同步卡号修改(AppId int, id []int, Status int) error {

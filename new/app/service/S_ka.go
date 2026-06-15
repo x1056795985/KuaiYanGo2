@@ -7,6 +7,8 @@ import (
 	DB "server/structs/db"
 )
 
+const batchSize = 5000
+
 type Ka struct {
 	db *gorm.DB
 	c  *gin.Context
@@ -57,14 +59,25 @@ func (s *Ka) Update(Id int, 数据 map[string]interface{}) (row int64, err error
 
 // 删除 支持 数组,和id
 func (s *Ka) Delete(Id interface{}) (影响行数 int64, error error) {
-	var tx2 *gorm.DB
 	switch k := Id.(type) {
 	case int:
-		tx2 = s.db.Model(DB.DB_Ka{}).Where("Id = ?", k).Delete("")
+		tx := s.db.Model(DB.DB_Ka{}).Where("Id = ?", k).Delete("")
+		return tx.RowsAffected, tx.Error
 	case []int:
-		tx2 = s.db.Model(DB.DB_Ka{}).Where("Id IN ?", k).Delete("")
+		var total int64
+		for i := 0; i < len(k); i += batchSize {
+			end := i + batchSize
+			if end > len(k) {
+				end = len(k)
+			}
+			tx := s.db.Model(DB.DB_Ka{}).Where("Id IN ?", k[i:end]).Delete("")
+			if tx.Error != nil {
+				return total, tx.Error
+			}
+			total += tx.RowsAffected
+		}
+		return total, nil
 	default:
 		return 0, errors.New("错误的数据")
 	}
-	return tx2.RowsAffected, tx2.Error
 }

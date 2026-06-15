@@ -123,6 +123,15 @@ func (s *User) Update(id int, 数据 map[string]interface{}) (row int64, err err
 
 func (s *User) Id取Uid_批量(AppId int, id []int) []int {
 	var Uid []int
-	s.db.Raw("SELECT `Uid` FROM `db_AppUser_"+strconv.Itoa(AppId)+"` WHERE `Id` IN  ? ", id).Scan(&Uid)
+	// 分批查询，避免占位符超限
+	for i := 0; i < len(id); i += 5000 {
+		end := i + 5000
+		if end > len(id) {
+			end = len(id)
+		}
+		var batch []int
+		s.db.Raw("SELECT `Uid` FROM `db_AppUser_"+strconv.Itoa(AppId)+"` WHERE `Id` IN  ? ", id[i:end]).Scan(&batch)
+		Uid = append(Uid, batch...)
+	}
 	return Uid
 }
