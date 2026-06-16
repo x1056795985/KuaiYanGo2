@@ -307,6 +307,7 @@ func (C *KaFull) SaveInfo(c *gin.Context) {
 		"VipNumber":   请求.VipNumber,
 		"UserClassId": 请求.UserClassId,
 		"NoUserClass": 请求.NoUserClass,
+		"MaxOnline":   请求.MaxOnline,
 	}
 
 	err := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
