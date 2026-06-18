@@ -1198,10 +1198,10 @@ func UserApi_用户登录注销(c *gin.Context) {
 	var AppInfo DB.DB_AppInfo
 	var 局_在线信息 DB.DB_LinksToken
 	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-	if !检测用户登录在线正常(&局_在线信息) {
-		response.X响应状态(c, response.Status_未登录)
-		return
-	}
+	//if !检测用户登录在线正常(&局_在线信息) {   //用户说不应该判断是否已登陆,调用就注销,我觉得有道理
+	//	response.X响应状态(c, response.Status_未登录)
+	//	return
+	//}
 	err := Ser_LinkUser.Set批量注销([]int{局_在线信息.Id}, Ser_LinkUser.Z注销_用户操作注销)
 	更新上下文缓存在线信息(c)
 	if err != nil {

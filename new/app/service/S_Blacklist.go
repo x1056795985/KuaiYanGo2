@@ -7,6 +7,7 @@ import (
 	"server/new/app/models/db"
 	"server/new/app/models/request"
 	"server/utils"
+	"strings"
 	"time"
 )
 
@@ -39,6 +40,9 @@ func (s *S_Blacklist) InfoItemKey(tx *gorm.DB, ItemKey string) ([]db.DB_Blacklis
 }
 func (s *S_Blacklist) Update(tx *gorm.DB, value db.DB_Blacklist) error {
 	err := tx.Model(db.DB_Blacklist{}).Where("ItemKey = ?", value.ItemKey).Updates(&value).Error
+	if err != nil && strings.Contains(err.Error(), "Error 1062") {
+		return errors.New("该记录已存在")
+	}
 	if _, ok := global.H缓存.Get(黑名单_ + value.ItemKey); ok {
 		global.H缓存.Delete(黑名单_ + value.ItemKey)
 	}
@@ -49,6 +53,9 @@ func (s *S_Blacklist) Create(tx *gorm.DB, value db.DB_Blacklist) error {
 		value.Time = time.Now().Unix()
 	}
 	err := tx.Model(db.DB_Blacklist{}).Create(&value).Error
+	if err != nil && strings.Contains(err.Error(), "Error 1062") {
+		return errors.New("该记录已存在")
+	}
 	if _, ok := global.H缓存.Get(黑名单_ + value.ItemKey); ok { //黑名单添加也需要增加缓存。因为如果有缓存的情况加,增加一个同名黑名单,就不会读取这个新的,只会读取以前缓存的记录
 		global.H缓存.Delete(黑名单_ + value.ItemKey)
 	}
