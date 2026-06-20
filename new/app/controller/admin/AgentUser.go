@@ -33,6 +33,7 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 		KaClassId    int      `json:"kaClassId"`
 		AgentLv      int      `json:"agentLv"`
 		AgentName    string   `json:"agentName"`
+		Status       int      `json:"status"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
@@ -77,7 +78,9 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 	if 请求.AppId != 0 {
 		局_DB.Where("AppId = ?", 请求.AppId)
 	}
-
+	if 请求.Status != 0 {
+		局_DB.Where("Status = ?", 请求.Status)
+	}
 	if 请求.Num == 1 || 请求.Num == 2 {
 		switch 请求.Num {
 		case 1: //已经使用
