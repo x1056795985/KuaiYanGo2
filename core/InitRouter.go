@@ -43,12 +43,11 @@ func InitRouters() *gin.Engine {
 	// 跨域，如需跨域可以打开下面的注释
 	Router.Use(middleware.Cors()) // 直接放行全部跨域请求
 	Router.Use(T统一恐慌恢复())         // 直接放行全部跨域请求
-
 	//公共路由器 无需鉴权
 	PublicGroup := Router.Group("")
 	RouterUserApi(PublicGroup) //先注册用户路由,因为管理员应用设置需要验证码接口需要获取用户api列表
 	//RouterAdmin(PublicGroup)   // [已迁移到新架构] Admin路由由 new/app/router/admin/admin.go 注册
-	RouterAgent(PublicGroup)   //注册基础功能路由 不做鉴权  初始化token  获取验证码等等
+	RouterAgent(PublicGroup) //注册基础功能路由 不做鉴权  初始化token  获取验证码等等
 	//RouterWebApi(PublicGroup) // [已迁移到新架构] WebApi路由由 new/app/router/webApi2/webApi.go 注册
 	router.RouterInit(PublicGroup)
 	if global.GVA_Viper.GetInt("系统模式") == 1 {

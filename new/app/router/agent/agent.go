@@ -84,4 +84,15 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 		agentRouter.POST("LogAgentInventory/Delete", 局_AgentLogAgentInventory.Delete)
 	}
 
+	局_Withdraw := controller.NewWithdrawController()
+	{
+		agentRouter.POST("withdraw/getConfig", 局_Withdraw.GetConfig)
+		agentRouter.POST("withdraw/uploadPayeeQr", 局_Withdraw.UploadPayeeQr)
+		agentRouter.POST("withdraw/image", 局_Withdraw.Image)
+		agentRouter.POST("withdraw/create", 局_Withdraw.Create)
+		agentRouter.POST("withdraw/list", 局_Withdraw.List)
+		agentRouter.POST("withdraw/detail", 局_Withdraw.Detail)
+		agentRouter.POST("withdraw/cancel", 局_Withdraw.Cancel)
+	}
+
 }

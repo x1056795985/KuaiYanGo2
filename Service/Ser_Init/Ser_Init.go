@@ -103,6 +103,8 @@ func InitDbTables(c *gin.Context) {
 		DB.DB_LogVipNumber{},
 		DB.DB_LogAgentOtherFunc{},
 		dbm.DB_LogKey{},
+		dbm.DB_RmbWithdraw{},
+		dbm.DB_RmbWithdrawLog{},
 
 		//	代理相关
 		DB.Db_Agent_Level{},

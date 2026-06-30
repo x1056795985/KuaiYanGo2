@@ -46,6 +46,11 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("base/checkDB", 局_InitDB.CheckDB)
 		adminRouter.POST("base/initDB", 局_InitDB.InitDB)
 	}
+	局_PublicWithdraw := controller.NewWithdrawController()
+	{
+		adminRouter.GET("withdraw/uploadVoucherByToken", 局_PublicWithdraw.UploadVoucherByTokenPage)
+		adminRouter.POST("withdraw/uploadVoucherByToken", 局_PublicWithdraw.UploadVoucherByToken)
+	}
 
 	// ========== 需要鉴权的路由 ==========
 	adminRouter = router.Group(局_管理入口)
@@ -355,6 +360,25 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 			adminRouter.POST("logRMBPayOrder/delete", 局_LogRMBPayOrder.Delete)
 			adminRouter.POST("logRMBPayOrder/out", 局_LogRMBPayOrder.Out)
 		}
+	}
+
+	局_Withdraw := controller.NewWithdrawController()
+	{
+		adminRouter.POST("withdraw/getConfig", 局_Withdraw.GetConfig)
+		adminRouter.POST("withdraw/saveConfig", 局_Withdraw.SaveConfig)
+		adminRouter.POST("withdraw/list", 局_Withdraw.List)
+		adminRouter.POST("withdraw/detail", 局_Withdraw.Detail)
+		adminRouter.POST("withdraw/auditPass", 局_Withdraw.AuditPass)
+		adminRouter.POST("withdraw/reject", 局_Withdraw.Reject)
+		adminRouter.POST("withdraw/markPaid", 局_Withdraw.MarkPaid)
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
+			adminRouter.POST("withdraw/delete", 局_Withdraw.Delete)
+		}
+		adminRouter.POST("withdraw/createVoucherToken", 局_Withdraw.CreateVoucherToken)
+		adminRouter.POST("withdraw/uploadVoucher", 局_Withdraw.UploadVoucher)
+		adminRouter.POST("withdraw/image", 局_Withdraw.Image)
+		adminRouter.POST("withdraw/getUploadVoucherByTokenStatus", 局_Withdraw.GetUploadVoucherByTokenStatus)
+		adminRouter.POST("withdraw/logs", 局_Withdraw.Logs)
 	}
 
 	// ========== 日志模块 ==========
