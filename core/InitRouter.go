@@ -11,21 +11,15 @@ import (
 	zhTranslations "github.com/go-playground/validator/v10/translations/zh"
 	"io"
 	"log"
-	"net/http"
 	"reflect"
 	"runtime/debug"
-	"server/api/Agent"
 	"server/api/UserApi"
 	// "server/api/Admin" // [已迁移到新架构]
 	// "server/api/WebApi" // [已迁移到新架构]
 	"server/api/middleware"
-	"server/core/dist/VueAgent"
 	"server/global"
 	"server/new/app/router"
-	mid2 "server/new/app/router/middleware"
 	"server/structs/Http/response"
-	DB "server/structs/db"
-	"strings"
 )
 
 // InitRouters 初始化总路由
@@ -47,7 +41,6 @@ func InitRouters() *gin.Engine {
 	PublicGroup := Router.Group("")
 	RouterUserApi(PublicGroup) //先注册用户路由,因为管理员应用设置需要验证码接口需要获取用户api列表
 	//RouterAdmin(PublicGroup)   // [已迁移到新架构] Admin路由由 new/app/router/admin/admin.go 注册
-	RouterAgent(PublicGroup) //注册基础功能路由 不做鉴权  初始化token  获取验证码等等
 	//RouterWebApi(PublicGroup) // [已迁移到新架构] WebApi路由由 new/app/router/webApi2/webApi.go 注册
 	router.RouterInit(PublicGroup)
 	if global.GVA_Viper.GetInt("系统模式") == 1 {
@@ -123,168 +116,6 @@ func T统一恐慌恢复() gin.HandlerFunc {
 // [已迁移到新架构 new/app/router/admin/admin.go] 所有Admin路由由新架构注册
 
 // Agent路由 menu 需要鉴权  menu
-// Agent路由 menu 需要鉴权  menu
-
-func RouterAgent(Router *gin.RouterGroup) *gin.RouterGroup {
-
-	局_代理入口 := global.GVA_Viper.GetString("代理入口")
-	//客户经常输入错误,单独注册个路由,跳转正确地址
-	if strings.ToLower(局_代理入口) != 局_代理入口 {
-		Router.GET(strings.ToLower(局_代理入口), func(context *gin.Context) {
-			context.Redirect(http.StatusFound, "/"+局_代理入口)
-		})
-	}
-
-	Router根Agent := Router.Group(局_代理入口) //127.0.0.1:18080/  这个后面第一个不需要 / 符号
-	//Router根Agent.Use(middleware.AA())
-	//Router根Agent.Use(middleware.IsAgentHost()) //已删除,因为现在支持自定义入口地址了效果更好,这个,精简掉,
-
-	Router根Agent.Use(middleware.IsAgent是否关闭())
-
-	//打包静态VueAgent文件============================
-	html := VueAgent.NewHtmlHandler()
-	Router根Agent.GET("/", html.Index)
-	Router根Agent.GET("/assets/*filepath", func(c *gin.Context) {
-		c.FileFromFS("assets/"+c.Param("filepath"), http.FS(VueAgent.Assets))
-	})
-	// 解决刷新404问题
-	//Router.NoRoute(html.RedirectIndex)
-	//结束==============================================================
-
-	//Agent基础路由 无数据库  无鉴权 就可以访问
-	baseRouter := Router根Agent.Group("/Base")
-	{
-		BaseApi := Agent.Api.Base
-		baseRouter.POST("Captcha", BaseApi.Captcha)
-		baseRouter.POST("Login", BaseApi.Login)
-	}
-
-	//菜单列表==============================================
-	baseRouter = Router根Agent.Group("/Menu")
-	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token
-
-	MenuApi := Agent.Api.Menu                            //实现路由的 具体方法位置
-	baseRouter.GET("GetAgentInfo", MenuApi.GetAgentInfo) // 获取用户信息
-	baseRouter.POST("OutLogin", MenuApi.OutLogin)
-	baseRouter.POST("GetPayStatus", MenuApi.Q取支付通道状态)
-	baseRouter.POST("GetPayStatus2", MenuApi.Q取支付通道状态2)
-	// 为需要鉴权的路由单独创建子组
-	baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_余额充值})).
-		POST("GetPayPC", MenuApi.Y余额充值)
-
-	baseRouter.POST("GetPayOrderStatus", MenuApi.Q取余额充值订单状态)
-
-	if !(global.GVA_Viper.GetInt("系统模式") == 1) {
-		baseRouter.POST("NewPassword", MenuApi.NewPassword) //修改当前Token密码
-	}
-	//卡号列表===========================================
-	baseRouter = Router根Agent.Group("/Ka")
-	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-	{
-		App := Agent.Api.Ka                       //实现路由的 具体方法位置
-		baseRouter.POST("GetList", App.GetKaList) // 获取列表
-		baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_制卡})).
-			POST("New", App.New)
-		baseRouter.POST("InventoryNewKa", App.K库存制卡)   // 新制卡号
-		baseRouter.POST("GetInfo", App.GetInfo)        // 获取详细信息
-		baseRouter.POST("SetStatus", App.Set修改状态)      // 修改状态
-		baseRouter.POST("SetAgentNote", App.Set修改代理备注) // 修改状态
-		// 为需要鉴权的路由单独创建子组
-		baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_卡号追回})).
-			POST("Recover", App.Z追回卡号)
-
-		baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_更换卡号})).
-			POST("ReplaceKaName", App.G更换卡号)
-
-		baseRouter.POST("UseKa", App.K卡号充值)
-		baseRouter.POST("ChartKaRegister", App.Get卡号列表统计制卡)
-		baseRouter.POST("GetKaTemplate", App.Q取卡号生成模板)
-		baseRouter.POST("SetKaTemplate", App.Set修改卡号生成模板)
-
-	}
-
-	//卡号列表===========================================
-	baseRouter = Router根Agent.Group("/App")
-	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-	{
-		App := Agent.Api.Ka //实现路由的 具体方法位置
-		baseRouter.GET("GetAppIdNameList", App.GetAppIdNameList)
-	}
-	//代理账号===========================================
-	baseRouter = Router根Agent.Group("/Agent")
-	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-	AgentApp := Agent.Api.AgentUser                                //实现路由的 具体方法位置
-	baseRouter.POST("GetAgentUserList", AgentApp.GetAgentUserList) // 获取用户列表
-	baseRouter.POST("GetAgentUserInfo", AgentApp.GetAgentUserInfo) // 获取用户详细信息
-	baseRouter.POST("SaveAgentUser", AgentApp.Save代理信息)            // 保存用户详细信息
-
-	// 为需要鉴权的路由单独创建子组
-	baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_发展下级代理})).
-		POST("NewAgentUser", AgentApp.New代理信息) // 保存用户详细信息
-	baseRouter.POST("SetAgentUserStatus", AgentApp.Set修改状态)                        // 保存用户详细信息
-	baseRouter.POST("GetAgentKaClassAuthority", AgentApp.GetAgentKaClassAuthority) //取全部可制卡类和已授权卡类
-	baseRouter.POST("SetAgentKaClassAuthority", AgentApp.SetAgentKaClassAuthority) //设置代理可制卡类ID
-	baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_转账})).
-		POST("SendRmbTOAgent", AgentApp.SendRmbTOAgent) //转账
-	baseRouter.POST("ChartAgentLevel", AgentApp.Get代理组织架构图)
-
-	//代理库存管理===========================================
-	baseRouter = Router根Agent.Group("/AgentInventory")
-	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-
-	AgentInventory := Agent.Api.AgentInventory                       //实现路由的 具体方法位置
-	baseRouter.POST("GetList", AgentInventory.GetAgentInventoryList) // 获取列表
-	baseRouter.POST("GetKaClassTree", AgentInventory.Get取可创建库存包列表)   // 获取列表
-	baseRouter.POST("GetInfo", AgentInventory.GetAgentInventoryInfo) // 获取详细信息
-	baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_制卡})).
-		POST("NewBuy", AgentInventory.New库存购买) // 创建库存包
-	baseRouter.POST("Send", AgentInventory.K库存发送)                     // 创建库存包
-	baseRouter.POST("GetSubordinateAgent", AgentInventory.Q可发送库存下级代理) // 创建库存包
-	baseRouter.POST("Withdraw", AgentInventory.K库存撤回)                 // 撤回转出的库存
-	baseRouter.POST("SetEndTime", AgentInventory.K库存延期)
-	baseRouter.POST("SetNote", AgentInventory.K库存修改备注)
-	//余额日志===========================================
-	// [已迁移到新架构 new/app/controller/agent/LogMoney.go] 路由由 new/app/router/agent/agent.go 注册
-	//baseRouter = Router根Agent.Group("/LogMoney")
-	//baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-	//
-	//{
-	//	App := Agent.Api.LogMoney                       //实现路由的 具体方法位置
-	//	baseRouter.POST("GetList", App.GetLogMoneyList) // 获取列表
-	//}
-	//库存日志===========================================
-	// [已迁移到新架构 new/app/controller/agent/LogAgentInventory.go] 路由由 new/app/router/agent/agent.go 注册
-	//baseRouter = Router根Agent.Group("/LogAgentInventory")
-	//baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-	//
-	//{
-	//	App := Agent.Api.LogAgentInventory                   //实现路由的 具体方法位置
-	//	baseRouter.POST("GetList", App.GetLogAgentInventory) // 获取列表
-	//
-	//}
-	//制卡日志===========================================
-	// [已迁移到新架构 new/app/controller/agent/LogRegisterKa.go] 路由由 new/app/router/agent/agent.go 注册
-	//baseRouter = Router根Agent.Group("/LogRegisterKa")
-	//baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-	//
-	//{
-	//	App := Agent.Api.LogRegister               //实现路由的 具体方法位置
-	//	baseRouter.POST("GetList", App.GetLogList) // 获取列表
-	//}
-	//其他操作===========================================
-	baseRouter = Router根Agent.Group("/OtherFunc")
-	baseRouter.Use(middleware.IsTokenAgent()) ///鉴权中间件 检查 token 检查是不是管理员令牌
-	{
-		App := Agent.Api.OtherFunc //实现路由的 具体方法位置
-		baseRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_修改用户绑定})).
-			POST("SetAppUserKey", App.SetAppUserKey)
-	}
-
-	return baseRouter
-}
-
 // RouterUserApi UserApi路由入口
 func RouterUserApi(Router *gin.RouterGroup) *gin.RouterGroup {
 

@@ -1,4 +1,4 @@
-package OtherFunc
+package controller
 
 import (
 	"EFunc/utils"
@@ -17,23 +17,24 @@ import (
 	"time"
 )
 
-type Api struct{}
+type AgentOtherFunc struct{}
 
-type 结构请求_修改用户绑定信息 struct {
-	AppId int    `json:"AppId"`
-	User  string `json:"User"`
-	Key   string `json:"Key"`
+func NewAgentOtherFuncController() *AgentOtherFunc {
+	return &AgentOtherFunc{}
 }
 
-// 修改软件用户绑定信息
-func (a *Api) SetAppUserKey(c *gin.Context) {
-	var 请求 结构请求_修改用户绑定信息
-	err := c.ShouldBindJSON(&请求)
-	if err != nil {
+type Agent修改绑定请求 struct {
+	AppId int    `json:"appId"`
+	User  string `json:"user"`
+	Key   string `json:"key"`
+}
+
+func (A *AgentOtherFunc) SetAppUserKey(c *gin.Context) {
+	var 请求 Agent修改绑定请求
+	if err := c.ShouldBindJSON(&请求); err != nil {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-
 	if !Ser_AppInfo.AppId是否存在(请求.AppId) {
 		response.FailWithMessage("应用不存在", c)
 		return
@@ -45,32 +46,30 @@ func (a *Api) SetAppUserKey(c *gin.Context) {
 		return
 	}
 
-	AppUserid := Ser_AppUser.User或卡号取Id(请求.AppId, 请求.User)
-
-	if AppUserid == 0 {
+	局_AppUserId := Ser_AppUser.User或卡号取Id(请求.AppId, 请求.User)
+	if 局_AppUserId == 0 {
 		response.FailWithMessage("用户不存在", c)
 		return
 	}
 
-	局_用户详情, err2 := Ser_AppUser.Id取详情(请求.AppId, AppUserid)
-	if err2 != nil {
-		response.FailWithMessage(err2.Error(), c)
+	局_用户详情, err := Ser_AppUser.Id取详情(请求.AppId, 局_AppUserId)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
-
 	if 局_用户详情.AgentUid != 0 && 局_用户详情.AgentUid != c.GetInt("Uid") {
 		response.FailWithMessage("只能操作自己的归属用户", c)
 		return
 	}
 
-	err = Ser_AppUser.Set绑定信息(请求.AppId, 局_用户详情.Uid, 请求.Key)
-	if err != nil {
+	if err = Ser_AppUser.Set绑定信息(请求.AppId, 局_用户详情.Uid, 请求.Key); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	局_用户名 := Ser_AppUser.Id取User(请求.AppId, AppUserid)
-	db := *global.GVA_DB
-	_, err = service.NewLogKey(c, &db).Create(&dbm.DB_LogKey{
+
+	局_用户名 := Ser_AppUser.Id取User(请求.AppId, 局_AppUserId)
+	局_DB := *global.GVA_DB
+	_, err = service.NewLogKey(c, &局_DB).Create(&dbm.DB_LogKey{
 		Type:   constant.LogKey_换绑,
 		User:   局_用户名,
 		Uid:    局_用户详情.Uid,
@@ -86,8 +85,6 @@ func (a *Api) SetAppUserKey(c *gin.Context) {
 	}
 
 	局_信息 := "修改绑定信息 '" + 局_用户详情.Key + "'  ->  '" + 请求.Key + "'"
-
-	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 请求.AppId, AppUserid, 局_用户名, DB.D代理功能_修改用户绑定, c.ClientIP(), 局_信息)
+	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 请求.AppId, 局_AppUserId, 局_用户名, DB.D代理功能_修改用户绑定, c.ClientIP(), 局_信息)
 	response.OkWithMessage("操作成功", c)
-	return
 }
