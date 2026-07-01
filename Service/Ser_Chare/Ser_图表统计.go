@@ -772,7 +772,7 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 	return Data
 }
 func Get卡号列表统计制卡(c *gin.Context) []gin.H {
-	局_type := 结构_请求类型{Type: 1}
+	局_type := 结构_请求类型{Type: 1, AppId: 0}
 	_ = c.ShouldBindJSON(&局_type)
 	var 时间处理函数 func(int) string
 	if 局_type.Type == 2 {
@@ -798,7 +798,7 @@ func Get卡号列表统计制卡(c *gin.Context) []gin.H {
 		return Data
 	}
 
-	Data缓存, ok := global.H缓存.Get("图表数据_Get卡号制卡使用统计" + strconv.Itoa(局_type.Type))
+	Data缓存, ok := global.H缓存.Get("图表数据_Get卡号制卡使用统计" + strconv.Itoa(局_type.Type) + "_" + strconv.Itoa(局_type.AppId))
 	if ok {
 		return Data缓存.([]gin.H)
 	}
@@ -808,6 +808,9 @@ func Get卡号列表统计制卡(c *gin.Context) []gin.H {
 
 	var 局_数量 [7]int
 	局_db := global.GVA_DB.Model(DB.DB_Ka{})
+	if 局_type.AppId > 0 {
+		局_db = 局_db.Where("AppId = ?", 局_type.AppId)
+	}
 	局_db.Select("SUM(case when (  RegisterTime between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then 1 else null end) as  '1' ",
 		"SUM(case when (  RegisterTime between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then 1 else null end) as  '2' ",
 		"SUM(case when (  RegisterTime between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then 1 else null end) as  '3' ",
@@ -830,13 +833,13 @@ func Get卡号列表统计制卡(c *gin.Context) []gin.H {
 	Data[0] = gin.H{"name": "制卡数量", "type": "line", "data": 局_数量}
 
 	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
-		global.H缓存.Set("图表数据_Get卡号制卡统计"+strconv.Itoa(局_type.Type), Data, time.Minute*10)
+		global.H缓存.Set("图表数据_Get卡号制卡统计"+strconv.Itoa(局_type.Type)+"_"+strconv.Itoa(局_type.AppId), Data, time.Minute*10)
 	}
 
 	return Data
 }
 func Get卡号列表统计制卡_代理(c *gin.Context) []gin.H {
-	局_type := 结构_请求类型{Type: 1}
+	局_type := 结构_请求类型{Type: 1, AppId: 0}
 	_ = c.ShouldBindJSON(&局_type)
 	var 时间处理函数 func(int) string
 	if 局_type.Type == 2 {
@@ -858,7 +861,7 @@ func Get卡号列表统计制卡_代理(c *gin.Context) []gin.H {
 	]*/
 	var Data = make([]gin.H, 2)
 
-	Data缓存, ok := global.H缓存.Get("图表数据_Get代理" + c.GetString("User") + "卡号制卡使用统计" + strconv.Itoa(局_type.Type))
+	Data缓存, ok := global.H缓存.Get("图表数据_Get代理" + c.GetString("User") + "卡号制卡使用统计" + strconv.Itoa(局_type.Type) + "_" + strconv.Itoa(局_type.AppId))
 	if ok {
 		return Data缓存.([]gin.H)
 	}
@@ -868,6 +871,9 @@ func Get卡号列表统计制卡_代理(c *gin.Context) []gin.H {
 
 	var 局_数量 [7]int
 	局_db := global.GVA_DB.Model(DB.DB_Ka{}).Where("RegisterUser = ?", c.GetString("User"))
+	if 局_type.AppId > 0 {
+		局_db = 局_db.Where("AppId = ?", 局_type.AppId)
+	}
 	局_db.Select("SUM(case when (  RegisterTime between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then 1 else null end) as  '1' ",
 		"SUM(case when (  RegisterTime between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then 1 else null end) as  '2' ",
 		"SUM(case when (  RegisterTime between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then 1 else null end) as  '3' ",
@@ -890,7 +896,7 @@ func Get卡号列表统计制卡_代理(c *gin.Context) []gin.H {
 	Data[0] = gin.H{"name": "制卡数量", "type": "line", "data": 局_数量}
 
 	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
-		global.H缓存.Set("图表数据_Get代理"+c.GetString("User")+"卡号制卡使用统计"+strconv.Itoa(局_type.Type), Data, time.Minute*10)
+		global.H缓存.Set("图表数据_Get代理"+c.GetString("User")+"卡号制卡使用统计"+strconv.Itoa(局_type.Type)+"_"+strconv.Itoa(局_type.AppId), Data, time.Minute*10)
 	}
 
 	return Data
