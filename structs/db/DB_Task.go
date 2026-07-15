@@ -21,7 +21,7 @@ type DB_TaskPoolData struct {
 	ReturnData  string `json:"ReturnData" gorm:"column:ReturnData;size:16777215;comment:消费返回数据"`
 	Status      int    `json:"Status" gorm:"column:Status;index:idx_tid_time_status;comment:任务状态,"` //1 已创建,2任务处理中,3成功,4任务失败;覆盖索引第三列
 	SubmitAppId int    `json:"SubmitAppId" gorm:"column:SubmitAppId;comment:生产者AppID"`
-	SubmitUid   int    `json:"SubmitUid" gorm:"column:SubmitUid;comment:生产者Uid"`
+	SubmitUid   int    `json:"SubmitUid" gorm:"column:SubmitUid;index:comment:生产者Uid"`
 	ReturnAppId int    `json:"ReturnAppId" gorm:"column:ReturnAppId;comment:消费者AppId"`
 	ReturnUid   int    `json:"ReturnUid" gorm:"column:ReturnUid;comment:消费者Uid,或在线id"`
 }

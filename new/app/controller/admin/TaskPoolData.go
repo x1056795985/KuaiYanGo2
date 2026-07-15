@@ -26,7 +26,8 @@ func NewTaskPoolDataController() *TaskPoolData {
 func (C *TaskPoolData) GetList(c *gin.Context) {
 	var 请求 struct {
 		request.List
-		Tid int `json:"tid"`
+		Tid       int `json:"tid"`
+		SubmitUid int `json:"submitUid"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -37,7 +38,7 @@ func (C *TaskPoolData) GetList(c *gin.Context) {
 	var dataList []db.DB_TaskPoolData
 	var 总数 int64
 	var err error
-	总数, dataList, err = S.GetList(请求.List, 请求.Tid, 0, 0)
+	总数, dataList, err = S.GetList(请求.List, 请求.Tid, 0, 请求.SubmitUid)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -69,6 +70,3 @@ func (C *TaskPoolData) Delete(c *gin.Context) {
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
 	return
 }
-
-
-

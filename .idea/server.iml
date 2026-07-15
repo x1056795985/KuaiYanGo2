@@ -15,6 +15,7 @@
       <excludeFolder url="file://$MODULE_DIR$/new/app/web/webUser/assets" />
       <excludeFolder url="file://$MODULE_DIR$/new/app/web/webUser/static" />
       <excludeFolder url="file://$MODULE_DIR$/new/app/web" />
+      <excludeFolder url="file://$MODULE_DIR$/runtime" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
