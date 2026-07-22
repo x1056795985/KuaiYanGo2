@@ -390,10 +390,10 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 		return 0, errors.New("仅限卡号类型应用使用")
 	}
 
-	db := global.GVA_DB.Model(DB.DB_AppUser{})
+	db := global.GVA_DB
 	var ids []int64
 
-	err = db.Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Uid").Where("VipTime <= ? ", VipTime).Find(&ids).Error
+	err = db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Uid").Where("VipTime <= ? ", VipTime).Find(&ids).Error
 
 	if err != nil {
 		return
@@ -409,7 +409,7 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 			end = len(ids)
 		}
 		var batch []string
-		err = db.Model(DB.DB_Ka{}).Select("Name").Where("Uid IN ? ", ids[i:end]).Find(&batch).Error
+		err = global.GVA_DB.Model(DB.DB_Ka{}).Select("Name").Where("id IN ? ", ids[i:end]).Find(&batch).Error
 		if err != nil {
 			return
 		}
@@ -454,10 +454,10 @@ func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64,
 		return 0, errors.New("仅限卡号类型应用使用")
 	}
 
-	db := *global.GVA_DB.Model(DB.DB_AppUser{})
+	db := *global.GVA_DB
 	var ids []int
 	//获取全部uid 就是卡号id
-	err = db.Table("db_AppUser_" + strconv.Itoa(AppId)).Select("Uid").Find(&ids).Error
+	err = db.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Select("Uid").Find(&ids).Error
 
 	if err != nil {
 		return 0, err
@@ -466,8 +466,8 @@ func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64,
 		return 0, nil
 	}
 	var KaId []int
-	db = *global.GVA_DB.Model(DB.DB_Ka{})
-	err = db.Select("Id").Where("AppId = ? ", AppId).Scan(&KaId).Error
+	db = *global.GVA_DB
+	err = db.Model(DB.DB_Ka{}).Select("Id").Where("AppId = ? ", AppId).Scan(&KaId).Error
 	if err != nil {
 		return 0, err
 	}
@@ -483,8 +483,8 @@ func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64,
 		if end > len(Uids) {
 			end = len(Uids)
 		}
-		db = *global.GVA_DB.Model(DB.DB_AppUser{})
-		tx := db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids[i:end]).Delete("")
+		db = *global.GVA_DB
+		tx := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids[i:end]).Delete("")
 		if tx.Error != nil {
 			return total, tx.Error
 		}
@@ -518,7 +518,8 @@ func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号�
 		return 0, errors.New("AppId不存在")
 	}
 
-	db := global.GVA_DB.Debug().Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+	db := global.GVA_DB
+	db.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
 
 	局_is计点 := Ser_AppInfo.App是否为计点(AppId)
 	局_is卡号 := Ser_AppInfo.App是否为卡号(AppId)
@@ -564,9 +565,9 @@ func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号�
 	if len(局_id数组) > 0 {
 		//如果是增加时间 Number 先给过期的修改为当前时间戳
 		if Number > 0 {
-			global.GVA_DB.Debug().Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Where("VipTime < ?", time.Now().Unix()).Update("VipTime", time.Now().Unix())
+			global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Where("VipTime < ?", time.Now().Unix()).Update("VipTime", time.Now().Unix())
 		}
-		影响行数 = global.GVA_DB.Debug().Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", gorm.Expr("VipTime + ?", Number)).RowsAffected
+		影响行数 = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", gorm.Expr("VipTime + ?", Number)).RowsAffected
 		var 局_id数组文本 string
 		for _, num := range 局_id数组 {
 			局_id数组文本 += strconv.Itoa(num) + ","
