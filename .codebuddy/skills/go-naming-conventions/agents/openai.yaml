@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go Naming Conventions"
+  short_description: "Guide Go code naming for this project"
+  default_prompt: "Use $go-naming-conventions to write Go code that follows this project naming rules."
