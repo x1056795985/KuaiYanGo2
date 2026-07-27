@@ -90,6 +90,8 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("panel/chartAppKa", 局_Panel.ChartAppKa)
 		adminRouter.POST("panel/chartAppKaClass", 局_Panel.ChartAppKaClass)
 		adminRouter.POST("panel/chartKaRegister", 局_Panel.ChartKaRegister)
+		adminRouter.POST("panel/chartKaMonthSummary", 局_Panel.ChartKaMonthSummary)
+		adminRouter.POST("panel/chartDashboardSummary", 局_Panel.ChartDashboardSummary)
 		adminRouter.POST("panel/chartAppUserRegister", 局_Panel.ChartAppUserRegister)
 		adminRouter.POST("panel/chartAgentLevel", 局_Panel.ChartAgentLevel)
 		adminRouter.POST("panel/chartTidTaskData", 局_Panel.ChartTidTaskData)

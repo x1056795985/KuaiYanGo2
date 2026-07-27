@@ -83,7 +83,7 @@ func (A *AgentMenu) NewPassword(c *gin.Context) {
 
 // OutLogin 退出登录
 func (A *AgentMenu) OutLogin(c *gin.Context) {
-	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"), Ser_LinkUser.Z注销_用户操作注销)
+	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		return
@@ -93,9 +93,9 @@ func (A *AgentMenu) OutLogin(c *gin.Context) {
 }
 
 type 结构请求_余额充值 struct {
-	Type     string  `json:"Type"` //支付方式
-	C充值金额    float64 `json:"RMB"`
-	D订单ID    string  `json:"OrderId"`
+	Type  string  `json:"Type"` //支付方式
+	C充值金额 float64 `json:"RMB"`
+	D订单ID string  `json:"OrderId"`
 }
 
 // Q取支付通道状态 取支付通道状态

@@ -15,6 +15,7 @@ import (
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/ka"
+	"server/new/app/models/constant"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -322,7 +323,7 @@ func (C *KaFull) SaveInfo(c *gin.Context) {
 	})
 
 	if 请求.Status == 2 {
-		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧卡号信息.Id}, 请求.AppId, Ser_LinkUser.Z注销_管理员手动注销)
+		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧卡号信息.Id}, 请求.AppId, constant.Z注销_管理员手动注销)
 	}
 	if err != nil {
 		response.FailWithMessage("保存失败", c)

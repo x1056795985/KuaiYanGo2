@@ -9,6 +9,7 @@ import (
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/webSocket"
+	"server/new/app/models/constant"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 )
@@ -170,7 +171,7 @@ func (C *LinkUserCtrl) Logout(c *gin.Context) {
 		return
 	}
 
-	err := Ser_LinkUser.Set批量注销(请求.Id, Ser_LinkUser.Z注销_管理员手动注销)
+	err := Ser_LinkUser.Set批量注销(请求.Id, constant.Z注销_管理员手动注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		global.GVA_LOG.Error("Logout:" + err.Error())

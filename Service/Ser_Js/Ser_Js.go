@@ -317,7 +317,7 @@ func jS_在线注销(局_在线信息 DB.DB_LinksToken) js对象_通用返回 {
 	for _, v := range 局_数组_在线 {
 		局_ids = append(局_ids, v.Id)
 	}
-	err = Ser_LinkUser.Set批量注销(局_ids, Ser_LinkUser.Z注销_管理员手动注销)
+	err = Ser_LinkUser.Set批量注销(局_ids, constant.Z注销_管理员手动注销)
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
@@ -788,7 +788,7 @@ func jS_置软件用户状态(局_在线信息 DB.DB_LinksToken, 状态 int) js�
 
 	//如果是冻结同时注销在线的uid
 	if 状态 == 2 {
-		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_在线信息.Uid}, 局_在线信息.LoginAppid, Ser_LinkUser.Z注销_管理员手动注销)
+		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_在线信息.Uid}, 局_在线信息.LoginAppid, constant.Z注销_管理员手动注销)
 	}
 	return js对象_通用返回{IsOk: true, Err: "成功"}
 }

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/Service/Ser_LinkUser"
+	"server/new/app/models/constant"
 	"server/new/app/models/request"
 	DB "server/structs/db"
 	"time"
@@ -34,7 +34,7 @@ func (s *LinksToken) S删除已过期的Token() error {
 // RevokeExpiredTokens 定时注销已过期的 token
 func (s *LinksToken) Z注销已过期的Token() error {
 	// 注销超时的 token
-	tx := s.db.Model(DB.DB_LinksToken{}).Where("Status = 1").Where("LastTime + OutTime < ?", time.Now().Unix()).Updates(map[string]interface{}{"Status": 2, "LogoutCode": Ser_LinkUser.Z注销_心跳超时自动注销})
+	tx := s.db.Model(DB.DB_LinksToken{}).Where("Status = 1").Where("LastTime + OutTime < ?", time.Now().Unix()).Updates(map[string]interface{}{"Status": 2, "LogoutCode": constant.Z注销_心跳超时自动注销})
 	return tx.Error
 }
 
@@ -106,6 +106,15 @@ func (s *LinksToken) Info(id int) (info DB.DB_LinksToken, err error) {
 // 查
 func (s *LinksToken) Infos(where map[string]interface{}) (info []DB.DB_LinksToken, err error) {
 	tx := s.db.Model(DB.DB_LinksToken{}).Where(where).Find(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
+// 查
+func (s *LinksToken) InfosId排序(where map[string]interface{}) (info []DB.DB_LinksToken, err error) {
+	tx := s.db.Model(DB.DB_LinksToken{}).Where(where).Order("Id ASC").Find(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}

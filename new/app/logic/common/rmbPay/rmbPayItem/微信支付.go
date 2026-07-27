@@ -29,6 +29,34 @@ var pay_微信支付 微信支付
 type 微信支付 struct {
 }
 
+// Q取微信支付Client 使用微信支付公钥验签创建 client
+func Q取微信支付Client(c *gin.Context, 局_支付配置 *m.Z在线支付_微信支付) (client *core.Client, err error) {
+	mchPrivateKey, err := WXutils.LoadPrivateKey(局_支付配置.W微信支付商户证书串)
+	if err != nil {
+		err = errors.Join(err, errors.New("加载微信支付商户证书串失败"))
+		return
+	}
+
+	wxPublicKey, err := WXutils.LoadPublicKey(局_支付配置.W微信支付公钥)
+	if err != nil {
+		err = errors.Join(err, errors.New("加载微信支付公钥失败"))
+		return
+	}
+
+	opts := []core.ClientOption{
+		option.WithWechatPayPublicKeyAuthCipher(
+			局_支付配置.W微信支付商户ID,
+			局_支付配置.W微信支付商户证书序列号,
+			mchPrivateKey,
+			局_支付配置.W微信支付公钥ID,
+			wxPublicKey,
+		),
+	}
+
+	client, err = core.NewClient(c, opts...)
+	return
+}
+
 func (j 微信支付) Q取通道名称() string {
 	return "微信支付"
 }
@@ -53,25 +81,8 @@ func (j 微信支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 		}
 	}
 
-	var (
-		mchID                      string = 局_支付配置.W微信支付商户ID    // 商户号
-		mchCertificateSerialNumber string = 局_支付配置.W微信支付商户证书序列号 // 商户证书序列号
-		mchAPIv3Key                string = 局_支付配置.W微信支付商户v3密钥  // 商户APIv3密钥
-	)
-
-	// 使用 utils 提供的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
-
-	mchPrivateKey, err := WXutils.LoadPrivateKey(局_支付配置.W微信支付商户证书串)
-	if err != nil {
-		err = errors.Join(err, errors.New("加载微信支付商户证书串失败"))
-		return
-	}
-
-	// 使用商户私钥等初始化 client，并使它具有自动定时获取微信支付平台证书的能力
-	opts := []core.ClientOption{
-		option.WithWechatPayAutoAuthCipher(mchID, mchCertificateSerialNumber, mchPrivateKey, mchAPIv3Key),
-	}
-	client, err := core.NewClient(c, opts...)
+	// 使用微信支付公钥验签创建 client
+	client, err := Q取微信支付Client(c, &局_支付配置)
 	if err != nil {
 		err = errors.Join(err, errors.New("微信支付创建错误失败请重试"))
 		return
@@ -80,7 +91,7 @@ func (j 微信支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 	resp, _, err := svc.Prepay(c,
 		native.PrepayRequest{
 			Appid:         core.String(局_支付配置.W微信支付AppId),
-			Mchid:         core.String(mchID),
+			Mchid:         core.String(局_支付配置.W微信支付商户ID),
 			Description:   core.String(参数.S商品名称),
 			OutTradeNo:    core.String(参数.PayOrder),
 			TimeExpire:    core.Time(time.Now().Add(time.Second * time.Duration(300))),
@@ -128,24 +139,8 @@ func (j 微信支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 }
 func (j 微信支付) D订单退款(c *gin.Context, 参数 *m.PayParams) (err error) {
 
-	var (
-		mchID                      string = 参数.Z支付配置s.W微信支付商户ID    // 商户号
-		mchCertificateSerialNumber string = 参数.Z支付配置s.W微信支付商户证书序列号 // 商户证书序列号
-		mchAPIv3Key                string = 参数.Z支付配置s.W微信支付商户v3密钥  // 商户APIv3密钥
-	)
-
-	// 使用 utils 提供的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
-
-	mchPrivateKey, err := WXutils.LoadPrivateKey(参数.Z支付配置s.W微信支付商户证书串)
-	if err != nil {
-		return errors.New("微信支付商户证书串载入失败")
-	}
-
-	// 使用商户私钥等初始化 client，并使它具有自动定时获取微信支付平台证书的能力
-	opts := []core.ClientOption{
-		option.WithWechatPayAutoAuthCipher(mchID, mchCertificateSerialNumber, mchPrivateKey, mchAPIv3Key),
-	}
-	client, err := core.NewClient(c, opts...)
+	// 使用微信支付公钥验签创建 client
+	client, err := Q取微信支付Client(c, &参数.Z支付配置s.Z在线支付_微信支付)
 	if err != nil {
 		return errors.New("创建微信退款错误失败请重试")
 	}

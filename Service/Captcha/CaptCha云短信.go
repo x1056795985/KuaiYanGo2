@@ -19,6 +19,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
+	"time"
 )
 
 func Sms_当前选择发送短信验证码(模板变量 []string, 接收短信手机号 string) error {
@@ -382,6 +383,7 @@ func ALY阿里云_sms发送短信验证码(模板变量 []string, 接收短信�
 		"SignatureVersion": "1.0",
 		"TemplateCode":     局_阿里云.Z正文模板Code,
 		"TemplateParam":    `{"code":"` + 模板变量[0] + `"}`,
+		"Timestamp":        time.Now().UTC().Format("2006-01-02T15:04:05Z"),
 		"Version":          "2017-05-25",
 	}
 

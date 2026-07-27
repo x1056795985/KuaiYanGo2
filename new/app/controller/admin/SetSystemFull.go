@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"server/Service/Captcha"
-	"server/api/middleware"
+	"server/new/app/router/userSafetyApi"
 	"server/config"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/setting"
@@ -39,7 +39,7 @@ func (C *SetSystemFull) SaveInfoSystem(c *gin.Context) {
 		response.FailWithMessage("保存失败:"+err.Error(), c)
 		return
 	}
-	middleware.J集_UserAPi路由_加密.G更新md5APi名称(setting.Q系统设置().Y用户API加密盐)
+	userSafetyApi.J集_UserAPi路由_加密.G更新md5APi名称(setting.Q系统设置().Y用户API加密盐)
 	response.OkWithMessage("保存成功", c)
 }
 
@@ -60,9 +60,9 @@ func (C *SetSystemFull) S生成API加密源码SDK(c *gin.Context) {
 		return
 	}
 
-	APi列表 := make([]string, 0, len(middleware.J集_UserAPi路由)+1)
+	APi列表 := make([]string, 0, len(userSafetyApi.J集_UserAPi路由)+1)
 	APi列表 = append(APi列表, "GetToken")
-	for key := range middleware.J集_UserAPi路由 {
+	for key := range userSafetyApi.J集_UserAPi路由 {
 		APi列表 = append(APi列表, key)
 	}
 	var SDK []byte

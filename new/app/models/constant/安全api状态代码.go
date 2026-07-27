@@ -1,5 +1,5 @@
 // 返回加密结果
-package response
+package constant
 
 // 常量 回复状态码
 const (
@@ -31,12 +31,15 @@ const (
 	Status_黑名单信息        = 211 //ip  或绑定信息
 	Status_唯一标识重复       = 212 //积分唯一扣点时出现
 	Status_积分不足         = 213 //积分不足
+
+	Status_操作成功 = 10000
 )
 
 var Status值键 = make(map[int]string)
 
 func init() {
 	//中间件鉴权使用的错误代码
+	Status值键[Status_系统已关闭] = "系统已关闭"
 	Status值键[Status_App不存在] = "App不存在"
 	Status值键[Status_Api不存在] = "Api不存在"
 	Status值键[Status_签名错误] = "请求签名错误"
@@ -46,6 +49,7 @@ func init() {
 	Status值键[Status_封包超时] = "封包超时"
 	Status值键[Status_状态码错误] = "状态码错误"
 	Status值键[Status_Token已注销] = "Token已注销"
+	Status值键[Status_已停止运营] = "应用已停止运营"
 	Status值键[Status_验证码错误] = "验证码错误请重新输入"
 
 	//Api使用的错误代码
@@ -59,6 +63,7 @@ func init() {
 	Status值键[Status_已冻结无法登录] = "已冻结无法登录"
 	Status值键[Status_同时在线超过最大值] = "同时在线超过最大值,请退出其他登录."
 	Status值键[Status_未登录] = "未登录,请先操作登录"
+	Status值键[Status_黑名单信息] = "黑名单信息"
 	Status值键[Status_唯一标识重复] = "唯一标识重复"
 	Status值键[Status_积分不足] = "积分不足"
 

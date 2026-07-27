@@ -6,6 +6,7 @@ import (
 	"github.com/imroc/req/v3"
 	"net/http"
 	"server/Service/KuaiYanUpdater"
+	"server/new/app/router"
 	"server/new/app/router/middleware"
 	utils2 "server/utils"
 
@@ -15,7 +16,7 @@ import (
 
 func RunWindowsServer() {
 
-	Router := InitRouters() //注册路由 和绑定 具体实现函数
+	Router := router.InitRouters() //注册路由 和绑定 具体实现函数
 
 	// 关键点【解决页面刷新404的问题】
 	/*	Router.NoRoute(func(c *gin.Context) {

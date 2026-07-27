@@ -1,11 +1,11 @@
-package UserApi
+package userSafetyApi
 
 import (
 	. "EFunc/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_LinkUser"
 	"server/global"
+	"server/new/app/controller/userSafetyApi/response"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
@@ -92,13 +92,6 @@ func 版本号_分解(文本 string) (版本号 版本号格式) {
 	return 版本号
 }
 
-func Y用户数据信息还原(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken) {
-	局_临时通用, _ := c.Get("AppInfo")
-	*AppInfo = 局_临时通用.(DB.DB_AppInfo)
-	局_临时通用, _ = c.Get("局_在线信息")
-	*在线信息 = 局_临时通用.(DB.DB_LinksToken)
-	return
-}
 func 检测用户登录在线正常(在线信息 *DB.DB_LinksToken) bool {
 	if 在线信息.Uid > 0 && 在线信息.Status == 1 {
 		return true
@@ -107,10 +100,9 @@ func 检测用户登录在线正常(在线信息 *DB.DB_LinksToken) bool {
 }
 
 func 更新上下文缓存在线信息(c *gin.Context) bool {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
-	Y用户数据信息还原(c, &AppInfo, &局_在线信息)
-	局_在线信息新, err := Ser_LinkUser.Token取User在线详情(局_在线信息.Token)
+	局_ctx := 取上下文(c)
+	db := *global.GVA_DB
+	局_在线信息新, err := service.NewLinksToken(c, &db).InfoToken(局_ctx.Z在线信息.Token)
 	if err == nil {
 		c.Set("局_在线信息", 局_在线信息新) //修改在线信息缓存,因为hook里可能用到
 	}
@@ -173,4 +165,14 @@ func 绑定信息更换规则校验(c *gin.Context, AppInfo DB.DB_AppInfo, Uid i
 
 	// 返回需要扣除的数据量
 	return nil, 扣费
+}
+
+// 检测_账密模式专用 检查应用是否为账密模式
+func 检测_账密模式专用(c *gin.Context) bool {
+	局_ctx := 取上下文(c)
+	if 局_ctx.AppInfo.AppType > 2 {
+		response.FailMsg(c, constant.Status_操作失败, "本接口仅限应用账密模式可用")
+		return false
+	}
+	return true
 }

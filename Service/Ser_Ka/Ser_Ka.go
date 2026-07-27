@@ -16,6 +16,7 @@ import (
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/kaClassUpPrice"
+	"server/new/app/models/constant"
 
 	dbm "server/new/app/models/db"
 	DB "server/structs/db"
@@ -711,7 +712,7 @@ func Ka修改状态_同步卡号模式软件用户(id []int, status int) error {
 
 			//如果是冻结同时注销在线的uid
 			if status == 2 {
-				_ = Ser_LinkUser.Set批量注销Uid数组(局_map[AppId], AppId, Ser_LinkUser.Z注销_管理员手动注销)
+				_ = Ser_LinkUser.Set批量注销Uid数组(局_map[AppId], AppId, constant.Z注销_管理员手动注销)
 			}
 
 		}

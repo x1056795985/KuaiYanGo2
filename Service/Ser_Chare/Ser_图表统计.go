@@ -575,8 +575,9 @@ type 临时应用id总数键值对 struct {
 	在线数量    int
 }
 type 结构_请求类型 struct {
-	Type  int `json:"Type"`
-	AppId int `json:"AppId"`
+	Type   int `json:"Type"`
+	AppId  int `json:"AppId"`
+	Offset int `json:"Offset"` // 时间偏移量(天数或月数),0=当前周期,负数=往前偏移
 }
 
 func Get余额充值消费统计(c *gin.Context) []gin.H {
@@ -838,6 +839,112 @@ func Get卡号列表统计制卡(c *gin.Context) []gin.H {
 
 	return Data
 }
+
+// Get卡号月度汇总 返回本月/上月的制卡数量和卡号使用数量
+// 月份以每月1日0点0分作为分隔
+func Get卡号月度汇总(c *gin.Context) gin.H {
+	局_type := 结构_请求类型{Type: 2, AppId: 0}
+	_ = c.ShouldBindJSON(&局_type)
+
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
+		return gin.H{
+			"本月制卡": 1500, "上月制卡": 1200,
+			"本月使用": 800, "上月使用": 700,
+		}
+	}
+
+	Data缓存, ok := global.H缓存.Get("图表数据_卡号月度汇总_" + strconv.Itoa(局_type.AppId))
+	if ok {
+		return Data缓存.(gin.H)
+	}
+
+	局_耗时 := time.Now().Unix()
+
+	// 本月: 取相对时间0点时间戳月(0) = 本月1号0点; 取相对时间0点时间戳月(1) = 下月1号0点
+	// 上月: 取相对时间0点时间戳月(-1) = 上月1号0点; 取相对时间0点时间戳月(0) = 本月1号0点
+	本月开始 := 取相对时间0点时间戳月(0)
+	本月结束 := 取相对时间0点时间戳月(1)
+	上月开始 := 取相对时间0点时间戳月(-1)
+
+	局_db := global.GVA_DB.Model(DB.DB_Ka{})
+	if 局_type.AppId > 0 {
+		局_db = 局_db.Where("AppId = ?", 局_type.AppId)
+	}
+
+	// 制卡数量: 统计 RegisterTime 在对应月份范围内
+	var 局_本月制卡, 局_上月制卡, 局_本月使用, 局_上月使用 int64
+
+	局_db.Select("COUNT(*)").Where("RegisterTime >= ? AND RegisterTime < ?", 本月开始, 本月结束).Count(&局_本月制卡)
+	局_db.Select("COUNT(*)").Where("RegisterTime >= ? AND RegisterTime < ?", 上月开始, 本月开始).Count(&局_上月制卡)
+
+	// 使用数量: 统计 UseTime > 0 且在对应月份范围内
+	局_db.Select("COUNT(*)").Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 本月开始, 本月结束).Count(&局_本月使用)
+	局_db.Select("COUNT(*)").Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 上月开始, 本月开始).Count(&局_上月使用)
+
+	Data := gin.H{
+		"本月制卡": 局_本月制卡,
+		"上月制卡": 局_上月制卡,
+		"本月使用": 局_本月使用,
+		"上月使用": 局_上月使用,
+	}
+
+	if time.Now().Unix()-局_耗时 > 5 {
+		global.H缓存.Set("图表数据_卡号月度汇总_"+strconv.Itoa(局_type.AppId), Data, time.Minute*10)
+	}
+
+	return Data
+}
+
+// Get仪表台汇总 返回卡号总数/未使用数量 + 本月/上月充值成功总额
+func Get仪表台汇总(c *gin.Context) gin.H {
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
+		return gin.H{
+			"卡号总数":   9999,
+			"卡号未使用":  3000,
+			"本月充值总额": 8888.50,
+			"上月充值总额": 6666.00,
+		}
+	}
+
+	Data缓存, ok := global.H缓存.Get("图表数据_仪表台汇总")
+	if ok {
+		return Data缓存.(gin.H)
+	}
+
+	局_耗时 := time.Now().Unix()
+
+	// 卡号总数 & 未使用数量 (UseTime=0 表示未使用)
+	var 局_卡号总数, 局_卡号未使用 int64
+	global.GVA_DB.Model(DB.DB_Ka{}).Count(&局_卡号总数)
+	global.GVA_DB.Model(DB.DB_Ka{}).Where("UseTime = 0").Count(&局_卡号未使用)
+
+	// 充值成功总额: Status=3 表示充值成功, 月份以每月1日0点0分作为分隔
+	本月开始 := 取相对时间0点时间戳月(0)
+	本月结束 := 取相对时间0点时间戳月(1)
+	上月开始 := 取相对时间0点时间戳月(-1)
+
+	var 局_本月充值, 局_上月充值 float64
+	global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).
+		Where("Status = 3 AND Time >= ? AND Time < ?", 本月开始, 本月结束).
+		Select("COALESCE(SUM(Rmb), 0)").Scan(&局_本月充值)
+	global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).
+		Where("Status = 3 AND Time >= ? AND Time < ?", 上月开始, 本月开始).
+		Select("COALESCE(SUM(Rmb), 0)").Scan(&局_上月充值)
+
+	Data := gin.H{
+		"卡号总数":   局_卡号总数,
+		"卡号未使用":  局_卡号未使用,
+		"本月充值总额": 局_本月充值,
+		"上月充值总额": 局_上月充值,
+	}
+
+	if time.Now().Unix()-局_耗时 > 5 {
+		global.H缓存.Set("图表数据_仪表台汇总", Data, time.Minute*10)
+	}
+
+	return Data
+}
+
 func Get卡号列表统计制卡_代理(c *gin.Context) []gin.H {
 	局_type := 结构_请求类型{Type: 1, AppId: 0}
 	_ = c.ShouldBindJSON(&局_type)
@@ -1013,7 +1120,7 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 		return Data
 	}
 
-	Data缓存, ok := global.H缓存.Get("图表数据_Get用户账号统计" + strconv.Itoa(局_type.Type))
+	Data缓存, ok := global.H缓存.Get("图表数据_Get用户账号统计" + strconv.Itoa(局_type.Type) + "_" + strconv.Itoa(局_type.Offset))
 	if ok {
 		return Data缓存.([]gin.H)
 	}
@@ -1047,13 +1154,13 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 	Data[0] = gin.H{"name": "用户总数", "type": "line", "data": 局_数量}*/
 
 	global.GVA_DB.Model(DB.DB_User{}).
-		Select("Count(case when ( RegisterTime between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then 1 else null end) as  '1' ",
-			"Count(case when ( RegisterTime between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then 1 else null end) as  '2' ",
-			"Count(case when ( RegisterTime between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then 1 else null end) as  '3' ",
-			"Count(case when ( RegisterTime between "+时间处理函数(-3)+" and "+时间处理函数(-2)+") then 1 else null end) as  '4' ",
-			"Count(case when ( RegisterTime between "+时间处理函数(-2)+" and "+时间处理函数(-1)+") then 1 else null end) as  '5' ",
-			"Count(case when ( RegisterTime between "+时间处理函数(-1)+" and "+时间处理函数(0)+") then 1 else null end) as  '6' ",
-			"Count(case when ( RegisterTime between "+时间处理函数(0)+" and "+时间处理函数(1)+") then 1 else null end) as  '7' ").
+		Select("Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset-6)+" and "+时间处理函数(局_type.Offset-5)+") then 1 else null end) as  '1' ",
+			"Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset-5)+" and "+时间处理函数(局_type.Offset-4)+") then 1 else null end) as  '2' ",
+			"Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset-4)+" and "+时间处理函数(局_type.Offset-3)+") then 1 else null end) as  '3' ",
+			"Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset-3)+" and "+时间处理函数(局_type.Offset-2)+") then 1 else null end) as  '4' ",
+			"Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset-2)+" and "+时间处理函数(局_type.Offset-1)+") then 1 else null end) as  '5' ",
+			"Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset-1)+" and "+时间处理函数(局_type.Offset)+") then 1 else null end) as  '6' ",
+			"Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset)+" and "+时间处理函数(局_type.Offset+1)+") then 1 else null end) as  '7' ").
 		First(&局_临时)
 	for 键名, 值 := range 局_临时 {
 		索引, _ := strconv.Atoi(键名)
@@ -1078,13 +1185,13 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 		First(&局_临时)*/
 	//老老实实读取登录日志吧
 	global.GVA_DB.Model(DB.DB_LogLogin{}).
-		Select("Count(case when ( Time between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then 1 else null end) as  '1' ",
-			"Count(case when ( Time between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then 1 else null end) as  '2' ",
-			"Count(case when ( Time between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then 1 else null end) as  '3' ",
-			"Count(case when ( Time between "+时间处理函数(-3)+" and "+时间处理函数(-2)+") then 1 else null end) as  '4' ",
-			"Count(case when ( Time between "+时间处理函数(-2)+" and "+时间处理函数(-1)+") then 1 else null end) as  '5' ",
-			"Count(case when ( Time between "+时间处理函数(-1)+" and "+时间处理函数(0)+") then 1 else null end) as  '6' ",
-			"Count(case when ( Time between "+时间处理函数(0)+" and "+时间处理函数(1)+") then 1 else null end) as  '7' ").
+		Select("Count(case when ( Time between "+时间处理函数(局_type.Offset-6)+" and "+时间处理函数(局_type.Offset-5)+") then 1 else null end) as  '1' ",
+			"Count(case when ( Time between "+时间处理函数(局_type.Offset-5)+" and "+时间处理函数(局_type.Offset-4)+") then 1 else null end) as  '2' ",
+			"Count(case when ( Time between "+时间处理函数(局_type.Offset-4)+" and "+时间处理函数(局_type.Offset-3)+") then 1 else null end) as  '3' ",
+			"Count(case when ( Time between "+时间处理函数(局_type.Offset-3)+" and "+时间处理函数(局_type.Offset-2)+") then 1 else null end) as  '4' ",
+			"Count(case when ( Time between "+时间处理函数(局_type.Offset-2)+" and "+时间处理函数(局_type.Offset-1)+") then 1 else null end) as  '5' ",
+			"Count(case when ( Time between "+时间处理函数(局_type.Offset-1)+" and "+时间处理函数(局_type.Offset)+") then 1 else null end) as  '6' ",
+			"Count(case when ( Time between "+时间处理函数(局_type.Offset)+" and "+时间处理函数(局_type.Offset+1)+") then 1 else null end) as  '7' ").
 		Where("Note = ?", "用户登录").First(&局_临时)
 	for 键名, 值 := range 局_临时 {
 		索引, _ := strconv.Atoi(键名)
@@ -1100,7 +1207,7 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 	Data[1] = gin.H{"name": "登录数量", "type": "line", "data": 局_数量}
 
 	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
-		global.H缓存.Set("图表数据_Get用户账号统计"+strconv.Itoa(局_type.Type), Data, time.Minute*10)
+		global.H缓存.Set("图表数据_Get用户账号统计"+strconv.Itoa(局_type.Type)+"_"+strconv.Itoa(局_type.Offset), Data, time.Minute*10)
 	}
 
 	return Data

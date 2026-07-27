@@ -12,6 +12,7 @@ import (
 	"server/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
+	"server/new/app/models/constant"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -297,7 +298,7 @@ func (C *AgentUser) Set修改状态(c *gin.Context) {
 		for _, 局_Id := range 请求.Id {
 			局_User数组 = append(局_User数组, Ser_User.Id取User(局_Id))
 		}
-		_ = Ser_LinkUser.Set批量注销User数组(局_User数组, Ser_LinkUser.Z注销_管理员手动注销)
+		_ = Ser_LinkUser.Set批量注销User数组(局_User数组, constant.Z注销_管理员手动注销)
 	}
 
 	response.OkWithMessage("修改成功", c)

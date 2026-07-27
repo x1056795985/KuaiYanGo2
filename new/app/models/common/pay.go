@@ -79,6 +79,9 @@ type Z在线支付_微信支付 struct {
 	W微信支付商户证书序列号 string `mapstructure:"微信支付商户证书序列号" json:"微信支付商户证书序列号" `
 	W微信支付异步回调Url string `mapstructure:"微信支付异步回调Url" json:"微信支付异步回调Url" `
 	W微信支付单次最大金额  int    `mapstructure:"微信支付单次最大金额" json:"微信支付单次最大金额" `
+	// 微信支付公钥验签(用于验证微信支付身份)
+	W微信支付公钥   string `mapstructure:"微信支付公钥" json:"微信支付公钥"`
+	W微信支付公钥ID string `mapstructure:"微信支付公钥ID" json:"微信支付公钥ID"`
 }
 type Z在线支付_小叮当 struct {
 	X小叮当支付开关   bool   `mapstructure:"小叮当支付开关" json:"小叮当支付开关"`

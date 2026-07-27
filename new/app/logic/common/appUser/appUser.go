@@ -14,6 +14,63 @@ import (
 	"time"
 )
 
+// Id点数增减 应用内某用户点数增减(事务操作,减少时校验是否充足)
+// AppId: 应用Id, Id: AppUser.Id, 增减值: 点数, is增加: true=增加 false=减少
+// 减少时若为时间模式(非计点),会自动减去当前时间戳后判断剩余时间是否充足
+func (j *appUser) Id点数增减(c *gin.Context, AppId, Id int, 增减值 int64, is增加 bool) error {
+	//因为无符号 转换正负数 比较乱容易精度错误,所以 增加一个 Is增加 形参 判断是增加还是减少
+	if Id == 0 {
+		return errors.New("用户不存在")
+	}
+	if 增减值 == 0 {
+		//增减0 直接成功
+		return nil
+	}
+	db := *global.GVA_DB
+	if is增加 {
+		//增加直接处理就可以了,不用事务
+		err := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime + ?", 增减值)).Error
+		if err != nil {
+			global.GVA_LOG.Error(strconv.Itoa(int(Id)) + "Id点数增加失败:" + err.Error())
+			return err
+		}
+		return nil
+	}
+	//这里就是减少,需要开启事务保证
+	tx := db.Begin() //开启事务
+	var 局_点数 int64
+
+	tx.Raw(fmt.Sprintf(`SELECT VipTime FROM db_AppUser_%d WHERE Id = %d  LIMIT 1`, AppId, Id)).Scan(&局_点数)
+	//读取旧的数值
+
+	局_AppInfo, _ := service.NewAppInfo(c, &db).Info(AppId)
+	局_计点 := 局_AppInfo.AppType == 2 || 局_AppInfo.AppType == 4
+	if !局_计点 {
+		// 如果不是计点方式 减去当前时间戳 为真实剩余时间
+		局_点数 -= time.Now().Unix()
+	}
+
+	if 局_点数 < 增减值 {
+		// 局_点数或时间不足,回滚并返回
+		tx.Rollback()
+		if 局_计点 {
+			return errors.New("点数不足")
+		} else {
+			return errors.New("剩余时间不足")
+		}
+
+	}
+
+	err := tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime - ?", 增减值)).Error
+	if err != nil {
+		tx.Rollback() //出错回滚
+		global.GVA_LOG.Error(strconv.Itoa(int(Id)) + "Id点数减少失败:" + err.Error())
+		return errors.New("点数减少失败查看服务器日志检查原因")
+	}
+	tx.Commit() //操作完成提交事务
+	return nil
+}
+
 var L_appUser appUser
 
 func init() {

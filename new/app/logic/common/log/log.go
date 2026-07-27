@@ -180,3 +180,20 @@ func (j *log) R日活月活增加_登陆处理(AppId int, user string) (err erro
 
 	return nil
 }
+
+// S写风控日志 写风控日志并增加风控分(多表操作: LinksToken表风控分+LogRiskControl表插入)
+func (j *log) S写风控日志(c *gin.Context, LId, 风控规则类型 int, User, IP, 风控信息 string) {
+	db := *global.GVA_DB
+	// 增加风控分
+	_ = db.Model(DB.DB_LinksToken{}).Where("Id=?", LId).Update("RiskControl", gorm.Expr("RiskControl +?", 1)).Error
+	// 写风控日志
+	login := DB.DB_LogRiskControl{
+		LId:  LId,
+		User: User,
+		Ip:   IP,
+		Time: time.Now().Unix(),
+		Type: 风控规则类型,
+		Note: 风控信息,
+	}
+	_ = db.Model(DB.DB_LogRiskControl{}).Create(&login).Error
+}

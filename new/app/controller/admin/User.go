@@ -15,6 +15,7 @@ import (
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/setting"
+	"server/new/app/models/constant"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -90,7 +91,7 @@ func (C *UserCtrl) GetAdminInfo(c *gin.Context) {
 
 // OutLogin 管理员退出登录
 func (C *UserCtrl) OutLogin(c *gin.Context) {
-	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"), Ser_LinkUser.Z注销_用户操作注销)
+	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		return
@@ -327,7 +328,7 @@ func (C *UserCtrl) SetUserStatus(c *gin.Context) {
 		for _, 值 := range 请求.Id {
 			局_user数组 = append(局_user数组, Ser_User.Id取User(值))
 		}
-		_ = Ser_LinkUser.Set批量注销User数组(局_user数组, Ser_LinkUser.Z注销_管理员手动注销)
+		_ = Ser_LinkUser.Set批量注销User数组(局_user数组, constant.Z注销_管理员手动注销)
 	} else {
 		err = global.GVA_DB.Model(DB.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 1).Error
 	}

@@ -13,7 +13,7 @@ import (
 	"os"
 	"runtime/debug"
 	"server/Service/Ser_Init"
-	"server/api/middleware"
+	"server/new/app/router/userSafetyApi"
 	"server/core"
 	"server/global"
 	"server/new"
@@ -65,7 +65,7 @@ func main() {
 		// 程序结束前关闭数据库链接
 		db, _ := global.GVA_DB.DB()
 		defer db.Close()                                                  //延迟关闭程序结束前关闭表
-		middleware.J集_UserAPi路由_加密.G更新md5APi名称(setting.Q系统设置().Y用户API加密盐) //只有数据库成功才可以操作 不然或报错
+		userSafetyApi.J集_UserAPi路由_加密.G更新md5APi名称(setting.Q系统设置().Y用户API加密盐) //只有数据库成功才可以操作 不然或报错
 		webSocket.L_webSocket.D断开所有连接()
 	} else {
 		global.GVA_LOG.Info(fmt.Sprintf("数据库连接失败,等待输入数据库信息"))

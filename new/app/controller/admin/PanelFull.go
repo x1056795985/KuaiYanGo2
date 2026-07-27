@@ -133,6 +133,16 @@ func (p *Panel) ChartKaRegister(c *gin.Context) {
 	response.OkWithDetailed(Ser_Chare.Get卡号列表统计制卡(c), "获取成功", c)
 }
 
+// ChartKaMonthSummary 卡号月度汇总(本月/上月制卡数量和使用数量)
+func (p *Panel) ChartKaMonthSummary(c *gin.Context) {
+	response.OkWithDetailed(Ser_Chare.Get卡号月度汇总(c), "获取成功", c)
+}
+
+// ChartDashboardSummary 仪表台汇总(卡号总数/未使用 + 本月/上月充值成功总额)
+func (p *Panel) ChartDashboardSummary(c *gin.Context) {
+	response.OkWithDetailed(Ser_Chare.Get仪表台汇总(c), "获取成功", c)
+}
+
 // ChartAppUserRegister 应用用户账号注册统计
 func (p *Panel) ChartAppUserRegister(c *gin.Context) {
 	response.OkWithDetailed(Ser_Chare.Get应用用户账号注册统计(c), "获取成功", c)

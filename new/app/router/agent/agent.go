@@ -3,7 +3,6 @@ package agent
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"server/api/middleware"
 	"server/core/dist/VueAgent"
 	"server/global"
 	controller "server/new/app/controller/agent"
@@ -29,7 +28,7 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 	}
 
 	rootRouter := router.Group(agentPrefix)
-	rootRouter.Use(middleware.IsAgent是否关闭())
+	rootRouter.Use(mid2.IsAgent是否关闭())
 	rootRouter.Use(agentResponseCamelMiddleware)
 
 	htmlHandler := VueAgent.NewHtmlHandler()
@@ -46,7 +45,7 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 	}
 
 	agentRouter := rootRouter.Group("")
-	agentRouter.Use(middleware.IsTokenAgent())
+	agentRouter.Use(mid2.IsTokenAgent())
 
 	settingController := controller.NewSettingController()
 	{

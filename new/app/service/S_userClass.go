@@ -136,6 +136,24 @@ func (s *UserClass) IsNameExists(AppId int, Name string) bool {
 	return count > 0
 }
 
+// InfoByMark 按AppId和Mark取详情
+func (s *UserClass) InfoByMark(AppId int, Mark int) (info DB.DB_UserClass, err error) {
+	tx := s.db.Model(DB.DB_UserClass{}).Where("AppId = ? AND Mark = ?", AppId, Mark).First(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
+// GetAllByAppId 取AppId下的所有用户类型列表(不分页)
+func (s *UserClass) GetAllByAppId(AppId int) (info []DB.DB_UserClass, err error) {
+	tx := s.db.Model(DB.DB_UserClass{}).Where("AppId = ?", AppId).Find(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
 // IsMarkExists 整数代号是否存在
 func (s *UserClass) IsMarkExists(AppId int, Mark int) bool {
 	var count int64

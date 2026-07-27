@@ -10,7 +10,7 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_PublicJs"
-	"server/api/middleware"
+	"server/new/app/router/userSafetyApi"
 	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/appInfo"
@@ -388,7 +388,7 @@ type 键值对 struct {
 
 // GetAllUserApi 获取全部用户API列表
 func (a *App) GetAllUserApi(c *gin.Context) {
-	局_path数组 := make([][]string, 0, len(middleware.J集_UserAPi路由))
+	局_path数组 := make([][]string, 0, len(userSafetyApi.J集_UserAPi路由))
 	局_path数组 = append(局_path数组, []string{"NewUserInfo", "用户注册"})
 	局_path数组 = append(局_path数组, []string{"UserLogin", "用户登录"})
 	局_path数组 = append(局_path数组, []string{"UseKa", "卡号充值"})
@@ -399,7 +399,7 @@ func (a *App) GetAllUserApi(c *gin.Context) {
 	局_path数组 = append(局_path数组, []string{"PayUserMoney", "订单_余额充值"})
 	局_path数组 = append(局_path数组, []string{"PayGetKa", "订单_支付购卡"})
 
-	for 键名, 键值 := range middleware.J集_UserAPi路由 {
+	for 键名, 键值 := range userSafetyApi.J集_UserAPi路由 {
 		if 键名 == "NewUserInfo" || 键名 == "UserLogin" || 键名 == "UseKa" || 键名 == "SetPassWord" || 键名 == "GetSMSCaptcha" || 键名 == "GetPayOrderStatus" || 键名 == "PayKaUsa" || 键名 == "PayUserMoney" || 键名 == "PayUserVipNumber" || 键名 == "PayGetKa" {
 			continue
 		}

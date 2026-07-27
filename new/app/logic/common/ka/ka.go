@@ -917,6 +917,8 @@ func (j *ka) S删除耗尽次数卡号(c *gin.Context, AppId int) (数量 int64,
 
 	return
 }
+
+// 这个必须放到ka.go 内不能移动到 appuser 会循环导入
 func (j *ka) Z置归属代理(c *gin.Context, AppId int, Uid int, AgentUid int) (err error) {
 
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(AppId)

@@ -18,6 +18,7 @@ import (
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
+	"server/new/app/models/constant"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	"strconv"
@@ -212,10 +213,10 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 		局_DB.Where("(select count(db_links_Token.id)  FROM db_links_Token WHERE  " + 表名_AppUser + ".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid=" + strconv.Itoa(请求.AppId) + " )=0 ")
 	}
 	if 请求.Status > 0 {
-		局_DB.Where(表名_AppUser + ".Status = ? ", 请求.Status)
+		局_DB.Where(表名_AppUser+".Status = ? ", 请求.Status)
 	}
 	if 请求.UserClassId >= 0 {
-		局_DB.Where(表名_AppUser + ".UserClassId = ? ", 请求.UserClassId)
+		局_DB.Where(表名_AppUser+".UserClassId = ? ", 请求.UserClassId)
 	}
 
 	err := 局_DB.Count(&总数).Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Scan(&DB_AppUser).Error
@@ -266,7 +267,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 // New 新建软件用户
 func (C *AppUserFull) New(c *gin.Context) {
 	var 请求 struct {
-		AppId int         `json:"appId"`
+		AppId int `json:"appId"`
 		DB.DB_AppUser
 	}
 	if !C.ToJSON(c, &请求) {
@@ -381,7 +382,7 @@ func (C *AppUserFull) SaveInfo(c *gin.Context) {
 	})
 
 	if 请求.AppUser.Status == 2 {
-		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧用户信息.Uid}, 请求.AppId, Ser_LinkUser.Z注销_管理员手动注销)
+		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧用户信息.Uid}, 请求.AppId, constant.Z注销_管理员手动注销)
 	}
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
@@ -435,7 +436,7 @@ func (C *AppUserFull) SetStatus(c *gin.Context) {
 		for _, 值 := range 请求.Id {
 			局_uid数组 = append(局_uid数组, Ser_AppUser.Id取Uid(请求.AppId, 值))
 		}
-		_ = Ser_LinkUser.Set批量注销Uid数组(局_uid数组, 请求.AppId, Ser_LinkUser.Z注销_管理员手动注销)
+		_ = Ser_LinkUser.Set批量注销Uid数组(局_uid数组, 请求.AppId, constant.Z注销_管理员手动注销)
 	}
 	response.OkWithMessage("修改成功", c)
 }
@@ -481,10 +482,10 @@ func (C *AppUserFull) SetBatchAddVipTime(c *gin.Context) {
 // SetBatchAddVipNumber 批量增减积分
 func (C *AppUserFull) SetBatchAddVipNumber(c *gin.Context) {
 	var 请求 struct {
-		Id     []int    `json:"id"`
-		AppId  int      `json:"appId"`
-		Number float64  `json:"number"`
-		Note   string   `json:"note"`
+		Id     []int   `json:"id"`
+		AppId  int     `json:"appId"`
+		Number float64 `json:"number"`
+		Note   string  `json:"note"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -581,14 +582,14 @@ func (C *AppUserFull) SetBatchUserClass(c *gin.Context) {
 // SetBatchAllUserVipTime 全部用户增减时间点数
 func (C *AppUserFull) SetBatchAllUserVipTime(c *gin.Context) {
 	var 请求 struct {
-		AppId             int      `json:"appId"`
-		AddType           int      `json:"addType"`
-		Number            int64    `json:"number"`
-		UserVipTimeStatus int      `json:"userVipTimeStatus"`
-		UserPrefix        string   `json:"userPrefix"`
-		OneLoginTimeStart int      `json:"oneLoginTimeStart"`
-		OneLoginTimeEnd   int      `json:"oneLoginTimeEnd"`
-		UserClassId       []int    `json:"userClassId"`
+		AppId             int    `json:"appId"`
+		AddType           int    `json:"addType"`
+		Number            int64  `json:"number"`
+		UserVipTimeStatus int    `json:"userVipTimeStatus"`
+		UserPrefix        string `json:"userPrefix"`
+		OneLoginTimeStart int    `json:"oneLoginTimeStart"`
+		OneLoginTimeEnd   int    `json:"oneLoginTimeEnd"`
+		UserClassId       []int  `json:"userClassId"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
