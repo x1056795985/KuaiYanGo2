@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/Service/Ser_Admin"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
@@ -16,6 +15,7 @@ import (
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/setting"
 	"server/new/app/models/constant"
+	"server/new/app/service"
 	"server/structs/Http/response"
 	DB "server/structs/db"
 	utils2 "server/utils"
@@ -113,7 +113,9 @@ func (C *UserCtrl) AdminNewPassword(c *gin.Context) {
 		return
 	}
 	Uid := c.GetInt("Uid")
-	err := Ser_Admin.Id置新密码(Uid, 请求.NewPassword)
+	db := *global.GVA_DB
+	_, err := service.NewAdmin(c, &db).Update(Uid, map[string]interface{}{"PassWord": utils2.Md5String(请求.NewPassword)})
+
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return

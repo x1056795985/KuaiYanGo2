@@ -39,7 +39,7 @@ func KyApiSendSms(c *gin.Context) {
 	}
 
 	var 局_增减值 float64
-	局_增减值 = 0.04 //短信价格0.47 //mark  正常一条0.047 但是系统只能计费到分,先这样,以后再说,下次重构系统,小数点要保留后4位备用 //更新 纠结,易语言只有双精度,4位易语言用不了,还是算了
+	局_增减值 = 0.06 //
 	if 局_User.Rmb < 局_增减值 {
 		response.FailMsg(c, constant.Status_操作失败, "余额不足")
 		return

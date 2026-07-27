@@ -4,13 +4,13 @@ import (
 	"EFunc/utils"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/Service/Ser_Admin"
 	"server/Service/Ser_Log"
 	"server/global"
 	"server/new/app/models/constant"
-
+	"server/new/app/service"
 	DB "server/structs/db"
 	. "server/utils"
 	"strconv"
@@ -347,7 +347,11 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 	/*	if !utils.Z正则_校验密码(SuperPassWord, &msg) {
 		return errors.New("超级密码" + msg)
 	}*/
-	if User用户名取id(User) != 0 || Ser_Admin.User用户名取id(User) != 0 {
+	db := global.GVA_DB
+	var 局_管理结果 DB.DB_Admin
+	局_管理结果, _ = service.NewAdmin(&gin.Context{}, db).Info2(map[string]interface{}{"User": User})
+
+	if User用户名取id(User) != 0 || 局_管理结果.Id != 0 {
 		return 局_User, errors.New("用户名已存在")
 	}
 

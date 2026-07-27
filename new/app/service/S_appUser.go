@@ -26,7 +26,7 @@ func NewAppUser(c *gin.Context, db *gorm.DB, appId int) *AppUser {
 // 增
 func (s *AppUser) Create(info *DB.DB_AppUser) (row int64, err error) {
 	//创建会自动重新赋值info.AppId为新插入的数据AppId
-	tx := s.db.Model(DB.DB_AppUser{}).Create(info)
+	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(s.appid)).Create(info)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -45,7 +45,7 @@ func (s *AppUser) InfoKey(绑定信息 string) (info DB.DB_AppUser, err error) {
 	}
 	return
 }
-  
+
 func (s *AppUser) InfoUid(Uid int) (info DB.DB_AppUser, err error) {
 
 	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Uid = ?", Uid).First(&info)

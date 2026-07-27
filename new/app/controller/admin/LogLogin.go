@@ -38,7 +38,8 @@ func (C *LogLogin) Info(c *gin.Context) {
 
 type 请求_LogLoginGetList struct {
 	request.List
-	Appid int `json:"appid"` // 登录类型筛选
+	Appid        int      `json:"appid"` // 登录类型筛选
+	RegisterTime []string `json:"registerTime"`
 }
 
 // GetList 登录日志列表
@@ -50,7 +51,7 @@ func (C *LogLogin) GetList(c *gin.Context) {
 
 	var S = service.S_LogLogin{}
 	tx := *global.GVA_DB
-	总数, dataList, err := S.GetList(&tx, 请求.List, 请求.Appid)
+	总数, dataList, err := S.GetList(&tx, 请求.List, 请求.Appid, 请求.RegisterTime)
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
 		return
@@ -67,7 +68,7 @@ func (C *LogLogin) GetList(c *gin.Context) {
 
 type 请求_LogLoginBatchDelete struct {
 	Id       []int  `json:"id"`
-	Type     int    `json:"type"`     // 1删除ID数组 2删除指定用户 3清空 4删除7天前 5删除30天前 6删除90天前 7关键字
+	Type     int    `json:"type"` // 1删除ID数组 2删除指定用户 3清空 4删除7天前 5删除30天前 6删除90天前 7关键字
 	Keywords string `json:"keywords"`
 }
 

@@ -25,9 +25,6 @@ import (
 // 路由名称解密函数指针,由 router/userSafetyApi 包在初始化时注入
 var F解密Api名称 func(c *gin.Context, Api string) (string, bool)
 
-// 强制RSA校验函数指针,由 router/userSafetyApi 包在初始化时注入
-var F校验强制RSA func(c *gin.Context, Api string) bool
-
 // Token有效的才放行,否则返回Token失效
 func UserApi解密() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -228,8 +225,8 @@ func J解密Api名称() gin.HandlerFunc {
 		局_ctx.RSA强制 = ok && 局_int == 1
 
 		// 强制RSA加密的Api,不允许使用AES加密方式
-		if 局_ctx.RSA强制 && 局_ctx.B值长度 == 32 { //强制RSA,但是签名长度不对,直接返回错误
-			response.Fail(c, constant.Status_加解密失败)
+		if 局_ctx.AppInfo.CryptoType == 3 && 局_ctx.RSA强制 && 局_ctx.B值长度 == 32 { //强制RSA,但是签名长度不对,直接返回错误
+			response.FailMsg(c, constant.Status_加解密失败, "该接口必须使用rsa加密")
 			c.Abort()
 			return
 		}

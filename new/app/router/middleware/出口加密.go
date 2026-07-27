@@ -78,6 +78,9 @@ func J尝试加密响应(ctx *common.Q请求_上下文, 明文Json string) (加�
 		加密包.B签名 = utils2.RSA私钥加密([]byte(AppInfo.CryptoKeyPrivate), 局_AES随机密匙字节集)
 		return 加密包, 加密包.A密文 != "" && 加密包.B签名 != ""
 	}
+	if AppInfo.CryptoType == 2 {
+		ctx.CryptoKeyAes = AppInfo.CryptoKeyAes
+	}
 
 	if (AppInfo.CryptoType != 2 && AppInfo.CryptoType != 3) || len(ctx.CryptoKeyAes) != 24 {
 		return 加密包, false

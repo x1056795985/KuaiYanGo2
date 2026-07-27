@@ -19,7 +19,7 @@ func (s *S_LogLogin) Info(tx *gorm.DB, Id int) (db.DB_LogLogin, error) {
 	return value, err
 }
 
-func (s *S_LogLogin) GetList(tx *gorm.DB, 请求 request.List, Appid int) (int64, []db.DB_LogLogin, error) {
+func (s *S_LogLogin) GetList(tx *gorm.DB, 请求 request.List, Appid int, RegisterTime []string) (int64, []db.DB_LogLogin, error) {
 	局_DB := tx.Model(db.DB_LogLogin{})
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
@@ -28,6 +28,11 @@ func (s *S_LogLogin) GetList(tx *gorm.DB, 请求 request.List, Appid int) (int64
 	}
 	if Appid > 0 {
 		局_DB.Where("LoginType = ?", Appid)
+	}
+	if RegisterTime != nil && len(RegisterTime) == 2 && RegisterTime[0] != "" && RegisterTime[1] != "" {
+		开始时间, _ := strconv.ParseInt(RegisterTime[0], 10, 64)
+		结束时间, _ := strconv.ParseInt(RegisterTime[1], 10, 64)
+		局_DB.Where("Time > ?", 开始时间).Where("Time < ?", 结束时间+86400)
 	}
 	if 请求.Keywords != "" {
 		switch 请求.Type {
