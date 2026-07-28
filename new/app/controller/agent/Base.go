@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"server/Service/Captcha"
-	"server/Service/Ser_Log"
 	adminController "server/new/app/controller/admin"
 	"server/new/app/global"
 	"server/new/app/logic/common/agentLevel"
+	"server/new/app/logic/common/log"
 	"server/new/app/models/constant"
 	"server/new/app/models/db"
 	"server/new/app/models/old/response"
@@ -62,7 +62,7 @@ func (A *AgentBase) Login(c *gin.Context) {
 	if 局_是否校验验证码 {
 		if !Captcha.Captcha_Verify点选(局_请求.CaptchaId, 局_请求.Captcha, true) {
 			response.FailWithMessage("验证码错误", c)
-			go Ser_Log.Log_写登录日志(局_请求.Username, 局_客户端IP, "验证码错误:"+局_请求.Captcha, 3)
+			go log.L_log.Log_写登录日志(局_请求.Username, 局_客户端IP, "验证码错误:"+局_请求.Captcha, 3)
 			return
 		}
 	}
@@ -74,12 +74,12 @@ func (A *AgentBase) Login(c *gin.Context) {
 	var 局_用户 db.DB_User
 	if err := global.GVA_DB.Where("User = ?", 局_请求.Username).First(&局_用户).Error; err != nil || !utils.BcryptCheck(局_请求.Password, 局_用户.PassWord) {
 		response.FailWithMessage("账号或密码错误", c)
-		go Ser_Log.Log_写登录日志(局_请求.Username, 局_客户端IP, "密码错误:"+局_请求.Password, 3)
+		go log.L_log.Log_写登录日志(局_请求.Username, 局_客户端IP, "密码错误:"+局_请求.Password, 3)
 		return
 	}
 	if 局_用户.Status != 1 {
 		response.FailWithMessage("用户被禁止登录", c)
-		go Ser_Log.Log_写登录日志(局_请求.Username, 局_客户端IP, "用户被禁止登录代理平台", 3)
+		go log.L_log.Log_写登录日志(局_请求.Username, 局_客户端IP, "用户被禁止登录代理平台", 3)
 		return
 	}
 
@@ -112,7 +112,7 @@ func (A *AgentBase) Login(c *gin.Context) {
 		return
 	}
 
-	go Ser_Log.Log_写登录日志(局_请求.Username, 局_客户端IP, "代理平台登录", 局_代理级别)
+	go log.L_log.Log_写登录日志(局_请求.Username, 局_客户端IP, "代理平台登录", 局_代理级别)
 	response.OkWithDetailed(Agent登录响应{
 		UserInfo: 局_用户,
 		Token:    局_在线信息.Token,

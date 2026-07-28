@@ -3,17 +3,15 @@ package controller
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_AgentInventory"
-	"server/Service/Ser_AppInfo"
-	"server/Service/Ser_KaClass"
-	"server/Service/Ser_Log"
-	"server/Service/Ser_User"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
+	"server/new/app/logic/common/ka"
+	"server/new/app/logic/common/log"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/old/response"
+	"server/new/app/service"
 	"strconv"
 	"time"
 )
@@ -80,7 +78,7 @@ type 响应_AgentInventoryGetList struct {
 
 type 结构请求_代理树和卡类树 struct {
 	AgentTree   []*Node                    `json:"agentTree"`
-	KaClassTree []Ser_KaClass.K可制卡类授权树形框结构 `json:"kaClassTree"`
+	KaClassTree []ka.K可制卡类授权树形框结构 `json:"kaClassTree"`
 }
 
 // Info 获取库存卡包详情
@@ -135,7 +133,7 @@ func (C *AgentInventoryCtrl) GetList(c *gin.Context) {
 			局_DB.Where("Id = ?", 请求.Keywords)
 			局_DB2.Where("Id = ?", 请求.Keywords)
 		case 2:
-			局_id := Ser_User.User用户名取id(请求.Keywords)
+			局_id := service.NewUser(c, global.GVA_DB).User用户名取id(请求.Keywords)
 			局_DB.Where("Uid= ? ", 局_id)
 			局_DB2.Where("Uid= ? ", 局_id)
 		case 3:
@@ -163,7 +161,7 @@ func (C *AgentInventoryCtrl) GetList(c *gin.Context) {
 		Offset((请求.Page - 1) * 请求.Size).
 		Find(&数组_库存卡包)
 
-	局_map := Ser_AppInfo.AppInfo取map列表Int(true)
+	局_map := service.NewAppInfo(c, global.GVA_DB).AppInfo取map列表Int(true)
 	for 索引 := range 数组_库存卡包 {
 		数组_库存卡包[索引].AppName = 局_map[数组_库存卡包[索引].AppId]
 	}
@@ -186,7 +184,7 @@ func (C *AgentInventoryCtrl) New(c *gin.Context) {
 		return
 	}
 
-	新库存卡包, err2 := Ser_AgentInventory.New(c, 请求.Uid, 请求.KaClassId, 请求.NumMax, -c.GetInt("Uid"), -1, 请求.EndTime, 请求.Note)
+	新库存卡包, err2 := agent.L_agent.New库存(c, 请求.Uid, 请求.KaClassId, 请求.NumMax, -c.GetInt("Uid"), -1, 请求.EndTime, 请求.Note)
 	if err2 != nil {
 		response.FailWithMessage(err2.Error(), c)
 		return
@@ -197,7 +195,7 @@ func (C *AgentInventoryCtrl) New(c *gin.Context) {
 	if User1角色 == 0 {
 		User1角色 = 4
 	}
-	Ser_Log.Log_写库存转移日志(新库存卡包.Id, 新库存卡包.NumMax, 2, agent.L_agent.ID取用户名(c, 请求.Uid), User1角色, agent.L_agent.ID取用户名(c, -c.GetInt("Uid")), 4, c.ClientIP(), "接收管理员库存包")
+	log.L_log.Log_写库存转移日志(新库存卡包.Id, 新库存卡包.NumMax, 2, agent.L_agent.ID取用户名(c, 请求.Uid), User1角色, agent.L_agent.ID取用户名(c, -c.GetInt("Uid")), 4, c.ClientIP(), "接收管理员库存包")
 }
 
 // Delete 批量删除库存
@@ -226,7 +224,7 @@ func (C *AgentInventoryCtrl) Withdraw(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	err := Ser_AgentInventory.K库存撤回(c, -c.GetInt("Uid"), 请求.Id, 请求.Num, 请求.Note, c.ClientIP())
+	err := agent.L_agent.K库存撤回(c, -c.GetInt("Uid"), 请求.Id, 请求.Num, 请求.Note, c.ClientIP())
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -268,7 +266,7 @@ func (C *AgentInventoryCtrl) GetAgentTreeAndKaClassTree(c *gin.Context) {
 	var 响应数据 结构请求_代理树和卡类树
 	局_uid := -c.GetInt("Uid")
 	响应数据.AgentTree = 转换为代理树(nodes, 局_uid)
-	响应数据.KaClassTree = Ser_KaClass.Q取全部可制卡类树形框列表(c, 请求.Id)
+	响应数据.KaClassTree = ka.L_ka.Q取全部可制卡类树形框列表(c, 请求.Id)
 	response.OkWithDetailed(响应数据, "获取成功", c)
 }
 

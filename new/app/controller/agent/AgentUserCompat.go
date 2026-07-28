@@ -4,17 +4,17 @@ import (
 	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Chare"
-	"server/Service/Ser_KaClass"
-	"server/Service/Ser_LinkUser"
-	"server/Service/Ser_Log"
-	"server/Service/Ser_User"
 	"server/new/app/global"
+	"server/new/app/logic/admin/L_chart"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
+	"server/new/app/logic/common/ka"
+	"server/new/app/logic/common/log"
+	"server/new/app/logic/common/user"
 	"server/new/app/models/constant"
 	"server/new/app/models/db"
 	"server/new/app/models/old/response"
+	"server/new/app/service"
 	utils2 "server/new/app/utils"
 	"strconv"
 	"strings"
@@ -60,7 +60,7 @@ type Agent批量状态请求 struct {
 }
 
 type Agent权限响应 struct {
-	KaList          []Ser_KaClass.K可制卡类授权树形框结构 `json:"kaList"`
+	KaList          []ka.K可制卡类授权树形框结构 `json:"kaList"`
 	IdListAuthority []int                      `json:"idListAuthority"`
 	FunctionList    map[string]int             `json:"functionList"`
 	FunctionId      []int                      `json:"functionId"`
@@ -173,7 +173,7 @@ func (C *AgentUser) New代理信息(c *gin.Context) {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
 	}
-	局_下级代理分成 := Ser_User.Id取下级代理分成最高(请求.Id)
+	局_下级代理分成 := service.NewUser(c, global.GVA_DB).Id取下级代理分成最高(请求.Id)
 	if 局_下级代理分成 > 请求.AgentDiscount {
 		response.FailWithMessage("该代理的下级代理已设置分成百分比为"+strconv.Itoa(局_下级代理分成)+"%,故不能设置低于该值,请联系协商", c)
 		return
@@ -185,14 +185,14 @@ func (C *AgentUser) New代理信息(c *gin.Context) {
 		return
 	}
 
-	if _, err := Ser_User.New用户信息(请求.User, 请求.PassWord, 请求.SuperPassWord, 请求.Qq, 请求.Email, 请求.Phone, c.ClientIP(), 请求.Note, 请求.UPAgentId, 请求.AgentDiscount, 请求.Rmb, ""); err != nil {
+	if _, err := user.L_user.New用户信息(c, 请求.User, 请求.PassWord, 请求.SuperPassWord, 请求.Qq, 请求.Email, 请求.Phone, c.ClientIP(), 请求.Note, 请求.UPAgentId, 请求.AgentDiscount, 请求.Rmb, ""); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
 	response.OkWithMessage("添加成功", c)
 	if 请求.Rmb != 0 {
-		go Ser_Log.Log_写余额日志(请求.User, c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带余额:%v", c.GetInt("Uid"), 请求.Rmb), 请求.Rmb)
+		go log.L_log.Log_写余额日志(请求.User, c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带余额:%v", c.GetInt("Uid"), 请求.Rmb), 请求.Rmb)
 	}
 }
 
@@ -224,7 +224,7 @@ func (C *AgentUser) Save代理信息(c *gin.Context) {
 		return
 	}
 
-	局_用户详情, ok := Ser_User.Id取详情(请求.Id)
+	局_用户详情, ok := service.NewUser(c, global.GVA_DB).Id取详情(请求.Id)
 	if !ok {
 		response.FailWithMessage("用户不存在", c)
 		return
@@ -239,7 +239,7 @@ func (C *AgentUser) Save代理信息(c *gin.Context) {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
 	}
-	局_下级代理分成 := Ser_User.Id取下级代理分成最高(请求.Id)
+	局_下级代理分成 := service.NewUser(c, global.GVA_DB).Id取下级代理分成最高(请求.Id)
 	if 局_下级代理分成 > 请求.AgentDiscount {
 		response.FailWithMessage("该代理的下级代理已设置分成百分比为"+strconv.Itoa(局_下级代理分成)+"%,故不能设置低于该值,请联系协商", c)
 		return
@@ -296,9 +296,9 @@ func (C *AgentUser) Set修改状态(c *gin.Context) {
 	if 请求.Status == 2 {
 		局_User数组 := make([]string, 0, len(请求.Id))
 		for _, 局_Id := range 请求.Id {
-			局_User数组 = append(局_User数组, Ser_User.Id取User(局_Id))
+			局_User数组 = append(局_User数组, service.NewUser(c, global.GVA_DB).Id取User(局_Id))
 		}
-		_ = Ser_LinkUser.Set批量注销User数组(局_User数组, constant.Z注销_管理员手动注销)
+		_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销User数组(局_User数组, constant.Z注销_管理员手动注销)
 	}
 
 	response.OkWithMessage("修改成功", c)
@@ -313,8 +313,8 @@ func (C *AgentUser) GetAgentKaClassAuthority(c *gin.Context) {
 	}
 
 	var 局_返回 Agent权限响应
-	局_上级代理ID := Ser_User.Id取上级代理ID(请求.Id)
-	局_返回.KaList = Ser_KaClass.Q取全部可制卡类树形框列表(c, 局_上级代理ID)
+	局_上级代理ID := service.NewUser(c, global.GVA_DB).Id取上级代理ID(请求.Id)
+	局_返回.KaList = ka.L_ka.Q取全部可制卡类树形框列表(c, 局_上级代理ID)
 	局_返回.FunctionList = agent.L_agent.Q取全部代理功能名称_MAP(c)
 
 	var 局_可用代理功能ID数组 []int
@@ -384,16 +384,16 @@ func (C *AgentUser) SendRmbTOAgent(c *gin.Context) {
 		return
 	}
 
-	局_源新余额, 局_目标新余额, err := Ser_User.Id余额转账(c.GetInt("Uid"), 请求.Id, 请求.Rmb, c.ClientIP())
+	err := user.L_user.Id余额转账(c, c.GetInt("Uid"), 请求.Id, 请求.Rmb)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithDetailed(map[string]float64{"sourceRmb": 局_源新余额, "targetRmb": 局_目标新余额}, "操作成功", c)
+	response.OkWithMessage("操作成功", c)
 }
 
 func (C *AgentUser) Get代理组织架构图(c *gin.Context) {
-	response.OkWithDetailed(Ser_Chare.Get代理组织架构图(c, c.GetInt("Uid")), "获取成功", c)
+	response.OkWithDetailed(L_chart.Get代理组织架构图(c, c.GetInt("Uid")), "获取成功", c)
 }
 
 func (C *AgentUser) Delete代理用户(c *gin.Context) {

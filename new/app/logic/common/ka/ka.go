@@ -7,8 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/Service/Ser_AppInfo"
-	"server/Service/Ser_AppUser"
 	"server/new/app/global"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/userClass"
@@ -89,7 +87,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 		if info.卡类详情.VipNumber != 0 {
 			//日志仅写到上下文内,由实际业务处理是否写入日志和修改备注信息
 			c.Set("logVipNumber", dbm.DB_LogVipNumber{
-				User:  Ser_AppUser.Uid取User(info.卡类详情.AppId, info.app用户详情.Uid),
+				User:  service.NewAppUser(c, global.GVA_DB, info.卡类详情.AppId).Uid取User(info.卡类详情.AppId, info.app用户详情.Uid),
 				AppId: info.卡类详情.AppId,
 				Ip:    c.ClientIP(),
 				Type:  1,
@@ -106,7 +104,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 		if info.卡类详情.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
 			if info.app用户详情.UserClassId == info.卡类详情.UserClassId {
 				//分类相同,正常处理时间或点数
-				if Ser_AppInfo.App是否为计点(info.卡类详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
+				if service.NewAppInfo(c, global.GVA_DB).App是否为计点(info.卡类详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
 					//如果为计点 或 时间大于现在时间直接加就行了
 					客户expr["VipTime"] = gorm.Expr("VipTime + ?", info.卡类详情.VipTime)
 				} else {
@@ -442,7 +440,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		if info.卡号详情.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
 			if info.app用户详情.UserClassId == info.卡号详情.UserClassId {
 				//分类相同,正常处理时间或点数
-				if Ser_AppInfo.App是否为计点(info.卡号详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
+				if service.NewAppInfo(c, global.GVA_DB).App是否为计点(info.卡号详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
 					//如果为计点 或 时间大于现在时间直接加就行了
 					客户expr["VipTime"] = gorm.Expr("VipTime + ?", info.卡号详情.VipTime)
 				} else {
@@ -995,4 +993,34 @@ func (j *ka) Z置归属代理(c *gin.Context, AppId int, Uid int, AgentUid int) 
 	}
 
 	return
+}
+
+// KaClass创建New 创建新卡类(简单封装, 用于初始化数据)
+func (j *ka) KaClass创建New(c *gin.Context, AppId int, Name, 卡前缀 string, VipTime int64, 邀请人赠送 int64, 余额, 积分, Money, AgentMoney float64, UserClassId, NoUserClass, KaLength, KaStringType, Num, KaType, MaxOnline int) (新卡类id int, 错误信息 error) {
+	db := *global.GVA_DB
+	请求 := dbm.DB_KaClass{
+		Id:           0,
+		AppId:        AppId,
+		Name:         Name,
+		Prefix:       卡前缀,
+		VipTime:      VipTime,
+		InviteCount:  邀请人赠送,
+		RMb:          余额,
+		VipNumber:    积分,
+		Money:        Money,
+		AgentMoney:   AgentMoney,
+		UserClassId:  UserClassId,
+		NoUserClass:  NoUserClass,
+		KaLength:     KaLength,
+		KaStringType: KaStringType,
+		Num:          Num,
+		KaType:       KaType,
+		MaxOnline:    MaxOnline,
+	}
+
+	_, err := service.NewKaClass(c, &db).Create(&请求)
+	if err != nil {
+		return 0, err
+	}
+	return 请求.Id, nil
 }

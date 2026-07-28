@@ -9,9 +9,9 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"io"
 	"server/Service/Ser_Js"
-	"server/Service/Ser_Log"
 	"server/new/app/controller/userSafetyApi/response"
 	"server/new/app/global"
+	"server/new/app/logic/common/log"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
@@ -111,7 +111,7 @@ func UserApi解密() gin.HandlerFunc {
 		if len(结构加密包.B签名) == 32 {
 			期望签名 := strings.ToUpper(utils2.Md5String(结构加密包.A密文 + S三元(局_ctx.AppInfo.CryptoType == 3, 局_ctx.Z在线信息.CryptoKeyAes, 局_ctx.AppInfo.CryptoKeyAes)))
 			if strings.ToUpper(结构加密包.B签名) != 期望签名 {
-				go Ser_Log.Log_写风控日志(局_ctx.Z在线信息.Id, Ser_Log.Log风控类型_Api异常调用, 局_ctx.Z在线信息.User, c.ClientIP(), "用户发送错误签名封包,可能在尝试破解")
+				go log.L_log.S写风控日志(c, 局_ctx.Z在线信息.Id, log.Log风控类型_Api异常调用, 局_ctx.Z在线信息.User, c.ClientIP(), "用户发送错误签名封包,可能在尝试破解")
 				response.Fail(c, constant.Status_签名错误)
 				c.Abort()
 				return

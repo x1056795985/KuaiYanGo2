@@ -3,10 +3,11 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
-	"server/Service/Ser_RMBPayOrder"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/old/response"
+	"server/new/app/service"
 )
 
 type PayWebApi struct {
@@ -30,9 +31,9 @@ func (P *PayWebApi) GetPayOrderStatus(c *gin.Context) {
 		return
 	}
 	var 局_订单详细信息 dbm.DB_LogRMBPayOrder
-	局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(局_订单信息)
+	局_订单详细信息, ok := service.NewRmbPayService(global.GVA_DB).Order取订单详细(局_订单信息)
 	if !ok {
-		局_订单详细信息, ok = Ser_RMBPayOrder.Order取订单详细_第三方订单(局_订单信息)
+		局_订单详细信息, ok = service.NewRmbPayService(global.GVA_DB).Order取订单详细_第三方订单(局_订单信息)
 	}
 	if 局_订单详细信息.Id == 0 {
 		response.OkWithDetailed([]gin.H{}, "获取成功", c)

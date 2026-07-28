@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"server/Service/Captcha"
-	"server/Service/Ser_LinkUser"
-	"server/Service/Ser_Log"
-	"server/Service/Ser_User"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
 	"server/new/app/global"
+	"server/new/app/logic/common/log"
+	"server/new/app/logic/common/user"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
@@ -65,7 +64,7 @@ func (C *User) NewUserInfo(c *gin.Context) {
 		}
 	}
 
-	info.user, err = Ser_User.New用户信息(请求.User, 请求.Password, 请求.Password, 请求.QQ, 请求.Email, 请求.Phone, c.ClientIP(), "", 0, 0, 0, "")
+	info.user, err = user.L_user.New用户信息(c, 请求.User, 请求.Password, 请求.Password, 请求.QQ, 请求.Email, 请求.Phone, c.ClientIP(), "", 0, 0, 0, "")
 	if err != nil {
 		response.FailWithMessage(c, err.Error())
 		return
@@ -108,7 +107,7 @@ func (C *User) GetPwSendSms(c *gin.Context) {
 	局_验证码ID := "Note" + utils2.Md5String(info.user.Phone)[:16] + W文本_取随机字符串(15)
 	err = Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, info.user.Phone)
 	if err != nil {
-		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, constant.APPID_Web用户中心, 请求.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, info.user.Phone, err.Error()), c.ClientIP())
+		log.L_log.Log_写用户消息(log.Log用户消息类型_系统执行错误, constant.APPID_Web用户中心, 请求.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, info.user.Phone, err.Error()), c.ClientIP())
 		response.FailWithMessage(c, "发送失败")
 		return
 	}
@@ -180,13 +179,13 @@ func (C *User) SmsCodeSetPassWord(c *gin.Context) {
 	}
 
 	if strings.Index(请求.PhoneCaptchaId, "Note") != 0 {
-		go Ser_Log.Log_写风控日志(0, Ser_Log.Log风控类型_Api异常调用, 请求.User, c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非短信验证码Id进行提交,可能是异常用户")
+		go log.L_log.S写风控日志(c, 0, log.Log风控类型_Api异常调用, 请求.User, c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非短信验证码Id进行提交,可能是异常用户")
 		response.FailWithMessage(c, "验证码错误.")
 		return
 	}
 
 	if info.user.Phone == "" || strings.Index(请求.PhoneCaptchaId, "Note"+utils2.Md5String(info.user.Phone)[:16]) == -1 {
-		go Ser_Log.Log_写风控日志(0, Ser_Log.Log风控类型_Api异常调用, info.user.User, c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非账号绑定的验证码进行提交,可能是异常用户")
+		go log.L_log.S写风控日志(c, 0, log.Log风控类型_Api异常调用, info.user.User, c.ClientIP(), "使用绑定手机密码找回或修改,用户使用非账号绑定的验证码进行提交,可能是异常用户")
 		response.FailWithMessage(c, "验证码错误.")
 		return
 	}
@@ -199,7 +198,7 @@ func (C *User) SmsCodeSetPassWord(c *gin.Context) {
 	if err != nil {
 		response.FailWithMessage(c, "修改失败")
 	} else {
-		_ = Ser_LinkUser.Set批量注销Uid(info.user.Id, constant.Z注销_用户改密注销)
+		_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid(info.user.Id, constant.Z注销_用户改密注销)
 		response.OkWithMessage(c, "修改成功")
 	}
 	return
@@ -213,7 +212,7 @@ func (C *User) Logout(c *gin.Context) {
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 
-	err = Ser_LinkUser.Set批量注销([]int{info.likeInfo.Id}, constant.Z注销_用户操作注销)
+	err = service.NewLinksToken(c, global.GVA_DB).Set批量注销([]int{info.likeInfo.Id}, constant.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage(c, "注销失败")
 		return
@@ -255,7 +254,7 @@ func (C *User) SetBaseInfo(c *gin.Context) {
 			return
 		}
 		if 请求.Value == "" || strings.Index(请求.CaptchaId, "Note"+utils2.Md5String(请求.Value)[:16]) == -1 {
-			go Ser_Log.Log_写风控日志(info.likeInfo.Id, Ser_Log.Log风控类型_Api异常调用, info.likeInfo.User, c.ClientIP(), "用户使用非新手机号绑定的验证码进行提交,更换绑定手机,可能是异常用户")
+			go log.L_log.S写风控日志(c, info.likeInfo.Id, log.Log风控类型_Api异常调用, info.likeInfo.User, c.ClientIP(), "用户使用非新手机号绑定的验证码进行提交,更换绑定手机,可能是异常用户")
 			response.FailWithMessage(c, "验证码错误.")
 			return
 		}
@@ -317,7 +316,7 @@ func (C *User) SendSms(c *gin.Context) {
 	局_验证码ID := "Note" + utils2.Md5String(请求.Phone)[:16] + W文本_取随机字符串(15)
 	err = Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, 请求.Phone)
 	if err != nil {
-		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, constant.APPID_Web用户中心, info.likeInfo.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 请求.Phone, err.Error()), c.ClientIP())
+		log.L_log.Log_写用户消息(log.Log用户消息类型_系统执行错误, constant.APPID_Web用户中心, info.likeInfo.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 请求.Phone, err.Error()), c.ClientIP())
 		response.FailWithMessage(c, "发送失败")
 		return
 	}

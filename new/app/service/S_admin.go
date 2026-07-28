@@ -110,3 +110,13 @@ func (s *Admin) Update(id int, 数据 map[string]interface{}) (row int64, err er
 	tx := s.db.Model(dbm.DB_Admin{}).Where("Id = ?", id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
+
+// Id取User 按Id取管理员用户名
+func (s *Admin) Id取User(Id int) string {
+	if Id == 0 {
+		return ""
+	}
+	var 用户名 string
+	s.db.Model(dbm.DB_Admin{}).Select("User").Where("Id=?", Id).Take(&用户名)
+	return 用户名
+}

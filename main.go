@@ -12,7 +12,7 @@ import (
 	//_ "net/http/pprof" // 开启 pprof
 	"os"
 	"runtime/debug"
-	"server/Service/Ser_Init"
+	initPkg "server/new/app/init"
 	"server/core"
 	"server/new"
 	_ "server/new/app/logic"
@@ -53,11 +53,11 @@ func main() {
 			//fmt.Printf("delete k:%s v:%v\n", k, v)
 		}),
 	)
-	global.GVA_DB, _ = Ser_Init.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
+	global.GVA_DB, _ = initPkg.InitGormMysql() // gorm连接数据库  Gorm参考资料https://www.cnblogs.com/davis12/p/16365213.html
 
 	if global.GVA_DB != nil { //如果数据库不为空
 		c := gin.Context{}
-		Ser_Init.InitDbTables(&c) // 如果数据库连接成功就初始化表  //不在这里了,只能由 InitMysql 初始化
+		initPkg.InitDbTables(&c) // 如果数据库连接成功就初始化表  //不在这里了,只能由 InitMysql 初始化
 
 		// 程序结束前关闭数据库链接
 		db, _ := global.GVA_DB.DB()

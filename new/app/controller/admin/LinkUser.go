@@ -3,13 +3,11 @@ package controller
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	App服务 "server/Service/Ser_AppInfo"
-	"server/Service/Ser_AppUser"
-	"server/Service/Ser_LinkUser"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/webSocket"
 	"server/new/app/models/constant"
+	"server/new/app/service"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/old/response"
 )
@@ -112,11 +110,11 @@ func (C *LinkUserCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	var AppName = App服务.AppInfo取map列表Int(true)
+	var AppName = service.NewAppInfo(c, global.GVA_DB).AppInfo取map列表Int(true)
 	for 索引 := range DB_LinksToken {
 		DB_LinksToken[索引].AppName = AppName[DB_LinksToken[索引].LoginAppid]
 		if DB_LinksToken[索引].Uid > 0 {
-			DB_LinksToken[索引].Note = Ser_AppUser.Uid取备注(DB_LinksToken[索引].LoginAppid, DB_LinksToken[索引].Uid)
+			DB_LinksToken[索引].Note = service.NewAppUser(c, global.GVA_DB, DB_LinksToken[索引].LoginAppid).Uid取备注(DB_LinksToken[索引].LoginAppid, DB_LinksToken[索引].Uid)
 		}
 	}
 
@@ -134,7 +132,7 @@ func (C *LinkUserCtrl) NewWebApiToken(c *gin.Context) {
 		return
 	}
 
-	在线信息, err := Ser_LinkUser.NewWebApiToken(请求.OutTime, 请求.Key, 请求.Tab)
+	在线信息, err := service.NewLinksToken(c, global.GVA_DB).NewWebApiToken(请求.OutTime, 请求.Key, 请求.Tab)
 	if err != nil {
 		response.FailWithMessage("创建失败:"+err.Error(), c)
 		return
@@ -152,7 +150,7 @@ func (C *LinkUserCtrl) SetTokenOutTime(c *gin.Context) {
 		response.FailWithMessage("id数量不能为0", c)
 		return
 	}
-	err := Ser_LinkUser.Set自动注销超时时间(请求.OutTime, 请求.Id)
+	err := service.NewLinksToken(c, global.GVA_DB).Set自动注销超时时间(请求.OutTime, 请求.Id)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -171,7 +169,7 @@ func (C *LinkUserCtrl) Logout(c *gin.Context) {
 		return
 	}
 
-	err := Ser_LinkUser.Set批量注销(请求.Id, constant.Z注销_管理员手动注销)
+	err := service.NewLinksToken(c, global.GVA_DB).Set批量注销(请求.Id, constant.Z注销_管理员手动注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		global.GVA_LOG.Println("Logout:" + err.Error())

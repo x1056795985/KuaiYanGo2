@@ -4,7 +4,6 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/Service/Ser_LinkUser"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
 	"server/new/app/global"
@@ -44,7 +43,7 @@ func (C *AppUser) BatchAddUser(c *gin.Context) {
 		数组User    []db2.DB_User
 		数组AppUser []db2.DB_AppUser
 	}
-	局_制卡人 := Ser_LinkUser.Token取Name(c.Request.Header.Get("Token"))
+	局_制卡人 := service.NewLinksToken(c, &db).Token取Name(c.Request.Header.Get("Token"))
 	局_时间戳 := time.Now().Unix()
 	info.AppInfo, err = service.NewAppInfo(c, &db).Info(请求.AppId)
 	if err != nil {

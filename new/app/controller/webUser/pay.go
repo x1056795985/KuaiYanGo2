@@ -5,9 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/valyala/fastjson"
-	"server/Service/Ser_KaClass"
-	"server/Service/Ser_RMBPayOrder"
-	"server/Service/Ser_UserClass"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
 	"server/new/app/global"
@@ -49,14 +46,14 @@ func (C *Pay) GetPayKaList(c *gin.Context) {
 	}
 
 	var DB_KaClass []dbm.DB_KaClass
-	DB_KaClass = Ser_KaClass.KaClass取可购买卡类列表(info.appInfo.AppId)
+	DB_KaClass = service.NewKaClass(c, global.GVA_DB).KaClass取可购买卡类列表(info.appInfo.AppId)
 
 	var 卡类列表_简化 = make([]gin.H, 0, len(DB_KaClass))
 	var 局_用户类型 = dbm.DB_UserClass{}
 	var ok = true
 
 	for 索引, _ := range DB_KaClass {
-		局_用户类型, ok = Ser_UserClass.Id取详情(info.appInfo.AppId, DB_KaClass[索引].UserClassId)
+		局_用户类型, ok = service.NewUserClass(c, global.GVA_DB).Id取详情(info.appInfo.AppId, DB_KaClass[索引].UserClassId)
 
 		if !ok {
 			局_用户类型.Name = ""
@@ -100,10 +97,10 @@ func (C *Pay) GetPayOrderStatus(c *gin.Context) {
 		return
 	}
 
-	局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(请求.OrderId)
+	局_订单详细信息, ok := service.NewRmbPayService(global.GVA_DB).Order取订单详细(请求.OrderId)
 	if !ok {
 		// 如果失败了,在判断是不是上传的第三方订单号
-		局_订单详细信息, ok = Ser_RMBPayOrder.Order取订单详细_第三方订单(请求.OrderId)
+		局_订单详细信息, ok = service.NewRmbPayService(global.GVA_DB).Order取订单详细_第三方订单(请求.OrderId)
 	}
 
 	// 可能存在未登录充值的情况,所以不检测在线了

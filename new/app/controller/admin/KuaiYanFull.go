@@ -16,10 +16,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
 	"server/Service/KuaiYanUpdater"
-	"server/Service/Ser_Ka"
-	"server/Service/Ser_LinkUser"
-	"server/Service/Ser_User"
 	"server/new/app/controller/Common"
+	"server/new/app/service"
 	utils2 "server/new/app/utils"
 )
 
@@ -174,7 +172,7 @@ func (k *KuaiYan) GetUserInfo(c *gin.Context) {
 
 	局_在线计数 := 0
 	if global.X系统信息.D到期时间 < time.Now().Unix() {
-		局_在线计数 = int(Ser_LinkUser.Get取在线总数(true, true))
+		局_在线计数 = int(service.NewLinksToken(nil, global.GVA_DB).Get取在线总数(true, true))
 		global.H缓存.Set("在线数量", 局_在线计数, time.Minute*10)
 	}
 
@@ -515,9 +513,9 @@ func K快验心跳() {
 		utils.Float64除int64(utils.Int64到Float64(int64(局_设备信息.Ram.TotalMB)), 1024, 2),
 		局_设备信息.Disk.TotalGB,
 		runtime.NumGoroutine(),
-		Ser_User.Q取总数(),
-		Ser_Ka.Q取总数(),
-		Ser_LinkUser.Get取在线总数(true, true),
+		service.NewUser(nil, global.GVA_DB).Q取总数(),
+		service.NewKa(nil, global.GVA_DB).Q取总数(),
+		service.NewLinksToken(nil, global.GVA_DB).Get取在线总数(true, true),
 	)
 	if 局_设备信息.Os.GOOS != "linux" {
 		局_动态标记 += " " + 局_设备信息.Os.GOOS

@@ -5,15 +5,12 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
-	"server/Service/Ser_Admin"
-	"server/Service/Ser_AppInfo"
-	"server/Service/Ser_KaClass"
-	"server/Service/Ser_Log"
-	"server/Service/Ser_PublicJs"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/appInfo"
+	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/publicData"
+	"server/new/app/logic/common/publicJs"
 	"server/new/app/logic/common/setting"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
@@ -137,7 +134,7 @@ func (a *App) GetInfo(c *gin.Context) {
 
 	response.OkWithDetailed(结构响应_GetAppInfo{
 		AppInfo:   DB_AppInfo,
-		KaClass:   Ser_KaClass.KaName取map列表Int(请求.Id),
+		KaClass:   service.NewKaClass(c, global.GVA_DB).KaName取map列表Int(请求.Id),
 		ServerUrl: setting.Q系统设置().X系统地址,
 		Port:      global.GVA_CONFIG.Port,
 	}, "获取成功", c)
@@ -155,7 +152,7 @@ func (a *App) New(c *gin.Context) {
 	if 请求.CopyAppId == 0 {
 		err = appInfo.L_appInfo.NewApp信息(c, 请求.AppId, 请求.AppType, 请求.AppName)
 	} else {
-		err = Ser_AppInfo.CopyApp信息(请求.AppId, 请求.AppType, 请求.AppName, 请求.CopyAppId)
+		err = appInfo.L_appInfo.CopyApp信息(c, 请求.AppId, 请求.AppType, 请求.AppName, 请求.CopyAppId)
 	}
 
 	if err != nil {
@@ -195,7 +192,7 @@ func (a *App) SaveInfo(c *gin.Context) {
 		return
 	}
 
-	if Ser_AppInfo.App存在数量(请求.AppData.AppId) == 0 {
+	if service.NewAppInfo(c, global.GVA_DB).App存在数量(请求.AppData.AppId) == 0 {
 		response.FailWithMessage("应用不存在", c)
 		return
 	}
@@ -214,15 +211,15 @@ func (a *App) SaveInfo(c *gin.Context) {
 		return
 	}
 
-	局_旧AppInfo := Ser_AppInfo.App取App详情(请求.AppData.AppId)
-	err = Ser_AppInfo.App修改信息(请求.AppData)
+	局_旧AppInfo := service.NewAppInfo(c, global.GVA_DB).App取App详情(请求.AppData.AppId)
+	err = appInfo.L_appInfo.App修改信息(c, 请求.AppData)
 
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
 		return
 	}
 	if 局_旧AppInfo.CryptoKeyPrivate != 请求.AppData.CryptoKeyPrivate {
-		Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_其他, constant.APPID_管理平台, Ser_Admin.Id取User(1), 请求.AppData.AppName, "", "防误操作应用"+strconv.Itoa(局_旧AppInfo.AppId)+"更换私钥旧私钥:"+局_旧AppInfo.CryptoKeyPrivate, c.ClientIP())
+		log.L_log.Log_写用户消息(log.Log用户消息类型_其他, constant.APPID_管理平台, service.NewAdmin(c, global.GVA_DB).Id取User(1), 请求.AppData.AppName, "", "防误操作应用"+strconv.Itoa(局_旧AppInfo.AppId)+"更换私钥旧私钥:"+局_旧AppInfo.CryptoKeyPrivate, c.ClientIP())
 	}
 
 	tx := *global.GVA_DB
@@ -272,8 +269,8 @@ func (a *App) SaveInfo(c *gin.Context) {
 		if object, err2 := JSON.Object(); err2 == nil {
 			object.Visit(func(key []byte, v *fastjson.Value) {
 				局_hook函数名 := strings.TrimSpace(string(v.GetStringBytes("Before")))
-				if len(局_hook函数名) > 0 && !Ser_PublicJs.Name是否存在(Ser_PublicJs.Js类型_ApiHook函数, 局_hook函数名) {
-					Ser_PublicJs.C创建(dbm.DB_PublicJs{
+				if len(局_hook函数名) > 0 && !service.NewPublicJs(c, global.GVA_DB).Name是否存在(service.Js类型_ApiHook函数, 局_hook函数名) {
+					publicJs.L_publicJs.C创建(c, dbm.DB_PublicJs{
 						AppId: 3, Name: 局_hook函数名,
 						Value: "function " + 局_hook函数名 + Api之前Hook函数模板,
 						Type:  2, IsVip: 0,
@@ -281,8 +278,8 @@ func (a *App) SaveInfo(c *gin.Context) {
 					})
 				}
 				局_hook函数名 = strings.TrimSpace(string(v.GetStringBytes("After")))
-				if len(局_hook函数名) > 0 && !Ser_PublicJs.Name是否存在(Ser_PublicJs.Js类型_ApiHook函数, 局_hook函数名) {
-					Ser_PublicJs.C创建(dbm.DB_PublicJs{
+				if len(局_hook函数名) > 0 && !service.NewPublicJs(c, global.GVA_DB).Name是否存在(service.Js类型_ApiHook函数, 局_hook函数名) {
+					publicJs.L_publicJs.C创建(c, dbm.DB_PublicJs{
 						AppId: 3, Name: 局_hook函数名,
 						Value: "function " + 局_hook函数名 + Api之后Hook函数模板,
 						Type:  2, IsVip: 0,
@@ -366,7 +363,7 @@ func (a *App) GetAppIdMax(c *gin.Context) {
 
 // GetAppIdNameList 取AppId和名称列表
 func (a *App) GetAppIdNameList(c *gin.Context) {
-	AppIdName := Ser_AppInfo.App取map列表String(false)
+	AppIdName := service.NewAppInfo(c, global.GVA_DB).App取map列表String(false)
 	var 临时Int int
 	var Name []键值对
 	for Key := range AppIdName {
@@ -416,7 +413,7 @@ func (a *App) GetAllWebApi(c *gin.Context) {
 	for 键名, 键值 := range webApi2.J集_UserAPi路由2 {
 		局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
 	}
-	局_PublicJsName := Ser_PublicJs.P取全部公共函数名称(1)
+	局_PublicJsName := service.NewPublicJs(c, global.GVA_DB).P取全部公共函数名称(1)
 	response.OkWithDetailed(gin.H{"api": 局_path数组, "publicJs": 局_PublicJsName}, "获取成功", c)
 	return
 }

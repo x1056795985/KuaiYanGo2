@@ -3,15 +3,13 @@ package controller
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_AppInfo"
-	"server/Service/Ser_Ka"
-	"server/Service/Ser_KaClass"
-	"server/Service/Ser_LinkUser"
-	"server/Service/Ser_Log"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
+	"server/new/app/logic/common/ka"
+	"server/new/app/logic/common/log"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/old/response"
+	"server/new/app/service"
 )
 
 type KaWebApi struct {
@@ -70,7 +68,7 @@ func (K *KaWebApi) NewKa(c *gin.Context) {
 		return
 	}
 
-	if !Ser_KaClass.KaClassId是否存在(请求.Id) {
+	if !service.NewKaClass(c, global.GVA_DB).KaClassId是否存在(请求.Id) {
 		response.FailWithMessage("卡类id不存在", c)
 		return
 	}
@@ -85,8 +83,8 @@ func (K *KaWebApi) NewKa(c *gin.Context) {
 
 	数组_卡 := make([]dbm.DB_Ka, 请求.Number)
 
-	用户名 := Ser_LinkUser.Token取Name(c.Request.Header.Get("Token"))
-	err = Ser_Ka.Ka批量创建(数组_卡[:], 请求.Id, -1, 用户名, 请求.AdminNote, "", 0)
+	用户名 := service.NewLinksToken(c, global.GVA_DB).Token取Name(c.Request.Header.Get("Token"))
+	err = ka.L_ka.Ka批量创建(c, 数组_卡[:], 请求.Id, -1, 用户名, 请求.AdminNote, "", 0)
 
 	if err != nil {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
@@ -106,8 +104,8 @@ func (K *KaWebApi) NewKa(c *gin.Context) {
 
 	response.OkWithDetailed(数组_卡_精简, "制卡成功", c)
 
-	局_文本 := fmt.Sprintf("新制卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", Ser_AppInfo.App取AppName(数组_卡[0].AppId), Ser_KaClass.Id取Name(数组_卡[0].KaClassId), 请求.Number)
-	go Ser_Log.Log_写卡号操作日志(用户名, c.ClientIP(), 局_文本, 数组_卡号, 1, 4)
+	局_文本 := fmt.Sprintf("新制卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", service.NewAppInfo(c, global.GVA_DB).App取AppName(数组_卡[0].AppId), service.NewKaClass(c, global.GVA_DB).Id取Name(数组_卡[0].KaClassId), 请求.Number)
+	go log.L_log.Log_写卡号操作日志(用户名, c.ClientIP(), 局_文本, 数组_卡号, 1, 4)
 
 	return
 }

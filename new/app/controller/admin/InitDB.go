@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/Service/Ser_Init"
+	initPkg "server/new/app/init"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/setting"
@@ -86,7 +86,7 @@ func (i *InitDBCtrl) InitDB(c *gin.Context) {
 	global.GVA_CONFIG.Mysql.MaxOpenConns = 100
 	global.GVA_CONFIG.Mysql.LogMode = "error"
 
-	局_db, err := Ser_Init.InitGormMysql()
+	局_db, err := initPkg.InitGormMysql()
 
 	if err != nil {
 		response.FailWithMessage("连接数据库失败，\r\n"+err.Error(), c)
@@ -116,8 +116,8 @@ func (i *InitDBCtrl) InitDB(c *gin.Context) {
 	global.GVA_Viper.Set("Mysql.LogMode", "error")
 	global.GVA_Viper.WriteConfig()
 
-	Ser_Init.InitDbTables(c)
-	Ser_Init.InitDbTable数据(c)
+	initPkg.InitDbTables(c)
+	initPkg.InitDbTableData(c)
 
 	global.GVA_Viper.SetConfigFile(global.GVA_CONFIG.Q取运行目录 + "/config.json")
 	global.GVA_Viper.SetConfigType("json")

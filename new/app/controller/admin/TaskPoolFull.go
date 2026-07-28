@@ -4,12 +4,12 @@ import (
 	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_PublicJs"
-	"server/Service/Ser_TaskPool"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
+	"server/new/app/logic/common/taskPool"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/old/response"
+	"server/new/app/service"
 	"strconv"
 )
 
@@ -93,7 +93,7 @@ func (C *TaskPoolFull) Info(c *gin.Context) {
 		return
 	}
 
-	TaskPool_类型, err := Ser_TaskPool.Task类型读取(请求.Id)
+	TaskPool_类型, err := service.NewTaskPoolType(c, global.GVA_DB).Task类型读取(请求.Id)
 	if err != nil {
 		response.FailWithMessage("读取失败,可能数据不存在Id:"+strconv.Itoa(请求.Id), c)
 		return
@@ -221,7 +221,7 @@ func (C *TaskPoolFull) New(c *gin.Context) {
 		return
 	}
 
-	err := Ser_TaskPool.Task类型创建(请求.Name, 请求.HookSubmitDataStart, 请求.HookSubmitDataEnd, 请求.HookReturnDataStart, 请求.HookReturnDataEnd)
+	_, err := service.NewTaskPoolType(c, global.GVA_DB).Create(dbm.TaskPool_类型{Name: 请求.Name, HookSubmitDataStart: 请求.HookSubmitDataStart, HookSubmitDataEnd: 请求.HookSubmitDataEnd, HookReturnDataStart: 请求.HookReturnDataStart, HookReturnDataEnd: 请求.HookReturnDataEnd})
 	if err != nil {
 		response.FailWithMessage("添加失败:"+err.Error(), c)
 		return
@@ -335,7 +335,7 @@ func (C *TaskPoolFull) ClearQueue(c *gin.Context) {
 		return
 	}
 
-	影响行数, err := Ser_TaskPool.Task队列清除指定Tid(请求.Id)
+	影响行数, err := taskPool.L_taskPool.Task队列清除指定Tid(c, 请求.Id)
 	if err != nil {
 		response.FailWithMessage("清空失败:"+err.Error(), c)
 		return
@@ -354,7 +354,7 @@ func (C *TaskPoolFull) UuidAddQueue(c *gin.Context) {
 		return
 	}
 
-	err := Ser_TaskPool.Uuid_添加到队列(请求.Uuid)
+	err := taskPool.L_taskPool.Uuid_添加到队列(c, 请求.Uuid)
 	if err != nil {
 		response.FailWithMessage("重新加入队列失败:"+err.Error(), c)
 		return
@@ -372,7 +372,7 @@ func (C *TaskPoolFull) BatchUuidAddQueue(c *gin.Context) {
 	}
 	局_成功数量 := 0
 	for i := range len(请求.Uuid) {
-		err := Ser_TaskPool.Uuid_添加到队列(请求.Uuid[i])
+		err := taskPool.L_taskPool.Uuid_添加到队列(c, 请求.Uuid[i])
 		if err == nil {
 			局_成功数量++
 		}
@@ -383,7 +383,7 @@ func (C *TaskPoolFull) BatchUuidAddQueue(c *gin.Context) {
 func 创建不存在的Hook函数(请求 dbm.TaskPool_类型) {
 	var 局数组_函数名 = []string{请求.HookSubmitDataStart, 请求.HookSubmitDataEnd, 请求.HookReturnDataStart, 请求.HookReturnDataEnd}
 	for 索引 := range 局数组_函数名 {
-		if 局数组_函数名[索引] != "" && !Ser_PublicJs.Name是否存在(2, 局数组_函数名[索引]) {
+		if 局数组_函数名[索引] != "" && !service.NewPublicJs(&gin.Context{}, global.GVA_DB).Name是否存在(2, 局数组_函数名[索引]) {
 			var 局_hook函数 = dbm.DB_PublicJs{
 				AppId: 2,
 				Type:  1,

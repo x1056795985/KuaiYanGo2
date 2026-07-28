@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"server/Service/Ser_AppInfo"
+	"server/new/app/service"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/setting"
@@ -76,7 +76,7 @@ func (C *ApkTools) CreateApkAddFNKYTask(c *gin.Context) {
 	aaa["签名方式"] = 请求.Q签名方式
 	aaa["Activity"] = 请求.Activity
 
-	局_Appinfo := Ser_AppInfo.App取App详情(请求.AppId)
+	局_Appinfo := service.NewAppInfo(c, global.GVA_DB).App取App详情(请求.AppId)
 	局_系统地址 := setting.Q系统设置().X系统地址
 
 	var appInfo = make(gin.H, 3)
@@ -133,7 +133,7 @@ func (C *ApkTools) GetList(c *gin.Context) {
 			Path:        局_任务提交.Get("Path").String(),
 			Q签名方式:       局_任务提交.Get("签名方式").Int(),
 			AppId:       局_任务提交.Get("AppId").Int(),
-			AppName:     Ser_AppInfo.AppId取应用名称(局_任务提交.Get("AppId").Int()),
+			AppName:     service.NewAppInfo(c, global.GVA_DB).AppId取应用名称(局_任务提交.Get("AppId").Int()),
 			DownloadUrl: 局_任务结果.Get("Url").String(),
 			Err:         局_任务结果.Get("msg").String(),
 		})

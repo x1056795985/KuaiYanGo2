@@ -9,7 +9,6 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	App服务 "server/Service/Ser_AppInfo"
 	"server/new/app/global"
 	"server/new/app/logic/agent/L_setting"
 	"server/new/app/logic/common/agent"
@@ -112,7 +111,7 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 	tx := *global.GVA_DB
 	var 局_通道数据 m.Request
 
-	参数.S商品名称 = App服务.AppId取应用名称(参数.E额外信息.Get("AppId").Int()) + j.Q取提示信息(&参数)
+	参数.S商品名称 = service.NewAppInfo(c, global.GVA_DB).AppId取应用名称(参数.E额外信息.Get("AppId").Int()) + j.Q取提示信息(&参数)
 
 	if 参数.ReceivedUid > 0 && agent.L_agent.Id功能权限检测(c, 参数.ReceivedUid, dbm.D代理功能_代收款) {
 		var 局代理Info dbm.DB_User
@@ -287,7 +286,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 				return err
 			}
 			if info.卡类详情.VipTime != 0 {
-				局_is计点 := App服务.App是否为计点(参数.E额外信息.Get("AppId").Int())
+				局_is计点 := service.NewAppInfo(c, global.GVA_DB).App是否为计点(参数.E额外信息.Get("AppId").Int())
 				info.LogVipNumber = append(info.LogVipNumber, dbm.DB_LogVipNumber{
 					User:  参数.User,
 					AppId: 参数.E额外信息.Get("AppId").Int(),
@@ -942,4 +941,33 @@ func (j *rmbPay) Pay_指定Uid待支付金额(c *gin.Context, Uid int) (金额 f
 		//global.GVA_LOG.Println("获取指定Uid待支付金额!", err)
 	}
 	return
+}
+
+// Order订单创建 创建支付订单(多表操作: 读取Ka/User表获取用户名, 创建订单)
+func (j *rmbPay) Order订单创建(c *gin.Context, Uid, Uid类型 int, Rmb float64, 支付类型, 订单备注, Ip string, 处理类型 int, 额外信息 string) (dbm.DB_LogRMBPayOrder, error) {
+	var 新订单 dbm.DB_LogRMBPayOrder
+	新订单.Id = 0
+	新订单.Uid = Uid
+	新订单.UidType = Uid类型
+	db := *global.GVA_DB
+	if 新订单.UidType == 2 {
+		新订单.User = service.NewKa(c, &db).Id取卡号(新订单.Uid)
+	} else {
+		新订单.User = service.NewUser(c, &db).Id取User(新订单.Uid)
+	}
+
+	新订单.Status = 1
+	新订单.Time = time.Now().Unix()
+	新订单.Ip = Ip
+	新订单.Type = 支付类型
+	新订单.ProcessingType = 处理类型
+	新订单.Extra = 额外信息
+	新订单.Rmb = Rmb
+	新订单.Note = 订单备注
+	新订单.PayOrder = service.NewRmbPayService(&db).Get获取新订单号()
+	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单).Error
+	if err != nil {
+		return dbm.DB_LogRMBPayOrder{}, err
+	}
+	return 新订单, err
 }

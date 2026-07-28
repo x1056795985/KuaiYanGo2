@@ -2,8 +2,6 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_AppInfo"
-	"server/Service/Ser_UserClass"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/agent"
@@ -98,8 +96,8 @@ func (C *KaClass) GetList(c *gin.Context) {
 		return
 	}
 
-	AppType := Ser_AppInfo.App取AppType(请求.AppId)
-	UserClass := Ser_UserClass.UserClass取map列表Int(请求.AppId)
+	AppType := service.NewAppInfo(c, global.GVA_DB).App取AppType(请求.AppId)
+	UserClass := service.NewUserClass(c, global.GVA_DB).UserClass取map列表Int(请求.AppId)
 
 	response.OkWithDetailed(响应_KaClassGetList{dataList, 总数, UserClass, AppType}, "获取成功", c)
 }
@@ -182,7 +180,7 @@ func (C *KaClass) SaveInfo(c *gin.Context) {
 		"InviteCount":  请求.InviteCount,
 	}
 
-	if Ser_AppInfo.App是否为卡号(请求.AppId) {
+	if service.NewAppInfo(c, global.GVA_DB).App是否为卡号(请求.AppId) {
 		data["Num"] = 1 //卡号类型卡只能用一次
 	}
 
@@ -210,7 +208,7 @@ func (C *KaClass) New(c *gin.Context) {
 		response.FailWithMessage("添加用户不能有id值", c)
 		return
 	}
-	if 请求.AppId < 10000 || !Ser_AppInfo.AppId是否存在(请求.AppId) {
+	if 请求.AppId < 10000 || !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId错误", c)
 		return
 	}
@@ -225,7 +223,7 @@ func (C *KaClass) New(c *gin.Context) {
 		return
 	}
 
-	if !Ser_AppInfo.AppId是否存在(请求.AppId) {
+	if !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId不存在,请先去[ 应用管理 => 应用列表 ],添加该应用信息", c)
 		return
 	}
@@ -245,7 +243,7 @@ func (C *KaClass) New(c *gin.Context) {
 		return
 	}
 
-	if Ser_AppInfo.App是否为卡号(请求.AppId) {
+	if service.NewAppInfo(c, global.GVA_DB).App是否为卡号(请求.AppId) {
 		请求.Num = 1 //卡号类型卡只能用一次
 	}
 

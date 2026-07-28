@@ -3,7 +3,6 @@ package controller
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_AppInfo"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
 	"server/new/app/global"
@@ -60,7 +59,7 @@ func (C *AppInfo) GetAppBaseInfo(c *gin.Context) {
 	//如果下载地址url不是json则直接填写, 如果是json,则获取 data 第一个成员的 url地址
 	info.appInfo.UrlDownload = info.appInfoUser.UrlDownload
 
-	局_downloadUrl := Ser_AppInfo.App下载更新地址变量处理(info.appInfo)
+	局_downloadUrl := service.NewAppInfo(c, global.GVA_DB).App下载更新地址变量处理(info.appInfo)
 
 	data := gin.H{
 		"appId":            info.appInfo.AppId,

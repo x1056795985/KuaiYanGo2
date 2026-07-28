@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"server/Service/Ser_AppInfo"
+	"server/new/app/service"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/setting"
@@ -98,7 +98,7 @@ func (C *ExeTools) CreateExeAddFNKYTask(c *gin.Context) {
 	aaa["移除重定位信息"] = 请求.J移除重定位信息
 	aaa["移除调试信息"] = 请求.J移除调试信息
 
-	局_Appinfo := Ser_AppInfo.App取App详情(请求.AppId)
+	局_Appinfo := service.NewAppInfo(c, global.GVA_DB).App取App详情(请求.AppId)
 	局_系统地址 := setting.Q系统设置().X系统地址
 	局_可用版本 := W文本_分割文本(局_Appinfo.AppVer, "\n")
 	var appInfo = make(gin.H, 4)
@@ -164,7 +164,7 @@ func (C *ExeTools) GetList(c *gin.Context) {
 			Path:        局_任务提交.Get("Path").String(),
 			Ui:          局_任务提交.Get("Ui").Int(),
 			AppId:       局_任务提交.Get("AppId").Int(),
-			AppName:     Ser_AppInfo.AppId取应用名称(局_任务提交.Get("AppId").Int()),
+			AppName:     service.NewAppInfo(c, global.GVA_DB).AppId取应用名称(局_任务提交.Get("AppId").Int()),
 			DownloadUrl: 局_任务结果.Get("Url").String(),
 			ExeMd5:      局_任务结果.Get("ExeMd5").String(),
 			Err:         局_任务结果.Get("msg").String(),

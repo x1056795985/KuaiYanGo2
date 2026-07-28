@@ -6,10 +6,10 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"server/Service/Ser_Log"
-	"server/Service/Ser_User"
 	"server/new/app/global"
+	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/rmbPay"
+	"server/new/app/logic/common/user"
 	m "server/new/app/models/common"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
@@ -83,12 +83,12 @@ func (j 余额支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 		err = errors.New("余额不足")
 		return
 	}
-	info.userInfo.Rmb, err = Ser_User.Id余额增减(info.likeInfo.Uid, 参数.Rmb, false)
+	info.userInfo.Rmb, err = user.L_user.Id余额增减(c, info.likeInfo.Uid, 参数.Rmb, false)
 	if err != nil {
 		err = errors.New("余额支付仅限账号模式应用调用")
 		return
 	}
-	go Ser_Log.Log_写余额日志(info.likeInfo.User, info.likeInfo.Ip, "余额支付订单:"+参数.PayOrder+"|新余额≈"+Float64到文本(info.userInfo.Rmb, 2), 参数.Rmb)
+	go log.L_log.Log_写余额日志(info.likeInfo.User, info.likeInfo.Ip, "余额支付订单:"+参数.PayOrder+"|新余额≈"+Float64到文本(info.userInfo.Rmb, 2), 参数.Rmb)
 
 	response = m.Request{
 		Status:  1,

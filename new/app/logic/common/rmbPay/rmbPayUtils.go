@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/skip2/go-qrcode"
-	"server/Service/Ser_RMBPayOrder"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
+	"server/new/app/service"
 	"strconv"
 	"strings"
 	"time"
@@ -57,7 +57,7 @@ func (j *rmbPay) S生成二维码并转base64(内容 string) string {
 func (j *rmbPay) Q取提示信息(参数 *common.PayParams) string {
 
 	if 参数.User == "" && 参数.ProcessingType == constant.D订单类型_支付购卡 {
-		return "支付购卡:" + Ser_RMBPayOrder.C处理类型[参数.ProcessingType]
+		return "支付购卡:" + service.C处理类型[参数.ProcessingType]
 	}
 
 	if 参数.User == "" {

@@ -9,7 +9,6 @@ import (
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Js"
-	"server/Service/Ser_PublicJs"
 	"server/new/app/controller/userSafetyApi/response"
 	"server/new/app/global"
 	"server/new/app/logic/common/cloudStorage"
@@ -63,9 +62,9 @@ func UserApi_云函数执行(c *gin.Context) {
 	// {"Api":"RunJS","Parameter":"{'a':1}","JsName":"获取用户相关信息","IsGlobal":false,"Time":1684497856,"Status":30873}
 	var 局_JSid = 0
 	if 局_ctx.Q请求明文.Get("IsGlobal").Bool() {
-		局_JSid = Ser_PublicJs.Name取Id([]int{Ser_PublicJs.Js类型_公共函数}, 局_ctx.Q请求明文.Get("JsName").String())
+		局_JSid = service.NewPublicJs(c, global.GVA_DB).Name取Id([]int{service.Js类型_公共函数}, 局_ctx.Q请求明文.Get("JsName").String())
 	} else {
-		局_JSid = Ser_PublicJs.Name取Id([]int{局_ctx.AppInfo.AppId}, 局_ctx.Q请求明文.Get("JsName").String())
+		局_JSid = service.NewPublicJs(c, global.GVA_DB).Name取Id([]int{局_ctx.AppInfo.AppId}, 局_ctx.Q请求明文.Get("JsName").String())
 	}
 	if 局_JSid == 0 {
 		response.FailMsg(c, constant.Status_操作失败, "JS公共函数不存在")
@@ -75,7 +74,7 @@ func UserApi_云函数执行(c *gin.Context) {
 
 	var 局_PublicJs dbm.DB_PublicJs
 	var err error
-	局_PublicJs, err = Ser_PublicJs.Q取值2(局_JSid)
+	局_PublicJs, err = service.NewPublicJs(c, global.GVA_DB).Q取值2(局_JSid)
 
 	if err != nil {
 		response.FailMsg(c, constant.Status_操作失败, "JS公共函数不存在")

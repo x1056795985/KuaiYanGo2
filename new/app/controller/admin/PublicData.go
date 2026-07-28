@@ -3,7 +3,7 @@ package controller
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	Db服务 "server/Service/Ser_AppInfo"
+	"server/new/app/service"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/publicData"
@@ -118,7 +118,7 @@ func (C *PublicDataCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	var AppName = Db服务.App取map列表String(false)
+	var AppName = service.NewAppInfo(c, global.GVA_DB).App取map列表String(false)
 	AppName["1"] = "全局"
 
 	for 索引 := range DB_PublicData {

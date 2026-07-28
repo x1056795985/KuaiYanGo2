@@ -10,9 +10,9 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"runtime/debug"
-	"server/Service/Ser_PublicJs"
 	"server/new/app/global"
 	"server/new/app/logic/common/cycleNot"
+	"server/new/app/logic/common/publicJs"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
@@ -255,10 +255,11 @@ func (j *webSocket) ProcessTextMessage(ws *websocket.Conn, linkId int, message *
 	}
 
 	var 局_PublicJs dbm.DB_PublicJs
+	var c = gin.Context{}
 	if W文本_是否为数字(局_json.Api) {
-		局_PublicJs, err = Ser_PublicJs.Q取值2(D到整数(局_json.Api))
+		局_PublicJs, err = service.NewPublicJs(&c, global.GVA_DB).Q取值2(D到整数(局_json.Api))
 	} else {
-		局_PublicJs, err = Ser_PublicJs.P取值2(constant.APPID_WebSocket, 局_json.Api)
+		局_PublicJs, err = publicJs.L_publicJs.P取值2(&c, constant.APPID_WebSocket, 局_json.Api)
 	}
 
 	if err != nil || 局_PublicJs.AppId != constant.APPID_WebSocket {
@@ -267,7 +268,6 @@ func (j *webSocket) ProcessTextMessage(ws *websocket.Conn, linkId int, message *
 
 	var AppInfo dbm.DB_AppInfo
 	var 局_在线信息 dbm.DB_LinksToken
-	var c = gin.Context{}
 	var response common.WsMsgResponse
 	response.I = 局_json.I
 	response.Code = constant.Status_操作失败

@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"server/Service/Captcha"
-	"server/Service/Ser_Log"
 	"server/new/app/controller/Common"
+	"server/new/app/logic/common/log"
 	"server/new/app/global"
 	"server/new/app/models/db"
 	"server/new/app/models/old/response"
@@ -66,7 +66,7 @@ func (l *LoginCtrl) Login(c *gin.Context) {
 	if j校验验证码 {
 		if !Captcha.Captcha_Verify点选(Request.CaptchaId, Request.Captcha, true) {
 			response.FailWithMessage("验证码错误", c)
-			go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "验证码错误:"+Request.Captcha, 4)
+			go log.L_log.Log_写登录日志(Request.Username, c.ClientIP(), "验证码错误:"+Request.Captcha, 4)
 			return
 		}
 	}
@@ -85,13 +85,13 @@ func (l *LoginCtrl) Login(c *gin.Context) {
 		} else {
 			response.FailWithMessage("账号或密码错误", c)
 		}
-		go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "密码错误:"+Request.Password, 4)
+		go log.L_log.Log_写登录日志(Request.Username, c.ClientIP(), "密码错误:"+Request.Password, 4)
 		return
 	}
 
 	if DB_user.Status != 1 {
 		response.FailWithMessage("用户被禁止登录", c)
-		go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "用户被禁止登录", 4)
+		go log.L_log.Log_写登录日志(Request.Username, c.ClientIP(), "用户被禁止登录", 4)
 		return
 	}
 	global.H缓存.Delete(客户端ip)
@@ -113,7 +113,7 @@ func (l *LoginCtrl) Login(c *gin.Context) {
 	DB_links_user.LoginAppid = 1 //管理员后台代号1
 
 	err = global.GVA_DB.Create(&DB_links_user).Error
-	go Ser_Log.Log_写登录日志(Request.Username, c.ClientIP(), "管理平台登录", 4)
+	go log.L_log.Log_写登录日志(Request.Username, c.ClientIP(), "管理平台登录", 4)
 	快验 := global.Q快验.Q取登录状态()
 
 	response.OkWithDetailed(结构_登录响应{

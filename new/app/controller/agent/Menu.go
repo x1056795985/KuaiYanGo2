@@ -3,9 +3,6 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"server/Service/Ser_LinkUser"
-	"server/Service/Ser_RMBPayOrder"
-	"server/Service/Ser_User"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/agent"
@@ -13,6 +10,7 @@ import (
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
+	"server/new/app/service"
 	"server/new/app/models/old/response"
 	"server/new/app/utils"
 	"strconv"
@@ -72,7 +70,7 @@ func (A *AgentMenu) NewPassword(c *gin.Context) {
 	}
 
 	Uid := c.GetInt("Uid")
-	err = Ser_User.Id置新密码(Uid, 请求.NewPassword)
+	err = service.NewUser(c, global.GVA_DB).Id置新密码(Uid, 请求.NewPassword)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return
@@ -83,7 +81,7 @@ func (A *AgentMenu) NewPassword(c *gin.Context) {
 
 // OutLogin 退出登录
 func (A *AgentMenu) OutLogin(c *gin.Context) {
-	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
+	err := service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		return
@@ -123,7 +121,7 @@ func (A *AgentMenu) Y余额充值(c *gin.Context) {
 
 	//========订单状态查询=======================
 	if 请求.D订单ID != "" {
-		局_订单信息, ok := Ser_RMBPayOrder.Order取订单详细(请求.D订单ID)
+		局_订单信息, ok := service.NewRmbPayService(global.GVA_DB).Order取订单详细(请求.D订单ID)
 		if !ok {
 			response.FailWithMessage("订单不存在", c)
 		} else {
@@ -164,9 +162,9 @@ func (A *AgentMenu) Q取余额充值订单状态(c *gin.Context) {
 		return
 	}
 
-	局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(请求.D订单ID)
+	局_订单详细信息, ok := service.NewRmbPayService(global.GVA_DB).Order取订单详细(请求.D订单ID)
 	if !ok {
-		局_订单详细信息, ok = Ser_RMBPayOrder.Order取订单详细_第三方订单(请求.D订单ID)
+		局_订单详细信息, ok = service.NewRmbPayService(global.GVA_DB).Order取订单详细_第三方订单(请求.D订单ID)
 	}
 
 	if !ok || 局_订单详细信息.Uid != c.GetInt("Uid") {

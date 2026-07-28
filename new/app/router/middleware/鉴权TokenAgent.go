@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_User"
 	"server/new/app/global"
 	"server/new/app/logic/common/setting"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/old/response"
+	"server/new/app/service"
 	"time"
 )
 
@@ -46,7 +46,7 @@ func IsTokenAgent() gin.HandlerFunc {
 		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
 			global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("LastTime", time.Now().Unix())
 		}
-		go Ser_User.Id置最后登录AppId(DB_LinksToken.Uid, 2, c.ClientIP())
+		go service.NewUser(c, global.GVA_DB).Id置最后登录AppId(DB_LinksToken.Uid, 2, c.ClientIP())
 		//把 userID 保存到上下文,这样逻辑层就不用再查询了
 		c.Set("Uid", DB_LinksToken.Uid)
 		c.Set("User", DB_LinksToken.User)

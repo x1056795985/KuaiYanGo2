@@ -3,8 +3,8 @@ package webSocket
 import (
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"net/http"
-	"server/Service/Ser_Log"
 	"server/new/app/global"
+	"server/new/app/logic/common/log"
 	"server/new/app/logic/webSocket"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
@@ -99,7 +99,7 @@ func WebSocketHandler(c *gin.Context) {
 		_ = ws.WriteMessage(websocket.TextMessage, []byte(返回))
 		return
 	}
-	go Ser_Log.Log_写登录日志(局_在线信息_旧.User, c.ClientIP(), "["+strconv.Itoa(局_在线信息_旧.LoginAppid)+"]已链接wss", constant.APPID_Web用户中心)
+	go log.L_log.Log_写登录日志(局_在线信息_旧.User, c.ClientIP(), "["+strconv.Itoa(局_在线信息_旧.LoginAppid)+"]已链接wss", constant.APPID_Web用户中心)
 
 	// 添加连接到管理器
 	webSocket.L_webSocket.Add(c, 局_在线信息_新.Id, ws)

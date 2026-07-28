@@ -7,12 +7,10 @@ import (
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
-	App服务 "server/Service/Ser_AppInfo"
 	"server/Service/Ser_Js"
-	"server/Service/Ser_PublicJs"
-	"server/Service/Ser_TaskPool"
 	"server/new/app/global"
 	"server/new/app/logic/admin/L_pay"
+	"server/new/app/logic/common/publicJs"
 	"server/new/app/models/db"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
@@ -117,7 +115,7 @@ func T通用任务执行函数2(时间戳 int64, R任务数据 db.DB_Cron) (stri
 		D定时任务_删除已过期的Token(&c)
 		return "", nil
 	case -3: //任务池Task数据删除过期
-		Ser_TaskPool.Task数据删除过期()
+		service.NewTaskPoolData(&c, global.GVA_DB).Task数据删除过期()
 		return "", nil
 	case -4: //关闭超时订单
 		err = L_pay.G关闭超时订单()
@@ -327,7 +325,7 @@ func D定时任务_执行公共函数(时间戳 int64, R任务数据 db.DB_Cron)
 	}
 
 	局_云函数型参数 = utils.W文本_取出中间文本(R任务数据.RunText, firstChar, firstChar) //获取字符串参数
-	局_js数据, err := Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_公共函数, 局_函数名)
+	局_js数据, err := publicJs.L_publicJs.P取值2(&gin.Context{}, service.Js类型_公共函数, 局_函数名)
 	if err != nil {
 		return 返回, errors.New("获取全局公共js函数失败:" + err.Error())
 	}
@@ -356,7 +354,7 @@ func D定时任务_删除已过期唯一积分记录(c *gin.Context) {
 	}
 
 	tx := *global.GVA_DB
-	局_全部应用 := App服务.AppInfo取map列表Int(true)
+	局_全部应用 := service.NewAppInfo(c, &tx).AppInfo取map列表Int(true)
 
 	for key, _ := range 局_全部应用 {
 		if key <= 10000 { //过滤掉其他的

@@ -3,12 +3,10 @@ package controller
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_AppInfo"
-	"server/Service/Ser_AppUser"
-	"server/Service/Ser_Log"
 	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
+	"server/new/app/logic/common/log"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/old/response"
@@ -34,7 +32,7 @@ func (A *AgentOtherFunc) SetAppUserKey(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-	if !Ser_AppInfo.AppId是否存在(请求.AppId) {
+	if !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("应用不存在", c)
 		return
 	}
@@ -45,13 +43,13 @@ func (A *AgentOtherFunc) SetAppUserKey(c *gin.Context) {
 		return
 	}
 
-	局_AppUserId := Ser_AppUser.User或卡号取Id(请求.AppId, 请求.User)
+	局_AppUserId := service.NewAppUser(c, global.GVA_DB, 请求.AppId).User或卡号取Id(请求.AppId, 请求.User)
 	if 局_AppUserId == 0 {
 		response.FailWithMessage("用户不存在", c)
 		return
 	}
 
-	局_用户详情, err := Ser_AppUser.Id取详情(请求.AppId, 局_AppUserId)
+	局_用户详情, err := service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id取详情(请求.AppId, 局_AppUserId)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -61,12 +59,12 @@ func (A *AgentOtherFunc) SetAppUserKey(c *gin.Context) {
 		return
 	}
 
-	if err = Ser_AppUser.Set绑定信息(请求.AppId, 局_用户详情.Uid, 请求.Key); err != nil {
+	if err = service.NewAppUser(c, global.GVA_DB, 请求.AppId).Set绑定信息(请求.AppId, 局_用户详情.Uid, 请求.Key); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
-	局_用户名 := Ser_AppUser.Id取User(请求.AppId, 局_AppUserId)
+	局_用户名 := service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id取User(请求.AppId, 局_AppUserId)
 	局_DB := *global.GVA_DB
 	_, err = service.NewLogKey(c, &局_DB).Create(&dbm.DB_LogKey{
 		Type:   constant.LogKey_换绑,
@@ -84,6 +82,6 @@ func (A *AgentOtherFunc) SetAppUserKey(c *gin.Context) {
 	}
 
 	局_信息 := "修改绑定信息 '" + 局_用户详情.Key + "'  ->  '" + 请求.Key + "'"
-	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 请求.AppId, 局_AppUserId, 局_用户名, dbm.D代理功能_修改用户绑定, c.ClientIP(), 局_信息)
+	log.L_log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 请求.AppId, 局_AppUserId, 局_用户名, dbm.D代理功能_修改用户绑定, c.ClientIP(), 局_信息)
 	response.OkWithMessage("操作成功", c)
 }

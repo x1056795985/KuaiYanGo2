@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_UserConfig"
+	"server/new/app/global"
 	m "server/new/app/models/common"
 	"server/new/app/models/constant"
+	"server/new/app/service"
 )
 
 func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data m.Z在线支付, err error) {
@@ -28,7 +29,7 @@ func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data m.Z在线�
 		return
 	}
 	func取值并解析 := func(key string, data any) (err error) {
-		局_临时文本 := Ser_UserConfig.Q取值(constant.APPID_代理平台, 局_uid, key)
+		局_临时文本 := service.NewUserConfig(c, global.GVA_DB).Q取值(constant.APPID_代理平台, 局_uid, key)
 		if 局_临时文本 != "" {
 			err = json.Unmarshal([]byte(局_临时文本), &data)
 		}
@@ -58,7 +59,7 @@ func Z置代理在线支付信息(c *gin.Context, 在线支付 m.Z在线支付) 
 		if err2 != nil {
 			marshal = []byte("{}")
 		}
-		err2 = Ser_UserConfig.Z置值(constant.APPID_代理平台, 局_uid, key, string(marshal))
+		err2 = service.NewUserConfig(c, global.GVA_DB).Z置值(constant.APPID_代理平台, 局_uid, key, string(marshal))
 		return err2
 	}
 

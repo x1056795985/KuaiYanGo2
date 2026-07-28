@@ -103,3 +103,10 @@ func (s *TaskPoolType) Save(info db.TaskPool_类型) (row int64, err error) {
 	tx := s.db.Model(db.TaskPool_类型{}).Where("Id = ?", info.Id).Save(&info)
 	return tx.RowsAffected, tx.Error
 }
+
+// Task类型读取 按id取任务类型
+func (s *TaskPoolType) Task类型读取(id int) (db.TaskPool_类型, error) {
+	var DB_TaskPool_类型 db.TaskPool_类型
+	err := s.db.Model(db.TaskPool_类型{}).Where("Id=?", id).First(&DB_TaskPool_类型).Error
+	return DB_TaskPool_类型, err
+}

@@ -5,15 +5,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/Service/Ser_AppInfo"
-	"server/Service/Ser_LinkUser"
-	"server/Service/Ser_Log"
-	"server/Service/Ser_User"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
+	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/setting"
+	"server/new/app/logic/common/user"
 	"server/new/app/models/constant"
 	"server/new/app/models/db"
 	"server/new/app/models/old/response"
@@ -81,7 +79,7 @@ func (C *UserCtrl) GetAdminInfo(c *gin.Context) {
 		return
 	}
 
-	局_未读用户消息数量 := Ser_Log.Y用户消息_取未读数量()
+	局_未读用户消息数量 := log.L_log.Y用户消息_取未读数量(DB_user.User)
 	response.OkWithDetailed(响应_GetAdminInfo{
 		AdminInfo:     DB_user,
 		UserMsgNoRead: 局_未读用户消息数量,
@@ -91,7 +89,7 @@ func (C *UserCtrl) GetAdminInfo(c *gin.Context) {
 
 // OutLogin 管理员退出登录
 func (C *UserCtrl) OutLogin(c *gin.Context) {
-	err := Ser_LinkUser.Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
+	err := service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		return
@@ -209,7 +207,7 @@ func (C *UserCtrl) GetUserList(c *gin.Context) {
 		return
 	}
 
-	var AppName = Ser_AppInfo.App取map列表String(true)
+	var AppName = service.NewAppInfo(c, global.GVA_DB).App取map列表String(true)
 	for 索引 := range DB_User_简化实例 {
 		DB_User_简化实例[索引].LoginAppName = AppName[DB_User_简化实例[索引].LoginAppid]
 	}
@@ -234,14 +232,14 @@ func (C *UserCtrl) NewUser(c *gin.Context) {
 		response.FailWithMessage("非系统管理员只能创建余额=0的普通用户", c)
 		return
 	}
-	_, err := Ser_User.New用户信息(请求.User, 请求.PassWord, 请求.SuperPassWord, 请求.Qq, 请求.Email, 请求.Phone, c.ClientIP(), 请求.Note, 0, 0, 请求.Rmb, "")
+	_, err := user.L_user.New用户信息(c, 请求.User, 请求.PassWord, 请求.SuperPassWord, 请求.Qq, 请求.Email, 请求.Phone, c.ClientIP(), 请求.Note, 0, 0, 请求.Rmb, "")
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithMessage("添加成功", c)
 	if 请求.Rmb != 0 {
-		go Ser_Log.Log_写余额日志(请求.User, c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带余额:%v", c.GetInt("Uid"), 请求.Rmb), 请求.Rmb)
+		go log.L_log.Log_写余额日志(请求.User, c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带余额:%v", c.GetInt("Uid"), 请求.Rmb), 请求.Rmb)
 	}
 }
 
@@ -269,7 +267,7 @@ func (C *UserCtrl) SaveUser(c *gin.Context) {
 		return
 	}
 
-	用户详情, ok := Ser_User.Id取详情(请求.Id)
+	用户详情, ok := service.NewUser(c, global.GVA_DB).Id取详情(请求.Id)
 	if !ok {
 		response.FailWithMessage("用户不存在", c)
 		return
@@ -303,7 +301,7 @@ func (C *UserCtrl) SaveUser(c *gin.Context) {
 		return
 	}
 	if 用户详情.Rmb != 请求.Rmb {
-		go Ser_Log.Log_写余额日志(用户详情.User, c.ClientIP(), "管理员ID:"+strconv.Itoa(c.GetInt("Uid"))+"编辑用户信息余额变化:"+utils.Float64到文本(用户详情.Rmb, 2)+"=>"+utils.Float64到文本(请求.Rmb, 2), 请求.Rmb-用户详情.Rmb)
+		go log.L_log.Log_写余额日志(用户详情.User, c.ClientIP(), "管理员ID:"+strconv.Itoa(c.GetInt("Uid"))+"编辑用户信息余额变化:"+utils.Float64到文本(用户详情.Rmb, 2)+"=>"+utils.Float64到文本(请求.Rmb, 2), 请求.Rmb-用户详情.Rmb)
 	}
 	response.OkWithMessage("保存成功"+strconv.Itoa(int(db.RowsAffected)), c)
 }
@@ -328,9 +326,9 @@ func (C *UserCtrl) SetUserStatus(c *gin.Context) {
 		err = global.GVA_DB.Model(db.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 2).Error
 		局_user数组 := make([]string, 0, len(请求.Id))
 		for _, 值 := range 请求.Id {
-			局_user数组 = append(局_user数组, Ser_User.Id取User(值))
+			局_user数组 = append(局_user数组, service.NewUser(c, global.GVA_DB).Id取User(值))
 		}
-		_ = Ser_LinkUser.Set批量注销User数组(局_user数组, constant.Z注销_管理员手动注销)
+		_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销User数组(局_user数组, constant.Z注销_管理员手动注销)
 	} else {
 		err = global.GVA_DB.Model(db.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 1).Error
 	}
@@ -403,7 +401,7 @@ func (C *UserCtrl) BatchAddRMB(c *gin.Context) {
 		return
 	}
 
-	err := Ser_User.Id余额增减_批量(请求.Id, utils.Float64取绝对值(请求.RMB), 请求.RMB > 0)
+	err := user.L_user.Id余额增减_批量(c, 请求.Id, utils.Float64取绝对值(请求.RMB), 请求.RMB > 0)
 	if err != nil {
 		response.FailWithMessage("操作失败:"+err.Error(), c)
 		return
@@ -414,7 +412,7 @@ func (C *UserCtrl) BatchAddRMB(c *gin.Context) {
 		局_前缀 = "管理员批量减少余额,原因:"
 	}
 	for _, 局_id := range 请求.Id {
-		Ser_Log.Log_写余额日志(Ser_User.Id取User(局_id), c.ClientIP(), 局_前缀+请求.Note, 请求.RMB)
+		log.L_log.Log_写余额日志(service.NewUser(c, global.GVA_DB).Id取User(局_id), c.ClientIP(), 局_前缀+请求.Note, 请求.RMB)
 	}
 	response.OkWithMessage("修改成功", c)
 }

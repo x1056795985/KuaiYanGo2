@@ -6,14 +6,12 @@ import (
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"net/http"
 	"server/Service/Captcha"
-	"server/Service/Ser_AppUser"
-	"server/Service/Ser_Ka"
-	"server/Service/Ser_Log"
-	"server/Service/Ser_UserClass"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
 	"server/new/app/global"
+	"server/new/app/logic/common/appUser"
 	"server/new/app/logic/common/ka"
+	"server/new/app/logic/common/log"
 	"server/new/app/logic/webUser/appInfoWebUser"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
@@ -92,7 +90,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		//验证码验证码正确 = 真
 		if !Captcha.Captcha_Verify点选(请求.CaptchaId, 请求.Captcha, true) {
 			response.FailWithMessage(c, "验证码错误")
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]验证码错误:"+请求.Captcha, constant.APPID_Web用户中心)
+			go log.L_log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]验证码错误:"+请求.Captcha, constant.APPID_Web用户中心)
 			return
 		}
 	}
@@ -104,7 +102,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 			return
 		}
 		if info.kaInfo.Status == 2 {
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]卡号已冻结", constant.APPID_Web用户中心)
+			go log.L_log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]卡号已冻结", constant.APPID_Web用户中心)
 			response.FailWithMessage(c, "卡号已冻结")
 			return
 		}
@@ -113,17 +111,17 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		info.user, err = service.NewUser(c, &tx).InfoName(请求.UserOrKa)
 		// 没查到数据  或  取反(密码正确)
 		if err != nil || !utils.BcryptCheck(请求.Password, info.user.PassWord) {
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]用户或密码错误", constant.APPID_Web用户中心)
+			go log.L_log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]用户或密码错误", constant.APPID_Web用户中心)
 			response.FailWithMessage(c, "用户或密码错误")
 			return
 		}
 		if info.user.Status == 2 {
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]账号已冻结", constant.APPID_Web用户中心)
+			go log.L_log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]账号已冻结", constant.APPID_Web用户中心)
 			response.FailWithMessage(c, "账号已冻结")
 			return
 		}
 		if info.user.UPAgentId != 0 {
-			go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]代理商请登录代理平台,禁止登陆用户中心", constant.APPID_Web用户中心)
+			go log.L_log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]代理商请登录代理平台,禁止登陆用户中心", constant.APPID_Web用户中心)
 			response.FailWithMessage(c, "代理商请登录代理平台,禁止登陆用户中心")
 			return
 		}
@@ -139,24 +137,24 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		//没有这个用户,应该是第一次登录应用,添加进去
 		switch info.appInfo.AppType {
 		case 1:
-			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", 1, time.Now().Unix(), 0, 0, "")
+			err = appUser.L_appUser.New用户信息(c, info.appInfo.AppId, info.Uid, "", 1, time.Now().Unix(), 0, 0, "")
 		case 2: //账号限时
-			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", 1, 0, 0, 0, "")
+			err = appUser.L_appUser.New用户信息(c, info.appInfo.AppId, info.Uid, "", 1, 0, 0, 0, "")
 		case 3:
 			//卡号模式,制卡人就是归属代理 如果是管理员制造的卡, 就使用代理标志为归属uid
-			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), time.Now().Unix()+info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote)
-			_ = Ser_Ka.Ka修改已用次数加一([]int{info.Uid})
+			err = appUser.L_appUser.New用户信息(c, info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), time.Now().Unix()+info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote)
+			_ = service.NewKa(c, global.GVA_DB).Ka修改已用次数加一([]int{info.Uid})
 		case 4:
 			//卡号模式,制卡人就是归属代理
-			err = Ser_AppUser.New用户信息(info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote)
-			_ = Ser_Ka.Ka修改已用次数加一([]int{info.Uid})
+			err = appUser.L_appUser.New用户信息(c, info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote)
+			_ = service.NewKa(c, global.GVA_DB).Ka修改已用次数加一([]int{info.Uid})
 		default:
 			//???应该不会到这里
 			response.FailWithMessage(c, "AppInfo.AppType错误")
 		}
 
 		if err != nil {
-			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.appInfo.AppId, 请求.UserOrKa, info.appInfo.AppName, info.DB_links_user.AppVer, "新添加软件用户时失败报错信息:"+err.Error(), c.ClientIP())
+			go log.L_log.Log_写用户消息(log.Log用户消息类型_系统执行错误, info.appInfo.AppId, 请求.UserOrKa, info.appInfo.AppName, info.DB_links_user.AppVer, "新添加软件用户时失败报错信息:"+err.Error(), c.ClientIP())
 			response.FailWithMessage(c, "New用户信息内部错误")
 			return
 		}
@@ -186,20 +184,20 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	info.DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	info.DB_links_user.LoginAppid = constant.APPID_Web用户中心
 	err = global.GVA_DB.Create(&info.DB_links_user).Error
-	go Ser_Log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]登录", constant.APPID_Web用户中心)
+	go log.L_log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]登录", constant.APPID_Web用户中心)
 
 	//账号模式登录成功把登录信息写到账号表
 	if info.appInfo.AppType == 1 || info.appInfo.AppType == 2 {
 		_, err = service.NewUser(c, &tx).Update(info.appInfo.AppId, map[string]interface{}{"LoginAppid": constant.APPID_Web用户中心, "LoginIp": c.ClientIP(), "LoginTime": time.Now().Unix()})
 		if err != nil {
 			局_log := "账号模式登录成功把登录最后时间信息写到账号表失败:" + err.Error()
-			Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.appInfo.AppId, 请求.UserOrKa, "webUser", strconv.Itoa(请求.AppId), 局_log, c.ClientIP())
+			log.L_log.Log_写用户消息(log.Log用户消息类型_系统执行错误, info.appInfo.AppId, 请求.UserOrKa, "webUser", strconv.Itoa(请求.AppId), 局_log, c.ClientIP())
 			return
 		}
 	}
 
 	var 局_用户类型 dbm.DB_UserClass
-	局_用户类型, ok = Ser_UserClass.Id取详情(请求.AppId, info.appUser.UserClassId)
+	局_用户类型, ok = service.NewUserClass(c, global.GVA_DB).Id取详情(请求.AppId, info.appUser.UserClassId)
 	if !ok {
 		局_用户类型.Name = "已删待改"
 		局_用户类型.Mark = 0
@@ -288,14 +286,14 @@ func (C *Base) LoginKey(c *gin.Context) {
 	if err != nil {
 		goto 结束开始跳转
 	}
-	go Ser_Log.Log_写登录日志(info.来源links_user.User, c.ClientIP(), "["+strconv.Itoa(info.来源links_user.LoginAppid)+"]登录", constant.APPID_Web用户中心)
+	go log.L_log.Log_写登录日志(info.来源links_user.User, c.ClientIP(), "["+strconv.Itoa(info.来源links_user.LoginAppid)+"]登录", constant.APPID_Web用户中心)
 
 	//账号模式登录成功把登录信息写到账号表
 	if info.appInfo.AppType == 1 || info.appInfo.AppType == 2 {
 		_, err = service.NewUser(c, &tx).Update(info.appInfo.AppId, map[string]interface{}{"LoginAppid": constant.APPID_Web用户中心, "LoginIp": c.ClientIP(), "LoginTime": time.Now().Unix()})
 		if err != nil {
 			局_log := "账号模式登录成功把登录最后时间信息写到账号表失败:" + err.Error()
-			Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, info.appInfo.AppId, info.来源links_user.User, "webUser", strconv.Itoa(info.appInfo.AppId), 局_log, c.ClientIP())
+			log.L_log.Log_写用户消息(log.Log用户消息类型_系统执行错误, info.appInfo.AppId, info.来源links_user.User, "webUser", strconv.Itoa(info.appInfo.AppId), 局_log, c.ClientIP())
 		}
 	}
 

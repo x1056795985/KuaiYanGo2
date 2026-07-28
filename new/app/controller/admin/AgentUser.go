@@ -4,9 +4,6 @@ import (
 	. "EFunc/utils"
 	"bytes"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_AppInfo"
-	"server/Service/Ser_KaClass"
-	"server/Service/Ser_User"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/models/db"
@@ -55,10 +52,10 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 		response.FailWithMessage("AppId请输>=10000的整数", c)
 		return
 	}
-	info.appInfo = Ser_AppInfo.App取App详情(请求.AppId)
+	info.appInfo = service.NewAppInfo(c, global.GVA_DB).App取App详情(请求.AppId)
 
 	if 请求.AgentName != "" {
-		局_代理info, ok := Ser_User.User取详情(请求.AgentName)
+		局_代理info, ok := service.NewUser(c, global.GVA_DB).User取详情(请求.AgentName)
 		if !ok {
 			response.FailWithMessage("代理不存在", c)
 			return
@@ -145,7 +142,7 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 		局_快速文本对象.WriteString("\n")
 		局_快速文本对象.WriteString("\n[应用名称]:" + info.appInfo.AppName + "")
 		for 局_卡类id, 局_卡类id数量 := range 局_卡类map {
-			info.卡类id名称map[局_卡类id] = Ser_KaClass.Id取Name(局_卡类id)
+			info.卡类id名称map[局_卡类id] = service.NewKaClass(c, global.GVA_DB).Id取Name(局_卡类id)
 			局_快速文本对象.WriteString("   [" + info.卡类id名称map[局_卡类id] + "]:" + strconv.Itoa(局_卡类id数量) + "")
 		}
 		局_快速文本对象.WriteString("\n-----------------------------------------")

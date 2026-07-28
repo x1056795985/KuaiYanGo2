@@ -5,22 +5,16 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/Service/Ser_Admin"
-	"server/Service/Ser_AppInfo"
-	"server/Service/Ser_AppUser"
-	"server/Service/Ser_Ka"
-	"server/Service/Ser_LinkUser"
-	"server/Service/Ser_Log"
-	"server/Service/Ser_User"
-	"server/Service/Ser_UserClass"
-	"server/Service/Ser_UserConfig"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
+	"server/new/app/logic/common/appUser"
+	"server/new/app/logic/common/log"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/old/response"
+	"server/new/app/service"
 	"strconv"
 	"time"
 )
@@ -66,7 +60,7 @@ func (C *AppUserFull) Info(c *gin.Context) {
 		return
 	}
 
-	app信息 := Ser_AppInfo.App取App详情(请求.AppId)
+	app信息 := service.NewAppInfo(c, global.GVA_DB).App取App详情(请求.AppId)
 	DB_AppUser.AppType = app信息.AppType
 	response.OkWithDetailed(DB_AppUser, "获取成功", c)
 }
@@ -99,7 +93,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 	var 总数 int64
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(请求.AppId)
 	局_DB := global.GVA_DB.Table(表名_AppUser)
-	if Ser_AppInfo.App是否为卡号(请求.AppId) {
+	if service.NewAppInfo(c, global.GVA_DB).App是否为卡号(请求.AppId) {
 		局_DB = 局_DB.Select(表名_AppUser+".*", "db_Ka.Name", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_Ka on " + 表名_AppUser + ".Uid=db_Ka.Id")
 	} else {
 		局_DB = 局_DB.Select(表名_AppUser+".*", "db_User.User", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_User on " + 表名_AppUser + ".Uid=db_User.Id")
@@ -117,7 +111,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 	}
 
 	var app信息 dbm.DB_AppInfo
-	app信息 = Ser_AppInfo.App取App详情(请求.AppId)
+	app信息 = service.NewAppInfo(c, global.GVA_DB).App取App详情(请求.AppId)
 	switch 请求.VipTimeStatus {
 	case 1:
 		if app信息.AppType == 2 || app信息.AppType == 4 {
@@ -161,7 +155,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 			局_DB.Where(表名_AppUser+".Uid = ?", 请求.Keywords)
 		case 3:
 			局_用户名数组 := utils.Z正则_取全部匹配子文本(请求.Keywords, "([A-Za-z0-9]+)")
-			if Ser_AppInfo.App是否为卡号(请求.AppId) {
+			if service.NewAppInfo(c, global.GVA_DB).App是否为卡号(请求.AppId) {
 				if len(局_用户名数组) == 1 {
 					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where db_Ka.Name like ? )", "%"+请求.Keywords+"%"))
 				} else {
@@ -179,7 +173,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 		case 5:
 			局_DB.Where("LOCATE( ?, "+表名_AppUser+".Note)>0 ", 请求.Keywords)
 		case 6:
-			局_代理id := Ser_User.User用户名取id(请求.Keywords)
+			局_代理id := service.NewUser(c, global.GVA_DB).User用户名取id(请求.Keywords)
 			if 局_代理id == 0 {
 				局_代理id, _ = strconv.Atoi(请求.Keywords)
 			}
@@ -189,7 +183,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 			局_DB.Where("AgentUid = ?", 局_代理id)
 		case 7:
 			局_代理id含子级id := []int{}
-			局_代理id := Ser_User.User用户名取id(请求.Keywords)
+			局_代理id := service.NewUser(c, global.GVA_DB).User用户名取id(请求.Keywords)
 			if 局_代理id == 0 {
 				局_代理id, _ = strconv.Atoi(请求.Keywords)
 			}
@@ -226,7 +220,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 		return
 	}
 
-	UserClass := Ser_UserClass.UserClass取map列表Int(请求.AppId)
+	UserClass := service.NewUserClass(c, global.GVA_DB).UserClass取map列表Int(请求.AppId)
 	type AppUserItem struct {
 		DB_AppUser带User信息
 		AgentName string `json:"agentName"`
@@ -244,7 +238,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 	}
 	if len(局_临时uid数组) > 0 {
 		局_临时uid数组 = utils.S数组_去重复(局_临时uid数组)
-		局_map := Ser_User.Id取User_批量(局_临时uid数组)
+		局_map := service.NewUser(c, global.GVA_DB).Id取User_批量(局_临时uid数组)
 		for i := range 局_list {
 			if 局_list[i].AgentUid > 0 {
 				if 局代理名称, ok := 局_map[局_list[i].AgentUid]; ok {
@@ -282,13 +276,13 @@ func (C *AppUserFull) New(c *gin.Context) {
 		return
 	}
 
-	if Ser_AppInfo.App是否为卡号(请求.AppId) {
-		if !Ser_Ka.KaId是否存在(请求.AppId, 请求.Uid) {
+	if service.NewAppInfo(c, global.GVA_DB).App是否为卡号(请求.AppId) {
+		if !service.NewKa(c, global.GVA_DB).KaId是否存在(请求.AppId, 请求.Uid) {
 			response.FailWithMessage("卡号Uid不存在,请先去[ 卡号列表 => 制新卡 ]添加信息", c)
 			return
 		}
 	} else {
-		if !Ser_User.UserId是否存在(请求.Uid) {
+		if !service.NewUser(c, global.GVA_DB).UserId是否存在(请求.Uid) {
 			response.FailWithMessage("用户Uid不存在,请先去[ 用户管理 => 用户账户 ]添加该用户信息", c)
 			return
 		}
@@ -323,7 +317,7 @@ func (C *AppUserFull) New(c *gin.Context) {
 	}
 	response.OkWithMessage("添加成功", c)
 	if 局_信息.VipNumber != 0 {
-		go Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Uid取User(请求.AppId, 请求.Uid), c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带积分:%v", c.GetInt("Uid"), 局_信息.VipNumber), 局_信息.VipNumber, 请求.AppId, 1)
+		go log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, global.GVA_DB, 请求.AppId).Uid取User(请求.AppId, 请求.Uid), c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带积分:%v", c.GetInt("Uid"), 局_信息.VipNumber), 局_信息.VipNumber, 请求.AppId, 1)
 	}
 }
 
@@ -372,7 +366,7 @@ func (C *AppUserFull) SaveInfo(c *gin.Context) {
 		if err != nil {
 			return err
 		}
-		if Ser_AppInfo.App是否为卡号(请求.AppId) {
+		if service.NewAppInfo(c, global.GVA_DB).App是否为卡号(请求.AppId) {
 			err = tx.Model(dbm.DB_Ka{}).Where("Id = ? ", 请求.AppUser.Id).Update("Status", 请求.AppUser.Status).Error
 			if err != nil {
 				return err
@@ -382,7 +376,7 @@ func (C *AppUserFull) SaveInfo(c *gin.Context) {
 	})
 
 	if 请求.AppUser.Status == 2 {
-		_ = Ser_LinkUser.Set批量注销Uid数组([]int{局_旧用户信息.Uid}, 请求.AppId, constant.Z注销_管理员手动注销)
+		_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid数组([]int{局_旧用户信息.Uid}, 请求.AppId, constant.Z注销_管理员手动注销)
 	}
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
@@ -395,10 +389,10 @@ func (C *AppUserFull) SaveInfo(c *gin.Context) {
 		_ = tx.Model(dbm.DB_LinksToken{}).Where("LoginAppid = ?", 请求.AppId).Where("Uid = ?", 局_旧用户信息.Uid).Updates(&map[string]interface{}{"AgentUid": 请求.AppUser.AgentUid}).Error
 	}
 	for _, 值 := range 请求.UserConfig {
-		_ = Ser_UserConfig.Z置值(请求.AppId, 请求.AppUser.Uid, 值.Name, 值.Value)
+		_ = service.NewUserConfig(c, global.GVA_DB).Z置值(请求.AppId, 请求.AppUser.Uid, 值.Name, 值.Value)
 	}
 	if 局_旧用户信息.VipNumber != 请求.AppUser.VipNumber {
-		go Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Uid取User(请求.AppId, 请求.AppUser.Uid), c.ClientIP(), "管理员ID:"+strconv.Itoa(c.GetInt("Uid"))+"编辑用户信息积分变化:"+utils.Float64到文本(局_旧用户信息.VipNumber, 2)+"=>"+utils.Float64到文本(请求.AppUser.VipNumber, 2), 请求.AppUser.VipNumber-局_旧用户信息.VipNumber, 请求.AppId, 1)
+		go log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, global.GVA_DB, 请求.AppId).Uid取User(请求.AppId, 请求.AppUser.Uid), c.ClientIP(), "管理员ID:"+strconv.Itoa(c.GetInt("Uid"))+"编辑用户信息积分变化:"+utils.Float64到文本(局_旧用户信息.VipNumber, 2)+"=>"+utils.Float64到文本(请求.AppUser.VipNumber, 2), 请求.AppUser.VipNumber-局_旧用户信息.VipNumber, 请求.AppId, 1)
 	}
 }
 
@@ -426,7 +420,7 @@ func (C *AppUserFull) SetStatus(c *gin.Context) {
 		return
 	}
 
-	err := Ser_AppUser.Z置状态_同步卡号修改(请求.AppId, 请求.Id, 请求.Status)
+	err := appUser.L_appUser.Z置状态_同步卡号修改(c, 请求.AppId, 请求.Id, 请求.Status)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return
@@ -434,9 +428,9 @@ func (C *AppUserFull) SetStatus(c *gin.Context) {
 	if 请求.Status == 2 {
 		局_uid数组 := make([]int, 0, len(请求.Id))
 		for _, 值 := range 请求.Id {
-			局_uid数组 = append(局_uid数组, Ser_AppUser.Id取Uid(请求.AppId, 值))
+			局_uid数组 = append(局_uid数组, service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id取Uid(请求.AppId, 值))
 		}
-		_ = Ser_LinkUser.Set批量注销Uid数组(局_uid数组, 请求.AppId, constant.Z注销_管理员手动注销)
+		_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid数组(局_uid数组, 请求.AppId, constant.Z注销_管理员手动注销)
 	}
 	response.OkWithMessage("修改成功", c)
 }
@@ -462,9 +456,9 @@ func (C *AppUserFull) SetBatchAddVipTime(c *gin.Context) {
 	}
 	var err error
 	if 请求.Status > 0 {
-		err = Ser_AppUser.Id点数增减_批量(请求.AppId, 请求.Id, int64(请求.Status), true)
+		err = service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id点数增减_批量(请求.Id, int64(请求.Status), true)
 	} else {
-		err = Ser_AppUser.Id点数增减_批量(请求.AppId, 请求.Id, int64(-请求.Status), false)
+		err = service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id点数增减_批量(请求.Id, int64(-请求.Status), false)
 	}
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
@@ -475,7 +469,7 @@ func (C *AppUserFull) SetBatchAddVipTime(c *gin.Context) {
 		请求.Note = "无"
 	}
 	for _, 局_id := range 请求.Id {
-		Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+Ser_Admin.Id取User(c.GetInt("Uid"))+"批量增减点数,原因:"+请求.Note, float64(请求.Status), 请求.AppId, utils.S三元(Ser_AppInfo.App是否为计点(请求.AppId), 2, 3))
+		log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+service.NewAdmin(c, global.GVA_DB).Id取User(c.GetInt("Uid"))+"批量增减点数,原因:"+请求.Note, float64(请求.Status), 请求.AppId, utils.S三元(service.NewAppInfo(c, global.GVA_DB).App是否为计点(请求.AppId), 2, 3))
 	}
 }
 
@@ -500,9 +494,9 @@ func (C *AppUserFull) SetBatchAddVipNumber(c *gin.Context) {
 	}
 	var err error
 	if 请求.Number > 0 {
-		err = Ser_AppUser.Id积分增减_批量(请求.AppId, 请求.Id, 请求.Number, true)
+		err = service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id积分增减_批量(请求.AppId, 请求.Id, 请求.Number, true)
 	} else {
-		err = Ser_AppUser.Id积分增减_批量(请求.AppId, 请求.Id, utils.Float64取绝对值(请求.Number), false)
+		err = service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id积分增减_批量(请求.AppId, 请求.Id, utils.Float64取绝对值(请求.Number), false)
 	}
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
@@ -513,7 +507,7 @@ func (C *AppUserFull) SetBatchAddVipNumber(c *gin.Context) {
 		请求.Note = "无"
 	}
 	for _, 局_id := range 请求.Id {
-		Ser_Log.Log_写积分点数时间日志(Ser_AppUser.Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+Ser_Admin.Id取User(c.GetInt("Uid"))+"批量增减积分原因:"+请求.Note, 请求.Number, 请求.AppId, 1)
+		log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+service.NewAdmin(c, global.GVA_DB).Id取User(c.GetInt("Uid"))+"批量增减积分原因:"+请求.Note, 请求.Number, 请求.AppId, 1)
 	}
 }
 
@@ -540,7 +534,7 @@ func (C *AppUserFull) SetBatchSetUserConfig(c *gin.Context) {
 		response.FailWithMessage("云配置名称不能为空", c)
 		return
 	}
-	err := Ser_UserConfig.P批量置值2(请求.AppId, 请求.Uids, 请求.Name, 请求.Value)
+	err := service.NewUserConfig(c, global.GVA_DB).P批量置值2(请求.AppId, 请求.Uids, 请求.Name, 请求.Value)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return
@@ -566,12 +560,12 @@ func (C *AppUserFull) SetBatchUserClass(c *gin.Context) {
 		response.FailWithMessage("Id数组为空", c)
 		return
 	}
-	局_用户类型, ok := Ser_UserClass.Id取详情(请求.AppId, 请求.UserClassId)
+	局_用户类型, ok := service.NewUserClass(c, global.GVA_DB).Id取详情(请求.AppId, 请求.UserClassId)
 	if !ok {
 		response.FailWithMessage("类型不存在", c)
 		return
 	}
-	局_数量, err := Ser_AppUser.X修改用户类型_批量(请求.AppId, 请求.Id, 局_用户类型.Id)
+	局_数量, err := service.NewAppUser(c, global.GVA_DB, 请求.AppId).X修改用户类型_批量(请求.AppId, 请求.Id, 局_用户类型.Id)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return
@@ -594,7 +588,7 @@ func (C *AppUserFull) SetBatchAllUserVipTime(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	if 请求.AppId < 10000 || !Ser_AppInfo.AppId是否存在(请求.AppId) {
+	if 请求.AppId < 10000 || !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId不存在", c)
 		return
 	}
@@ -607,21 +601,21 @@ func (C *AppUserFull) SetBatchAllUserVipTime(c *gin.Context) {
 		response.OkWithMessage("操作类型错误", c)
 		return
 	case 1:
-		影响数量, err2 := Ser_AppUser.P批量_全部用户增减时间或点数(请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd, 请求.UserClassId)
+		影响数量, err2 := appUser.L_appUser.P批量_全部用户增减时间或点数(c, 请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd, 请求.UserClassId)
 		if err2 != nil {
 			response.FailWithMessage(err2.Error(), c)
 		} else {
 			response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
 		}
 	case 2:
-		影响数量, err2 := Ser_AppUser.P批量_全部用户增减时间或点数(请求.AppId, -请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd, 请求.UserClassId)
+		影响数量, err2 := appUser.L_appUser.P批量_全部用户增减时间或点数(c, 请求.AppId, -请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd, 请求.UserClassId)
 		if err2 != nil {
 			response.FailWithMessage(err2.Error(), c)
 		} else {
 			response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
 		}
 	case 3:
-		影响数量, err2 := Ser_AppUser.P批量_全部用户修改为指定时间或点数(请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd)
+		影响数量, err2 := appUser.L_appUser.P批量_全部用户修改为指定时间或点数(c, 请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd)
 		if err2 != nil {
 			response.FailWithMessage(err2.Error(), c)
 		} else {
@@ -640,7 +634,7 @@ func (C *AppUserFull) BatchSetAppUserKey(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	if 请求.AppId < 10000 || !Ser_AppInfo.AppId是否存在(请求.AppId) {
+	if 请求.AppId < 10000 || !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId不存在", c)
 		return
 	}
@@ -648,7 +642,7 @@ func (C *AppUserFull) BatchSetAppUserKey(c *gin.Context) {
 		response.FailWithMessage("id数量必须大于0", c)
 		return
 	}
-	影响数量, err2 := Ser_AppUser.X修改用户绑定信息_批量(请求.AppId, 请求.Id, 请求.Key)
+	影响数量, err2 := service.NewAppUser(c, global.GVA_DB, 请求.AppId).X修改用户绑定信息_批量(请求.AppId, 请求.Id, 请求.Key)
 	if err2 != nil {
 		response.FailWithMessage(err2.Error(), c)
 	} else {
@@ -666,7 +660,7 @@ func (C *AppUserFull) BatchSetAppUserNote(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	if 请求.AppId < 10000 || !Ser_AppInfo.AppId是否存在(请求.AppId) {
+	if 请求.AppId < 10000 || !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId不存在", c)
 		return
 	}
@@ -674,7 +668,7 @@ func (C *AppUserFull) BatchSetAppUserNote(c *gin.Context) {
 		response.FailWithMessage("id数量必须大于0", c)
 		return
 	}
-	影响数量, err2 := Ser_AppUser.X修改软件用户备注_批量(请求.AppId, 请求.Id, 请求.Note)
+	影响数量, err2 := service.NewAppUser(c, global.GVA_DB, 请求.AppId).X修改软件用户备注_批量(请求.AppId, 请求.Id, 请求.Note)
 	if err2 != nil {
 		response.FailWithMessage(err2.Error(), c)
 	} else {
@@ -691,7 +685,7 @@ func (C *AppUserFull) DeleteBatch(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	if !Ser_AppInfo.AppId是否存在(请求.AppId) {
+	if !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId错误", c)
 		return
 	}
@@ -702,19 +696,19 @@ func (C *AppUserFull) DeleteBatch(c *gin.Context) {
 		response.FailWithMessage("维护类型错误", c)
 		return
 	case 1:
-		if Ser_AppInfo.App是否为计点(请求.AppId) {
-			局_row, err = Ser_AppUser.S删除VipTime小于等于X(请求.AppId, 0)
+		if service.NewAppInfo(c, global.GVA_DB).App是否为计点(请求.AppId) {
+			局_row, err = appUser.L_appUser.S删除VipTime小于等于X(c, 请求.AppId, 0)
 		} else {
-			局_row, err = Ser_AppUser.S删除VipTime小于等于X(请求.AppId, time.Now().Unix())
+			局_row, err = appUser.L_appUser.S删除VipTime小于等于X(c, 请求.AppId, time.Now().Unix())
 		}
 	case 2:
-		if Ser_AppInfo.App是否为计点(请求.AppId) {
-			局_row, err = Ser_AppUser.S删除VipTime小于等于X且删除卡号(c, 请求.AppId, 0, c.ClientIP())
+		if service.NewAppInfo(c, global.GVA_DB).App是否为计点(请求.AppId) {
+			局_row, err = appUser.L_appUser.S删除VipTime小于等于X且删除卡号(c, 请求.AppId, 0, c.ClientIP())
 		} else {
-			局_row, err = Ser_AppUser.S删除VipTime小于等于X且删除卡号(c, 请求.AppId, time.Now().Unix(), c.ClientIP())
+			局_row, err = appUser.L_appUser.S删除VipTime小于等于X且删除卡号(c, 请求.AppId, time.Now().Unix(), c.ClientIP())
 		}
 	case 3:
-		局_row, err = Ser_AppUser.S删除卡号不存在的软件用户(c, 请求.AppId)
+		局_row, err = appUser.L_appUser.S删除卡号不存在的软件用户(c, 请求.AppId)
 	}
 	if err != nil {
 		response.FailWithMessage("操作失败:"+err.Error(), c)
@@ -741,7 +735,7 @@ func (C *AppUserFull) Delete(c *gin.Context) {
 		return
 	}
 
-	var 软件用户Uid = Ser_AppUser.Id取Uid_批量(请求.AppId, 请求.Id)
+	var 软件用户Uid = service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id取Uid_批量(请求.AppId, 请求.Id)
 	var db = global.GVA_DB
 	var 影响行数 int64
 	// 分批删除AppUser，避免占位符超限

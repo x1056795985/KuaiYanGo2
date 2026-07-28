@@ -3,7 +3,6 @@ package userSafetyApi
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/Service/Ser_Log"
 	"server/new/app/controller/userSafetyApi/response"
 	"server/new/app/global"
 	"server/new/app/logic/common/blacklist"
@@ -84,7 +83,7 @@ func UserApi_取注册送卡(c *gin.Context) {
 			App:     局_ctx.AppInfo.AppName,
 			AppId:   局_ctx.AppInfo.AppId,
 			AppVer:  局_ctx.Z在线信息.AppVer,
-			MsgType: Ser_Log.Log用户消息类型_系统执行错误,
+			MsgType: log.Log用户消息类型_系统执行错误,
 			Note:    "新添加软件用户时失败报错信息:" + err.Error(),
 			Ip:      c.ClientIP(),
 		}

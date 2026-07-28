@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
 	"server/Service/Ser_Js"
-	"server/Service/Ser_PublicJs"
-	"server/Service/Ser_TaskPool"
 	"server/new/app/controller/Common"
 	"server/new/app/global"
+	"server/new/app/logic/common/publicJs"
+	"server/new/app/logic/common/taskPool"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/old/response"
 	"server/new/app/service"
@@ -51,10 +51,10 @@ func (T *TaskPoolWebApi) TaskPoolGetTask(c *gin.Context) {
 	for 索引, _ := range 局_临时 {
 		局_可获取任务类型ID[索引], _ = 局_临时[索引].Int()
 	}
-	局_任务UUID := Ser_TaskPool.Task队列弹出任务(局_可获取任务类型ID, 局_最大数量, 局_在线信息.LoginAppid, 局_在线信息.Uid)
+	局_任务UUID := taskPool.L_taskPool.Task队列弹出任务(c, 局_可获取任务类型ID, 局_最大数量, 局_在线信息.LoginAppid, 局_在线信息.Uid)
 	var 局_已获取任务数据 []dbm.TaskPool_数据_精简
 	if len(局_任务UUID) > 0 {
-		局_已获取任务数据 = Ser_TaskPool.Task数据读取_数组(局_任务UUID)
+		局_已获取任务数据 = service.NewTaskPoolData(c, global.GVA_DB).Task数据读取_数组(局_任务UUID)
 	} else {
 		response.OkWithDetailed([]gin.H{}, "获取成功", c)
 		return
@@ -75,9 +75,9 @@ func (T *TaskPoolWebApi) TaskPoolSetTask(c *gin.Context) {
 		response.FailWithMessage("UUid错误", c)
 		return
 	}
-	局_Tid := Ser_TaskPool.Task数据读取Tid(局_uuid)
+	局_Tid := service.NewTaskPoolData(c, global.GVA_DB).Task数据读取Tid(局_uuid)
 
-	局_任务类型, err := Ser_TaskPool.Task类型读取(局_Tid)
+	局_任务类型, err := service.NewTaskPoolType(c, global.GVA_DB).Task类型读取(局_Tid)
 	if err != nil {
 		response.FailWithMessage("该UUID的任务类型Id不存在", c)
 		return
@@ -98,7 +98,7 @@ func (T *TaskPoolWebApi) TaskPoolSetTask(c *gin.Context) {
 		}
 	}
 
-	err = Ser_TaskPool.Task数据修改(局_uuid, 局_任务状态, 局_任务数据)
+	err = service.NewTaskPoolData(c, global.GVA_DB).Task数据修改(局_uuid, 局_任务状态, 局_任务数据)
 	if err != nil {
 		response.FailWithMessage("任务数据写入数据库失败", c)
 		return
@@ -133,7 +133,7 @@ func (T *TaskPoolWebApi) TaskPoolNewData(c *gin.Context) {
 	var 局_在线信息 dbm.DB_LinksToken
 	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
-	局_任务类型, err := Ser_TaskPool.Task类型读取(请求json.GetInt("TaskTypeId"))
+	局_任务类型, err := service.NewTaskPoolType(c, global.GVA_DB).Task类型读取(请求json.GetInt("TaskTypeId"))
 	if err != nil {
 		response.FailWithMessage("任务类型Id不存在", c)
 		return
@@ -155,7 +155,7 @@ func (T *TaskPoolWebApi) TaskPoolNewData(c *gin.Context) {
 			return
 		}
 	}
-	任务Id, err := Ser_TaskPool.Task数据创建加入队列(局_任务类型.Id, 局_任务数据, 局_在线信息.LoginAppid, 局_在线信息.Uid)
+	任务Id, err := taskPool.L_taskPool.Task数据创建加入队列(c, 局_任务类型.Id, 局_任务数据, 局_在线信息.LoginAppid, 局_在线信息.Uid)
 	if err != nil {
 		response.FailWithMessage("Task数据创建加入队列失败", c)
 		return
@@ -180,7 +180,7 @@ func (T *TaskPoolWebApi) TaskPoolGetData(c *gin.Context) {
 		response.FailWithMessage("任务Uuid错误", c)
 		return
 	}
-	局_任务数据, err := Ser_TaskPool.Task数据读取_单条(局_uuid)
+	局_任务数据, err := service.NewTaskPoolData(c, global.GVA_DB).Task数据读取_单条(局_uuid)
 	if err != nil {
 		response.FailWithMessage("任务Uuid错误", c)
 		return
@@ -215,7 +215,7 @@ func (T *TaskPoolWebApi) RunJs(c *gin.Context) {
 	局_耗时 := time.Now().UnixMilli()
 	var 局_PublicJs dbm.DB_PublicJs
 	var err error
-	局_PublicJs, err = Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_公共函数, string(请求json.GetStringBytes("JsName")))
+	局_PublicJs, err = publicJs.L_publicJs.P取值2(c, service.Js类型_公共函数, string(请求json.GetStringBytes("JsName")))
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -278,7 +278,7 @@ func (T *TaskPoolWebApi) RunJs2(c *gin.Context) {
 	局_耗时 := time.Now().UnixMilli()
 	var 局_PublicJs dbm.DB_PublicJs
 	var err error
-	局_PublicJs, err = Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_公共函数, 局_公共函数名)
+	局_PublicJs, err = publicJs.L_publicJs.P取值2(c, service.Js类型_公共函数, 局_公共函数名)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return

@@ -8,6 +8,7 @@ import (
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
 	"server/new/app/utils"
+	"strconv"
 )
 
 type KaClass struct {
@@ -131,4 +132,105 @@ func (s *KaClass) IsIdExists(id int) bool {
 	var 局_id int64
 	s.db.Model(dbm.DB_KaClass{}).Select("id").Where("Id = ?", id).Take(&局_id)
 	return 局_id > 0
+}
+
+// KaClassId是否存在 卡类Id是否存在
+func (s *KaClass) KaClassId是否存在(id int) bool {
+	var Count int64
+	result := s.db.Model(dbm.DB_KaClass{}).Select("1").Where("Id=?", id).First(&Count)
+	return result.Error == nil
+}
+
+// KaName取map列表String 按Appid取卡类id->名称的map列表(string键)
+func (s *KaClass) KaName取map列表String(Appid int) map[string]string {
+
+	var DB_KaClass []dbm.DB_KaClass
+	var 总数 int64
+	_ = s.db.Model(dbm.DB_KaClass{}).Select("Id", "Name").Where("Appid=?", Appid).Count(&总数).Find(&DB_KaClass).Error
+	var AppName = make(map[string]string, 总数)
+
+	//吧 id 和 app名字 放入map
+	for 索引 := range DB_KaClass {
+		AppName[strconv.Itoa(int(DB_KaClass[索引].Id))] = DB_KaClass[索引].Name
+	}
+	return AppName
+}
+
+// KaName取map列表Int 按Appid取卡类id->名称的map列表(int键)
+func (s *KaClass) KaName取map列表Int(Appid int) map[int]string {
+
+	var DB_KaClass []dbm.DB_KaClass
+	var 总数 int64
+	_ = s.db.Model(dbm.DB_KaClass{}).Select("Id", "Name").Where("Appid=?", Appid).Count(&总数).Find(&DB_KaClass).Error
+	var AppName = make(map[int]string, 总数)
+
+	//吧 id 和 app名字 放入map
+	for 索引 := range DB_KaClass {
+		AppName[int(DB_KaClass[索引].Id)] = DB_KaClass[索引].Name
+	}
+	return AppName
+}
+
+// KaClass取可购买卡类列表 按Appid取可购买卡类列表(Money>0)
+func (s *KaClass) KaClass取可购买卡类列表(Appid int) []dbm.DB_KaClass {
+
+	var DB_KaClass []dbm.DB_KaClass
+	_ = s.db.Model(dbm.DB_KaClass{}).Where("Appid=?", Appid).Where("Money>0").Find(&DB_KaClass).Error
+	return DB_KaClass
+}
+
+// KaClass取详细信息 按id取卡类详细信息
+func (s *KaClass) KaClass取详细信息(id int) (dbm.DB_KaClass, error) {
+
+	var KaClass详细信息 dbm.DB_KaClass
+
+	err := s.db.Model(dbm.DB_KaClass{}).Where("Id=?", id).First(&KaClass详细信息).Error
+
+	return KaClass详细信息, err
+}
+
+// Id取详细信息_数组 按id数组取卡类详细信息数组
+func (s *KaClass) Id取详细信息_数组(id []int) ([]dbm.DB_KaClass, error) {
+
+	var KaClass详细信息 = make([]dbm.DB_KaClass, 0, len(id))
+
+	err := s.db.Model(dbm.DB_KaClass{}).Where("Id IN ?", id).Find(&KaClass详细信息).Error
+
+	return KaClass详细信息, err
+}
+
+// KaClass取map列表Int 按AppId取卡类id->名称的map列表(int键)
+func (s *KaClass) KaClass取map列表Int(AppId int) map[int]string {
+
+	var DB_KaClass []dbm.DB_KaClass
+	var 总数 int64
+	_ = s.db.Model(dbm.DB_KaClass{}).Select("Id", "Name").Where("AppId=?", AppId).Count(&总数).Find(&DB_KaClass).Error
+	var AppName = make(map[int]string, 总数)
+
+	//吧 id 和 app名字 放入map
+	for 索引 := range DB_KaClass {
+		AppName[DB_KaClass[索引].Id] = DB_KaClass[索引].Name
+	}
+	return AppName
+}
+
+// KaClass取map列表String 按AppId取卡类id->名称的map列表(string键)
+func (s *KaClass) KaClass取map列表String(AppId int) map[string]string {
+
+	var DB_KaClass []dbm.DB_KaClass
+	var 总数 int64
+	_ = s.db.Model(dbm.DB_KaClass{}).Select("Id", "Name").Where("AppId=?", AppId).Count(&总数).Find(&DB_KaClass).Error
+	var AppName = make(map[string]string, 总数)
+
+	//吧 id 和 app名字 放入map
+	for 索引 := range DB_KaClass {
+		AppName[strconv.Itoa(DB_KaClass[索引].Id)] = DB_KaClass[索引].Name
+	}
+	return AppName
+}
+
+// Id取Name 按卡类id取卡类名称
+func (s *KaClass) Id取Name(卡类id int) (Name string) {
+	_ = s.db.Model(dbm.DB_KaClass{}).Select("Name").Where("Id=?", 卡类id).First(&Name).Error
+	return Name
 }

@@ -4,8 +4,10 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"server/new/app/global"
 	"server/new/app/models/db"
 	"server/new/app/models/request"
+	"time"
 )
 
 type TaskPoolData struct {
@@ -116,3 +118,56 @@ func (s *TaskPoolData) Save(info db.DB_TaskPoolData) (row int64, err error) {
 	tx := s.db.Model(db.DB_TaskPoolData{}).Where("Uuid = ?", info.Uuid).Save(&info)
 	return tx.RowsAffected, tx.Error
 }
+
+// Task数据读取_数组 按Uuid数组取任务数据(精简)
+func (s *TaskPoolData) Task数据读取_数组(Uuid []string) []db.TaskPool_数据_精简 {
+	var TaskPool_数据 []db.TaskPool_数据_精简
+	if len(Uuid) == 0 {
+		return TaskPool_数据
+	}
+	_ = s.db.Model(db.DB_TaskPoolData{}).Where("Uuid in ?", Uuid).Find(&TaskPool_数据).Error
+	return TaskPool_数据
+}
+
+// Task数据读取_单条 按Uuid取单条任务数据
+func (s *TaskPoolData) Task数据读取_单条(Uuid string) (db.DB_TaskPoolData, error) {
+	var TaskPool_数据 db.DB_TaskPoolData
+	err := s.db.Model(db.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&TaskPool_数据).Error
+	return TaskPool_数据, err
+}
+
+// Task数据读取Tid 按Uuid取Tid
+func (s *TaskPoolData) Task数据读取Tid(Uuid string) int {
+	var Tid int
+	_ = s.db.Model(db.DB_TaskPoolData{}).Select("Tid").Where("Uuid = ?", Uuid).First(&Tid).Error
+	return Tid
+}
+
+// Task数据修改 数据修改 Status=0 或ReturnData="" 不修改
+func (s *TaskPoolData) Task数据修改(Uuid string, Status int, ReturnData string) error {
+
+	局_UpData := make(map[string]interface{}, 3)
+	局_UpData["TimeEnd"] = time.Now().Unix()
+	if Status != 0 {
+		局_UpData["Status"] = Status
+	}
+	if ReturnData != "" {
+		局_UpData["ReturnData"] = ReturnData
+	}
+
+	err := s.db.Model(db.DB_TaskPoolData{}).Where("Uuid=?", Uuid).Updates(局_UpData).Error
+	return err
+}
+
+// Task数据删除过期 删除超过30天的任务
+func (s *TaskPoolData) Task数据删除过期() {
+
+	if s.db != nil {
+		//删除超过30天的任务
+		_ = s.db.Model(db.DB_TaskPoolData{}).Where("TimeStart<?", time.Now().Unix()-(86400*30)).Delete("").RowsAffected
+		//fmt.Printf("定时删除已过期24H任务:%v\n", 局_数量)
+	}
+	//24小时
+}
+
+var _ = global.GVA_DB // 避免未使用导入

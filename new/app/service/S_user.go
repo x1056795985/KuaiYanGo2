@@ -2,11 +2,15 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
+	"server/new/app/utils"
 	"strconv"
+	"time"
 )
 
 type User struct {
@@ -134,4 +138,166 @@ func (s *User) Id取Uid_批量(AppId int, id []int) []int {
 		Uid = append(Uid, batch...)
 	}
 	return Uid
+}
+
+// UserId是否存在
+func (s *User) UserId是否存在(id int) bool {
+	var Count int64
+	result := s.db.Model(dbm.DB_User{}).Select("1").Where("Id=?", id).Take(&Count)
+	return result.Error == nil
+}
+
+// User用户名取id
+func (s *User) User用户名取id(用户名 string) int {
+	if 用户名 == "" {
+		return 0
+	}
+	var Id = 0
+	_ = s.db.Model(dbm.DB_User{}).Select("Id").Where("User=?", 用户名).Take(&Id)
+	return Id
+}
+
+// 负数会取管理员表的信息
+func (s *User) Id取User(Id int) string {
+	if Id == 0 {
+		return ""
+	}
+	var 用户名 string
+	if Id < 0 {
+		s.db.Model(dbm.DB_Admin{}).Select("User").Where("Id=?", -Id).Scan(&用户名)
+		return 用户名
+	}
+	err := s.db.Model(dbm.DB_User{}).Select("User").Where("Id=?", Id).Scan(&用户名).Error
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return 用户名
+}
+
+// 取用户表的信息_批量,仅限用户表
+func (s *User) Id取User_批量(Id []int) map[int]string {
+	if len(Id) == 0 {
+		return map[int]string{}
+	}
+	var 用户名 []dbm.DB_User
+	s.db.Model(dbm.DB_User{}).Select("Id,User").Where("Id IN ?", Id).Find(&用户名)
+	var 局_返回 = make(map[int]string, len(用户名))
+	for 索引, _ := range 用户名 {
+		局_返回[用户名[索引].Id] = 用户名[索引].User
+	}
+	return 局_返回
+}
+
+// 负数会取管理员表的信息
+func (s *User) Id取状态(Id int) int {
+	if Id == 0 {
+		return 1
+	}
+	var Status int
+	if Id < 0 {
+		s.db.Model(dbm.DB_Admin{}).Select("Status").Where("Id=?", -Id).First(&Status)
+		return Status
+	}
+	s.db.Model(dbm.DB_User{}).Select("Status").Where("Id=?", Id).First(&Status)
+	return Status
+}
+
+func (s *User) User取详情(User string) (用户详情 dbm.DB_User, ok bool) {
+	err := s.db.Model(dbm.DB_User{}).Where("User=?", User).First(&用户详情).Error
+	return 用户详情, err == nil
+}
+
+func (s *User) Id取详情(Id int) (用户详情 dbm.DB_User, ok bool) {
+	err := s.db.Model(dbm.DB_User{}).Where("Id=?", Id).First(&用户详情).Error
+	return 用户详情, err == nil
+}
+
+func (s *User) Id取详情_数组(Id []int) ([]dbm.DB_User, error) {
+	var 局_用户详情 = make([]dbm.DB_User, 0, len(Id))
+	if len(Id) == 0 {
+		return 局_用户详情, nil
+	}
+	err := s.db.Model(dbm.DB_User{}).Where("Id IN ?", Id).Find(&局_用户详情).Error
+	return 局_用户详情, err
+}
+
+func (s *User) Id取余额(Id int) (余额 float64) {
+	_ = s.db.Model(dbm.DB_User{}).Select("Rmb").Where("Id=?", Id).First(&余额).Error
+	return
+}
+
+func (s *User) Id置最后登录AppId(Id, AppId int, Ip string) {
+	if Id == 0 {
+		return
+	}
+	err := s.db.Model(dbm.DB_User{}).Where("Id = ?", Id).Updates(map[string]interface{}{"LoginAppid": AppId, "LoginIp": Ip, "LoginTime": time.Now().Unix()}).Error
+	if err != nil {
+		global.GVA_LOG.Println(fmt.Sprintf("Id置最后登录AppId失败ID:%v,AppId,%v,Ip,%v,%v", Id, AppId, Ip, err.Error()))
+	}
+	return
+}
+
+func (s *User) Id置QQ邮箱手机号(Id int, QQ, 邮箱, 手机号 string) error {
+	if Id == 0 {
+		return errors.New("id不能为空")
+	}
+	局data := map[string]interface{}{}
+	if QQ != "" {
+		局data["Qq"] = QQ
+	}
+	if 邮箱 != "" {
+		局data["Email"] = 邮箱
+	}
+	if 手机号 != "" {
+		局data["Phone"] = 手机号
+	}
+	err := s.db.Model(dbm.DB_User{}).Where("Id = ?", Id).Updates(&局data).Error
+	if err != nil {
+		global.GVA_LOG.Println(fmt.Sprintf("Id置QQ邮箱手机号失败ID:%v,%v,%v,%v,%v", Id, QQ, 邮箱, 手机号, err.Error()))
+		return err
+	}
+	return nil
+}
+
+func (s *User) Id置新密码(Id int, NewPassWord string) error {
+	if Id == 0 {
+		return errors.New("Id不能为0")
+	}
+	err := s.db.Model(dbm.DB_User{}).Where("Id = ?", Id).Updates(map[string]interface{}{"PassWord": utils.Md5String(NewPassWord)}).Error
+	if err != nil {
+		global.GVA_LOG.Println(fmt.Sprintf("Id置新密码失败:%v,%v,%v", Id, NewPassWord, err.Error()))
+		return errors.New("修改密码失败")
+	}
+	return nil
+}
+
+func (s *User) Q取总数() int64 {
+	var 局_总数 int64
+	_ = s.db.Model(dbm.DB_User{}).Count(&局_总数).Error
+	return 局_总数
+}
+
+func (s *User) Id取上级代理ID(Id int) int {
+	if Id == 0 {
+		return 0
+	}
+	var 上级代理ID int
+	s.db.Model(dbm.DB_User{}).Select("UPAgentId").Where("Id=?", Id).First(&上级代理ID)
+	return 上级代理ID
+}
+
+func (s *User) Id取下级代理分成最高(Id int) int {
+	if Id == 0 {
+		return 0
+	}
+	var 上级代理ID = 0
+	s.db.Model(dbm.DB_User{}).Select(" Max(AgentDiscount) ").Where("UPAgentId=?", Id).First(&上级代理ID)
+	return 上级代理ID
+}
+
+// 0 非代理,1 一级代理 2 二级代理 3 三级代理
+func (s *User) 取Id代理级别(用户ID int) int {
+	var Count int64 = 0
+	s.db.Model(dbm.Db_Agent_Level{}).Where("Uid=?", 用户ID).Count(&Count)
+	return int(Count)
 }
