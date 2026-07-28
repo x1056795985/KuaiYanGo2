@@ -37,7 +37,7 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.653
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/valyala/fastjson v1.6.4
-	github.com/wechatpay-apiv3/wechatpay-go v0.2.16
+	github.com/wechatpay-apiv3/wechatpay-go v0.2.21
 	go.uber.org/zap v1.24.0
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
 	golang.org/x/net v0.38.0
