@@ -7,12 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"gorm.io/gorm"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/models/db"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"strconv"
 	"unicode/utf8"
 )
@@ -44,13 +43,13 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
 	}
 	var count int64
 	service.NewAppInfo(c, global.GVA_DB)
-	err = global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
+	err = global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
 	// 没查到数据
 	if count != 0 {
 		return errors.New("AppId已存在")
 	}
 
-	var NewApp DB.DB_AppInfo
+	var NewApp dbm.DB_AppInfo
 	NewApp.AppId = AppId
 	NewApp.AppType = AppType
 	NewApp.AppName = AppName
@@ -133,7 +132,7 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
 		// 创建用户表
 		if err = tx.Set("gorm:table_options", "ENGINE=InnoDB").
 			Table("db_AppUser_" + strconv.Itoa(NewApp.AppId)).
-			AutoMigrate(&DB.DB_AppUser{}); err != nil {
+			AutoMigrate(&dbm.DB_AppUser{}); err != nil {
 			return fmt.Errorf("用户表创建失败: %w", err)
 		}
 

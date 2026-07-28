@@ -8,15 +8,15 @@ import (
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_User"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/ka"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	"server/utils"
+	"server/new/app/utils"
 	"time"
 )
 
-func jS_批量注册(局_在线信息 DB.DB_LinksToken, user []string, 密码 string) js对象_通用返回 {
+func jS_批量注册(局_在线信息 dbm.DB_LinksToken, user []string, 密码 string) js对象_通用返回 {
 
 	if 局_在线信息.LoginAppid <= 10000 {
 		return js对象_通用返回{IsOk: false, Err: "AppId必须大于10000"}
@@ -26,8 +26,8 @@ func jS_批量注册(局_在线信息 DB.DB_LinksToken, user []string, 密码 st
 	}
 
 	type 临时 struct {
-		User    DB.DB_User
-		AppUser DB.DB_AppUser
+		User    dbm.DB_User
+		AppUser dbm.DB_AppUser
 		Name    string
 		IsOk    bool
 		Msg     string
@@ -39,7 +39,7 @@ func jS_批量注册(局_在线信息 DB.DB_LinksToken, user []string, 密码 st
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	db := *global.GVA_DB
-	var appInfo DB.DB_AppInfo
+	var appInfo dbm.DB_AppInfo
 	appInfo, err2 := service.NewAppInfo(c, &db).Info(局_在线信息.LoginAppid)
 	if err2 != nil {
 		return js对象_通用返回{IsOk: false, Err: "无该应用信息"}
@@ -72,7 +72,7 @@ func jS_批量注册(局_在线信息 DB.DB_LinksToken, user []string, 密码 st
 		if err != nil {
 			局_软件用户信息 = append(局_软件用户信息, 临时{
 				User:    用户信息,
-				AppUser: DB.DB_AppUser{},
+				AppUser: dbm.DB_AppUser{},
 				Name:    user[i],
 				IsOk:    false,
 				Msg:     "无软件用户信息:" + err.Error(),
@@ -91,7 +91,7 @@ func jS_批量注册(局_在线信息 DB.DB_LinksToken, user []string, 密码 st
 	return js对象_通用返回{IsOk: true, Err: "成功", Data: 局_软件用户信息}
 }
 
-func jS_批量充值(局_在线信息 DB.DB_LinksToken, user, 卡号列表 []string) js对象_通用返回 {
+func jS_批量充值(局_在线信息 dbm.DB_LinksToken, user, 卡号列表 []string) js对象_通用返回 {
 
 	if 局_在线信息.LoginAppid <= 10000 {
 		return js对象_通用返回{IsOk: false, Err: "AppId必须大于10000"}
@@ -123,8 +123,8 @@ func jS_批量充值(局_在线信息 DB.DB_LinksToken, user, 卡号列表 []str
 	}
 
 	type 临时 struct {
-		User    DB.DB_User
-		AppUser DB.DB_AppUser
+		User    dbm.DB_User
+		AppUser dbm.DB_AppUser
 		UseKa   string
 		Name    string
 		IsOk    bool
@@ -137,7 +137,7 @@ func jS_批量充值(局_在线信息 DB.DB_LinksToken, user, 卡号列表 []str
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	db := *global.GVA_DB
-	var appInfo DB.DB_AppInfo
+	var appInfo dbm.DB_AppInfo
 	appInfo, err2 := service.NewAppInfo(c, &db).Info(局_在线信息.LoginAppid)
 	if err2 != nil {
 		return js对象_通用返回{IsOk: false, Err: "无该应用信息"}
@@ -165,7 +165,7 @@ func jS_批量充值(局_在线信息 DB.DB_LinksToken, user, 卡号列表 []str
 		if err != nil {
 			局_软件用户信息 = append(局_软件用户信息, 临时{
 				User:    用户信息,
-				AppUser: DB.DB_AppUser{},
+				AppUser: dbm.DB_AppUser{},
 				UseKa:   卡号列表[i],
 				Name:    user[i],
 				IsOk:    false,
@@ -185,7 +185,7 @@ func jS_批量充值(局_在线信息 DB.DB_LinksToken, user, 卡号列表 []str
 
 	return js对象_通用返回{IsOk: true, Err: "成功", Data: 局_软件用户信息}
 }
-func jS_批量取账号信息(局_在线信息 DB.DB_LinksToken, user []string, 密码 string) js对象_通用返回 {
+func jS_批量取账号信息(局_在线信息 dbm.DB_LinksToken, user []string, 密码 string) js对象_通用返回 {
 
 	if 局_在线信息.LoginAppid <= 10000 {
 		return js对象_通用返回{IsOk: false, Err: "AppId必须大于10000"}
@@ -195,8 +195,8 @@ func jS_批量取账号信息(局_在线信息 DB.DB_LinksToken, user []string, 
 	}
 
 	type 临时 struct {
-		User    DB.DB_User
-		AppUser DB.DB_AppUser
+		User    dbm.DB_User
+		AppUser dbm.DB_AppUser
 		Name    string
 		IsOk    bool
 		Msg     string
@@ -212,7 +212,7 @@ func jS_批量取账号信息(局_在线信息 DB.DB_LinksToken, user []string, 
 		info, err := service.NewUser(c, &db).InfoName(user[i])
 		if err != nil {
 			局_软件用户信息 = append(局_软件用户信息, 临时{
-				AppUser: DB.DB_AppUser{},
+				AppUser: dbm.DB_AppUser{},
 				Name:    user[i],
 				IsOk:    false,
 				Msg:     err.Error(),
@@ -221,7 +221,7 @@ func jS_批量取账号信息(局_在线信息 DB.DB_LinksToken, user []string, 
 		}
 		if !utils.BcryptCheck(密码, info.PassWord) {
 			局_软件用户信息 = append(局_软件用户信息, 临时{
-				AppUser: DB.DB_AppUser{},
+				AppUser: dbm.DB_AppUser{},
 				Name:    user[i],
 				IsOk:    false,
 				Msg:     "密码错误",
@@ -232,7 +232,7 @@ func jS_批量取账号信息(局_在线信息 DB.DB_LinksToken, user []string, 
 		if err != nil {
 			局_软件用户信息 = append(局_软件用户信息, 临时{
 				User:    info,
-				AppUser: DB.DB_AppUser{},
+				AppUser: dbm.DB_AppUser{},
 				Name:    user[i],
 				IsOk:    false,
 				Msg:     "无软件用户信息",

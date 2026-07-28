@@ -3,13 +3,13 @@ package userSafetyApi
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/log"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -112,7 +112,7 @@ func UserApi_置新用户消息(c *gin.Context) {
 		return
 	}
 	go func() {
-		var 日志 = DB.DB_LogUserMsg{
+		var 日志 = dbm.DB_LogUserMsg{
 			User:    局_ctx.Z在线信息.User,
 			App:     局_ctx.AppInfo.AppName,
 			AppId:   局_ctx.AppInfo.AppId,

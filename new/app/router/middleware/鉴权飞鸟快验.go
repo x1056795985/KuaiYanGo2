@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/valyala/fastjson"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/setting"
-	"server/utils"
+	"server/new/app/utils"
 	"strconv"
 	"sync"
 )
@@ -26,8 +26,8 @@ func D读取缓存Token() bool {
 	if global.Q快验.J_Token != "" {
 		return false
 	}
-	F飞鸟快验_互斥锁.Lock()              //上锁
-	defer F飞鸟快验_互斥锁.Unlock()      //解锁
+	F飞鸟快验_互斥锁.Lock()         //上锁
+	defer F飞鸟快验_互斥锁.Unlock() //解锁
 	if global.Q快验.J_Token != "" { //进入后重新检测,防止前一个已经获取,后进入的,继续获取
 		return false
 	}
@@ -87,7 +87,7 @@ func D读取缓存Token() bool {
 			_ = setting.Z系统设置(&局_系统设置)
 
 		}
-		global.GVA_Viper.Set(string(快验Token), global.Q快验.J_Token)                                                                             //写到配置重启备用
+		global.GVA_Viper.Set(string(快验Token), global.Q快验.J_Token)                                                                               //写到配置重启备用
 		global.GVA_Viper.Set(string(ailiyunid), hex.EncodeToString(utils.Aes加密_cbc192_2(global.Q快验.J_CryptoKeyAes, global.Q快验.J_Token[:24]))) //写到配置重启备用
 		_ = global.GVA_Viper.WriteConfig()
 	}

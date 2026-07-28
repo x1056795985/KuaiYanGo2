@@ -3,11 +3,11 @@ package controller
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
+	"server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 )
 
@@ -22,10 +22,10 @@ func NewAppUserController() *AppUser {
 func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 	var err error
 	var info = struct {
-		appInfo   DB.DB_AppInfo
-		likeInfo  DB.DB_LinksToken
-		appUser   DB.DB_AppUser
-		userClass DB.DB_UserClass
+		appInfo   db.DB_AppInfo
+		likeInfo  db.DB_LinksToken
+		appUser   db.DB_AppUser
+		userClass db.DB_UserClass
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 
@@ -47,7 +47,7 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 		}
 	}
 
-	var 局_userInfo DB.DB_User
+	var 局_userInfo db.DB_User
 	if info.appInfo.AppType <= 2 {
 		局_userInfo, err = service.NewUser(c, &tx).Info(info.likeInfo.Uid)
 	}

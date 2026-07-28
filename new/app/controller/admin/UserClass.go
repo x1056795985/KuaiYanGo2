@@ -2,12 +2,12 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"server/new/app/models/request"
 	"server/new/app/service"
-	"server/structs/Http/response"
-	DB "server/structs/db"
 	"sort"
 	"strconv"
 )
@@ -128,7 +128,7 @@ func (C *UserClass) Delete(c *gin.Context) {
 
 // SaveInfo 保存用户类型信息
 func (C *UserClass) SaveInfo(c *gin.Context) {
-	var 请求 DB.DB_UserClass
+	var 请求 dbm.DB_UserClass
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -173,7 +173,7 @@ func (C *UserClass) SaveInfo(c *gin.Context) {
 
 // New 新建用户类型
 func (C *UserClass) New(c *gin.Context) {
-	var 请求 DB.DB_UserClass
+	var 请求 dbm.DB_UserClass
 	if !C.ToJSON(c, &请求) {
 		return
 	}

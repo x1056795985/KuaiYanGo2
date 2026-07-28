@@ -4,16 +4,16 @@ package cycleNot
 import (
 	"github.com/dop251/goja"   // JavaScript运行时引擎
 	"github.com/gin-gonic/gin" // HTTP框架，用于处理请求上下文
-	DB "server/structs/db"     // 数据库结构体定义
+	"server/new/app/models/db"
 )
 
 // JsEngineInitializer - JS引擎初始化函数类型定义
 // 用于初始化JavaScript运行环境，传入请求上下文、应用信息、在线用户信息和公共JS配置
 type JS引擎初始化_用户 func(
 	c *gin.Context,             // Gin框架的请求上下文
-	AppInfo *DB.DB_AppInfo,     // 应用基本信息
-	在线信息 *DB.DB_LinksToken, // 用户在线状态信息
-	局_PublicJs *DB.DB_PublicJs) *goja.Runtime // 公共JS脚本配置
+	AppInfo *db.DB_AppInfo,     // 应用基本信息
+	在线信息 *db.DB_LinksToken, // 用户在线状态信息
+	局_PublicJs *db.DB_PublicJs) *goja.Runtime // 公共JS脚本配置
 
 // GlobalJsEngineInit - 全局JS引擎初始化函数变量
 // 用于存储实际的JS引擎初始化实现，避免包间直接依赖

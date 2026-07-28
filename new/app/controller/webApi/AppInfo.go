@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_AppInfo"
 	"server/new/app/controller/Common"
-	"server/structs/Http/response"
+	"server/new/app/models/old/response"
 	"strconv"
 )
 

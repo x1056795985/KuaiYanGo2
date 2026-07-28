@@ -6,15 +6,15 @@ import (
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	rmbPay "server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
-	"server/structs/Http/response"
-	DB "server/structs/db"
-	"server/utils"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
+	"server/new/app/utils"
 	"strconv"
 )
 
@@ -27,20 +27,20 @@ func NewAgentMenuController() *AgentMenu {
 }
 
 type 结构响应_GetAdminInfo struct {
-	AgentInfo     DB.DB_User `json:"AgentInfo"`
-	UserMsgNoRead int64      `json:"UserMsgNoRead"`
-	G功能权限         []int      `json:"功能权限"`
+	AgentInfo     dbm.DB_User `json:"AgentInfo"`
+	UserMsgNoRead int64       `json:"UserMsgNoRead"`
+	G功能权限         []int       `json:"功能权限"`
 }
 
 // GetAgentInfo 获取代理信息
 func (A *AgentMenu) GetAgentInfo(c *gin.Context) {
 	Uid := c.GetInt("Uid")
-	var DB_user DB.DB_User
-	err := global.GVA_DB.Model(DB.DB_User{}).Omit("Note", "PassWord", "SuperPassWord").Where("id = ?", Uid).First(&DB_user).Error
+	var DB_user dbm.DB_User
+	err := global.GVA_DB.Model(dbm.DB_User{}).Omit("Note", "PassWord", "SuperPassWord").Where("id = ?", Uid).First(&DB_user).Error
 
 	if err != nil {
 		response.FailWithMessage("查询失败", c)
-		global.GVA_LOG.Error("Uid:" + strconv.Itoa(Uid) + "GetUserInfo错误:" + err.Error())
+		global.GVA_LOG.Println("Uid:" + strconv.Itoa(Uid) + "GetUserInfo错误:" + err.Error())
 		return
 	}
 

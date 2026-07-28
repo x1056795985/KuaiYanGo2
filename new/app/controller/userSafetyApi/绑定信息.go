@@ -4,16 +4,15 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/appUser"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/log"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"time"
 )
 
@@ -53,7 +52,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 					return
 				}
 				if 局密码 == "" || !utils2.BcryptCheck(局密码, 局_User.PassWord) {
-					go log.L_log.S输出日志(c, DB.DB_LogLogin{
+					go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 						User:      局_User.User,
 						Ip:        c.ClientIP(),
 						Note:      "更换绑定登录时密码错误:" + 局密码,
@@ -111,7 +110,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 			if 局_ctx.AppInfo.AppType == 2 || 局_ctx.AppInfo.AppType == 4 {
 				局_type = 2
 			}
-			log.L_log.S输出日志(c, DB.DB_LogVipNumber{
+			log.L_log.S输出日志(c, dbm.DB_LogVipNumber{
 				User:  局_ctx.Z在线信息.User,
 				Ip:    c.ClientIP(),
 				Note:  局_日志,
@@ -138,7 +137,7 @@ func UserApi_置新绑定信息(c *gin.Context) {
 			Note:   "置新绑定信息",
 		})
 		if err != nil {
-			global.GVA_LOG.Error("修改绑定信息日志写入失败:" + err.Error())
+			global.GVA_LOG.Println("修改绑定信息日志写入失败:" + err.Error())
 		}
 		response.OkData(c, gin.H{"ReduceVipTime": 扣时间值})
 	} else {
@@ -186,7 +185,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 					return
 				}
 				if 局密码 == "" || !utils2.BcryptCheck(局密码, 局_User.PassWord) {
-					go log.L_log.S输出日志(c, DB.DB_LogLogin{
+					go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 						User:      局_User.User,
 						Ip:        c.ClientIP(),
 						Note:      "更换绑定登录时密码错误:" + 局密码,
@@ -229,7 +228,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 			if 局_ctx.AppInfo.AppType == 2 || 局_ctx.AppInfo.AppType == 4 {
 				局_type = 2
 			}
-			log.L_log.S输出日志(c, DB.DB_LogVipNumber{
+			log.L_log.S输出日志(c, dbm.DB_LogVipNumber{
 				User:  局_ctx.Z在线信息.User,
 				Ip:    c.ClientIP(),
 				Note:  局_日志,
@@ -258,7 +257,7 @@ func UserApi_解除绑定信息(c *gin.Context) {
 			Note:   "解除绑定信息",
 		})
 		if err != nil {
-			global.GVA_LOG.Error("修改绑定信息日志写入失败:" + err.Error())
+			global.GVA_LOG.Println("修改绑定信息日志写入失败:" + err.Error())
 		}
 		response.OkData(c, gin.H{"ReduceVipTime": 扣时间值})
 	} else {

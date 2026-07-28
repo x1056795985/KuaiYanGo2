@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 	"gorm.io/gorm"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/models/db"
 	"server/new/app/models/request"
-	"server/utils"
+	"server/new/app/utils"
 )
 
 type S_Cron struct {
@@ -83,7 +83,7 @@ func (s *S_Cron) GetList(tx *gorm.DB, 请求 request.List, Status int) (int64, [
 	var 局_数组 []db.DB_Cron
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组).Error
 	if err != nil {
-		global.GVA_LOG.Error(utils.Q取包名结构体方法(s) + ":" + err.Error())
+		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
 	}
 	return 总数, 局_数组, err
 }

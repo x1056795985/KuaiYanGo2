@@ -9,19 +9,19 @@ import (
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/models/constant"
-	"server/structs/Http/response"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	"server/new/app/models/db"
+	"server/new/app/models/old/response"
+	utils2 "server/new/app/utils"
 	"strconv"
 	"strings"
 )
 
 type Agent用户详情 struct {
-	DB.DB_User
+	db.DB_User
 	LoginAppName string `json:"loginAppName"`
 	Role         int    `json:"role"`
 	UPAgentUser  string `json:"upAgentUser"`
@@ -85,7 +85,7 @@ func (C *AgentUser) GetAgentUserInfo(c *gin.Context) {
 	}
 
 	var 局_用户详情 Agent用户详情
-	if err := global.GVA_DB.Model(DB.DB_User{}).
+	if err := global.GVA_DB.Model(db.DB_User{}).
 		Omit("Note", "PassWord", "SuperPassWord").
 		Where("id = ?", 请求.Id).
 		Find(&局_用户详情).Error; err != nil {
@@ -104,7 +104,7 @@ func (C *AgentUser) GetAgentUserList(c *gin.Context) {
 	}
 
 	局_所有子级代理ID := agent.L_agent.Q取下级代理数组含子级(c, []int{c.GetInt("Uid")})
-	局_DB := global.GVA_DB.Model(DB.DB_User{}).Where("UPAgentId != 0").Where("Id IN ?", 局_所有子级代理ID)
+	局_DB := global.GVA_DB.Model(db.DB_User{}).Where("UPAgentId != 0").Where("Id IN ?", 局_所有子级代理ID)
 
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
@@ -141,7 +141,7 @@ func (C *AgentUser) GetAgentUserList(c *gin.Context) {
 		Find(&局_列表).Error
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		global.GVA_LOG.Error("GetUserList:" + err.Error())
+		global.GVA_LOG.Println("GetUserList:" + err.Error())
 		return
 	}
 
@@ -149,7 +149,7 @@ func (C *AgentUser) GetAgentUserList(c *gin.Context) {
 }
 
 func (C *AgentUser) New代理信息(c *gin.Context) {
-	var 请求 DB.DB_User
+	var 请求 db.DB_User
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -197,7 +197,7 @@ func (C *AgentUser) New代理信息(c *gin.Context) {
 }
 
 func (C *AgentUser) Save代理信息(c *gin.Context) {
-	var 请求 DB.DB_User
+	var 请求 db.DB_User
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -261,7 +261,7 @@ func (C *AgentUser) Save代理信息(c *gin.Context) {
 		局_更新字段["SuperPassWord"] = utils2.BcryptHash(请求.SuperPassWord)
 	}
 
-	局_DB := global.GVA_DB.Model(DB.DB_User{}).Where("Id= ?", 请求.Id).Updates(&局_更新字段)
+	局_DB := global.GVA_DB.Model(db.DB_User{}).Where("Id= ?", 请求.Id).Updates(&局_更新字段)
 	if 局_DB.Error != nil {
 		response.FailWithMessage("保存失败", c)
 		return
@@ -287,9 +287,9 @@ func (C *AgentUser) Set修改状态(c *gin.Context) {
 		return
 	}
 
-	if err := global.GVA_DB.Model(DB.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 请求.Status).Error; err != nil {
+	if err := global.GVA_DB.Model(db.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 请求.Status).Error; err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return
 	}
 
@@ -342,7 +342,7 @@ func (C *AgentUser) SetAgentKaClassAuthority(c *gin.Context) {
 		response.FailWithMessage("只能操作自己的直属下级代理", c)
 		return
 	}
-	if utils.S数组_整数是否存在(请求.KId, DB.D代理功能_发展下级代理) && agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.Id) >= 3 {
+	if utils.S数组_整数是否存在(请求.KId, db.D代理功能_发展下级代理) && agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.Id) >= 3 {
 		response.FailWithMessage("该代理不可设置发展下级代理功能权限", c)
 		return
 	}

@@ -3,7 +3,7 @@ package cpsUser
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"

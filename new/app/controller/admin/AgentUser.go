@@ -2,16 +2,16 @@ package controller
 
 import (
 	. "EFunc/utils"
+	"bytes"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap/buffer"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_User"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
+	"server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
-	DB "server/structs/db"
 	"strconv"
 )
 
@@ -40,8 +40,8 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		appInfo   DB.DB_AppInfo
-		DB_Ka     []DB.DB_Ka
+		appInfo   db.DB_AppInfo
+		DB_Ka     []db.DB_Ka
 		总数        int64
 		局_制卡人     []string
 		卡类id名称map map[int]string
@@ -66,15 +66,15 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 
 		if 请求.AgentLv != 0 {
 			var 下级代理Uid = []int{}
-			global.GVA_DB.Model(DB.Db_Agent_Level{}).Select("Uid").Where("UPAgentId = ?", 局_代理info.Id).Where("Level<=?", 请求.AgentLv).Find(&下级代理Uid)
+			global.GVA_DB.Model(db.Db_Agent_Level{}).Select("Uid").Where("UPAgentId = ?", 局_代理info.Id).Where("Level<=?", 请求.AgentLv).Find(&下级代理Uid)
 			if len(下级代理Uid) > 0 {
-				global.GVA_DB.Model(DB.DB_User{}).Select("User").Where("Id in ?", 下级代理Uid).Find(&info.局_制卡人)
+				global.GVA_DB.Model(db.DB_User{}).Select("User").Where("Id in ?", 下级代理Uid).Find(&info.局_制卡人)
 			}
 		}
 		info.局_制卡人 = append(info.局_制卡人, 请求.AgentName)
 	}
 
-	局_DB := tx.Model(DB.DB_Ka{})
+	局_DB := tx.Model(db.DB_Ka{})
 	if 请求.AppId != 0 {
 		局_DB.Where("AppId = ?", 请求.AppId)
 	}
@@ -128,7 +128,7 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 		}
 	}
 
-	var 局_快速文本对象 buffer.Buffer
+	var 局_快速文本对象 bytes.Buffer
 	for _, item制卡人User := range 局_制卡人列表 {
 		局_卡类map := make(map[int]int) // [!code ++]
 		for i := range info.DB_Ka {
@@ -141,28 +141,28 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 				}
 			}
 		}
-		局_快速文本对象.AppendString("\n========[代理]:" + item制卡人User + "========")
-		局_快速文本对象.AppendString("\n")
-		局_快速文本对象.AppendString("\n[应用名称]:" + info.appInfo.AppName + "")
+		局_快速文本对象.WriteString("\n========[代理]:" + item制卡人User + "========")
+		局_快速文本对象.WriteString("\n")
+		局_快速文本对象.WriteString("\n[应用名称]:" + info.appInfo.AppName + "")
 		for 局_卡类id, 局_卡类id数量 := range 局_卡类map {
 			info.卡类id名称map[局_卡类id] = Ser_KaClass.Id取Name(局_卡类id)
-			局_快速文本对象.AppendString("   [" + info.卡类id名称map[局_卡类id] + "]:" + strconv.Itoa(局_卡类id数量) + "")
+			局_快速文本对象.WriteString("   [" + info.卡类id名称map[局_卡类id] + "]:" + strconv.Itoa(局_卡类id数量) + "")
 		}
-		局_快速文本对象.AppendString("\n-----------------------------------------")
+		局_快速文本对象.WriteString("\n-----------------------------------------")
 		局_计数 := 1
 		for i := range info.DB_Ka {
 			if info.DB_Ka[i].RegisterUser == item制卡人User {
-				局_快速文本对象.AppendString("\n" + strconv.Itoa(局_计数) + ":" + info.DB_Ka[i].Name)
-				局_快速文本对象.AppendString("  [制卡时间]:" + S时间_时间戳到时间(info.DB_Ka[i].RegisterTime))
-				局_快速文本对象.AppendString("  [使用时间]:" + S时间_时间戳到时间(info.DB_Ka[i].UseTime))
-				局_快速文本对象.AppendString("  [卡类名称]:" + info.卡类id名称map[info.DB_Ka[i].KaClassId])
-				局_快速文本对象.AppendString("  [状态]:" + S三元(info.DB_Ka[i].Status == 1, "正常", "冻结"))
-				局_快速文本对象.AppendString("  [管理备注]:" + info.DB_Ka[i].AdminNote)
-				局_快速文本对象.AppendString("  [代理备注]:" + info.DB_Ka[i].AgentNote)
+				局_快速文本对象.WriteString("\n" + strconv.Itoa(局_计数) + ":" + info.DB_Ka[i].Name)
+				局_快速文本对象.WriteString("  [制卡时间]:" + S时间_时间戳到时间(info.DB_Ka[i].RegisterTime))
+				局_快速文本对象.WriteString("  [使用时间]:" + S时间_时间戳到时间(info.DB_Ka[i].UseTime))
+				局_快速文本对象.WriteString("  [卡类名称]:" + info.卡类id名称map[info.DB_Ka[i].KaClassId])
+				局_快速文本对象.WriteString("  [状态]:" + S三元(info.DB_Ka[i].Status == 1, "正常", "冻结"))
+				局_快速文本对象.WriteString("  [管理备注]:" + info.DB_Ka[i].AdminNote)
+				局_快速文本对象.WriteString("  [代理备注]:" + info.DB_Ka[i].AgentNote)
 				局_计数++
 			}
 		}
-		局_快速文本对象.AppendString("\n")
+		局_快速文本对象.WriteString("\n")
 	}
 
 	response.OkWithDetailed(局_快速文本对象.String(), "获取成功", c)

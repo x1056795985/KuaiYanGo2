@@ -4,14 +4,13 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"net/url"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	"server/new/app/logic/webUser/appInfoWebUser"
 	shortUr "server/new/app/logic/webUser/shortUrl"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -64,8 +63,8 @@ func (C *ShortUrl) Create(c *gin.Context) {
 	}
 	var err error
 	var info = struct {
-		appInfo   DB.DB_AppInfo
-		likeInfo  DB.DB_LinksToken
+		appInfo   dbm.DB_AppInfo
+		likeInfo  dbm.DB_LinksToken
 		ShortUrls []dbm.DB_ShortUrl
 		ShortUrl  dbm.DB_ShortUrl
 	}{}
@@ -117,8 +116,8 @@ func (C *ShortUrl) Info(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
 		ShortUrl dbm.DB_ShortUrl
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)

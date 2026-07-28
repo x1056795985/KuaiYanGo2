@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_User"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/kaClassUpPrice"
 	dbm "server/new/app/models/db"
-	DB "server/structs/db"
 	"strconv"
 )
 
@@ -165,8 +164,8 @@ type K可制卡类授权树形框结构 struct {
 }
 
 func Q取全部可制卡类树形框列表(c *gin.Context, 上级代理ID int) []K可制卡类授权树形框结构 {
-	var DB_AppInfo []DB.DB_AppInfo
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppId", "AppName").Find(&DB_AppInfo).Error
+	var DB_AppInfo []dbm.DB_AppInfo
+	_ = global.GVA_DB.Model(dbm.DB_AppInfo{}).Select("AppId", "AppName").Find(&DB_AppInfo).Error
 
 	var DB_KaClass []dbm.DB_KaClass
 	if 上级代理ID < 0 {

@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 	"gorm.io/gorm"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/models/db"
 	"server/new/app/models/request"
-	"server/utils"
+	"server/new/app/utils"
 	"strconv"
 	"time"
 )
@@ -48,7 +48,7 @@ func (s *S_LogAgentInventory) GetList(tx *gorm.DB, 请求 request.List) (int64, 
 	var dataList []db.Db_Agent_库存日志
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
 	if err != nil {
-		global.GVA_LOG.Error(utils.Q取包名结构体方法(s) + ":" + err.Error())
+		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
 	}
 	return 总数, dataList, err
 }
@@ -125,7 +125,7 @@ func (s *S_LogAgentInventory) GetListByUser(tx *gorm.DB, 请求 request.ListLog,
 	var dataList []db.Db_Agent_库存日志
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
 	if err != nil {
-		global.GVA_LOG.Error(utils.Q取包名结构体方法(s) + ":" + err.Error())
+		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
 	}
 	return 总数, dataList, err
 }

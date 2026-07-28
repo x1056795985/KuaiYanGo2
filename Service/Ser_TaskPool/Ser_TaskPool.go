@@ -3,8 +3,8 @@ package Ser_TaskPool
 import (
 	"errors"
 	"github.com/google/uuid"
-	"server/global"
-	DB "server/structs/db"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 	"strconv"
 	"sync"
 	"time"
@@ -20,10 +20,10 @@ func Task队列弹出任务(任务类型id []int, 最大获取数量, ReturnAppI
 		return 任务Uuid
 	}
 	db := global.GVA_DB
-	_ = db.Model(DB.TaskPool_队列{}).Select("Uuid").Where("Tid in ?", 任务类型id).Limit(最大获取数量).Find(&任务Uuid).Error
+	_ = db.Model(dbm.TaskPool_队列{}).Select("Uuid").Where("Tid in ?", 任务类型id).Limit(最大获取数量).Find(&任务Uuid).Error
 	if len(任务类型id) > 0 {
-		_ = db.Model(DB.TaskPool_队列{}).Where("Uuid in ?", 任务Uuid).Delete("").Error
-		_ = db.Model(DB.DB_TaskPoolData{}).Where("Uuid in ?", 任务Uuid).Updates(map[string]interface{}{
+		_ = db.Model(dbm.TaskPool_队列{}).Where("Uuid in ?", 任务Uuid).Delete("").Error
+		_ = db.Model(dbm.DB_TaskPoolData{}).Where("Uuid in ?", 任务Uuid).Updates(map[string]interface{}{
 			"Status":      2,
 			"ReturnAppId": ReturnAppId,
 			"ReturnUid":   ReturnUid,
@@ -41,7 +41,7 @@ func Task_取队列数量() (map[int]string, error) {
 		Count int
 	}
 
-	err := global.GVA_DB.Model(DB.TaskPool_队列{}).
+	err := global.GVA_DB.Model(dbm.TaskPool_队列{}).
 		Select("Tid, COUNT(*) AS Count").
 		Group("Tid").
 		Scan(&results).Error
@@ -60,18 +60,18 @@ func Task队列清除指定Tid(Tid []int) (int, error) {
 	var 局_uuid []string
 	临界许可.Lock()
 	defer 临界许可.Unlock()
-	global.GVA_DB.Model(DB.TaskPool_队列{}).Select("Uuid").Where("Tid IN ?", Tid).Find(&局_uuid)
+	global.GVA_DB.Model(dbm.TaskPool_队列{}).Select("Uuid").Where("Tid IN ?", Tid).Find(&局_uuid)
 
 	if len(局_uuid) == 0 {
 		return 0, nil
 	}
-	global.GVA_DB.Model(DB.TaskPool_队列{}).Where("Uuid IN ?", 局_uuid).Delete("")
+	global.GVA_DB.Model(dbm.TaskPool_队列{}).Where("Uuid IN ?", 局_uuid).Delete("")
 
 	局_UpData := make(map[string]interface{}, 3)
 	局_UpData["TimeEnd"] = time.Now().Unix()
 	局_UpData["Status"] = 4
 
-	err := global.GVA_DB.Model(DB.DB_TaskPoolData{}).Where("Uuid IN ?", 局_uuid).Updates(局_UpData).Error
+	err := global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Where("Uuid IN ?", 局_uuid).Updates(局_UpData).Error
 	if err != nil {
 		return 0, err
 	}
@@ -79,7 +79,7 @@ func Task队列清除指定Tid(Tid []int) (int, error) {
 	return len(局_uuid), nil
 }
 func Task数据创建加入队列(任务类型Id int, 生产提交数据 string, SubmitAppId, SubmitUid int) (string, error) {
-	DB_TaskPool_类型 := DB.DB_TaskPoolData{
+	DB_TaskPool_类型 := dbm.DB_TaskPoolData{
 		Uuid:        uuid.New().String(),
 		Tid:         任务类型Id,
 		TimeStart:   int(time.Now().Unix()),
@@ -91,40 +91,40 @@ func Task数据创建加入队列(任务类型Id int, 生产提交数据 string,
 		SubmitUid:   SubmitUid,
 	}
 
-	err := global.GVA_DB.Model(DB.DB_TaskPoolData{}).Create(&DB_TaskPool_类型).Error
+	err := global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Create(&DB_TaskPool_类型).Error
 	if err != nil {
 		return "", err
 	}
 
-	TaskPool_队列 := DB.TaskPool_队列{
+	TaskPool_队列 := dbm.TaskPool_队列{
 		Uuid: DB_TaskPool_类型.Uuid,
 		Tid:  DB_TaskPool_类型.Tid,
 	}
-	err = global.GVA_DB.Model(DB.TaskPool_队列{}).Create(&TaskPool_队列).Error
+	err = global.GVA_DB.Model(dbm.TaskPool_队列{}).Create(&TaskPool_队列).Error
 	if err != nil {
 		//如果失败任务删除丢弃,除非雪崩,不然概率不大,大量出就人工介入
-		_ = global.GVA_DB.Model(DB.DB_TaskPoolData{}).Delete(&DB_TaskPool_类型)
+		_ = global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Delete(&DB_TaskPool_类型)
 		return "", err
 	}
 
 	return DB_TaskPool_类型.Uuid, nil
 }
-func Task数据读取_数组(Uuid []string) []DB.TaskPool_数据_精简 {
-	var TaskPool_数据 []DB.TaskPool_数据_精简
+func Task数据读取_数组(Uuid []string) []dbm.TaskPool_数据_精简 {
+	var TaskPool_数据 []dbm.TaskPool_数据_精简
 	if len(Uuid) == 0 {
 		return TaskPool_数据
 	}
-	_ = global.GVA_DB.Model(DB.DB_TaskPoolData{}).Where("Uuid in ?", Uuid).Find(&TaskPool_数据).Error
+	_ = global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Where("Uuid in ?", Uuid).Find(&TaskPool_数据).Error
 	return TaskPool_数据
 }
-func Task数据读取_单条(Uuid string) (DB.DB_TaskPoolData, error) {
-	var TaskPool_数据 DB.DB_TaskPoolData
-	err := global.GVA_DB.Model(DB.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&TaskPool_数据).Error
+func Task数据读取_单条(Uuid string) (dbm.DB_TaskPoolData, error) {
+	var TaskPool_数据 dbm.DB_TaskPoolData
+	err := global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&TaskPool_数据).Error
 	return TaskPool_数据, err
 }
 func Task数据读取Tid(Uuid string) int {
 	var Tid int
-	_ = global.GVA_DB.Model(DB.DB_TaskPoolData{}).Select("Tid").Where("Uuid = ?", Uuid).First(&Tid).Error
+	_ = global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Select("Tid").Where("Uuid = ?", Uuid).First(&Tid).Error
 	return Tid
 }
 
@@ -140,7 +140,7 @@ func Task数据修改(Uuid string, Status int, ReturnData string) error {
 		局_UpData["ReturnData"] = ReturnData
 	}
 
-	err := global.GVA_DB.Model(DB.DB_TaskPoolData{}).Where("Uuid=?", Uuid).Updates(局_UpData).Error
+	err := global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Where("Uuid=?", Uuid).Updates(局_UpData).Error
 	return err
 }
 
@@ -148,14 +148,14 @@ func Task数据删除过期() {
 
 	if global.GVA_DB != nil {
 		//删除超过24小时的任务
-		_ = global.GVA_DB.Model(DB.DB_TaskPoolData{}).Where("TimeStart<?", time.Now().Unix()-(86400*30)).Delete("").RowsAffected
+		_ = global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Where("TimeStart<?", time.Now().Unix()-(86400*30)).Delete("").RowsAffected
 		//fmt.Printf("定时删除已过期24H任务:%v\n", 局_数量)
 	}
 	//24小时
 }
 
 func Task类型创建(Name, hook函数名创建入库前, hook函数名创建入库后, hook函数名执行入库前, hook函数名执行入库后 string) error {
-	DB_TaskPool_类型 := DB.TaskPool_类型{
+	DB_TaskPool_类型 := dbm.TaskPool_类型{
 		Id:                  0,
 		Name:                Name,
 		HookSubmitDataStart: hook函数名创建入库前,
@@ -163,12 +163,12 @@ func Task类型创建(Name, hook函数名创建入库前, hook函数名创建入
 		HookReturnDataStart: hook函数名执行入库前,
 		HookReturnDataEnd:   hook函数名执行入库后,
 	}
-	err := global.GVA_DB.Model(DB.TaskPool_类型{}).Create(&DB_TaskPool_类型).Error
+	err := global.GVA_DB.Model(dbm.TaskPool_类型{}).Create(&DB_TaskPool_类型).Error
 	return err
 }
 
 func Task类型修改(id int, Name, hook函数名创建入库前, hook函数名创建入库后, hook函数名创建后, hook函数名执行入库前, hook函数名执行入库后 string) error {
-	DB_TaskPool_类型 := DB.TaskPool_类型{
+	DB_TaskPool_类型 := dbm.TaskPool_类型{
 		Id:                  id,
 		Name:                Name,
 		HookSubmitDataStart: hook函数名创建入库前,
@@ -176,38 +176,38 @@ func Task类型修改(id int, Name, hook函数名创建入库前, hook函数名�
 		HookReturnDataStart: hook函数名执行入库前,
 		HookReturnDataEnd:   hook函数名执行入库后,
 	}
-	err := global.GVA_DB.Model(DB.TaskPool_类型{}).Save(&DB_TaskPool_类型).Error
+	err := global.GVA_DB.Model(dbm.TaskPool_类型{}).Save(&DB_TaskPool_类型).Error
 	return err
 }
 
 func Task类型删除(id int) error {
-	err := global.GVA_DB.Model(DB.TaskPool_类型{}).Where("Id=?", id).Delete("").Error
+	err := global.GVA_DB.Model(dbm.TaskPool_类型{}).Where("Id=?", id).Delete("").Error
 	return err
 }
-func Task类型读取(id int) (DB.TaskPool_类型, error) {
-	var DB_TaskPool_类型 DB.TaskPool_类型
-	err := global.GVA_DB.Model(DB.TaskPool_类型{}).Where("Id=?", id).First(&DB_TaskPool_类型).Error
+func Task类型读取(id int) (dbm.TaskPool_类型, error) {
+	var DB_TaskPool_类型 dbm.TaskPool_类型
+	err := global.GVA_DB.Model(dbm.TaskPool_类型{}).Where("Id=?", id).First(&DB_TaskPool_类型).Error
 	return DB_TaskPool_类型, err
 }
 
 func Uuid_添加到队列(uuid string) error {
-	var TaskPool_数据 DB.DB_TaskPoolData
-	var TaskPool_队列 DB.TaskPool_队列
+	var TaskPool_数据 dbm.DB_TaskPoolData
+	var TaskPool_队列 dbm.TaskPool_队列
 	db := *global.GVA_DB
 	//先判断任务是否已经在队列之中
 
-	db.Model(DB.TaskPool_队列{}).Where("Uuid=?", uuid).First(&TaskPool_队列)
+	db.Model(dbm.TaskPool_队列{}).Where("Uuid=?", uuid).First(&TaskPool_队列)
 	if TaskPool_队列.Tid != 0 {
 		return errors.New("uuid已存在队列之中")
 	}
-	err := db.Model(DB.DB_TaskPoolData{}).Where("uuid=?", uuid).First(&TaskPool_数据).Error
+	err := db.Model(dbm.DB_TaskPoolData{}).Where("uuid=?", uuid).First(&TaskPool_数据).Error
 	if err != nil {
 		return errors.New("uuid任务不存在")
 	}
-	TaskPool_队列 = DB.TaskPool_队列{
+	TaskPool_队列 = dbm.TaskPool_队列{
 		Uuid: TaskPool_数据.Uuid,
 		Tid:  TaskPool_数据.Tid,
 	}
-	err = db.Model(DB.TaskPool_队列{}).Create(&TaskPool_队列).Error
+	err = db.Model(dbm.TaskPool_队列{}).Create(&TaskPool_队列).Error
 	return err
 }

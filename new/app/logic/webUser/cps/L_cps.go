@@ -2,10 +2,9 @@ package cps
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -23,7 +22,7 @@ type cps struct {
 func (j *cps) Q开启中cps活动(c *gin.Context, AppId int) (cpsInfo dbm.DB_CpsInfo) {
 	var err error
 	var info struct {
-		邀请人信息              DB.DB_User
+		邀请人信息         dbm.DB_User
 		AppPromotionConfig dbm.DB_AppPromotionConfig
 	}
 

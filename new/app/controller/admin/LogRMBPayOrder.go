@@ -7,13 +7,13 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_User"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strconv"
 	"strings"
 	"time"
@@ -67,11 +67,11 @@ type 请求_LogRMBPayOrderSetNote struct {
 
 type 响应_LogRMBPayOrderGetList struct {
 	List  []响应_LogRMBPayOrderGetListItem `json:"list"`
-	Count int64                           `json:"count"`
+	Count int64                          `json:"count"`
 }
 
 type 响应_LogRMBPayOrderGetListItem struct {
-	DB.DB_LogRMBPayOrder
+	dbm.DB_LogRMBPayOrder
 	Processing string `json:"processing"`
 }
 
@@ -82,8 +82,8 @@ func (C *LogRMBPayOrderCtrl) Info(c *gin.Context) {
 		return
 	}
 
-	var DB_LogRMBPayOrder DB.DB_LogRMBPayOrder
-	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("Id= ?", 请求.Id).First(&DB_LogRMBPayOrder).Error
+	var DB_LogRMBPayOrder dbm.DB_LogRMBPayOrder
+	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("Id= ?", 请求.Id).First(&DB_LogRMBPayOrder).Error
 	if err != nil {
 		response.FailWithMessage("获取失败,可能不存在", c)
 		return
@@ -98,7 +98,7 @@ func (C *LogRMBPayOrderCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	局_DB := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{})
+	局_DB := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{})
 	if 请求.Order == 1 {
 		局_DB.Order("db_Log_RMBPayOrder.Id ASC")
 	} else {
@@ -129,7 +129,7 @@ func (C *LogRMBPayOrderCtrl) GetList(c *gin.Context) {
 		局_DB.Where("db_Log_RMBPayOrder.Status  = ? ", 请求.Status)
 	}
 
-	var DB_LogRMBPayOrder []DB.DB_LogRMBPayOrder
+	var DB_LogRMBPayOrder []dbm.DB_LogRMBPayOrder
 	var 总数 int64
 	if 请求.Count > 500000 {
 		总数 = 请求.Count
@@ -169,7 +169,7 @@ func (C *LogRMBPayOrderCtrl) Delete(c *gin.Context) {
 		return
 	}
 	var 影响行数 int64
-	var db = global.GVA_DB.Model(DB.DB_LogRMBPayOrder{})
+	var db = global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{})
 
 	switch 请求.Type {
 	default:
@@ -180,17 +180,17 @@ func (C *LogRMBPayOrderCtrl) Delete(c *gin.Context) {
 			response.FailWithMessage("Id数组没有要删除的ID", c)
 			return
 		}
-		影响行数 = db.Where("Id IN ? ", 请求.Id).Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
+		影响行数 = db.Where("Id IN ? ", 请求.Id).Delete(dbm.DB_LogRMBPayOrder{}).RowsAffected
 	case 2:
-		影响行数 = db.Where("User = ? ", 请求.Keywords).Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
+		影响行数 = db.Where("User = ? ", 请求.Keywords).Delete(dbm.DB_LogRMBPayOrder{}).RowsAffected
 	case 3:
-		影响行数 = db.Where("1=1").Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
+		影响行数 = db.Where("1=1").Delete(dbm.DB_LogRMBPayOrder{}).RowsAffected
 	case 4:
-		影响行数 = db.Where("Time <  ?", time.Now().Unix()-604800).Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
+		影响行数 = db.Where("Time <  ?", time.Now().Unix()-604800).Delete(dbm.DB_LogRMBPayOrder{}).RowsAffected
 	case 5:
-		影响行数 = db.Where("Time <  ?", time.Now().Unix()-2592000).Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
+		影响行数 = db.Where("Time <  ?", time.Now().Unix()-2592000).Delete(dbm.DB_LogRMBPayOrder{}).RowsAffected
 	case 6:
-		影响行数 = db.Where("Time <  ?", time.Now().Unix()-7776000).Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
+		影响行数 = db.Where("Time <  ?", time.Now().Unix()-7776000).Delete(dbm.DB_LogRMBPayOrder{}).RowsAffected
 	case 7:
 		if len(请求.Keywords) == 0 {
 			response.FailWithMessage("关键字不能为空", c)
@@ -202,7 +202,7 @@ func (C *LogRMBPayOrderCtrl) Delete(c *gin.Context) {
 			constant.D订单状态_等待支付,
 			constant.D订单状态_已关闭,
 		}
-		影响行数 = db.Where("Time <  ?", time.Now().Unix()-3600).Where("Status IN ?", 状态id).Delete(DB.DB_LogRMBPayOrder{}).RowsAffected
+		影响行数 = db.Where("Time <  ?", time.Now().Unix()-3600).Where("Status IN ?", 状态id).Delete(dbm.DB_LogRMBPayOrder{}).RowsAffected
 		if db.Error == nil {
 			response.OkWithMessage("删除过期(1小时前)待支付和已关闭成功,数量"+strconv.FormatInt(影响行数, 10), c)
 			return
@@ -230,7 +230,7 @@ func (C *LogRMBPayOrderCtrl) New(c *gin.Context) {
 		response.FailWithMessage("增减金额不能超过10亿(11位)", c)
 	}
 
-	var 新订单 DB.DB_LogRMBPayOrder
+	var 新订单 dbm.DB_LogRMBPayOrder
 	新订单.Id = 0
 	新订单.Uid = 局_Uid
 	新订单.User = 请求.User
@@ -243,7 +243,7 @@ func (C *LogRMBPayOrderCtrl) New(c *gin.Context) {
 	新订单.PayOrder = Ser_RMBPayOrder.Get获取新订单号()
 	新订单.UidType = 1
 
-	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Create(&新订单).Error
+	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单).Error
 	if err != nil {
 		response.FailWithMessage("订单创建失败", c)
 		return
@@ -291,7 +291,7 @@ func (C *LogRMBPayOrderCtrl) SetNote(c *gin.Context) {
 	err := Ser_RMBPayOrder.Order更新订单备注_批量(请求.PayOrder, 请求.Note)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return
 	}
 	response.OkWithMessage("修改成功", c)

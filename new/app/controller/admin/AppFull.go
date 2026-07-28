@@ -10,18 +10,17 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_PublicJs"
-	"server/new/app/router/userSafetyApi"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/appInfo"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
+	"server/new/app/router/userSafetyApi"
 	"server/new/app/router/webApi2"
 	"server/new/app/service"
-	"server/structs/Http/response"
-	DB "server/structs/db"
 	"sort"
 	"strconv"
 	"strings"
@@ -37,7 +36,7 @@ func NewAppController() *App {
 }
 
 type 结构响应_GetAppInfo struct {
-	AppInfo   DB.DB_AppInfo  `json:"appInfo"`
+	AppInfo   dbm.DB_AppInfo `json:"appInfo"`
 	KaClass   map[int]string `json:"kaClass"`
 	ServerUrl string         `json:"serverUrl"`
 	Port      int            `json:"port"`
@@ -87,7 +86,7 @@ func (a *App) GetList(c *gin.Context) {
 
 	var DB_AppInfo_简化1 []DB_AppInfo_简化
 	var 总数 int64
-	局_DB := global.GVA_DB.Model(DB.DB_AppInfo{})
+	局_DB := global.GVA_DB.Model(dbm.DB_AppInfo{})
 
 	if 请求.Order == 1 {
 		局_DB.Order("Sort DESC, AppId ASC")
@@ -112,7 +111,7 @@ func (a *App) GetList(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		global.GVA_LOG.Error("GetAppList:" + err.Error())
+		global.GVA_LOG.Println("GetAppList:" + err.Error())
 		return
 	}
 	response.OkWithDetailed(结构响应_GetAppList{DB_AppInfo_简化1, 总数}, "获取成功", c)
@@ -128,8 +127,8 @@ func (a *App) GetInfo(c *gin.Context) {
 		return
 	}
 
-	var DB_AppInfo DB.DB_AppInfo
-	err = global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId = ?", 请求.Id).Find(&DB_AppInfo).Error
+	var DB_AppInfo dbm.DB_AppInfo
+	err = global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId = ?", 请求.Id).Find(&DB_AppInfo).Error
 
 	if err != nil {
 		response.FailWithMessage("查询APPID:"+strconv.Itoa(请求.Id)+"详细信息失败", c)
@@ -181,8 +180,8 @@ type 请求_NewApp struct {
 // SaveInfo 保存应用信息
 func (a *App) SaveInfo(c *gin.Context) {
 	var 请求 struct {
-		AppData        DB.DB_AppInfo         `json:"appData"`
-		PublicData     []DB.DB_PublicData    `json:"publicData"`
+		AppData        dbm.DB_AppInfo        `json:"appData"`
+		PublicData     []dbm.DB_PublicData   `json:"publicData"`
 		AppInfoWebUser dbm.DB_AppInfoWebUser `json:"appInfoWebUser"`
 	}
 	err := c.ShouldBindJSON(&请求)
@@ -274,19 +273,19 @@ func (a *App) SaveInfo(c *gin.Context) {
 			object.Visit(func(key []byte, v *fastjson.Value) {
 				局_hook函数名 := strings.TrimSpace(string(v.GetStringBytes("Before")))
 				if len(局_hook函数名) > 0 && !Ser_PublicJs.Name是否存在(Ser_PublicJs.Js类型_ApiHook函数, 局_hook函数名) {
-					Ser_PublicJs.C创建(DB.DB_PublicJs{
+					Ser_PublicJs.C创建(dbm.DB_PublicJs{
 						AppId: 3, Name: 局_hook函数名,
 						Value: "function " + 局_hook函数名 + Api之前Hook函数模板,
-						Type: 2, IsVip: 0,
+						Type:  2, IsVip: 0,
 						Note: 请求.AppData.AppName + "(" + strconv.Itoa(请求.AppData.AppId) + ")函数" + string(key) + "函数hook进入前自动创建",
 					})
 				}
 				局_hook函数名 = strings.TrimSpace(string(v.GetStringBytes("After")))
 				if len(局_hook函数名) > 0 && !Ser_PublicJs.Name是否存在(Ser_PublicJs.Js类型_ApiHook函数, 局_hook函数名) {
-					Ser_PublicJs.C创建(DB.DB_PublicJs{
+					Ser_PublicJs.C创建(dbm.DB_PublicJs{
 						AppId: 3, Name: 局_hook函数名,
 						Value: "function " + 局_hook函数名 + Api之后Hook函数模板,
-						Type: 2, IsVip: 0,
+						Type:  2, IsVip: 0,
 						Note: 请求.AppData.AppName + "(" + strconv.Itoa(请求.AppData.AppId) + ")函数" + string(key) + "函数hook退出后自动创建",
 					})
 				}
@@ -329,14 +328,14 @@ func (a *App) Delete(c *gin.Context) {
 
 	var 影响行数 int64
 	var db = global.GVA_DB
-	db.Model(DB.DB_AppInfo{}).Count(&影响行数)
+	db.Model(dbm.DB_AppInfo{}).Count(&影响行数)
 
 	if int(影响行数)-len(请求.Id) <= 0 {
 		response.FailWithMessage("不能删除全部应用至少保留一个应用", c)
 		return
 	}
 
-	影响行数 = db.Model(DB.DB_AppInfo{}).Where("AppId IN ? ", 请求.Id).Delete("").RowsAffected
+	影响行数 = db.Model(dbm.DB_AppInfo{}).Where("AppId IN ? ", 请求.Id).Delete("").RowsAffected
 
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
@@ -344,9 +343,9 @@ func (a *App) Delete(c *gin.Context) {
 	}
 	for _, id值 := range 请求.Id {
 		global.GVA_DB.Migrator().DropTable("db_AppUser_" + strconv.Itoa(id值))
-		global.GVA_DB.Model(DB.DB_UserClass{}).Where("AppId IN ? ", 请求.Id).Delete("")
+		global.GVA_DB.Model(dbm.DB_UserClass{}).Where("AppId IN ? ", 请求.Id).Delete("")
 		global.GVA_DB.Model(dbm.DB_KaClass{}).Where("AppId IN ? ", 请求.Id).Delete("")
-		global.GVA_DB.Model(DB.DB_Ka{}).Where("AppId IN ? ", 请求.Id).Delete("")
+		global.GVA_DB.Model(dbm.DB_Ka{}).Where("AppId IN ? ", 请求.Id).Delete("")
 	}
 
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
@@ -356,7 +355,7 @@ func (a *App) Delete(c *gin.Context) {
 // GetAppIdMax 取最大AppId
 func (a *App) GetAppIdMax(c *gin.Context) {
 	var AppIdMax int64
-	err := global.GVA_DB.Model(DB.DB_AppInfo{}).Select("Max(AppId)").Find(&AppIdMax).Error
+	err := global.GVA_DB.Model(dbm.DB_AppInfo{}).Select("Max(AppId)").Find(&AppIdMax).Error
 	if err != nil {
 		response.OkWithDetailed(gin.H{"appIdMax": 10000}, "获取成功", c)
 		return

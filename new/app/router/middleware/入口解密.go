@@ -10,14 +10,14 @@ import (
 	"io"
 	"server/Service/Ser_Js"
 	"server/Service/Ser_Log"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	"server/new/app/utils"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"strings"
 	"time"
 )
@@ -263,7 +263,7 @@ func apiHook之前(c *gin.Context, ctx *common.Q请求_上下文) error {
 	return nil
 }
 
-func 校验请求基础字段(c *gin.Context, AppInfo DB.DB_AppInfo, 请求 *gjson.Json) int {
+func 校验请求基础字段(c *gin.Context, AppInfo dbm.DB_AppInfo, 请求 *gjson.Json) int {
 	局_Time := 请求.Get("Time").Int()
 	if AppInfo.PackTimeOut != 0 && int(time.Now().Unix())-局_Time > AppInfo.PackTimeOut {
 		return constant.Status_封包超时

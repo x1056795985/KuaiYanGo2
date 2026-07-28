@@ -10,14 +10,14 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_UserClass"
 	"server/Service/Ser_UserConfig"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/kaClassUpPrice"
+	"server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
-	DB "server/structs/db"
 	"sort"
 	"strconv"
 )
@@ -120,8 +120,8 @@ func (A *AgentKa) GetInfo(c *gin.Context) {
 		return
 	}
 
-	var 局_卡号 DB.DB_Ka
-	if err := global.GVA_DB.Model(DB.DB_Ka{}).Omit("AdminNote").Where("Id = ?", 请求.Id).First(&局_卡号).Error; err != nil {
+	var 局_卡号 db.DB_Ka
+	if err := global.GVA_DB.Model(db.DB_Ka{}).Omit("AdminNote").Where("Id = ?", 请求.Id).First(&局_卡号).Error; err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return
 	}
@@ -131,7 +131,7 @@ func (A *AgentKa) GetInfo(c *gin.Context) {
 		response.FailWithMessage("读取缓存在线信息失败", c)
 		return
 	}
-	局_在线信息 := 局_接口.(DB.DB_LinksToken)
+	局_在线信息 := 局_接口.(db.DB_LinksToken)
 
 	局_制卡人数组 := agent.L_agent.Q取下级代理数组_user(c, []int{c.GetInt("Uid")})
 	局_制卡人数组 = append(局_制卡人数组, 局_在线信息.User)
@@ -150,13 +150,13 @@ func (A *AgentKa) GetKaList(c *gin.Context) {
 	}
 
 	局_临时通用, _ := c.Get("局_在线信息")
-	局_在线信息 := 局_临时通用.(DB.DB_LinksToken)
+	局_在线信息 := 局_临时通用.(db.DB_LinksToken)
 	局_制卡人数组 := []string{局_在线信息.User}
 	if 请求.Child == 1 {
 		局_制卡人数组 = append(agent.L_agent.Q取下级代理数组_user(c, []int{c.GetInt("Uid")}), 局_在线信息.User)
 	}
 
-	局_DB := global.GVA_DB.Model(DB.DB_Ka{}).Where("RegisterUser IN ?", 局_制卡人数组)
+	局_DB := global.GVA_DB.Model(db.DB_Ka{}).Where("RegisterUser IN ?", 局_制卡人数组)
 	if 请求.AppId != 0 {
 		局_DB.Where("AppId = ?", 请求.AppId)
 	}
@@ -207,10 +207,10 @@ func (A *AgentKa) GetKaList(c *gin.Context) {
 	}
 
 	var 局_总数 int64
-	var 局_列表 []DB.DB_Ka
+	var 局_列表 []db.DB_Ka
 	if err := 局_DB.Count(&局_总数).Omit("AdminNote").Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_列表).Error; err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		global.GVA_LOG.Error("GetKaList:" + err.Error())
+		global.GVA_LOG.Println("GetKaList:" + err.Error())
 		return
 	}
 
@@ -268,7 +268,7 @@ func (A *AgentKa) Z追回卡号(c *gin.Context) {
 	}
 
 	局_临时通用, _ := c.Get("局_在线信息")
-	局_在线信息 := 局_临时通用.(DB.DB_LinksToken)
+	局_在线信息 := 局_临时通用.(db.DB_LinksToken)
 	if Ser_Ka.Id取制卡人(请求.Id[0]) != 局_在线信息.User {
 		response.FailWithMessage("只能追回自己制造的卡号", c)
 		return
@@ -280,7 +280,7 @@ func (A *AgentKa) Z追回卡号(c *gin.Context) {
 
 	局_卡号详情, _ := Ser_Ka.Id取详情(请求.Id[0])
 	局_信息 := "操作卡号管理:代理追回卡号:" + 局_卡号详情.Name
-	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_卡号详情.Name, DB.D代理功能_卡号追回, c.ClientIP(), 局_信息)
+	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_卡号详情.Name, db.D代理功能_卡号追回, c.ClientIP(), 局_信息)
 	response.OkWithMessage("操作成功", c)
 }
 
@@ -307,7 +307,7 @@ func (A *AgentKa) New(c *gin.Context) {
 		return
 	}
 
-	局_卡数组 := make([]DB.DB_Ka, 请求.Number)
+	局_卡数组 := make([]db.DB_Ka, 请求.Number)
 	局_接口, ok := c.Get("局_在线信息")
 	if !ok {
 		response.FailWithMessage("读取缓存在线信息失败", c)
@@ -318,7 +318,7 @@ func (A *AgentKa) New(c *gin.Context) {
 		response.FailWithMessage("卡类id不存在", c)
 		return
 	}
-	局_在线信息 := 局_接口.(DB.DB_LinksToken)
+	局_在线信息 := 局_接口.(db.DB_LinksToken)
 	if err = Ser_Ka.Ka代理批量购买(c, 局_卡数组[:], 请求.Id, 局_在线信息.Uid, 请求.AdminNote, 0, c.ClientIP()); err != nil {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
 		return
@@ -339,7 +339,7 @@ func (A *AgentKa) K库存制卡(c *gin.Context) {
 		return
 	}
 
-	局_卡数组 := make([]DB.DB_Ka, 请求.Number)
+	局_卡数组 := make([]db.DB_Ka, 请求.Number)
 	if err := Ser_Ka.Ka代理批量库存购买(c, 局_卡数组[:], 请求.Id, 请求.Number, c.GetInt("Uid"), 请求.AgentNote, c.ClientIP()); err != nil {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
 		return
@@ -369,13 +369,13 @@ func (A *AgentKa) Set修改状态(c *gin.Context) {
 	局_权限 := false
 	switch 请求.Status {
 	case 1:
-		局_权限 = agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_卡号解冻)
+		局_权限 = agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), db.D代理功能_卡号解冻)
 		局_权限文本 = "无卡号解冻权限,请联系上级代理授权"
-		局_代理权限ID = DB.D代理功能_卡号解冻
+		局_代理权限ID = db.D代理功能_卡号解冻
 	case 2:
-		局_权限 = agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), DB.D代理功能_卡号冻结)
+		局_权限 = agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), db.D代理功能_卡号冻结)
 		局_权限文本 = "无卡号冻结权限,请联系上级代理授权"
-		局_代理权限ID = DB.D代理功能_卡号冻结
+		局_代理权限ID = db.D代理功能_卡号冻结
 	}
 	if !局_权限 {
 		response.FailWithMessage(局_权限文本, c)
@@ -388,7 +388,7 @@ func (A *AgentKa) Set修改状态(c *gin.Context) {
 
 	if err := Ser_Ka.Ka修改状态_同步卡号模式软件用户(请求.Id, 请求.Status); err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return
 	}
 
@@ -396,7 +396,7 @@ func (A *AgentKa) Set修改状态(c *gin.Context) {
 		局_卡号, err := Ser_Ka.Id取详情(局_Id)
 		if err == nil {
 			局_信息 := "操作卡号管理:"
-			if 局_代理权限ID == DB.D代理功能_卡号冻结 {
+			if 局_代理权限ID == db.D代理功能_卡号冻结 {
 				局_信息 += "卡号冻结"
 			} else {
 				局_信息 += "卡号解冻"
@@ -426,7 +426,7 @@ func (A *AgentKa) G更换卡号(c *gin.Context) {
 
 	局_卡号详情, _ := Ser_Ka.Id取详情(请求.Id)
 	局_信息 := "操作卡号管理:卡号更换新卡号:" + 局_卡号详情.Name
-	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_旧卡号详情.Name, DB.D代理功能_更换卡号, c.ClientIP(), 局_信息)
+	Ser_Log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 局_卡号详情.AppId, 局_卡号详情.Id, 局_旧卡号详情.Name, db.D代理功能_更换卡号, c.ClientIP(), 局_信息)
 	response.OkWithDetailed(局_卡号详情, "更换成功", c)
 }
 
@@ -450,10 +450,10 @@ func (A *AgentKa) Set修改代理备注(c *gin.Context) {
 		response.FailWithMessage("读取缓存在线信息失败", c)
 		return
 	}
-	局_在线信息 := 局_接口.(DB.DB_LinksToken)
+	局_在线信息 := 局_接口.(db.DB_LinksToken)
 	if err := Ser_Ka.Ka修改代理备注(局_在线信息.User, 请求.Id, 请求.Note); err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return
 	}
 	response.OkWithMessage("修改成功", c)
@@ -512,7 +512,7 @@ func (A *AgentKa) Set修改卡号生成模板(c *gin.Context) {
 	}
 	if err := Ser_UserConfig.Z置值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId), 请求.KaTemplate); err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return
 	}
 	response.OkWithMessage("修改成功", c)
@@ -537,7 +537,7 @@ func (A *AgentKa) Q取卡号生成模板(c *gin.Context) {
 	response.OkWithData(局_模板, c)
 }
 
-func (A *AgentKa) 转精简卡列表(卡数组 []DB.DB_Ka, 用户类型名称 string) []AgentKa精简 {
+func (A *AgentKa) 转精简卡列表(卡数组 []db.DB_Ka, 用户类型名称 string) []AgentKa精简 {
 	局_结果 := make([]AgentKa精简, len(卡数组))
 	for 局_索引 := range 局_结果 {
 		局_结果[局_索引].Name = 卡数组[局_索引].Name

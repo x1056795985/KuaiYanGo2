@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/rmbPay"
 	m "server/new/app/models/common"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 )
 
 func init() {
@@ -48,12 +48,12 @@ func (j 余额支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 		return
 	}
 	var info = struct {
-		likeInfo DB.DB_LinksToken
-		appInfo  DB.DB_AppInfo
-		userInfo DB.DB_User
+		likeInfo dbm.DB_LinksToken
+		appInfo  dbm.DB_AppInfo
+		userInfo dbm.DB_User
 	}{}
 	局_临时通用, _ := c.Get("局_在线信息")
-	info.likeInfo = 局_临时通用.(DB.DB_LinksToken)
+	info.likeInfo = 局_临时通用.(dbm.DB_LinksToken)
 	if info.likeInfo.Uid <= 0 {
 		err = errors.New("余额支付仅限已登陆后使用")
 		return
@@ -61,10 +61,10 @@ func (j 余额支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 	db := *global.GVA_DB
 	if info.likeInfo.LoginAppid == constant.APPID_Web用户中心 {
 		局_临时通用, err = service.NewAppInfo(c, &db).Info(D到整数(info.likeInfo.AppIdEx))
-		info.appInfo = 局_临时通用.(DB.DB_AppInfo)
+		info.appInfo = 局_临时通用.(dbm.DB_AppInfo)
 	} else {
 		局_临时通用, err = service.NewAppInfo(c, &db).Info(info.likeInfo.LoginAppid)
-		info.appInfo = 局_临时通用.(DB.DB_AppInfo)
+		info.appInfo = 局_临时通用.(dbm.DB_AppInfo)
 	}
 	if err != nil {
 		err = errors.New("读取应用信息错误")

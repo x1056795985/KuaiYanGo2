@@ -2,6 +2,9 @@ package Captcha
 
 import (
 	"EFunc/utils"
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/base64"
 	系统错误 "errors"
 	"fmt"
 	"github.com/imroc/req/v3"
@@ -12,13 +15,10 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	sms_tx "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111" // 引入sms
 	"net/url"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/setting"
 	"sort"
 	"strings"
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/base64"
 	"time"
 )
 

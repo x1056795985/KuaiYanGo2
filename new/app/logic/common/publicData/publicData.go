@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/global"
-	DB "server/structs/db"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 	"strings"
 )
 
@@ -23,22 +23,22 @@ type publicData struct {
 func (j *publicData) Name是否存在(c *gin.Context, AppId int, Name string) bool {
 	var Count int64
 	db := *global.GVA_DB
-	db.Model(DB.DB_PublicData{}).Select("1").Where("Name=?", Name).Where("AppId=?", AppId).Take(&Count)
+	db.Model(dbm.DB_PublicData{}).Select("1").Where("Name=?", Name).Where("AppId=?", AppId).Take(&Count)
 	return Count > 0
 }
 
 // 会正确处理队列
 func (j *publicData) Z置值(c *gin.Context, Appid int, 变量名, 变量值 string) (err error) {
 	db := *global.GVA_DB
-	var 局_云变量数据 DB.DB_PublicData
-	err = db.Model(DB.DB_PublicData{}).Where("AppId=?", Appid).Where("Name=?", 变量名).First(&局_云变量数据).Error
+	var 局_云变量数据 dbm.DB_PublicData
+	err = db.Model(dbm.DB_PublicData{}).Where("AppId=?", Appid).Where("Name=?", 变量名).First(&局_云变量数据).Error
 	if err != nil {
 		err = errors.Join(err, errors.New("变量不存在"))
 		return
 	}
 	//队列类型的单独处理,加锁读取,避免队列数据被修改
 	if 局_云变量数据.Type <= 3 {
-		err = db.Model(DB.DB_PublicData{}).
+		err = db.Model(dbm.DB_PublicData{}).
 			Where("AppId=?", Appid).Where("Name=?", 变量名).
 			Update("Value", 变量值).Error
 		if err != nil {
@@ -46,7 +46,7 @@ func (j *publicData) Z置值(c *gin.Context, Appid int, 变量名, 变量值 str
 		}
 	} else if 局_云变量数据.Type == 4 {
 		err = db.Transaction(func(tx *gorm.DB) error {
-			err = tx.Model(DB.DB_PublicData{}).
+			err = tx.Model(dbm.DB_PublicData{}).
 				Clauses(clause.Locking{Strength: "UPDATE"}).
 				Where("AppId=?", Appid).Where("Name=?", 变量名).
 				First(&局_云变量数据).Error //加锁再查一次
@@ -57,7 +57,7 @@ func (j *publicData) Z置值(c *gin.Context, Appid int, 变量名, 变量值 str
 				局_云变量数据.Value += "\n"
 			}
 			局_云变量数据.Value += 变量值
-			err = tx.Model(DB.DB_PublicData{}).
+			err = tx.Model(dbm.DB_PublicData{}).
 				Where("AppId=?", Appid).Where("Name=?", 变量名).
 				Update("Value", 局_云变量数据.Value).Error //更新变量
 			if err != nil {
@@ -72,20 +72,20 @@ func (j *publicData) Z置值(c *gin.Context, Appid int, 变量名, 变量值 str
 	return err
 }
 
-func (j *publicData) Z置值_原值(c *gin.Context, PublicData DB.DB_PublicData) error {
+func (j *publicData) Z置值_原值(c *gin.Context, PublicData dbm.DB_PublicData) error {
 	db := *global.GVA_DB
-	return db.Model(DB.DB_PublicData{}).Select("Value", "IsVip", "Note", "Time", "Sort").Omit("Type", "AppId", "Name").Where("AppId=?", PublicData.AppId).Where("Name=?", PublicData.Name).Updates(PublicData).Error
+	return db.Model(dbm.DB_PublicData{}).Select("Value", "IsVip", "Note", "Time", "Sort").Omit("Type", "AppId", "Name").Where("AppId=?", PublicData.AppId).Where("Name=?", PublicData.Name).Updates(PublicData).Error
 }
 
 func (j *publicData) Q取值(c *gin.Context, Appid int, Name string) string {
-	var value DB.DB_PublicData
+	var value dbm.DB_PublicData
 	value, _ = j.Q取值2(c, Appid, Name)
 	return value.Value
 }
-func (j *publicData) Q取值2(c *gin.Context, Appid int, 变量名 string) (返回 DB.DB_PublicData, err error) {
+func (j *publicData) Q取值2(c *gin.Context, Appid int, 变量名 string) (返回 dbm.DB_PublicData, err error) {
 	db := *global.GVA_DB
-	var 局_云变量数据 DB.DB_PublicData
-	err = db.Model(DB.DB_PublicData{}).Where("AppId=?", Appid).Where("Name=?", 变量名).First(&局_云变量数据).Error
+	var 局_云变量数据 dbm.DB_PublicData
+	err = db.Model(dbm.DB_PublicData{}).Where("AppId=?", Appid).Where("Name=?", 变量名).First(&局_云变量数据).Error
 	if err != nil {
 		err = errors.Join(err, errors.New("变量不存在"))
 		return
@@ -93,7 +93,7 @@ func (j *publicData) Q取值2(c *gin.Context, Appid int, 变量名 string) (返�
 	//队列类型的单独处理,加锁读取,避免队列数据被修改
 	if 局_云变量数据.Type == 4 {
 		err = db.Transaction(func(tx *gorm.DB) error {
-			err = tx.Model(DB.DB_PublicData{}).
+			err = tx.Model(dbm.DB_PublicData{}).
 				Clauses(clause.Locking{Strength: "UPDATE"}).
 				Where("AppId=?", 1).Where("Name=?", 变量名).
 				First(&局_云变量数据).Error //加锁再查一次
@@ -107,7 +107,7 @@ func (j *publicData) Q取值2(c *gin.Context, Appid int, 变量名 string) (返�
 			} else {
 				局_云变量数据.Value = ""
 			}
-			err = tx.Model(DB.DB_PublicData{}).
+			err = tx.Model(dbm.DB_PublicData{}).
 				Where("AppId=?", 1).Where("Name=?", 变量名).
 				Update("Value", 局_云变量数据.Value).Error
 			if err != nil {
@@ -135,18 +135,18 @@ func (j *publicData) Q取值2(c *gin.Context, Appid int, 变量名 string) (返�
 
 func (j *publicData) P批量修改IsVip(c *gin.Context, AppId int, Name []string, IsVip int) error {
 	db := *global.GVA_DB
-	return db.Model(DB.DB_PublicData{}).Where("AppId=?", AppId).Where("Name in ?", Name).Update("IsVip", IsVip).Error
+	return db.Model(dbm.DB_PublicData{}).Where("AppId=?", AppId).Where("Name in ?", Name).Update("IsVip", IsVip).Error
 }
 
-func (j *publicData) C创建(c *gin.Context, PublicData DB.DB_PublicData) error {
+func (j *publicData) C创建(c *gin.Context, PublicData dbm.DB_PublicData) error {
 	db := *global.GVA_DB
-	err := db.Model(DB.DB_PublicData{}).Create(&PublicData).Error
+	err := db.Model(dbm.DB_PublicData{}).Create(&PublicData).Error
 	return err
 }
 func (j *publicData) Q取队列长度(c *gin.Context, Appid int, 变量名 string) (返回 int, err error) {
-	var 局_云变量数据 DB.DB_PublicData
+	var 局_云变量数据 dbm.DB_PublicData
 	db := *global.GVA_DB
-	err = db.Model(DB.DB_PublicData{}).Where("AppId=?", Appid).Where("Name=?", 变量名).First(&局_云变量数据).Error
+	err = db.Model(dbm.DB_PublicData{}).Where("AppId=?", Appid).Where("Name=?", 变量名).First(&局_云变量数据).Error
 	if err != nil {
 		err = errors.Join(err, errors.New("变量不存在"))
 		return
@@ -158,8 +158,8 @@ func (j *publicData) F复制app专属变量(原appid, 新appid int) error {
 	db := *global.GVA_DB
 	// 开启事务
 	return db.Transaction(func(tx *gorm.DB) error {
-		var 变量列表 []DB.DB_PublicData
-		if err := tx.Model(DB.DB_PublicData{}).Where("AppId=?", 原appid).Find(&变量列表).Error; err != nil {
+		var 变量列表 []dbm.DB_PublicData
+		if err := tx.Model(dbm.DB_PublicData{}).Where("AppId=?", 原appid).Find(&变量列表).Error; err != nil {
 			return err
 		}
 

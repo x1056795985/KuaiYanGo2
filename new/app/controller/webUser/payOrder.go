@@ -4,13 +4,13 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
+	"server/new/app/models/db"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 )
 
@@ -31,9 +31,9 @@ func (C *PayOrder) List(c *gin.Context) {
 	}
 
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
-		数组订单     []DB.DB_LogRMBPayOrder
+		appInfo  db.DB_AppInfo
+		likeInfo db.DB_LinksToken
+		数组订单 []db.DB_LogRMBPayOrder
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	tx := *global.GVA_DB

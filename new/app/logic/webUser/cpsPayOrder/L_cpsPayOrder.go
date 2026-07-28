@@ -4,10 +4,9 @@ import (
 	. "EFunc/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/webUser/cpsUser"
 	"strings"
@@ -16,7 +15,6 @@ import (
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -39,7 +37,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 		return
 	}
 	var info struct {
-		邀请人信息              DB.DB_User
+		邀请人信息              dbm.DB_User
 		AppPromotionConfig dbm.DB_AppPromotionConfig
 		cpsInfo            dbm.DB_CpsInfo
 		cpsPayOrder        dbm.DB_CpsPayOrder
@@ -48,9 +46,9 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 		卡类                 dbm.DB_KaClass
 		cpsUser            dbm.DB_CpsUser
 		有效邀请数量             int
-		LogMoney           []DB.DB_LogMoney
-		邀请人User            DB.DB_User
-		邀请人上级User          DB.DB_User
+		LogMoney           []dbm.DB_LogMoney
+		邀请人User            dbm.DB_User
+		邀请人上级User          dbm.DB_User
 	}
 	var tx *gorm.DB
 	if tempObj, ok := c.Get("tx"); ok {
@@ -88,7 +86,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 	}
 	info.cpsInfo, err = service.NewCpsInfo(c, tx).Info(info.AppPromotionConfig.TypeAssociatedId)
 	if err != nil && err.Error() != "record not found" {
-		global.GVA_LOG.Error("订单:"+参数.PayOrder+",佣金发放失败,获取cpsinfo"+strconv.Itoa(info.AppPromotionConfig.TypeAssociatedId)+"信息失败", zap.Any("err", err))
+		global.GVA_LOG.Println("订单:"+参数.PayOrder+",佣金发放失败,获取cpsinfo"+strconv.Itoa(info.AppPromotionConfig.TypeAssociatedId)+"信息失败", err)
 		return
 	}
 
@@ -104,14 +102,14 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 
 	info.卡类, err = service.NewKaClass(c, tx).Info(参数.E额外信息.Get("KaClassId").Int())
 	if err != nil {
-		global.GVA_LOG.Error("订单:"+参数.PayOrder+",佣金发放失败,获取卡类"+strconv.Itoa(参数.E额外信息.Get("KaClassId").Int())+"信息失败0", zap.Any("err", err))
+		global.GVA_LOG.Println("订单:"+参数.PayOrder+",佣金发放失败,获取卡类"+strconv.Itoa(参数.E额外信息.Get("KaClassId").Int())+"信息失败0", err)
 		return
 	}
 	//判断邀请人的级别
 	info.有效邀请数量 = cpsUser.L_cpsUser.Q取有效邀请数量(c, 参数.E额外信息.Get("AppId").Int(), info.上级.InviterId)
 	info.cpsUser, err = service.NewCpsUser(c, tx).Info(参数.E额外信息.Get("AppId").Int(), info.上级.InviterId)
 	if err != nil {
-		global.GVA_LOG.Error("订单:"+参数.PayOrder+",佣金发放失败,获取cpsUser"+strconv.Itoa(info.上级.InviterId)+"信息失败", zap.Any("err", err))
+		global.GVA_LOG.Println("订单:"+参数.PayOrder+",佣金发放失败,获取cpsUser"+strconv.Itoa(info.上级.InviterId)+"信息失败", err)
 		return
 	}
 
@@ -157,7 +155,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 		return
 	}
 	if err != nil {
-		global.GVA_LOG.Error("订单:"+参数.PayOrder+",佣金发放失败,插入cpsPayOrder信息失败", zap.Any("err", err))
+		global.GVA_LOG.Println("订单:"+参数.PayOrder+",佣金发放失败,插入cpsPayOrder信息失败", err)
 		return
 	}
 	//更新支付状态 增加余额 增加累计收入缓存,都需要在事务内完成
@@ -165,21 +163,21 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 	err = db.Transaction(func(tx *gorm.DB) error {
 		//处理邀请人的RMB增减
 		if info.cpsPayOrder.InviterRMB > 0 { //只有大于0才执行
-			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.cpsPayOrder.InviterId).First(&info.邀请人User).Error
+			err = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.cpsPayOrder.InviterId).First(&info.邀请人User).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人账号不存在"))
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", info.cpsPayOrder.InviterId).Update("Rmb", gorm.Expr("Rmb + ?", info.cpsPayOrder.InviterRMB)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", info.cpsPayOrder.InviterId).Update("Rmb", gorm.Expr("Rmb + ?", info.cpsPayOrder.InviterRMB)).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人支付佣金失败,请重试"))
 			}
 			var 局_新余额 float64
-			err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id = ?", info.cpsPayOrder.InviterId).First(&局_新余额).Error
+			err = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id = ?", info.cpsPayOrder.InviterId).First(&局_新余额).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人支付佣金后读取新余额失败"))
 			}
 			//写入日志
-			info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+			info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 				User:  info.邀请人User.User,
 				Ip:    c.ClientIP(),
 				Count: info.cpsPayOrder.InviterRMB,
@@ -209,7 +207,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 	if err != nil {
 		//写入备注
 		_, err = service.NewCpsPayOrder(c, tx).UpdateMap([]int{info.cpsPayOrder.Id}, map[string]interface{}{"Note": err.Error()})
-		global.GVA_LOG.Error("订单:"+参数.PayOrder+",佣金发放失败,更新支付状态失败", zap.Any("err", err))
+		global.GVA_LOG.Println("订单:"+参数.PayOrder+",佣金发放失败,更新支付状态失败", err)
 		return
 	}
 
@@ -218,21 +216,21 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 	err = db.Transaction(func(tx *gorm.DB) error {
 		//处理邀请人上级的RMB增减
 		if info.cpsPayOrder.GrandpaRMB > 0 { //只有大于0才执行
-			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.cpsPayOrder.GrandpaId).First(&info.邀请人上级User).Error
+			err = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.cpsPayOrder.GrandpaId).First(&info.邀请人上级User).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人上级账号不存在"))
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", info.cpsPayOrder.GrandpaId).Update("Rmb", Float64加float64(info.邀请人上级User.Rmb, info.cpsPayOrder.GrandpaRMB, 2)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", info.cpsPayOrder.GrandpaId).Update("Rmb", Float64加float64(info.邀请人上级User.Rmb, info.cpsPayOrder.GrandpaRMB, 2)).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人上级支付佣金失败,请重试"))
 			}
 			var 局_新余额 float64
-			err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id = ?", info.cpsPayOrder.GrandpaId).First(&局_新余额).Error
+			err = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id = ?", info.cpsPayOrder.GrandpaId).First(&局_新余额).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人上级支付佣金后读取新余额失败"))
 			}
 			//写入日志
-			info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+			info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 				User:  info.邀请人上级User.User,
 				Ip:    c.ClientIP(),
 				Count: info.cpsPayOrder.GrandpaRMB,
@@ -262,12 +260,12 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 	if err != nil {
 		//写入备注
 		_, err = service.NewCpsPayOrder(c, tx).UpdateMap([]int{info.cpsPayOrder.Id}, map[string]interface{}{"Note": err.Error()})
-		global.GVA_LOG.Error("订单:"+参数.PayOrder+",佣金发放失败,更新支付状态失败", zap.Any("err", err))
+		global.GVA_LOG.Println("订单:"+参数.PayOrder+",佣金发放失败,更新支付状态失败", err)
 		return
 	}
 	//输出日志
 	if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
-		global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		global.GVA_LOG.Println("输出日志失败!", err)
 	}
 	return
 }

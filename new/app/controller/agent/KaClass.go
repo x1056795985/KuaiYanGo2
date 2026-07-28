@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/agent/L_KaClass"
+	"server/new/app/models/old/response"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
-	"server/structs/Http/response"
 )
 
 type KaClassUp struct {

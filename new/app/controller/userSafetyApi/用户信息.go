@@ -3,11 +3,11 @@ package userSafetyApi
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -32,7 +32,7 @@ func UserApi_取软件用户信息(c *gin.Context) {
 		service.NewLinksToken(c, &db).Update(局_ctx.Z在线信息.Id, map[string]interface{}{"AppVer": 局_应用版本})
 	}
 
-	var 局_UserClass DB.DB_UserClass
+	var 局_UserClass dbm.DB_UserClass
 	局_UserClass, _ = service.NewUserClass(c, &db).Info(局_AppUser.UserClassId)
 
 	response.OkData(c, gin.H{

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
 )
 
 type UserConfig struct {
@@ -21,9 +21,9 @@ func NewUserConfig(c *gin.Context, db *gorm.DB) *UserConfig {
 }
 
 // 增
-func (s *UserConfig) Create(info DB.DB_UserConfig) (row int64, err error) {
+func (s *UserConfig) Create(info dbm.DB_UserConfig) (row int64, err error) {
 	//创建会自动重新赋值info.Id为新插入的数据id
-	tx := s.db.Model(DB.DB_UserConfig{}).Create(&info)
+	tx := s.db.Model(dbm.DB_UserConfig{}).Create(&info)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -32,9 +32,9 @@ func (s *UserConfig) Delete(Id interface{}) (影响行数 int64, error error) {
 	var tx2 *gorm.DB
 	switch k := Id.(type) {
 	case int:
-		tx2 = s.db.Model(DB.DB_UserConfig{}).Where("Id = ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_UserConfig{}).Where("Id = ?", k).Delete("")
 	case []int:
-		tx2 = s.db.Model(DB.DB_UserConfig{}).Where("Id IN ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_UserConfig{}).Where("Id IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -44,14 +44,14 @@ func (s *UserConfig) Delete(Id interface{}) (影响行数 int64, error error) {
 // 删除 支持 数组,和id
 func (s *UserConfig) Delete2(where map[string]interface{}) (影响行数 int64, error error) {
 
-	tx := s.db.Model(DB.DB_UserConfig{}).Where(where).Delete("")
+	tx := s.db.Model(dbm.DB_UserConfig{}).Where(where).Delete("")
 
 	return tx.RowsAffected, tx.Error
 }
 
 // 查
-func (s *UserConfig) Info(id int) (info DB.DB_UserConfig, err error) {
-	tx := s.db.Model(DB.DB_UserConfig{}).Where("Id = ?", id).First(&info)
+func (s *UserConfig) Info(id int) (info dbm.DB_UserConfig, err error) {
+	tx := s.db.Model(dbm.DB_UserConfig{}).Where("Id = ?", id).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -59,8 +59,8 @@ func (s *UserConfig) Info(id int) (info DB.DB_UserConfig, err error) {
 }
 
 // 查
-func (s *UserConfig) Info2(where map[string]interface{}) (info DB.DB_UserConfig, err error) {
-	tx := s.db.Model(DB.DB_UserConfig{}).Where(where).First(&info)
+func (s *UserConfig) Info2(where map[string]interface{}) (info dbm.DB_UserConfig, err error) {
+	tx := s.db.Model(dbm.DB_UserConfig{}).Where(where).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -68,8 +68,8 @@ func (s *UserConfig) Info2(where map[string]interface{}) (info DB.DB_UserConfig,
 }
 
 // 查
-func (s *UserConfig) Infos(where map[string]interface{}) (info []DB.DB_UserConfig, err error) {
-	tx := s.db.Model(DB.DB_UserConfig{}).Where(where).Find(&info)
+func (s *UserConfig) Infos(where map[string]interface{}) (info []dbm.DB_UserConfig, err error) {
+	tx := s.db.Model(dbm.DB_UserConfig{}).Where(where).Find(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -79,6 +79,6 @@ func (s *UserConfig) Infos(where map[string]interface{}) (info []DB.DB_UserConfi
 // 改
 func (s *UserConfig) Update(where map[string]interface{}, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(DB.DB_UserConfig{}).Where(where).Updates(&数据)
+	tx := s.db.Model(dbm.DB_UserConfig{}).Where(where).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }

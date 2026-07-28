@@ -12,14 +12,13 @@ import (
 	"github.com/qiniu/go-sdk/v7/storagev2/objects"
 	"github.com/qiniu/go-sdk/v7/storagev2/uptoken"
 	"net/url"
-	"server/config"
 	"server/new/app/models/common"
 	"strings"
 	"time"
 )
 
 type Q七牛云 struct {
-	配置     config.Q七牛云对象存储
+	配置     common.Q七牛云对象存储
 	bucket *objects.Bucket
 }
 
@@ -27,7 +26,7 @@ func (j *Q七牛云) Q取云存储名称() string {
 	return "七牛云"
 }
 
-func (j *Q七牛云) C初始化数据(配置 config.Y云存储配置) bool {
+func (j *Q七牛云) C初始化数据(配置 common.Y云存储配置) bool {
 	j.配置 = 配置.Q七牛云对象存储
 	if j.配置.RootPath == "" {
 		j.配置.RootPath = "fnkuaiyan/"

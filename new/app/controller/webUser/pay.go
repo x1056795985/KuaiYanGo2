@@ -8,16 +8,15 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_UserClass"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/kaClassUpPrice"
 	"server/new/app/logic/common/rmbPay"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 )
 
 type Pay struct {
@@ -35,10 +34,10 @@ func (C *Pay) GetPayStatus(c *gin.Context) {
 }
 func (C *Pay) GetPayKaList(c *gin.Context) {
 	var info = struct {
-		ka       DB.DB_Ka
-		likeInfo DB.DB_LinksToken
-		appInfo  DB.DB_AppInfo
-		appUser  DB.DB_AppUser
+		ka       dbm.DB_Ka
+		likeInfo dbm.DB_LinksToken
+		appInfo  dbm.DB_AppInfo
+		appUser  dbm.DB_AppUser
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	tx := *global.GVA_DB
@@ -53,7 +52,7 @@ func (C *Pay) GetPayKaList(c *gin.Context) {
 	DB_KaClass = Ser_KaClass.KaClass取可购买卡类列表(info.appInfo.AppId)
 
 	var 卡类列表_简化 = make([]gin.H, 0, len(DB_KaClass))
-	var 局_用户类型 = DB.DB_UserClass{}
+	var 局_用户类型 = dbm.DB_UserClass{}
 	var ok = true
 
 	for 索引, _ := range DB_KaClass {
@@ -122,9 +121,9 @@ func (C *Pay) GetPayOrderStatus(c *gin.Context) {
 
 func (C *Pay) PayKaUsa(c *gin.Context) {
 	var info = struct {
-		likeInfo       DB.DB_LinksToken
-		appInfo        DB.DB_AppInfo
-		appUser        DB.DB_AppUser
+		likeInfo       dbm.DB_LinksToken
+		appInfo        dbm.DB_AppInfo
+		appUser        dbm.DB_AppUser
 		KaClass        dbm.DB_KaClass
 		appInfoWebUser dbm.DB_AppInfoWebUser
 	}{}
@@ -301,7 +300,7 @@ func (C *Pay) PayKaUsa(c *gin.Context) {
 //		局_日志前缀 := fmt.Sprintf("用户:%s,余额制卡ID{%d}", info.likeInfo.User, 局_卡信息.Id)
 //		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
 //		if err != nil {
-//			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
+//			global.GVA_LOG.Println(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
 //		}
 //	}
 //	if info.likeInfo.AgentUid > 0 && info.KaClass.AgentMoney > 0 {
@@ -311,7 +310,7 @@ func (C *Pay) PayKaUsa(c *gin.Context) {
 //			局_日志前缀 := fmt.Sprintf("用户%s余额制卡ID:%d,", info.likeInfo.User, 局_卡信息.Id)
 //			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, info.KaClass.Money, 局_日志前缀, 局_价格组成.总调价 == 0)
 //			if err != nil {
-//				global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+//				global.GVA_LOG.Println(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 //			}
 //		}
 //	}

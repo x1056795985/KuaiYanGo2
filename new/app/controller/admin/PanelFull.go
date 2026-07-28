@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"os"
 	"server/Service/Ser_Chare"
-	"server/global"
 	"server/new/app/controller/Common"
-	"server/structs/Http/response"
-	"server/utils"
+	"server/new/app/global"
+	"server/new/app/models/old/response"
+	"server/new/app/utils"
 	"time"
 )
 
@@ -26,7 +25,7 @@ func NewPanelController() *Panel {
 func (p *Panel) GetServerInfo(c *gin.Context) {
 	server, err := getServerInfo()
 	if err != nil {
-		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		global.GVA_LOG.Println("获取失败!", err)
 		response.FailWithMessage("获取失败", c)
 		return
 	}
@@ -52,7 +51,7 @@ func getServerInfo() (server *utils.Server, err error) {
 func (p *Panel) ReloadSystem(c *gin.Context) {
 	err := utils.Reload()
 	if err != nil {
-		global.GVA_LOG.Error("重启失败!", zap.Error(err))
+		global.GVA_LOG.Println("重启失败!", err)
 		response.FailWithMessage("重启失败:"+err.Error(), c)
 		return
 	}

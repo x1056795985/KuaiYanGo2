@@ -3,7 +3,6 @@ package cloudStorage
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"server/config"
 	"server/new/app/logic/common/cloudStorage/item"
 	"server/new/app/logic/common/setting"
 	"server/new/app/models/common"
@@ -16,7 +15,7 @@ type Item struct {
 
 // 注册通道接口
 type StorageItem interface {
-	C初始化数据(配置 config.Y云存储配置) bool
+	C初始化数据(配置 common.Y云存储配置) bool
 	Q取云存储名称() string
 	H获取文件列表(c *gin.Context, 路径前缀, 分隔符 string) (列表 []common.W文件对象详情, err error)
 	Q取文件上传授权(c *gin.Context, 要上传的路径 string) (common.W文件上传凭证, error)

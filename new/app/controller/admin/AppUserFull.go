@@ -14,13 +14,13 @@ import (
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserClass"
 	"server/Service/Ser_UserConfig"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/models/constant"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strconv"
 	"time"
 )
@@ -34,7 +34,7 @@ func NewAppUserFullController() *AppUserFull {
 }
 
 type DB_AppUser带User信息 struct {
-	DB.DB_AppUser
+	dbm.DB_AppUser
 	User       string `json:"user" gorm:"column:User;index;comment:用户登录名"`
 	Name       string `json:"name" gorm:"column:Name;index;comment:卡号"`
 	Status     int    `json:"status" gorm:"column:Status;default:1;comment:用户是状态 1正常 2冻结"`
@@ -56,11 +56,11 @@ func (C *AppUserFull) Info(c *gin.Context) {
 	}
 
 	var DB_AppUser struct {
-		DB.DB_AppUser
+		dbm.DB_AppUser
 		AppType int `json:"appType"`
 	}
 	db := *global.GVA_DB
-	err := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Find(&DB_AppUser).Error
+	err := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Find(&DB_AppUser).Error
 	if err != nil {
 		response.FailWithMessage("查询软件用户详细信息失败", c)
 		return
@@ -116,7 +116,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 		局_DB.Order(表名_AppUser + "." + 排序字段名 + " DESC")
 	}
 
-	var app信息 DB.DB_AppInfo
+	var app信息 dbm.DB_AppInfo
 	app信息 = Ser_AppInfo.App取App详情(请求.AppId)
 	switch 请求.VipTimeStatus {
 	case 1:
@@ -222,7 +222,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 	err := 局_DB.Count(&总数).Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Scan(&DB_AppUser).Error
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		global.GVA_LOG.Error("GetAppUserList:" + err.Error())
+		global.GVA_LOG.Println("GetAppUserList:" + err.Error())
 		return
 	}
 
@@ -268,7 +268,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 func (C *AppUserFull) New(c *gin.Context) {
 	var 请求 struct {
 		AppId int `json:"appId"`
-		DB.DB_AppUser
+		dbm.DB_AppUser
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -299,13 +299,13 @@ func (C *AppUserFull) New(c *gin.Context) {
 	}
 
 	var count int64
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Uid  = ?", 请求.Uid).Count(&count).Error
+	err := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Uid  = ?", 请求.Uid).Count(&count).Error
 	if count != 0 {
 		response.FailWithMessage("用户已存在", c)
 		return
 	}
 
-	局_信息 := DB.DB_AppUser{
+	局_信息 := dbm.DB_AppUser{
 		Uid:          请求.Uid,
 		Status:       请求.Status,
 		Key:          请求.Key,
@@ -316,7 +316,7 @@ func (C *AppUserFull) New(c *gin.Context) {
 		UserClassId:  请求.UserClassId,
 		RegisterTime: time.Now().Unix(),
 	}
-	err = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(请求.AppId)).Create(&局_信息).Error
+	err = global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(请求.AppId)).Create(&局_信息).Error
 	if err != nil {
 		response.FailWithMessage("添加失败", c)
 		return
@@ -330,9 +330,9 @@ func (C *AppUserFull) New(c *gin.Context) {
 // SaveInfo 保存软件用户信息
 func (C *AppUserFull) SaveInfo(c *gin.Context) {
 	var 请求 struct {
-		AppId      int                `json:"appId"`
-		AppUser    DB.DB_AppUser      `json:"appUser"`
-		UserConfig []DB.DB_UserConfig `json:"userConfig"`
+		AppId      int                 `json:"appId"`
+		AppUser    dbm.DB_AppUser      `json:"appUser"`
+		UserConfig []dbm.DB_UserConfig `json:"userConfig"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -350,15 +350,15 @@ func (C *AppUserFull) SaveInfo(c *gin.Context) {
 		return
 	}
 
-	var 局_旧用户信息 DB.DB_AppUser
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id).Take(&局_旧用户信息).Error
+	var 局_旧用户信息 dbm.DB_AppUser
+	err := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id).Take(&局_旧用户信息).Error
 	if err != nil {
 		response.FailWithMessage("用户不存在", c)
 		return
 	}
 
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		var db = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id)
+		var db = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id = ?", 请求.AppUser.Id)
 		err = db.Updates(map[string]interface{}{
 			"Status":      请求.AppUser.Status,
 			"Key":         请求.AppUser.Key,
@@ -373,7 +373,7 @@ func (C *AppUserFull) SaveInfo(c *gin.Context) {
 			return err
 		}
 		if Ser_AppInfo.App是否为卡号(请求.AppId) {
-			err = tx.Model(DB.DB_Ka{}).Where("Id = ? ", 请求.AppUser.Id).Update("Status", 请求.AppUser.Status).Error
+			err = tx.Model(dbm.DB_Ka{}).Where("Id = ? ", 请求.AppUser.Id).Update("Status", 请求.AppUser.Status).Error
 			if err != nil {
 				return err
 			}
@@ -392,7 +392,7 @@ func (C *AppUserFull) SaveInfo(c *gin.Context) {
 
 	if 局_旧用户信息.AgentUid != 请求.AppUser.AgentUid {
 		tx := *global.GVA_DB
-		_ = tx.Model(DB.DB_LinksToken{}).Where("LoginAppid = ?", 请求.AppId).Where("Uid = ?", 局_旧用户信息.Uid).Updates(&map[string]interface{}{"AgentUid": 请求.AppUser.AgentUid}).Error
+		_ = tx.Model(dbm.DB_LinksToken{}).Where("LoginAppid = ?", 请求.AppId).Where("Uid = ?", 局_旧用户信息.Uid).Updates(&map[string]interface{}{"AgentUid": 请求.AppUser.AgentUid}).Error
 	}
 	for _, 值 := range 请求.UserConfig {
 		_ = Ser_UserConfig.Z置值(请求.AppId, 请求.AppUser.Uid, 值.Name, 值.Value)
@@ -750,7 +750,7 @@ func (C *AppUserFull) Delete(c *gin.Context) {
 		if end > len(请求.Id) {
 			end = len(请求.Id)
 		}
-		tx := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id IN ? ", 请求.Id[i:end]).Delete("")
+		tx := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id IN ? ", 请求.Id[i:end]).Delete("")
 		if tx.Error != nil {
 			response.FailWithMessage("删除失败", c)
 			return
@@ -763,7 +763,7 @@ func (C *AppUserFull) Delete(c *gin.Context) {
 		if end > len(软件用户Uid) {
 			end = len(软件用户Uid)
 		}
-		_ = db.Model(DB.DB_UserConfig{}).Where("AppId = ? ", 请求.AppId).Where("Uid IN ? ", 软件用户Uid[i:end]).Delete("").RowsAffected
+		_ = db.Model(dbm.DB_UserConfig{}).Where("AppId = ? ", 请求.AppId).Where("Uid IN ? ", 软件用户Uid[i:end]).Delete("").RowsAffected
 	}
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
 }

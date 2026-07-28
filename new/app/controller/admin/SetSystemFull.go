@@ -2,17 +2,16 @@ package controller
 
 import (
 	"EFunc/utils"
+	"encoding/base64"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"server/Service/Captcha"
-	"server/new/app/router/userSafetyApi"
-	"server/config"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/setting"
 	m "server/new/app/models/common"
-	"server/structs/Http/response"
-	utils2 "server/utils"
-	"encoding/base64"
+	"server/new/app/models/old/response"
+	"server/new/app/router/userSafetyApi"
+	utils2 "server/new/app/utils"
 )
 
 type SetSystemFull struct {
@@ -30,7 +29,7 @@ func (C *SetSystemFull) GetInfoSystem(c *gin.Context) {
 
 // SaveInfoSystem 保存系统设置
 func (C *SetSystemFull) SaveInfoSystem(c *gin.Context) {
-	var 请求 config.X系统设置
+	var 请求 m.X系统设置
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -107,7 +106,7 @@ func (C *SetSystemFull) GetInfo短信平台设置(c *gin.Context) {
 
 // Save短信平台设置 保存短信平台配置
 func (C *SetSystemFull) Save短信平台设置(c *gin.Context) {
-	var 请求 config.D短信平台配置
+	var 请求 m.D短信平台配置
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -157,7 +156,7 @@ func (C *SetSystemFull) GetInfo行为验证码平台设置(c *gin.Context) {
 
 // Save行为验证码平台设置 保存行为验证码配置
 func (C *SetSystemFull) Save行为验证码平台设置(c *gin.Context) {
-	var 请求 config.X行为验证码平台配置
+	var 请求 m.X行为验证码平台配置
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -176,7 +175,7 @@ func (C *SetSystemFull) GetInfo云存储设置(c *gin.Context) {
 
 // Save云存储设置 保存云存储配置
 func (C *SetSystemFull) Save云存储设置(c *gin.Context) {
-	var 请求 config.Y云存储配置
+	var 请求 m.Y云存储配置
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -195,7 +194,7 @@ func (C *SetSystemFull) Get用户消息配置(c *gin.Context) {
 
 // Save用户消息配置 保存用户消息配置
 func (C *SetSystemFull) Save用户消息配置(c *gin.Context) {
-	var 请求 config.Y用户消息配置
+	var 请求 m.Y用户消息配置
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -214,7 +213,7 @@ func (C *SetSystemFull) GetInfoAiConfig(c *gin.Context) {
 
 // SaveInfoAiConfig 保存AI配置
 func (C *SetSystemFull) SaveInfoAiConfig(c *gin.Context) {
-	var 请求 config.XAIConfig
+	var 请求 m.XAIConfig
 	if !C.ToJSON(c, &请求) {
 		return
 	}

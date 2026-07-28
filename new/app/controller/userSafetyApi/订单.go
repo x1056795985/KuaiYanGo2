@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/kaClassUpPrice"
@@ -17,7 +17,6 @@ import (
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strings"
 )
 
@@ -226,7 +225,7 @@ func UserApi_取可购买卡类列表(c *gin.Context) {
 	DB_KaClass, _ := service.NewKaClass(c, &db).Infos(map[string]interface{}{"AppId": 局_ctx.AppInfo.AppId})
 
 	var 卡类列表_简化 = make([]gin.H, 0, len(DB_KaClass))
-	var 局_用户类型 = DB.DB_UserClass{}
+	var 局_用户类型 = dbm.DB_UserClass{}
 
 	for 索引, _ := range DB_KaClass {
 		if DB_KaClass[索引].Money <= 0 {
@@ -286,9 +285,9 @@ func UserApi_取已购买充值卡列表(c *gin.Context) {
 		卡类名称map[v.Id] = v.Name
 	}
 
-	var DB_Ka []DB.DB_Ka
+	var DB_Ka []dbm.DB_Ka
 	//Ka取已购卡列表: Where RegisterUser=? Order Id DESC Limit 数量 Offset 0
-	db.Model(DB.DB_Ka{}).Order("Id DESC").Where("RegisterUser=?", 局_ctx.Z在线信息.User).Limit(局_数量).Find(&DB_Ka)
+	db.Model(dbm.DB_Ka{}).Order("Id DESC").Where("RegisterUser=?", 局_ctx.Z在线信息.User).Limit(局_数量).Find(&DB_Ka)
 
 	var 卡列表_简化 = make([]gin.H, len(DB_Ka), len(DB_Ka)+1)
 	for 索引, _ := range DB_Ka {
@@ -360,7 +359,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 		新余额, err = user.L_user.Id余额增减(c, 局_ctx.Z在线信息.Uid, 局_卡类.Money, true)
 		if err != nil {
 			//用户余额购卡,减余额成功,制卡失败,请手动处理,本次错误原因
-			局_日志 := DB.DB_LogUserMsg{
+			局_日志 := dbm.DB_LogUserMsg{
 				User:    "系统",
 				App:     局_ctx.AppInfo.AppName,
 				AppId:   局_ctx.AppInfo.AppId,
@@ -384,14 +383,14 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 		局_卡信息.Name,
 		Float64到文本(新余额, 2),
 	)
-	_ = log.L_log.S输出日志(c, DB.DB_LogMoney{
+	_ = log.L_log.S输出日志(c, dbm.DB_LogMoney{
 		User:  局_ctx.Z在线信息.User,
 		Ip:    c.ClientIP(),
 		Count: Float64取负值(局_价格组成.付款金额),
 		Note:  str,
 	})
 	局_文本 := fmt.Sprintf("自助购卡应用:%s,卡类:%s,消费:%.2f)", 局_ctx.AppInfo.AppName, 局_卡类.Name, 局_价格组成.付款金额)
-	_ = log.L_log.S输出日志(c, DB.DB_LogKa{
+	_ = log.L_log.S输出日志(c, dbm.DB_LogKa{
 		User:     局_ctx.Z在线信息.User,
 		Ip:       c.ClientIP(),
 		KaType:   constant.Log_卡操作_增,
@@ -405,7 +404,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 		局_日志前缀 := fmt.Sprintf("用户:%s,余额制卡ID{%d}", 局_ctx.Z在线信息.User, 局_卡信息.Id)
 		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:%s", err.Error()))
+			global.GVA_LOG.Println(fmt.Sprintf("Z执行调价信息分成失败:%s", err.Error()))
 		}
 	}
 	if 局_ctx.Z在线信息.AgentUid > 0 && 局_卡类.AgentMoney > 0 {
@@ -415,7 +414,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 			局_日志前缀 := fmt.Sprintf("用户%s余额制卡ID:%d,", 局_ctx.Z在线信息.User, 局_卡信息.Id)
 			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_卡类.Money, 局_日志前缀, 局_价格组成.总调价 == 0)
 			if err != nil {
-				global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+				global.GVA_LOG.Println(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 			}
 		}
 	}

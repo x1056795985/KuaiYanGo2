@@ -1,7 +1,7 @@
 package L_pay
 
 import (
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/service"
 	"time"
 )

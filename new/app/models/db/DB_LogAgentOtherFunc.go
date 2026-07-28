@@ -15,5 +15,5 @@ type DB_LogAgentOtherFunc struct {
 }
 
 func (DB_LogAgentOtherFunc) TableName() string {
-	return "db_Log_AgentOtherFunc"
+	return "db_Log_AgentOtherFunc" //(操作日志)
 }

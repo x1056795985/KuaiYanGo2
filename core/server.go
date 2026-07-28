@@ -6,11 +6,11 @@ import (
 	"github.com/imroc/req/v3"
 	"net/http"
 	"server/Service/KuaiYanUpdater"
+	"server/new/app/global"
 	"server/new/app/router"
 	"server/new/app/router/middleware"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 
-	"server/global"
 	"time"
 )
 
@@ -37,7 +37,7 @@ func RunWindowsServer() {
 	// 保证文本顺序输出
 	// In order to ensure that the text order output can be deleted
 	time.Sleep(10 * time.Microsecond)
-	//global.GVA_LOG.Info("web 服务器启动成功", zap.String("端口", 端口))
+	//global.GVA_LOG.Println("web 服务器启动成功, 端口:", 端口)
 
 	fmt.Printf(`
 	欢迎使用 飞鸟快验后台管理
@@ -72,7 +72,7 @@ func RunWindowsServer() {
 	KuaiYanUpdater.B宝塔_修改项目信息pid()
 	err := global.GVA_Gin.ListenAndServe() //执行到此处会暂停,直到系统退出
 	if err != nil {
-		global.GVA_LOG.Error(err.Error())
+		global.GVA_LOG.Println(err.Error())
 	}
 
 	//global.GVA_Gin.Shutdown()  这句话可以停止侦听关闭端口

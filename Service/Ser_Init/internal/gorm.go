@@ -4,11 +4,11 @@ import (
 	"gorm.io/gorm/schema"
 	"log"
 	"os"
+	"server/new/app/global"
 	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"server/global"
 )
 
 type DBBASE interface {

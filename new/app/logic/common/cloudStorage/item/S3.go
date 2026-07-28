@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"path"
-	"server/config"
 	"server/new/app/models/common"
 	"strings"
 	"time"
@@ -18,7 +17,7 @@ import (
 
 // 兼容S3API协议
 type S3Api struct {
-	配置       config.S3兼容协议
+	配置       common.S3兼容协议
 	minio客户端 *minio.Client
 }
 
@@ -26,7 +25,7 @@ func (j *S3Api) Q取云存储名称() string {
 	return "S3兼容协议"
 }
 
-func (j *S3Api) C初始化数据(配置 config.Y云存储配置) bool {
+func (j *S3Api) C初始化数据(配置 common.Y云存储配置) bool {
 	j.配置 = 配置.S3兼容协议
 	if j.配置.RootPath == "" {
 		j.配置.RootPath = "fnkuaiyan/"

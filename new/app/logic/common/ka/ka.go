@@ -5,18 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/userClass"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -35,9 +33,9 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 	//已优化,事务处理,数据库内直接加减乘除计算字段值,可以并发,不出错
 	var info struct {
 		卡类详情     dbm.DB_KaClass
-		app用户详情  DB.DB_AppUser
-		user用户详情 DB.DB_User
-		app详情    DB.DB_AppInfo
+		app用户详情  dbm.DB_AppUser
+		user用户详情 dbm.DB_User
+		app详情    dbm.DB_AppInfo
 		is卡号     bool
 		is计点     bool
 	}
@@ -81,7 +79,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 	//在事务中执行数据库操作，使用的是tx变量，不是db。
 	err = tx.Transaction(func(tx *gorm.DB) error {
 		//卡库存减少成功,开始增加客户数据 ,重新加锁读取App用户信息,防止并发数据错误
-		err = tx.Model(DB.DB_AppUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Table("db_AppUser_"+strconv.Itoa(info.卡类详情.AppId)).Where("Uid=?", info.app用户详情.Uid).First(&info.app用户详情).Error
+		err = tx.Model(dbm.DB_AppUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Table("db_AppUser_"+strconv.Itoa(info.卡类详情.AppId)).Where("Uid=?", info.app用户详情.Uid).First(&info.app用户详情).Error
 		if err != nil {
 			return errors.Join(err, errors.New("未注册应用???感觉不可能,之前读取过,请联系管理员"))
 		}
@@ -90,7 +88,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 		客户expr["VipNumber"] = gorm.Expr("VipNumber + ?", info.卡类详情.VipNumber) //积分不会变直接增加即可
 		if info.卡类详情.VipNumber != 0 {
 			//日志仅写到上下文内,由实际业务处理是否写入日志和修改备注信息
-			c.Set("logVipNumber", DB.DB_LogVipNumber{
+			c.Set("logVipNumber", dbm.DB_LogVipNumber{
 				User:  Ser_AppUser.Uid取User(info.卡类详情.AppId, info.app用户详情.Uid),
 				AppId: info.卡类详情.AppId,
 				Ip:    c.ClientIP(),
@@ -117,7 +115,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 				}
 			} else {
 				//用户类型不同, 根据权重处理
-				var 局_旧用户类型权重, 局_新用户类型权重 DB.DB_UserClass
+				var 局_旧用户类型权重, 局_新用户类型权重 dbm.DB_UserClass
 				if info.app用户详情.UserClassId > 0 {
 					if 局_旧用户类型权重, err = service.NewUserClass(c, tx).Info(info.app用户详情.UserClassId); err != nil {
 						return errors.Join(err, errors.New("读取旧用户类型权重失败"))
@@ -151,27 +149,27 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 			}
 		}
 		//更新客户数据
-		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡类详情.AppId)).Where("Id = ?", info.app用户详情.Id).Updates(&客户expr).Error
+		err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡类详情.AppId)).Where("Id = ?", info.app用户详情.Id).Updates(&客户expr).Error
 		if err != nil {
 			return errors.Join(err, errors.New("充值失败,重试"))
 		}
 		//处理账号的RMB增减
 		if !info.is卡号 && info.卡类详情.RMb > 0 {
-			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.app用户详情.Uid).First(&info.user用户详情).Error
+			err = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.app用户详情.Uid).First(&info.user用户详情).Error
 			if err != nil {
 				return errors.Join(err, errors.New("用户账号不存在"))
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", info.app用户详情.Uid).Update("RMB", gorm.Expr("RMB + ?", info.卡类详情.RMb)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", info.app用户详情.Uid).Update("RMB", gorm.Expr("RMB + ?", info.卡类详情.RMb)).Error
 			if err != nil {
 				return errors.Join(err, errors.New("充值余额时失败,请重试"))
 			}
 			var 局_新余额 float64
-			err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id = ?", info.user用户详情.Id).First(&局_新余额).Error
+			err = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id = ?", info.user用户详情.Id).First(&局_新余额).Error
 			if err != nil {
 				return errors.Join(err, errors.New("充值后读取新余额失败"))
 			}
 			//日志仅写到上下文内,由实际业务处理是否写入日志和修改备注信息
-			c.Set("logMoney", DB.DB_LogMoney{
+			c.Set("logMoney", dbm.DB_LogMoney{
 				User:  info.user用户详情.User,
 				Ip:    c.ClientIP(),
 				Count: info.卡类详情.RMb,
@@ -189,7 +187,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 }
 
 // 有效期 0=9999999999 无限制
-func (j *ka) Ka单卡创建(c *gin.Context, 卡类id, 制卡人Id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) (卡信息切片 DB.DB_Ka, err error) {
+func (j *ka) Ka单卡创建(c *gin.Context, 卡类id, 制卡人Id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) (卡信息切片 dbm.DB_Ka, err error) {
 	var info struct {
 		卡类信息 dbm.DB_KaClass
 	}
@@ -247,29 +245,29 @@ func (j *ka) Ka单卡创建(c *gin.Context, 卡类id, 制卡人Id int, 制卡人
 	if 有效期时间戳 != 0 {
 		卡信息切片.EndTime = 有效期时间戳
 	}
-	return 卡信息切片, tx.Model(DB.DB_Ka{}).Create(&卡信息切片).Error
+	return 卡信息切片, tx.Model(dbm.DB_Ka{}).Create(&卡信息切片).Error
 }
 
 // 来源AppId int, 卡号, 充值用户, 推荐人, 来源IP string)
 func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充值用户, 推荐人 string) (err error) {
 	var info struct {
-		卡号详情     DB.DB_Ka
-		app用户详情  DB.DB_AppUser
-		user用户详情 DB.DB_User
-		ka用户详情   DB.DB_Ka
-		app详情    DB.DB_AppInfo
+		卡号详情     dbm.DB_Ka
+		app用户详情  dbm.DB_AppUser
+		user用户详情 dbm.DB_User
+		ka用户详情   dbm.DB_Ka
+		app详情    dbm.DB_AppInfo
 		is卡号     bool
 		is计点     bool
 		ip       string
 
-		app用户详情_推荐人  DB.DB_AppUser
-		user用户详情_推荐人 DB.DB_User
-		ka用户详情_推荐人   DB.DB_Ka
-		用户类型_推荐人     DB.DB_UserClass
-		新用户类型_推荐人    DB.DB_UserClass
+		app用户详情_推荐人  dbm.DB_AppUser
+		user用户详情_推荐人 dbm.DB_User
+		ka用户详情_推荐人   dbm.DB_Ka
+		用户类型_推荐人     dbm.DB_UserClass
+		新用户类型_推荐人    dbm.DB_UserClass
 
-		logMoney     []DB.DB_LogMoney     //余额日志
-		logVipNumber []DB.DB_LogVipNumber //积分,点数日志
+		logMoney     []dbm.DB_LogMoney     //余额日志
+		logVipNumber []dbm.DB_LogVipNumber //积分,点数日志
 
 	}
 
@@ -396,7 +394,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 	//在事务中执行数据库操作，使用的是tx变量，不是db。
 	err = db2.Transaction(func(tx *gorm.DB) error {
 		//加锁重新读卡信息
-		err = tx.Model(DB.DB_Ka{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id=?", info.卡号详情.Id).First(&info.卡号详情).Error
+		err = tx.Model(dbm.DB_Ka{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id=?", info.卡号详情.Id).First(&info.卡号详情).Error
 		if err != nil {
 			return errors.Join(err, errors.New("卡号不存在"))
 		}
@@ -411,13 +409,13 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		m["UserTime"] = gorm.Expr("CONCAT(UserTime,?)", strconv.Itoa(int(time.Now().Unix()))+",")
 		m["UseTime"] = time.Now().Unix()
 		m["InviteUser"] = gorm.Expr("CONCAT(InviteUser,?)", 推荐人+",") //空推荐人也增加, 这样才能和用户充值顺序对应
-		rowsAffected := tx.Model(DB.DB_Ka{}).
+		rowsAffected := tx.Model(dbm.DB_Ka{}).
 			Where("Id = ?", info.卡号详情.Id).Updates(&m).RowsAffected
 		if rowsAffected == 0 {
 			return errors.New("卡号不存在或已经使用到最大次数")
 		}
 		//卡库存减少成功,开始增加客户数据 ,重新加锁读取App用户信息,防止并发数据错误
-		err = tx.Model(DB.DB_AppUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Uid=?", info.app用户详情.Uid).First(&info.app用户详情).Error
+		err = tx.Model(dbm.DB_AppUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Uid=?", info.app用户详情.Uid).First(&info.app用户详情).Error
 		if err != nil {
 			return errors.Join(err, errors.New("未注册应用???感觉不可能,之前读取过,请联系管理员"))
 		}
@@ -425,7 +423,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		客户expr := map[string]interface{}{}
 		if info.卡号详情.VipNumber > 0 {
 			客户expr["VipNumber"] = gorm.Expr("VipNumber + ?", info.卡号详情.VipNumber) //积分不会变直接增加即可
-			info.logVipNumber = append(info.logVipNumber, DB.DB_LogVipNumber{
+			info.logVipNumber = append(info.logVipNumber, dbm.DB_LogVipNumber{
 				AppId: info.卡号详情.AppId,
 				Count: info.卡号详情.VipNumber,
 				Ip:    info.ip,
@@ -453,7 +451,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 				}
 			} else {
 				//用户类型不同, 根据权重处理
-				var 局_旧用户类型权重, 局_新用户类型权重 DB.DB_UserClass
+				var 局_旧用户类型权重, 局_新用户类型权重 dbm.DB_UserClass
 				if info.app用户详情.UserClassId > 0 {
 					if 局_旧用户类型权重, err = service.NewUserClass(c, tx).Info(info.app用户详情.UserClassId); err != nil {
 						return errors.Join(err, errors.New("读取旧用户类型权重失败"))
@@ -473,7 +471,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 				if info.is计点 {
 					//转换结果值,转后再增加新类型 值
 					客户expr["VipTime"] = gorm.Expr("VipTime * ? / ? +?", 局_旧用户类型权重.Weight, 局_新用户类型权重.Weight, info.卡号详情.VipTime)
-					info.logVipNumber = append(info.logVipNumber, DB.DB_LogVipNumber{
+					info.logVipNumber = append(info.logVipNumber, dbm.DB_LogVipNumber{
 						User:  info.user用户详情.User,
 						Ip:    info.ip,
 						Count: info.卡号详情.VipNumber,
@@ -493,27 +491,27 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 			}
 		}
 		//更新客户数据
-		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Id = ?", info.app用户详情.Id).Updates(&客户expr).Error
+		err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Id = ?", info.app用户详情.Id).Updates(&客户expr).Error
 		if err != nil {
 			return errors.Join(err, errors.New("充值失败,重试"))
 		}
 		//处理账号的RMB增减
 		if !info.is卡号 && info.卡号详情.RMb > 0 {
-			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.app用户详情.Uid).First(&info.user用户详情).Error
+			err = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", info.app用户详情.Uid).First(&info.user用户详情).Error
 			if err != nil {
 				return errors.Join(err, errors.New("用户账号不存在"))
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", info.app用户详情.Uid).Update("RMB", gorm.Expr("RMB + ?", info.卡号详情.RMb)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", info.app用户详情.Uid).Update("RMB", gorm.Expr("RMB + ?", info.卡号详情.RMb)).Error
 			if err != nil {
 				return errors.Join(err, errors.New("充值余额时失败,请重试"))
 			}
 			var 局_新余额 float64
-			err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id = ?", info.user用户详情.Id).First(&局_新余额).Error
+			err = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id = ?", info.user用户详情.Id).First(&局_新余额).Error
 			if err != nil {
 				return errors.Join(err, errors.New("充值后读取新余额失败"))
 			}
 			//日志仅写到上下文内,由实际业务处理是否写入日志和修改备注信息
-			info.logMoney = append(info.logMoney, DB.DB_LogMoney{
+			info.logMoney = append(info.logMoney, dbm.DB_LogMoney{
 				User:  info.user用户详情.User,
 				Ip:    info.ip,
 				Count: info.卡号详情.RMb,
@@ -550,7 +548,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 					//所以 卡秒数+新用户类型权重=2,在除以推荐人用户类型权重=2
 					局_增减时间点数 := info.卡号详情.InviteCount * info.新用户类型_推荐人.Weight / info.用户类型_推荐人.Weight
 					推荐人expr["VipTime"] = gorm.Expr("VipTime +?", 局_增减时间点数)
-					info.logVipNumber = append(info.logVipNumber, DB.DB_LogVipNumber{
+					info.logVipNumber = append(info.logVipNumber, dbm.DB_LogVipNumber{
 						User:  info.user用户详情.User,
 						Ip:    info.ip,
 						Count: Int64到Float64(局_增减时间点数),
@@ -568,7 +566,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 					}
 				}
 			}
-			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Uid = ?", info.app用户详情_推荐人.Uid).Updates(&推荐人expr).Error
+			err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Uid = ?", info.app用户详情_推荐人.Uid).Updates(&推荐人expr).Error
 			if err != nil {
 				return errors.Join(err, errors.New("推荐人更新失败"))
 			}
@@ -584,13 +582,13 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 	if len(info.logMoney) > 0 {
 		//最后写出日志
 		if err = log.L_log.S输出日志(c, info.logMoney); err != nil {
-			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			global.GVA_LOG.Println("输出日志失败!", err)
 		}
 	}
 
 	if len(info.logVipNumber) > 0 {
 		if err = log.L_log.S输出日志(c, info.logVipNumber); err != nil {
-			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			global.GVA_LOG.Println("输出日志失败!", err)
 		}
 	}
 
@@ -605,15 +603,15 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 // 已用充值卡将相应的卡使用者和推荐人强行扣回充值卡面值,可能扣成负数
 func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error) {
 	var info struct {
-		卡号详情         DB.DB_Ka
-		卡号应用         DB.DB_AppInfo
+		卡号详情         dbm.DB_Ka
+		卡号应用         dbm.DB_AppInfo
 		is卡号         bool
 		is计点         bool
 		vipTime名称    string
-		已充值用户        []DB.DB_AppUser
-		操作人详情        DB.DB_User
-		LogMoney     []DB.DB_LogMoney
-		LogVipNumber []DB.DB_LogVipNumber
+		已充值用户        []dbm.DB_AppUser
+		操作人详情        dbm.DB_User
+		LogMoney     []dbm.DB_LogMoney
+		LogVipNumber []dbm.DB_LogVipNumber
 	}
 	// 开启事务,检测上层是否有事务,如果有直接使用,没有就创建一个
 	var db *gorm.DB
@@ -663,22 +661,22 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 				continue //如果值为空,到循环尾
 			}
 
-			var 临时软件用户info DB.DB_AppUser
-			var 临时账号info DB.DB_User
-			var 临时卡号info DB.DB_Ka
+			var 临时软件用户info dbm.DB_AppUser
+			var 临时账号info dbm.DB_User
+			var 临时卡号info dbm.DB_Ka
 
 			if info.is卡号 {
-				tempTx := tx.Model(DB.DB_Ka{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时卡号info, "Name = ?", 值)
+				tempTx := tx.Model(dbm.DB_Ka{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时卡号info, "Name = ?", 值)
 				if tempTx.Error != nil {
 					return errors.Join(tempTx.Error, errors.New(值+"已充卡号不存在"))
 				}
 			} else {
-				tempTx := tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时账号info, "User = ?", 值)
+				tempTx := tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时账号info, "User = ?", 值)
 				if tempTx.Error != nil {
 					return errors.Join(tempTx.Error, errors.New("已充账号不存在"))
 				}
 			}
-			tempTx := tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Clauses(clause.Locking{Strength: "UPDATE"}).
+			tempTx := tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Clauses(clause.Locking{Strength: "UPDATE"}).
 				First(&临时软件用户info, "Uid = ?", S三元(info.is卡号, 临时卡号info.Id, 临时账号info.Id))
 			if tempTx.Error != nil {
 				return errors.Join(tempTx.Error, errors.New(值+"已充软件用户info不存在"))
@@ -694,13 +692,13 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 				"VipTime":   临时软件用户info.VipTime,
 				"VipNumber": 临时软件用户info.VipNumber,
 			}
-			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Id = ?", 临时软件用户info.Id).
+			err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Id = ?", 临时软件用户info.Id).
 				Updates(&update).Error
 			if err != nil {
 				return errors.Join(err, errors.New("修改uid:"+strconv.Itoa(临时软件用户info.Uid)+"软件用户信息失败"))
 			}
 			if info.卡号详情.VipTime != 0 {
-				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+				info.LogVipNumber = append(info.LogVipNumber, dbm.DB_LogVipNumber{
 					User:  S三元(info.is卡号, 临时卡号info.Name, 临时账号info.User),
 					AppId: info.卡号详情.AppId,
 					Type:  S三元(info.is计点, constant.Log_type_点数, constant.Log_type_时间),
@@ -711,7 +709,7 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 				})
 			}
 			if info.卡号详情.VipNumber != 0 {
-				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+				info.LogVipNumber = append(info.LogVipNumber, dbm.DB_LogVipNumber{
 					User:  S三元(info.is卡号, 临时卡号info.Name, 临时账号info.User),
 					AppId: info.卡号详情.AppId,
 					Type:  constant.Log_type_积分,
@@ -728,12 +726,12 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 				//余额只需要改RMB
 				if info.卡号详情.RMb != 0 {
 					临时账号info.Rmb = Float64减float64(临时账号info.Rmb, info.卡号详情.RMb, 2)
-					tempTx = tx.Model(DB.DB_User{}).Where("Id = ?", 临时账号info.Id).
+					tempTx = tx.Model(dbm.DB_User{}).Where("Id = ?", 临时账号info.Id).
 						Update("Rmb", 临时账号info.Rmb)
 					if tempTx.Error != nil {
 						return errors.Join(tempTx.Error, errors.New("修改id:"+strconv.Itoa(临时账号info.Id)+"用户Rmb信息失败"))
 					}
-					info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+					info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 						User:  临时账号info.User,
 						Time:  time.Now().Unix(),
 						Ip:    c.ClientIP(),
@@ -752,21 +750,21 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 				continue
 			}
 			// First 传入的如果带主键id会自动增加这个条件
-			临时账号info = DB.DB_User{}
-			临时卡号info = DB.DB_Ka{}
-			临时软件用户info = DB.DB_AppUser{}
+			临时账号info = dbm.DB_User{}
+			临时卡号info = dbm.DB_Ka{}
+			临时软件用户info = dbm.DB_AppUser{}
 			if info.is卡号 {
-				tempTx = tx.Model(DB.DB_Ka{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时卡号info, "Name = ?", 值)
+				tempTx = tx.Model(dbm.DB_Ka{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时卡号info, "Name = ?", 值)
 				if tempTx.Error != nil {
 					return errors.Join(tempTx.Error, errors.New("推荐人["+值+"]卡号不存在"))
 				}
 			} else {
-				tempTx = tx.Debug().Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时账号info, "User = ?", 值)
+				tempTx = tx.Debug().Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时账号info, "User = ?", 值)
 				if tempTx.Error != nil {
 					return errors.Join(tempTx.Error, errors.New("推荐人["+值+"]账号不存在"))
 				}
 			}
-			tempTx = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).
+			tempTx = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).
 				Clauses(clause.Locking{Strength: "UPDATE"}).
 				First(&临时软件用户info, "Uid = ?", S三元(info.is卡号, 临时卡号info.Id, 临时账号info.Id))
 			if tempTx.Error != nil {
@@ -780,13 +778,13 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 			update = map[string]interface{}{
 				"VipTime": 临时软件用户info.VipTime,
 			}
-			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Id = ?", 临时软件用户info.Id).
+			err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(info.卡号详情.AppId)).Where("Id = ?", 临时软件用户info.Id).
 				Updates(&update).Error
 			if err != nil {
 				return errors.Join(err, errors.New("修改推荐人uid:"+strconv.Itoa(临时软件用户info.Uid)+"软件用户信息失败"))
 			}
 			if info.卡号详情.VipTime != 0 {
-				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+				info.LogVipNumber = append(info.LogVipNumber, dbm.DB_LogVipNumber{
 					User:  S三元(info.is卡号, 临时卡号info.Name, 临时账号info.User),
 					AppId: info.卡号详情.AppId,
 					Type:  S三元(info.is计点, constant.Log_type_点数, constant.Log_type_时间),
@@ -799,7 +797,7 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 
 		}
 		//重置卡并冻结,删除信息
-		err = tx.Model(DB.DB_Ka{}).Where("Id = ? ", info.卡号详情.Id).Updates(
+		err = tx.Model(dbm.DB_Ka{}).Where("Id = ? ", info.卡号详情.Id).Updates(
 			map[string]interface{}{
 				"Status":     2,
 				"User":       "",
@@ -819,10 +817,10 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 			c.Set("info.LogMoney", info.LogMoney)
 		} else {
 			if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
-				global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+				global.GVA_LOG.Println("输出日志失败!", err)
 			}
 			if err = log.L_log.S输出日志(c, info.LogVipNumber); err != nil {
-				global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+				global.GVA_LOG.Println("输出日志失败!", err)
 			}
 		}
 	}
@@ -833,13 +831,13 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 // 删除已耗尽次数卡号
 func (j *ka) S删除耗尽次数卡号(c *gin.Context, AppId int) (数量 int64, err error) {
 	var info struct {
-		卡号详情  []DB.DB_Ka
+		卡号详情  []dbm.DB_Ka
 		删除id  []int
-		app详情 DB.DB_AppInfo
+		app详情 dbm.DB_AppInfo
 		is卡号  bool
 		is计点  bool
 		ip    string
-		LogKa []DB.DB_LogKa //卡号
+		LogKa []dbm.DB_LogKa //卡号
 	}
 	info.ip = "未知" // 处理 `gin.Context` 为 `nil` 的情况
 	if c != nil {
@@ -872,7 +870,7 @@ func (j *ka) S删除耗尽次数卡号(c *gin.Context, AppId int) (数量 int64,
 		}
 		//这些卡号Uid 且未过期的
 		局_排除Id := []int{}
-		db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).
+		db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).
 			Where("Uid IN ?", 局_已过期卡号id).
 			Where("VipTime > ?", 局_vipTime).
 			Select("Uid").
@@ -890,7 +888,7 @@ func (j *ka) S删除耗尽次数卡号(c *gin.Context, AppId int) (数量 int64,
 
 	数量, err = service.NewKa(c, &db).Delete(info.删除id)
 	if err == nil && 数量 > 0 {
-		局_临时数组 := make([]DB.DB_Ka, 0, len(info.卡号详情))
+		局_临时数组 := make([]dbm.DB_Ka, 0, len(info.卡号详情))
 		for v := range len(info.卡号详情) {
 			if S数组_整数是否存在(info.删除id, info.卡号详情[v].Id) {
 				局_临时数组 = append(局_临时数组, info.卡号详情[v])
@@ -899,7 +897,7 @@ func (j *ka) S删除耗尽次数卡号(c *gin.Context, AppId int) (数量 int64,
 		局_时间 := time.Now().Unix()
 		for i, v := range 局_临时数组 {
 			局_文本 := fmt.Sprintf("批量删除耗尽卡号批次id:%d(%d/%d),卡号id:%d,卡类id:%d", 局_时间, i+1, len(局_临时数组), v.Id, v.KaClassId)
-			info.LogKa = append(info.LogKa, DB.DB_LogKa{
+			info.LogKa = append(info.LogKa, dbm.DB_LogKa{
 				User:     c.GetString("User"),
 				UserType: constant.Log_卡操作用户_管理员,
 				Ka:       v.Name,
@@ -911,7 +909,7 @@ func (j *ka) S删除耗尽次数卡号(c *gin.Context, AppId int) (数量 int64,
 		}
 		//最后写出日志
 		if err = log.L_log.S输出日志(c, info.LogKa); err != nil {
-			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			global.GVA_LOG.Println("输出日志失败!", err)
 		}
 	}
 
@@ -923,11 +921,11 @@ func (j *ka) Z置归属代理(c *gin.Context, AppId int, Uid int, AgentUid int) 
 
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(AppId)
 	var info struct {
-		AppInfo DB.DB_AppInfo
-		AppUser DB.DB_AppUser
+		AppInfo dbm.DB_AppInfo
+		AppUser dbm.DB_AppUser
 
-		LogMoney     []DB.DB_LogMoney
-		LogVipNumber []DB.DB_LogVipNumber
+		LogMoney     []dbm.DB_LogMoney
+		LogVipNumber []dbm.DB_LogVipNumber
 	}
 	var tx *gorm.DB
 	if tempObj, ok := c.Get("tx"); ok {
@@ -972,12 +970,12 @@ func (j *ka) Z置归属代理(c *gin.Context, AppId int, Uid int, AgentUid int) 
 		}
 
 		if 临时数据, ok := c.Get("logMoney"); ok { //判断是否有rmb充值的日志
-			info.LogMoney = append(info.LogMoney, 临时数据.(DB.DB_LogMoney))
+			info.LogMoney = append(info.LogMoney, 临时数据.(dbm.DB_LogMoney))
 			info.LogMoney[len(info.LogMoney)-1].Note = "归属代理送卡,卡类id:" + strconv.Itoa(info.AppInfo.AgentGiftKaClassId) + info.LogMoney[len(info.LogMoney)-1].Note
 		}
 
 		if 临时数据, ok := c.Get("logVipNumber"); ok { //判断是否有积分充值的日志
-			info.LogVipNumber = append(info.LogVipNumber, 临时数据.(DB.DB_LogVipNumber))
+			info.LogVipNumber = append(info.LogVipNumber, 临时数据.(dbm.DB_LogVipNumber))
 			info.LogVipNumber[len(info.LogVipNumber)-1].Note = "归属代理送卡,卡类id:" + strconv.Itoa(info.AppInfo.AgentGiftKaClassId) + info.LogVipNumber[len(info.LogVipNumber)-1].Note
 		}
 
@@ -990,10 +988,10 @@ func (j *ka) Z置归属代理(c *gin.Context, AppId int, Uid int, AgentUid int) 
 
 	//最后写出日志
 	if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
-		global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		global.GVA_LOG.Println("输出日志失败!", err)
 	}
 	if err = log.L_log.S输出日志(c, info.LogVipNumber); err != nil {
-		global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		global.GVA_LOG.Println("输出日志失败!", err)
 	}
 
 	return

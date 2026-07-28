@@ -4,12 +4,11 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_AppInfo"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 )
 
 type AppInfo struct {
@@ -29,7 +28,7 @@ func (C *AppInfo) GetAppBaseInfo(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		appInfo        DB.DB_AppInfo
+		appInfo        dbm.DB_AppInfo
 		appInfoWebUser dbm.DB_AppInfoWebUser
 		appInfoUser    dbm.DB_AppInfoWebUser
 	}{}
@@ -90,7 +89,7 @@ func (C *AppInfo) GetAppGongGao(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		appInfo        DB.DB_AppInfo
+		appInfo        dbm.DB_AppInfo
 		appInfoWebUser dbm.DB_AppInfoWebUser
 	}{}
 	var err error

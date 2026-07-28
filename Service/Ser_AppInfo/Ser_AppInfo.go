@@ -9,13 +9,12 @@ import (
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"gorm.io/gorm"
 	"regexp"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/cloudStorage"
 
 	"server/new/app/logic/common/publicData"
 	dbm "server/new/app/models/db"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -24,9 +23,9 @@ import (
 
 func AppInfo取map列表Int(基础id bool) map[int]string {
 
-	var DB_AppInfo []DB.DB_AppInfo
+	var DB_AppInfo []dbm.DB_AppInfo
 	var 总数 int64
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppId", "AppName").Count(&总数).Find(&DB_AppInfo).Error
+	_ = global.GVA_DB.Model(dbm.DB_AppInfo{}).Select("AppId", "AppName").Count(&总数).Find(&DB_AppInfo).Error
 	var AppName = make(map[int]string, 总数+4)
 	if 基础id {
 		AppName[1] = "管理平台"
@@ -67,16 +66,16 @@ func App取map列表String(基础id bool) map[string]string {
 }
 
 func App取AppName(Appid int) (AppName string) {
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppName").Where("AppId=?", Appid).First(&AppName).Error
+	_ = global.GVA_DB.Model(dbm.DB_AppInfo{}).Select("AppName").Where("AppId=?", Appid).First(&AppName).Error
 	return AppName
 }
 
-func App取App详情(Appid int) (AppName DB.DB_AppInfo) {
+func App取App详情(Appid int) (AppName dbm.DB_AppInfo) {
 	Data缓存, ok := global.H缓存.Get("DB_AppInfo_" + strconv.Itoa(Appid)) //读取缓存
 	if ok {
-		return Data缓存.(DB.DB_AppInfo)
+		return Data缓存.(dbm.DB_AppInfo)
 	}
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId=?", Appid).First(&AppName).Error
+	_ = global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId=?", Appid).First(&AppName).Error
 
 	//高频率读取数据 写入缓存
 	global.H缓存.Set("DB_AppInfo_"+strconv.Itoa(Appid), AppName, time.Minute*10) //10分钟有效
@@ -84,14 +83,14 @@ func App取App详情(Appid int) (AppName DB.DB_AppInfo) {
 	return AppName
 }
 func App取App最新下载地址Json(Appid int) (下载地址 string) {
-	var DB_AppInfo DB.DB_AppInfo
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId=?", Appid).First(&DB_AppInfo).Error
+	var DB_AppInfo dbm.DB_AppInfo
+	_ = global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId=?", Appid).First(&DB_AppInfo).Error
 	下载地址 = App下载更新地址变量处理(DB_AppInfo)
 	return 下载地址
 }
 func AppId是否存在(AppId int) bool {
 	var appInfo int
-	result := global.GVA_DB.Model(DB.DB_AppInfo{}).Select("1").Where("AppId = ?", AppId).First(&appInfo)
+	result := global.GVA_DB.Model(dbm.DB_AppInfo{}).Select("1").Where("AppId = ?", AppId).First(&appInfo)
 	return result.Error == nil
 }
 func AppId取应用名称(AppId int) string {
@@ -99,18 +98,18 @@ func AppId取应用名称(AppId int) string {
 		return ""
 	}
 	AppName := ""
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppName").Where("AppId = ?", AppId).First(&AppName).Error
+	_ = global.GVA_DB.Model(dbm.DB_AppInfo{}).Select("AppName").Where("AppId = ?", AppId).First(&AppName).Error
 	return AppName
 }
 func App取AppType(Appid int) (AppType int) {
-	_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
+	_ = global.GVA_DB.Model(dbm.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
 	return AppType
 }
 
 func App是否为卡号(Appid int) bool {
 	var AppType int = 0 //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
 	db := *global.GVA_DB
-	_ = db.Model(DB.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
+	_ = db.Model(dbm.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
 	if AppType == 3 || AppType == 4 {
 		return true
 	}
@@ -120,7 +119,7 @@ func App是否为卡号(Appid int) bool {
 func App是否为计点(Appid int) bool {
 	var AppType int = 0 //1=账号限时,2=账号计点,3卡号限时,4=卡号计点
 	db := *global.GVA_DB
-	_ = db.Model(DB.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
+	_ = db.Model(dbm.DB_AppInfo{}).Select("AppType").Where("AppId=?", Appid).First(&AppType).Error
 	if AppType == 2 || AppType == 4 {
 		return true
 	}
@@ -130,17 +129,17 @@ func App是否为计点(Appid int) bool {
 func App存在数量(Appid int) int64 {
 	var count int64 = 0
 	db := *global.GVA_DB
-	_ = db.Model(DB.DB_AppInfo{}).Where("AppId = ?", Appid).Count(&count).Error
+	_ = db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", Appid).Count(&count).Error
 
 	return count
 
 }
 
-func App修改信息(AppInfo DB.DB_AppInfo) error {
+func App修改信息(AppInfo dbm.DB_AppInfo) error {
 	//高频率读取数据 写入缓存
 
 	//直接排除AppType  AppWeb 禁止修改
-	var db = global.GVA_DB.Model(DB.DB_AppInfo{}).Select(
+	var db = global.GVA_DB.Model(dbm.DB_AppInfo{}).Select(
 		"AppName",
 		"Status",
 		"AppStatusMessage",
@@ -192,7 +191,7 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 	}
 
 	var count int64
-	err := global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
+	err := global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
 	// 没查到数据
 	if count != 0 {
 		return errors.New("AppId已存在")
@@ -202,10 +201,10 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 		return errors.New("应用类型错误")
 	}
 
-	var NewApp DB.DB_AppInfo
+	var NewApp dbm.DB_AppInfo
 	var 数组_卡类列表 []dbm.DB_KaClass
-	var 数组_用户类型列表 []DB.DB_UserClass
-	err = global.GVA_DB.Model(DB.DB_AppInfo{}).Where("AppId = ?", CopyAppId).First(&NewApp).Error
+	var 数组_用户类型列表 []dbm.DB_UserClass
+	err = global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId = ?", CopyAppId).First(&NewApp).Error
 	if err != nil {
 		return errors.New("复制应用不存在")
 	}
@@ -216,20 +215,20 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 	NewApp.CryptoKeyAes = rand_string.RandomLetter(24) //aes cbc 192长度固定24
 	err, 公钥base64, 私钥base64 := utils2.GetRsaKey()
 	if err != nil {
-		global.GVA_LOG.Error("新建app创建Rsa密匙失败:" + err.Error())
+		global.GVA_LOG.Println("新建app创建Rsa密匙失败:" + err.Error())
 	}
 	NewApp.CryptoKeyPublic = 公钥base64
 	NewApp.CryptoKeyPrivate = 私钥base64
 
 	err = global.GVA_DB.Model(dbm.DB_KaClass{}).Where("AppId = ?", CopyAppId).Find(&数组_卡类列表).Error
-	err = global.GVA_DB.Model(DB.DB_UserClass{}).Where("AppId = ?", CopyAppId).Find(&数组_用户类型列表).Error
+	err = global.GVA_DB.Model(dbm.DB_UserClass{}).Where("AppId = ?", CopyAppId).Find(&数组_用户类型列表).Error
 	//数据准备完毕,开启事务进行复制应用
 	db := *global.GVA_DB
 	err = db.Transaction(func(tx *gorm.DB) (err error) {
 		for i1, v := range 数组_用户类型列表 {
 			v.Id = 0
 			v.AppId = AppId
-			err = tx.Model(DB.DB_UserClass{}).Create(&v).Error
+			err = tx.Model(dbm.DB_UserClass{}).Create(&v).Error
 			if err != nil {
 				return errors.Join(err, errors.New("用户类型复制失败"))
 			}
@@ -254,13 +253,13 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 		}
 		NewApp.RegisterGiveKaClassId = 局_注册送卡id //注册赠送卡类的id 要重新设置
 
-		err = tx.Model(DB.DB_AppInfo{}).Create(&NewApp).Error
+		err = tx.Model(dbm.DB_AppInfo{}).Create(&NewApp).Error
 		if err != nil {
 			return errors.Join(err, errors.New("app复制失败"))
 		}
 
 		//应用添加完毕 创建这个应用的用户表
-		err = tx.Set("gorm:table_options", "ENGINE=InnoDB").Table("db_AppUser_" + strconv.Itoa(NewApp.AppId)).AutoMigrate(&DB.DB_AppUser{})
+		err = tx.Set("gorm:table_options", "ENGINE=InnoDB").Table("db_AppUser_" + strconv.Itoa(NewApp.AppId)).AutoMigrate(&dbm.DB_AppUser{})
 		if err != nil {
 			return errors.Join(err, errors.New("用户表创建失败,请删除该应用重新创建"))
 		}
@@ -282,7 +281,7 @@ func CopyApp信息(AppId, AppType int, AppName string, CopyAppId int) error {
 	return err
 }
 
-func App下载更新地址变量处理(DB_AppInfo DB.DB_AppInfo) string {
+func App下载更新地址变量处理(DB_AppInfo dbm.DB_AppInfo) string {
 	局_新文本 := DB_AppInfo.UrlDownload
 
 	局_新文本 = strings.Replace(局_新文本, "{{AppName}}", DB_AppInfo.AppName, -1)

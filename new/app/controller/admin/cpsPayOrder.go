@@ -3,15 +3,13 @@ package controller
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
-	DB "server/structs/db"
-
 	"strconv"
 )
 
@@ -107,11 +105,11 @@ func (C *CpsPayOrder) GetList(c *gin.Context) {
 	}
 	var info struct {
 		ids         []int
-		userInfo    []DB.DB_User
+		userInfo    []dbm.DB_User
 		map_id_user map[int]string
 
 		appIds         []int
-		appInfo        []DB.DB_AppInfo
+		appInfo        []dbm.DB_AppInfo
 		map_appid_name map[int]string
 	}
 	info.ids = make([]int, 0, len(dataList)*3)

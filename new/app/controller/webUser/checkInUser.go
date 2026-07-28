@@ -2,12 +2,11 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -22,8 +21,8 @@ func NewCheckInUserController() *CheckInUser {
 func (C *CheckInUser) Info(c *gin.Context) {
 	var err error
 	var info = struct {
-		appInfo     DB.DB_AppInfo
-		likeInfo    DB.DB_LinksToken
+		appInfo     dbm.DB_AppInfo
+		likeInfo    dbm.DB_LinksToken
 		checkInUser dbm.DB_CheckInUser
 		最后签到信息      dbm.DB_CheckInLog
 	}{}

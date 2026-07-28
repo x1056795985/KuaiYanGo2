@@ -6,10 +6,10 @@ import (
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_UserConfig"
-	"server/global"
 	"server/new/app/controller/Common"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strconv"
 	"time"
 )
@@ -40,25 +40,25 @@ type 请求_UserConfigGetList struct {
 }
 
 type 请求_UserConfigDelete struct {
-	Data []DB.DB_UserConfig `json:"data"`
+	Data []dbm.DB_UserConfig `json:"data"`
 }
 
 type 请求_UserConfigNew struct {
-	DB.DB_UserConfig
+	dbm.DB_UserConfig
 }
 
 type 请求_UserConfigSet struct {
-	DB.DB_UserConfig
+	dbm.DB_UserConfig
 }
 
 // 响应结构体
 type 响应_UserConfigGetList struct {
 	List  []响应_UserConfig扩展 `json:"list"`
-	Count int64               `json:"count"`
+	Count int64             `json:"count"`
 }
 
 type 响应_UserConfig扩展 struct {
-	DB.DB_UserConfig
+	dbm.DB_UserConfig
 	AppName string `json:"appName"`
 }
 
@@ -69,9 +69,9 @@ func (C *UserConfig) Info(c *gin.Context) {
 		return
 	}
 
-	var DB_UserConfig DB.DB_UserConfig
+	var DB_UserConfig dbm.DB_UserConfig
 	Ser_UserConfig.Q取值(请求.AppId, 请求.Uid, 请求.Name)
-	err := global.GVA_DB.Model(DB.DB_UserConfig{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_UserConfig).Error
+	err := global.GVA_DB.Model(dbm.DB_UserConfig{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_UserConfig).Error
 	if err != nil {
 		response.FailWithMessage("获取公共变量失败,可能联合主键不存在", c)
 		return
@@ -86,7 +86,7 @@ func (C *UserConfig) GetList(c *gin.Context) {
 		return
 	}
 
-	局_DB := global.GVA_DB.Model(&DB.DB_UserConfig{})
+	局_DB := global.GVA_DB.Model(&dbm.DB_UserConfig{})
 	局_DB = 局_DB.Where("Uid>?", 0)
 	if 请求.AppId > 0 {
 		局_DB = 局_DB.Where("AppId=?", 请求.AppId)
@@ -114,7 +114,7 @@ func (C *UserConfig) GetList(c *gin.Context) {
 	err := 局_DB.Count(&总数).Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Omit("AppName").Find(&DB_PublicData).Error
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		global.GVA_LOG.Error("UserConfigGetList:" + err.Error())
+		global.GVA_LOG.Println("UserConfigGetList:" + err.Error())
 		return
 	}
 
@@ -149,7 +149,7 @@ func (C *UserConfig) Delete(c *gin.Context) {
 	}
 
 	var db = global.GVA_DB
-	影响行数 := db.Model(DB.DB_UserConfig{}).Delete(请求.Data).RowsAffected
+	影响行数 := db.Model(dbm.DB_UserConfig{}).Delete(请求.Data).RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
 		return
@@ -159,7 +159,7 @@ func (C *UserConfig) Delete(c *gin.Context) {
 
 // New 新建用户云配置
 func (C *UserConfig) New(c *gin.Context) {
-	var 请求 DB.DB_UserConfig
+	var 请求 dbm.DB_UserConfig
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -194,7 +194,7 @@ func (C *UserConfig) New(c *gin.Context) {
 
 // SetUserConfig 修改用户云配置值
 func (C *UserConfig) SetUserConfig(c *gin.Context) {
-	var 请求 DB.DB_UserConfig
+	var 请求 dbm.DB_UserConfig
 	if !C.ToJSON(c, &请求) {
 		return
 	}

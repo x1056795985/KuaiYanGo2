@@ -8,11 +8,11 @@ import (
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -26,18 +26,18 @@ func NewTaskPoolWebApiController() *TaskPoolWebApi {
 }
 
 // Y用户数据信息还原 从上下文恢复用户数据
-func (T *TaskPoolWebApi) Y用户数据信息还原(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken) {
+func (T *TaskPoolWebApi) Y用户数据信息还原(c *gin.Context, AppInfo *dbm.DB_AppInfo, 在线信息 *dbm.DB_LinksToken) {
 	db := *global.GVA_DB
 	*AppInfo, _ = service.NewAppInfo(c, &db).Info(3)
 	局_临时通用, _ := c.Get("局_在线信息")
-	*在线信息 = 局_临时通用.(DB.DB_LinksToken)
+	*在线信息 = 局_临时通用.(dbm.DB_LinksToken)
 	return
 }
 
 // R任务池_任务处理获取 获取待处理任务
 func (T *TaskPoolWebApi) TaskPoolGetTask(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
 	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	if 局_在线信息.Status != 1 {
@@ -52,7 +52,7 @@ func (T *TaskPoolWebApi) TaskPoolGetTask(c *gin.Context) {
 		局_可获取任务类型ID[索引], _ = 局_临时[索引].Int()
 	}
 	局_任务UUID := Ser_TaskPool.Task队列弹出任务(局_可获取任务类型ID, 局_最大数量, 局_在线信息.LoginAppid, 局_在线信息.Uid)
-	var 局_已获取任务数据 []DB.TaskPool_数据_精简
+	var 局_已获取任务数据 []dbm.TaskPool_数据_精简
 	if len(局_任务UUID) > 0 {
 		局_已获取任务数据 = Ser_TaskPool.Task数据读取_数组(局_任务UUID)
 	} else {
@@ -65,8 +65,8 @@ func (T *TaskPoolWebApi) TaskPoolGetTask(c *gin.Context) {
 
 // R任务池_任务处理返回 返回任务处理结果
 func (T *TaskPoolWebApi) TaskPoolSetTask(c *gin.Context) {
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
 	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
@@ -129,8 +129,8 @@ func (T *TaskPoolWebApi) TaskPoolNewData(c *gin.Context) {
 			return
 		}
 	}()
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
 	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
 	局_任务类型, err := Ser_TaskPool.Task类型读取(请求json.GetInt("TaskTypeId"))
@@ -208,12 +208,12 @@ func (T *TaskPoolWebApi) RunJs(c *gin.Context) {
 			return
 		}
 	}()
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
 	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
 	局_耗时 := time.Now().UnixMilli()
-	var 局_PublicJs DB.DB_PublicJs
+	var 局_PublicJs dbm.DB_PublicJs
 	var err error
 	局_PublicJs, err = Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_公共函数, string(请求json.GetStringBytes("JsName")))
 	if err != nil {
@@ -263,8 +263,8 @@ func (T *TaskPoolWebApi) RunJs2(c *gin.Context) {
 			return
 		}
 	}()
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
 	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	局_公共函数名 := c.Param("JsName")
 
@@ -276,7 +276,7 @@ func (T *TaskPoolWebApi) RunJs2(c *gin.Context) {
 	}
 
 	局_耗时 := time.Now().UnixMilli()
-	var 局_PublicJs DB.DB_PublicJs
+	var 局_PublicJs dbm.DB_PublicJs
 	var err error
 	局_PublicJs, err = Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_公共函数, 局_公共函数名)
 	if err != nil {

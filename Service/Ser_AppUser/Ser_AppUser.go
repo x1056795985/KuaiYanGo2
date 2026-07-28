@@ -9,9 +9,9 @@ import (
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
-	"server/global"
+	"server/new/app/global"
+	db2 "server/new/app/models/db"
 
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -112,7 +112,7 @@ func Uid取User(AppId int, Uid int) string {
 				return 卡号
 				用户名 = Ser_Ka.Id取卡号(Uid)   //这个有循环导入报错,待解决
 		*/
-		_ = global.GVA_DB.Model(DB.DB_Ka{}).Select("Name").Where("Id=?", Uid).First(&用户名)
+		_ = global.GVA_DB.Model(db2.DB_Ka{}).Select("Name").Where("Id=?", Uid).First(&用户名)
 
 	} else {
 		用户名 = Ser_User.Id取User(Uid)
@@ -125,41 +125,41 @@ func Uid取备注(AppId int, Uid int) string {
 	if AppId < 10000 { //屏蔽掉管理平台代理平台等
 		return ""
 	}
-	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Note").Where("Uid=?", Uid).First(&备注).Error
+	_ = global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Note").Where("Uid=?", Uid).First(&备注).Error
 
 	return 备注
 }
 func Uid是否存在(AppId int, Uid int) bool {
 	var Count int64
-	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("1").Where("UId=?", Uid).First(&Count)
+	_ = global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("1").Where("UId=?", Uid).First(&Count)
 	return Count != 0
 
 }
 
 func Id是否存在(AppId int, Id int) bool {
 	var Count int64
-	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("1").Where("Id=?", Id).Take(&Count)
+	_ = global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("1").Where("Id=?", Id).Take(&Count)
 	return Count != 0
 
 }
-func Id取详情(AppId int, Id int) (DB.DB_AppUser, error) {
-	var App用户信息 DB.DB_AppUser
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(int(AppId))).Where("Id=?", Id).First(&App用户信息).Error
+func Id取详情(AppId int, Id int) (db2.DB_AppUser, error) {
+	var App用户信息 db2.DB_AppUser
+	err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(int(AppId))).Where("Id=?", Id).First(&App用户信息).Error
 	return App用户信息, err
 }
-func Uid取详情(AppId int, Uid int) (DB.DB_AppUser, bool) {
-	var App用户信息 DB.DB_AppUser
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid=?", Uid).First(&App用户信息).Error
+func Uid取详情(AppId int, Uid int) (db2.DB_AppUser, bool) {
+	var App用户信息 db2.DB_AppUser
+	err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid=?", Uid).First(&App用户信息).Error
 	return App用户信息, err == nil
 }
 func Uid取Id(AppId int, Uid int) int {
 	var App用户ID = 0
-	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Id").Where("Uid=?", Uid).First(&App用户ID).Error
+	_ = global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Id").Where("Uid=?", Uid).First(&App用户ID).Error
 	return App用户ID
 }
 func Get用户总数(AppId int) int {
 	var 局_总数 int64
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Count(&局_总数).Error
+	err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Count(&局_总数).Error
 	if err != nil {
 		return 0
 	}
@@ -167,11 +167,11 @@ func Get用户总数(AppId int) int {
 }
 func Get用户会员和非会员数量(AppId int) (会员, 非会员 int64) {
 	if Ser_AppInfo.App是否为计点(AppId) {
-		global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Where("VipTime>0").Count(&会员)
-		global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Where("VipTime<=0").Count(&非会员)
+		global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Where("VipTime>0").Count(&会员)
+		global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Where("VipTime<=0").Count(&非会员)
 	} else {
-		global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("VipTime>?", time.Now().Unix()).Count(&会员)
-		global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("VipTime<=?", time.Now().Unix()).Count(&非会员)
+		global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("VipTime>?", time.Now().Unix()).Count(&会员)
+		global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("VipTime<=?", time.Now().Unix()).Count(&非会员)
 	}
 
 	return 会员, 非会员
@@ -179,7 +179,7 @@ func Get用户会员和非会员数量(AppId int) (会员, 非会员 int64) {
 
 // New用户信息
 func New用户信息(AppId int, Uid int, 绑定信息 string, 最大在线数量 int, VipTime int64, VipNumber float64, UserClassId int, Note string) error {
-	var 局_AppUser DB.DB_AppUser
+	var 局_AppUser db2.DB_AppUser
 
 	局_AppUser.Id = 0
 	局_AppUser.Uid = Uid
@@ -193,7 +193,7 @@ func New用户信息(AppId int, Uid int, 绑定信息 string, 最大在线数量
 	局_AppUser.RegisterTime = time.Now().Unix()
 	局_AppUser.AgentUid = 0 //不在这里赋值,单独处理
 
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Create(&局_AppUser).Error
+	err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Create(&局_AppUser).Error
 
 	return err
 }
@@ -203,11 +203,11 @@ func B绑定信息是否存在(AppId int, 绑定信息 string) bool {
 		return true
 	}
 	var Count int64
-	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("1").Where("`Key` = ?", 绑定信息).Take(&Count)
+	_ = global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("1").Where("`Key` = ?", 绑定信息).Take(&Count)
 	return Count != 0
 }
 func Set绑定信息(AppId, 用户Uid int, 绑定信息 string) error {
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid = ? ", 用户Uid).Update("Key", 绑定信息).Error
+	err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid = ? ", 用户Uid).Update("Key", 绑定信息).Error
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func Set绑定信息(AppId, 用户Uid int, 绑定信息 string) error {
 }
 func Q取绑定信息(AppId, 用户Uid int) string {
 	var 绑定信息 = ""
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid = ? ", 用户Uid).Select("Key").Take(&绑定信息).Error
+	err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid = ? ", 用户Uid).Select("Key").Take(&绑定信息).Error
 	if err != nil {
 		return ""
 	}
@@ -224,7 +224,7 @@ func Q取绑定信息(AppId, 用户Uid int) string {
 func Ser用户类型Vip时间(AppId, 用户Uid, 用户类型Id int, VipTime int64) error {
 	db := *global.GVA_DB
 	db = *db.Debug()
-	err := db.Model(DB.DB_AppUser{}).
+	err := db.Model(db2.DB_AppUser{}).
 		Table("db_AppUser_"+strconv.Itoa(AppId)).
 		Where("Uid = ? ", 用户Uid).
 		Updates(map[string]interface{}{
@@ -255,7 +255,7 @@ func Id积分增减_批量(AppId int, Id []int, 增减值 float64, is增加 bool
 	if !is增加 {
 		sql = "VipNumber - ?"
 	}
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("VipNumber", gorm.Expr(sql, 增减值)).Error
+	err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("VipNumber", gorm.Expr(sql, 增减值)).Error
 	return err
 }
 
@@ -276,9 +276,9 @@ func Id积分增减(AppId, Id int, 增减值 float64, is增加 bool) error {
 
 	if is增加 {
 		//增加直接处理就可以了,不用事务
-		err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipNumber", gorm.Expr("VipNumber + ?", 增减值)).Error
+		err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipNumber", gorm.Expr("VipNumber + ?", 增减值)).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(Id) + "Id积分增加失败:" + err.Error())
+			global.GVA_LOG.Println(strconv.Itoa(Id) + "Id积分增加失败:" + err.Error())
 			return err
 		}
 		return nil
@@ -286,10 +286,10 @@ func Id积分增减(AppId, Id int, 增减值 float64, is增加 bool) error {
 	//这里就是减少,需要开启事务保证
 	db := global.GVA_DB.Begin() //开启事务
 
-	err := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipNumber", gorm.Expr("VipNumber - ?", 增减值)).Error
+	err := db.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipNumber", gorm.Expr("VipNumber - ?", 增减值)).Error
 	if err != nil {
 		db.Rollback() //出错回滚
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id积分减少失败:" + err.Error())
+		global.GVA_LOG.Println(strconv.Itoa(Id) + "Id积分减少失败:" + err.Error())
 		return errors.New("积分减少失败查看服务器日志检查原因")
 	}
 	var 局_积分 float64
@@ -320,9 +320,9 @@ func Id点数增减(AppId, Id int, 增减值 int64, is增加 bool) error {
 
 	if is增加 {
 		//增加直接处理就可以了,不用事务
-		err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime + ?", 增减值)).Error
+		err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime + ?", 增减值)).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(int(Id)) + "Id点数增加失败:" + err.Error())
+			global.GVA_LOG.Println(strconv.Itoa(int(Id)) + "Id点数增加失败:" + err.Error())
 			return err
 		}
 		return nil
@@ -352,10 +352,10 @@ func Id点数增减(AppId, Id int, 增减值 int64, is增加 bool) error {
 
 	}
 
-	err := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime - ?", 增减值)).Error
+	err := db.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime - ?", 增减值)).Error
 	if err != nil {
 		db.Rollback() //出错回滚
-		global.GVA_LOG.Error(strconv.Itoa(int(Id)) + "Id点数减少失败:" + err.Error())
+		global.GVA_LOG.Println(strconv.Itoa(int(Id)) + "Id点数减少失败:" + err.Error())
 		return errors.New("点数减少失败查看服务器日志检查原因")
 	}
 	db.Commit() //操作完成提交事务
@@ -376,12 +376,12 @@ func Id点数增减_批量(AppId int, Id []int, 增减值 int64, is增加 bool) 
 	if is增加 {
 		sql = "VipTime + ?"
 	}
-	err := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("VipTime", gorm.Expr(sql, 增减值)).Error
+	err := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("VipTime", gorm.Expr(sql, 增减值)).Error
 	return err
 
 }
 func S删除VipTime小于等于X(AppId int, VipTime int64) (影响行数 int64, err error) {
-	db := global.GVA_DB.Model(DB.DB_AppUser{})
+	db := global.GVA_DB.Model(db2.DB_AppUser{})
 	影响行数 = db.Table("db_AppUser_"+strconv.Itoa(AppId)).Where("VipTime <= ? ", VipTime).Delete("").RowsAffected
 	return 影响行数, err
 }
@@ -393,7 +393,7 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 	db := global.GVA_DB
 	var ids []int64
 
-	err = db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Uid").Where("VipTime <= ? ", VipTime).Find(&ids).Error
+	err = db.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Select("Uid").Where("VipTime <= ? ", VipTime).Find(&ids).Error
 
 	if err != nil {
 		return
@@ -409,7 +409,7 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 			end = len(ids)
 		}
 		var batch []string
-		err = global.GVA_DB.Model(DB.DB_Ka{}).Select("Name").Where("id IN ? ", ids[i:end]).Find(&batch).Error
+		err = global.GVA_DB.Model(db2.DB_Ka{}).Select("Name").Where("id IN ? ", ids[i:end]).Find(&batch).Error
 		if err != nil {
 			return
 		}
@@ -423,7 +423,7 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 			if end > len(ids) {
 				end = len(ids)
 			}
-			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ?", ids[i:end]).Delete("").Error
+			err = tx.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ?", ids[i:end]).Delete("").Error
 			if err != nil {
 				return errors.New("删除应用用户失败:" + err.Error())
 			}
@@ -434,7 +434,7 @@ func S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTi
 			if end > len(ids) {
 				end = len(ids)
 			}
-			err = tx.Model(DB.DB_Ka{}).Where("AppId = ?", AppId).Where("id IN ?", ids[i:end]).Delete("").Error
+			err = tx.Model(db2.DB_Ka{}).Where("AppId = ?", AppId).Where("id IN ?", ids[i:end]).Delete("").Error
 			if err != nil {
 				return errors.New("删除应用卡号失败:" + err.Error())
 			}
@@ -457,7 +457,7 @@ func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64,
 	db := *global.GVA_DB
 	var ids []int
 	//获取全部uid 就是卡号id
-	err = db.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Select("Uid").Find(&ids).Error
+	err = db.Model(db2.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Select("Uid").Find(&ids).Error
 
 	if err != nil {
 		return 0, err
@@ -467,7 +467,7 @@ func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64,
 	}
 	var KaId []int
 	db = *global.GVA_DB
-	err = db.Model(DB.DB_Ka{}).Select("Id").Where("AppId = ? ", AppId).Scan(&KaId).Error
+	err = db.Model(db2.DB_Ka{}).Select("Id").Where("AppId = ? ", AppId).Scan(&KaId).Error
 	if err != nil {
 		return 0, err
 	}
@@ -484,7 +484,7 @@ func S删除卡号不存在的软件用户(c *gin.Context, AppId int) (id int64,
 			end = len(Uids)
 		}
 		db = *global.GVA_DB
-		tx := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids[i:end]).Delete("")
+		tx := db.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids[i:end]).Delete("")
 		if tx.Error != nil {
 			return total, tx.Error
 		}
@@ -506,7 +506,7 @@ func Z置状态_同步卡号修改(AppId int, id []int, Status int) error {
 			return err
 		}
 		// 子查询获取所有软件用户的Uid 在修改卡号
-		err = tx.Debug().Model(&DB.DB_Ka{}).Where("Id IN (?)", tx.Table(表名_AppUser).Select("Uid").Where("Id IN (?)", id)).Update("Status", Status).Error
+		err = tx.Debug().Model(&db2.DB_Ka{}).Where("Id IN (?)", tx.Table(表名_AppUser).Select("Uid").Where("Id IN (?)", id)).Update("Status", Status).Error
 
 		//err = tx.Debug().Model(DB.DB_Ka{}).Where("Id IN ? ", tx.Exec("SELECT Uid  FROM ?  WHERE Id IN ?", 表名_AppUser, id)).Update("Status", Status).Error
 		return err
@@ -519,7 +519,7 @@ func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号�
 	}
 
 	db := global.GVA_DB
-	db.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+	db.Model(db2.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
 
 	局_is计点 := Ser_AppInfo.App是否为计点(AppId)
 	局_is卡号 := Ser_AppInfo.App是否为卡号(AppId)
@@ -527,7 +527,7 @@ func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号�
 		if 局_is卡号 {
 			db = db.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
 		} else {
-			db = db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(DB.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
+			db = db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(db2.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
 		}
 	}
 
@@ -565,15 +565,15 @@ func P批量_全部用户增减时间或点数(AppId int, Number int64, 账号�
 	if len(局_id数组) > 0 {
 		//如果是增加时间 Number 先给过期的修改为当前时间戳
 		if Number > 0 {
-			global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Where("VipTime < ?", time.Now().Unix()).Update("VipTime", time.Now().Unix())
+			global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Where("VipTime < ?", time.Now().Unix()).Update("VipTime", time.Now().Unix())
 		}
-		影响行数 = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", gorm.Expr("VipTime + ?", Number)).RowsAffected
+		影响行数 = global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", gorm.Expr("VipTime + ?", Number)).RowsAffected
 		var 局_id数组文本 string
 		for _, num := range 局_id数组 {
 			局_id数组文本 += strconv.Itoa(num) + ","
 		}
 		局_id数组文本 = fmt.Sprintf("管理员进行了批量维护时间点数,AppId:%d,软件用户ID[%s],操作类型增减指定值,修改值:%d", AppId, 局_id数组文本, Number)
-		global.GVA_LOG.Log(1, 局_id数组文本)
+		global.GVA_LOG.Println(局_id数组文本)
 	}
 
 	return 影响行数, err
@@ -585,7 +585,7 @@ func P批量_全部用户修改为指定时间或点数(AppId int, Number int64,
 		return 0, errors.New("AppId不存在")
 	}
 
-	db := global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+	db := global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
 
 	局_is计点 := Ser_AppInfo.App是否为计点(AppId)
 	局_is卡号 := Ser_AppInfo.App是否为卡号(AppId)
@@ -593,7 +593,7 @@ func P批量_全部用户修改为指定时间或点数(AppId int, Number int64,
 		if 局_is卡号 {
 			db = db.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
 		} else {
-			db = db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(DB.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
+			db = db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(db2.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
 		}
 	}
 
@@ -626,13 +626,13 @@ func P批量_全部用户修改为指定时间或点数(AppId int, Number int64,
 	var 局_id数组 []int
 	db.Find(&局_id数组)
 	if len(局_id数组) > 0 {
-		影响行数 = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", Number).RowsAffected
+		影响行数 = global.GVA_DB.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", Number).RowsAffected
 		var 局_id数组文本 string
 		for _, num := range 局_id数组 {
 			局_id数组文本 += strconv.Itoa(num) + ","
 		}
 		局_id数组文本 = fmt.Sprintf("管理员进行了批量维护时间点数,AppId:%d,软件用户ID[%s],操作类型修改指定值,修改值:%d", AppId, 局_id数组文本, Number)
-		global.GVA_LOG.Log(1, 局_id数组文本)
+		global.GVA_LOG.Println(局_id数组文本)
 	}
 
 	return 影响行数, err
@@ -641,20 +641,20 @@ func P批量_全部用户修改为指定时间或点数(AppId int, Number int64,
 func X修改用户类型_批量(AppId int, Id []int, UserClassId int) (int64, error) {
 	//因为无符号 转换正负数 比较乱容易精度错误,所以 增加一个 Is增加 形参 判断是增加还是减少
 	db := *global.GVA_DB
-	db2 := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("UserClassId", UserClassId)
+	db2 := db.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("UserClassId", UserClassId)
 	return db2.RowsAffected, db2.Error
 }
 
 func X修改用户绑定信息_批量(AppId int, Id []int, Key string) (int64, error) {
 	//因为无符号 转换正负数 比较乱容易精度错误,所以 增加一个 Is增加 形参 判断是增加还是减少
 	db := *global.GVA_DB
-	db2 := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("Key", Key)
+	db2 := db.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("Key", Key)
 	return db2.RowsAffected, db2.Error
 }
 
 func X修改软件用户备注_批量(AppId int, Id []int, Note string) (int64, error) {
 	//因为无符号 转换正负数 比较乱容易精度错误,所以 增加一个 Is增加 形参 判断是增加还是减少
 	db := *global.GVA_DB
-	db2 := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("Note", Note)
+	db2 := db.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", Id).Update("Note", Note)
 	return db2.RowsAffected, db2.Error
 }

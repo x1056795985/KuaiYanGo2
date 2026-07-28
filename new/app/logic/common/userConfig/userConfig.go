@@ -2,9 +2,9 @@ package userConfig
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
+	"server/new/app/global"
+	db2 "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -33,7 +33,7 @@ func (j *userConfig) Q取值(c *gin.Context, AppId, Uid int, Name string) string
 
 // Z置值 置用户云配置值(多表操作: 根据App类型从Ka或User表读取用户名)
 // AppInfo: 应用信息(用于判断卡号模式), AppId: 配置归属AppId, Uid, Name, Value: 配置项
-func (j *userConfig) Z置值(c *gin.Context, AppInfo DB.DB_AppInfo, AppId, Uid int, Name, Value string) error {
+func (j *userConfig) Z置值(c *gin.Context, AppInfo db2.DB_AppInfo, AppId, Uid int, Name, Value string) error {
 	db := *global.GVA_DB
 	局_服务 := service.NewUserConfig(c, &db)
 	//先查是否存在
@@ -69,7 +69,7 @@ func (j *userConfig) Z置值(c *gin.Context, AppInfo DB.DB_AppInfo, AppId, Uid i
 			局_用户名 = 局_User.User
 		}
 	}
-	局_用户配置 := DB.DB_UserConfig{
+	局_用户配置 := db2.DB_UserConfig{
 		AppId:      AppId,
 		Uid:        Uid,
 		Name:       Name,
@@ -83,7 +83,7 @@ func (j *userConfig) Z置值(c *gin.Context, AppInfo DB.DB_AppInfo, AppId, Uid i
 }
 
 // Z置值_空删除 置用户云配置值,值为空则删除配置
-func (j *userConfig) Z置值_空删除(c *gin.Context, AppInfo DB.DB_AppInfo, AppId, Uid int, Name, Value string) error {
+func (j *userConfig) Z置值_空删除(c *gin.Context, AppInfo db2.DB_AppInfo, AppId, Uid int, Name, Value string) error {
 	db := *global.GVA_DB
 	局_服务 := service.NewUserConfig(c, &db)
 	if Value == "" { //值为空则删

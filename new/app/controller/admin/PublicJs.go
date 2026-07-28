@@ -9,11 +9,11 @@ import (
 	Db服务 "server/Service/Ser_AppInfo"
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/models/constant"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strconv"
 	"strings"
 	"time"
@@ -48,11 +48,11 @@ type 请求_PublicJsDelete struct {
 
 type 响应_PublicJsGetList struct {
 	List  []响应_PublicJs扩展 `json:"list"`
-	Count int64              `json:"count"`
+	Count int64           `json:"count"`
 }
 
 type 响应_PublicJs扩展 struct {
-	DB.DB_PublicJs
+	dbm.DB_PublicJs
 	AppName string `json:"appName"`
 }
 
@@ -68,8 +68,8 @@ func (C *PublicJsCtrl) Info(c *gin.Context) {
 		return
 	}
 
-	var DB_PublicJs DB.DB_PublicJs
-	err := global.GVA_DB.Model(DB.DB_PublicJs{}).Where("Name= ?", 请求.Name).First(&DB_PublicJs).Error
+	var DB_PublicJs dbm.DB_PublicJs
+	err := global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("Name= ?", 请求.Name).First(&DB_PublicJs).Error
 	if err != nil {
 		response.FailWithMessage("获取公共变量失败,可能联合主键不存在", c)
 		return
@@ -87,7 +87,7 @@ func (C *PublicJsCtrl) Info(c *gin.Context) {
 // GetPublicAppList 获取公共函数应用列表
 func (C *PublicJsCtrl) GetPublicAppList(c *gin.Context) {
 	var 局_appid []int
-	_ = global.GVA_DB.Model(DB.DB_PublicJs{}).Select("AppId").Group("AppId").Find(&局_appid).Error
+	_ = global.GVA_DB.Model(dbm.DB_PublicJs{}).Select("AppId").Group("AppId").Find(&局_appid).Error
 
 	var AppName = Db服务.AppInfo取map列表Int(false)
 
@@ -117,7 +117,7 @@ func (C *PublicJsCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	局_DB := global.GVA_DB.Model(DB.DB_PublicJs{})
+	局_DB := global.GVA_DB.Model(dbm.DB_PublicJs{})
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
 	} else if 请求.Order == 2 {
@@ -138,7 +138,7 @@ func (C *PublicJsCtrl) GetList(c *gin.Context) {
 	err := 局_DB.Count(&总数).Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Omit("AppName").Find(&DB_PublicJs).Error
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		global.GVA_LOG.Error("PublicJsGetList:" + err.Error())
+		global.GVA_LOG.Println("PublicJsGetList:" + err.Error())
 		return
 	}
 
@@ -167,8 +167,8 @@ func (C *PublicJsCtrl) Delete(c *gin.Context) {
 	}
 
 	for _, 值 := range 请求.Id {
-		var DB_PublicJs DB.DB_PublicJs
-		err := global.GVA_DB.Model(DB.DB_PublicJs{}).Where("Id = ? ", 值).First(&DB_PublicJs).Error
+		var DB_PublicJs dbm.DB_PublicJs
+		err := global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("Id = ? ", 值).First(&DB_PublicJs).Error
 		if W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value) {
 			_ = W文件_删除(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value)
 			if err != nil {
@@ -185,7 +185,7 @@ func (C *PublicJsCtrl) Delete(c *gin.Context) {
 			response.FailWithMessage("Id数组没有要删除的ID", c)
 			return
 		}
-		影响行数 = db.Where("Id IN ? ", 请求.Id).Delete(DB.DB_PublicJs{}).RowsAffected
+		影响行数 = db.Where("Id IN ? ", 请求.Id).Delete(dbm.DB_PublicJs{}).RowsAffected
 	}
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
@@ -196,7 +196,7 @@ func (C *PublicJsCtrl) Delete(c *gin.Context) {
 
 // SaveInfo 保存公共函数信息
 func (C *PublicJsCtrl) SaveInfo(c *gin.Context) {
-	var 请求 DB.DB_PublicJs
+	var 请求 dbm.DB_PublicJs
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -225,7 +225,7 @@ func (C *PublicJsCtrl) SaveInfo(c *gin.Context) {
 
 // New 新建公共函数
 func (C *PublicJsCtrl) New(c *gin.Context) {
-	var 请求 DB.DB_PublicJs
+	var 请求 dbm.DB_PublicJs
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -284,7 +284,7 @@ func (C *PublicJsCtrl) SetVipLimit(c *gin.Context) {
 	err := Ser_PublicJs.P批量修改IsVip(请求.Id, 请求.IsVip)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return
 	}
 	response.OkWithMessage("修改成功", c)
@@ -317,7 +317,7 @@ func (C *PublicJsCtrl) TestExec(c *gin.Context) {
 	}
 	局_耗时 := time.Now().UnixMilli()
 
-	var 局_PublicJs DB.DB_PublicJs
+	var 局_PublicJs dbm.DB_PublicJs
 	var err error
 	局_PublicJs, err = Ser_PublicJs.Q取值2(请求.Id)
 	if err != nil {
@@ -332,8 +332,8 @@ func (C *PublicJsCtrl) TestExec(c *gin.Context) {
 		return
 	}
 
-	var AppInfo DB.DB_AppInfo
-	var 局_在线信息 DB.DB_LinksToken
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
 
 	vm := Ser_Js.JS引擎初始化_用户(c, &AppInfo, &局_在线信息, &局_PublicJs)
 

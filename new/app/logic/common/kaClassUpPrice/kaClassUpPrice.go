@@ -3,12 +3,11 @@ package kaClassUpPrice
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 )
 
 var L_kaClassUpPrice = new(kaClassUpPrice)
@@ -20,7 +19,7 @@ type kaClassUpPrice struct {
 func (j *kaClassUpPrice) J计算代理调价(c *gin.Context, 卡类id int, 代理id int) (总加价 float64, 调价信息列表 []dbm.DB_KaClassUpPrice, err error) {
 
 	var info struct {
-		代理层级信息 []DB.Db_Agent_Level
+		代理层级信息 []dbm.Db_Agent_Level
 		代理Ids  []int
 		卡类详情   dbm.DB_KaClass
 		临时成本价  float64
@@ -34,7 +33,7 @@ func (j *kaClassUpPrice) J计算代理调价(c *gin.Context, 卡类id int, 代�
 	// 在循环外部批量获取所有代理的调价信息
 	info.代理Ids = make([]int, 0, len(info.代理层级信息))
 	for i, _ := range info.代理层级信息 {
-		if agent.L_agent.Id功能权限检测(c, info.代理层级信息[i].Uid, DB.D代理功能_卡类调价) {
+		if agent.L_agent.Id功能权限检测(c, info.代理层级信息[i].Uid, dbm.D代理功能_卡类调价) {
 			info.代理Ids = append(info.代理Ids, info.代理层级信息[i].Uid)
 		}
 	}

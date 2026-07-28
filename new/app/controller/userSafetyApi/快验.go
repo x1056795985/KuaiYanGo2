@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"server/Service/Captcha"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/user"
 	"server/new/app/models/constant"
+	db2 "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	"server/utils/Qqwry"
+	"server/new/app/utils/Qqwry"
 	"time"
 )
 
@@ -50,7 +50,7 @@ func KyApiSendSms(c *gin.Context) {
 		response.FailMsg(c, constant.Status_操作失败, err.Error()) //基本就是余额不足
 		return
 	}
-	go log.L_log.S输出日志(c, DB.DB_LogMoney{
+	go log.L_log.S输出日志(c, db2.DB_LogMoney{
 		User:  局_User.User,
 		Ip:    c.ClientIP() + " " + Qqwry.Ip查信息2(c.ClientIP()),
 		Time:  time.Now().Unix(),
@@ -67,7 +67,7 @@ func KyApiSendSms(c *gin.Context) {
 	新余额2, err2 := user.L_user.Id余额增减(c, 局_User.Id, 局_增减值, true) // 'mark 隐患,增加值会失败,后期重构放事务内'
 	if err2 != nil {
 		局_log := fmt.Sprintf("%s|金额%v", "快验系统ApiSendSms"+局_手机号+","+局_参数验证码+"发送失败补偿单失败了,原因"+err2.Error(), 局_增减值)
-		_ = log.L_log.S输出日志(c, DB.DB_LogUserMsg{
+		_ = log.L_log.S输出日志(c, db2.DB_LogUserMsg{
 			User:    "系统",
 			App:     局_ctx.AppInfo.AppName,
 			AppId:   局_ctx.AppInfo.AppId,
@@ -78,7 +78,7 @@ func KyApiSendSms(c *gin.Context) {
 			Note:    局_log,
 		})
 	} else {
-		go log.L_log.S输出日志(c, DB.DB_LogMoney{
+		go log.L_log.S输出日志(c, db2.DB_LogMoney{
 			User:  局_User.User,
 			Ip:    c.ClientIP() + " " + Qqwry.Ip查信息2(c.ClientIP()),
 			Time:  time.Now().Unix(),

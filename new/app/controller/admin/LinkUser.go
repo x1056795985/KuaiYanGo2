@@ -6,12 +6,12 @@ import (
 	App服务 "server/Service/Ser_AppInfo"
 	"server/Service/Ser_AppUser"
 	"server/Service/Ser_LinkUser"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/webSocket"
 	"server/new/app/models/constant"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 )
 
 type LinkUserCtrl struct {
@@ -39,13 +39,13 @@ type 响应_LinkUserGetList struct {
 }
 
 type DB_LinksToken2 struct {
-	DB.DB_LinksToken
+	dbm.DB_LinksToken
 	AppName string `json:"appName"`
 	Note    string `json:"note"`
 }
 
 type 请求_LinkUserNewWebApiToken struct {
-	DB.DB_LinksToken
+	dbm.DB_LinksToken
 }
 
 type 请求_LinkUserSetTokenOutTime struct {
@@ -66,7 +66,7 @@ func (C *LinkUserCtrl) GetList(c *gin.Context) {
 
 	var DB_LinksToken []DB_LinksToken2
 	var 总数 int64
-	局_DB := global.GVA_DB.Model(DB.DB_LinksToken{})
+	局_DB := global.GVA_DB.Model(dbm.DB_LinksToken{})
 
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
@@ -108,7 +108,7 @@ func (C *LinkUserCtrl) GetList(c *gin.Context) {
 	err := 局_DB.Count(&总数).Limit(请求.Size).Omit("app_name").Offset((请求.Page - 1) * 请求.Size).Find(&DB_LinksToken).Error
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		global.GVA_LOG.Error("LinkUserGetList:" + err.Error())
+		global.GVA_LOG.Println("LinkUserGetList:" + err.Error())
 		return
 	}
 
@@ -125,7 +125,7 @@ func (C *LinkUserCtrl) GetList(c *gin.Context) {
 
 // NewWebApiToken 创建webApi使用的Token
 func (C *LinkUserCtrl) NewWebApiToken(c *gin.Context) {
-	var 请求 DB.DB_LinksToken
+	var 请求 dbm.DB_LinksToken
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -174,7 +174,7 @@ func (C *LinkUserCtrl) Logout(c *gin.Context) {
 	err := Ser_LinkUser.Set批量注销(请求.Id, constant.Z注销_管理员手动注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
-		global.GVA_LOG.Error("Logout:" + err.Error())
+		global.GVA_LOG.Println("Logout:" + err.Error())
 		return
 	}
 	for _, v := range 请求.Id {
@@ -196,13 +196,13 @@ func (C *LinkUserCtrl) DeleteLogout(c *gin.Context) {
 
 	var err error
 	if 请求.Id[0] == -1 {
-		err = global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Status = 2").Delete("").Error
+		err = global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Status = 2").Delete("").Error
 	} else {
-		err = global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id IN ? ", 请求.Id).Where("Status = 2").Delete("").Error
+		err = global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id IN ? ", 请求.Id).Where("Status = 2").Delete("").Error
 	}
 	if err != nil {
 		response.FailWithMessage("已注销删除失败", c)
-		global.GVA_LOG.Error("DeleteLogout:" + err.Error())
+		global.GVA_LOG.Println("DeleteLogout:" + err.Error())
 		return
 	}
 	response.OkWithMessage("已注销删除成功", c)

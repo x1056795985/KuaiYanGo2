@@ -4,30 +4,30 @@ import (
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_User"
-	"server/global"
-	DB "server/structs/db"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 	"time"
 )
 
 func Name是否存在(AppId, Uid int, Name string) bool {
 	var Count int64
-	global.GVA_DB.Model(DB.DB_UserConfig{}).Select("1").Where("AppId=?", AppId).Where("Uid=?", Uid).Where("Name=?", Name).Take(&Count)
+	global.GVA_DB.Model(dbm.DB_UserConfig{}).Select("1").Where("AppId=?", AppId).Where("Uid=?", Uid).Where("Name=?", Name).Take(&Count)
 	return Count > 0
 
 }
 
 func Q取值(AppId, Uid int, Name string) string {
 	var value string = ""
-	global.GVA_DB.Model(DB.DB_UserConfig{}).Select("Value").Where("AppId=?", AppId).Where("Uid=?", Uid).Where("Name=?", Name).First(&value)
+	global.GVA_DB.Model(dbm.DB_UserConfig{}).Select("Value").Where("AppId=?", AppId).Where("Uid=?", Uid).Where("Name=?", Name).First(&value)
 	return value
 }
-func Q取值2(AppId, Uid int, Name string) (DB.DB_UserConfig, error) {
-	var value DB.DB_UserConfig
-	err := global.GVA_DB.Model(DB.DB_UserConfig{}).Where("AppId=?", AppId).Where("Uid=?", Uid).Where("Name=?", Name).First(&value).Error
+func Q取值2(AppId, Uid int, Name string) (dbm.DB_UserConfig, error) {
+	var value dbm.DB_UserConfig
+	err := global.GVA_DB.Model(dbm.DB_UserConfig{}).Where("AppId=?", AppId).Where("Uid=?", Uid).Where("Name=?", Name).First(&value).Error
 	return value, err
 }
 func Z置值(Appid, Uid int, Name string, Value string) error {
-	db := global.GVA_DB.Model(DB.DB_UserConfig{})
+	db := global.GVA_DB.Model(dbm.DB_UserConfig{})
 	var err error
 	if Name是否存在(Appid, Uid, Name) {
 		updates := map[string]interface{}{
@@ -42,39 +42,39 @@ func Z置值(Appid, Uid int, Name string, Value string) error {
 		} else {
 			User = Ser_User.Id取User(Uid)
 		}
-		var 局_用户配置 = DB.DB_UserConfig{AppId: Appid, Uid: Uid, Name: Name, Value: Value, Time: time.Now().Unix(), UpdateTime: time.Now().Unix(), User: User}
+		var 局_用户配置 = dbm.DB_UserConfig{AppId: Appid, Uid: Uid, Name: Name, Value: Value, Time: time.Now().Unix(), UpdateTime: time.Now().Unix(), User: User}
 		err = db.Create(&局_用户配置).Error
 	}
 
 	return err
 }
-func Z置值2(PublicData DB.DB_UserConfig) error {
-	return global.GVA_DB.Model(DB.DB_UserConfig{}).Select("Value", "IsVip", "Note").Omit("Type", "AppId", "Name").Where("AppId=?", PublicData.AppId).Where("Name=?", PublicData.Name).Updates(PublicData).Error
+func Z置值2(PublicData dbm.DB_UserConfig) error {
+	return global.GVA_DB.Model(dbm.DB_UserConfig{}).Select("Value", "IsVip", "Note").Omit("Type", "AppId", "Name").Where("AppId=?", PublicData.AppId).Where("Name=?", PublicData.Name).Updates(PublicData).Error
 }
 
-func C创建(PublicData DB.DB_UserConfig) error {
-	err := global.GVA_DB.Model(DB.DB_UserConfig{}).Create(&PublicData).Error
+func C创建(PublicData dbm.DB_UserConfig) error {
+	err := global.GVA_DB.Model(dbm.DB_UserConfig{}).Create(&PublicData).Error
 	return err
 }
 
-func P批量取值(Appid int) []DB.DB_UserConfig {
-	var value []DB.DB_UserConfig
-	global.GVA_DB.Model(DB.DB_UserConfig{}).Where("AppId=?", Appid).Find(&value)
+func P批量取值(Appid int) []dbm.DB_UserConfig {
+	var value []dbm.DB_UserConfig
+	global.GVA_DB.Model(dbm.DB_UserConfig{}).Where("AppId=?", Appid).Find(&value)
 	return value
 }
 
-func P批量置值(DB_PublicData []DB.DB_UserConfig) error {
+func P批量置值(DB_PublicData []dbm.DB_UserConfig) error {
 
-	return global.GVA_DB.Model(DB.DB_UserConfig{}).Save(DB_PublicData).Error
+	return global.GVA_DB.Model(dbm.DB_UserConfig{}).Save(DB_PublicData).Error
 }
 
 func P批量置值2(Appid int, Uid []int, Name string, Value string) error {
 	if Value == "" {
-		return global.GVA_DB.Model(DB.DB_UserConfig{}).Where("AppId=?", Appid).Where("Uid IN ?", Uid).Where("Name=?", Name).Delete("").Error
+		return global.GVA_DB.Model(dbm.DB_UserConfig{}).Where("AppId=?", Appid).Where("Uid IN ?", Uid).Where("Name=?", Name).Delete("").Error
 	}
 
-	var 局_数据 []DB.DB_UserConfig
-	局_数据 = make([]DB.DB_UserConfig, len(Uid))
+	var 局_数据 []dbm.DB_UserConfig
+	局_数据 = make([]dbm.DB_UserConfig, len(Uid))
 	for i, v := range Uid {
 		局_数据[i].AppId = Appid
 		局_数据[i].Uid = v
@@ -82,5 +82,5 @@ func P批量置值2(Appid int, Uid []int, Name string, Value string) error {
 		局_数据[i].Value = Value
 	}
 
-	return global.GVA_DB.Model(DB.DB_UserConfig{}).Save(局_数据).Error
+	return global.GVA_DB.Model(dbm.DB_UserConfig{}).Save(局_数据).Error
 }

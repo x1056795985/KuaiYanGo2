@@ -13,7 +13,7 @@ import (
 	"image/png"
 	"math"
 	"math/rand"
-	"server/global"
+	"server/new/app/global"
 	"strconv"
 	"strings"
 	"time"

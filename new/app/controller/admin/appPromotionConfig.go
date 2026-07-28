@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -76,8 +75,8 @@ func (C *AppPromotionConfig) Create(c *gin.Context) {
 	tx := *global.GVA_DB
 
 	var info struct {
-		AppInfo            DB.DB_AppInfo
-		局_活动配置表ID          int
+		AppInfo         dbm.DB_AppInfo
+		局_活动配置表ID int
 		Cps                dbm.DB_CpsInfo
 		CheckInInfo        dbm.DB_CheckInInfo
 		AppPromotionConfig dbm.DB_AppPromotionConfig

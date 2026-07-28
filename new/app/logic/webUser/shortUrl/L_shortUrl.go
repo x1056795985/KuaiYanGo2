@@ -4,10 +4,9 @@ import (
 	"EFunc/utils"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
@@ -151,7 +150,7 @@ func (j *shortUr) 签到分享被访问(c *gin.Context, 短链信息 dbm.DB_Shor
 	})
 
 	if err != nil {
-		global.GVA_LOG.Error("签到分享被访问触发异常", zap.Any("err", err))
+		global.GVA_LOG.Println("签到分享被访问触发异常", err)
 		return
 	}
 

@@ -2,9 +2,9 @@ package internal
 
 import (
 	"fmt"
+	"server/new/app/global"
 
 	"gorm.io/gorm/logger"
-	"server/global"
 )
 
 type writer struct {
@@ -20,11 +20,5 @@ func NewWriter(w logger.Writer) *writer {
 // Printf 格式化打印日志
 // Author [SliverHorn](https://github.com/SliverHorn)
 func (w *writer) Printf(message string, data ...interface{}) {
-	var logZap bool
-	logZap = global.GVA_CONFIG.Mysql.LogZap
-	if logZap {
-		global.GVA_LOG.Info(fmt.Sprintf(message+"\n", data...))
-	} else {
-		w.Writer.Printf(message, data...)
-	}
+	global.GVA_LOG.Print(fmt.Sprintf(message, data...))
 }

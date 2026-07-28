@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"server/new/app/controller/userSafetyApi/response"
 	"server/new/app/models/common"
+	dbm "server/new/app/models/db"
 	appUtils "server/new/app/utils"
-	DB "server/structs/db"
-	serverUtils "server/utils"
+	serverUtils "server/new/app/utils"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +19,7 @@ func TestC处理响应数据_Abort后输出响应(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	局_业务已执行 := false
 	路由 := gin.New()
-	路由.Use(Z测试上下文(&common.Q请求_上下文{AppInfo: DB.DB_AppInfo{CryptoType: 1}}))
+	路由.Use(Z测试上下文(&common.Q请求_上下文{AppInfo: dbm.DB_AppInfo{CryptoType: 1}}))
 	路由.Use(C处理响应数据())
 	路由.Use(func(c *gin.Context) {
 		response.FailMsg(c, 12345, "blocked")
@@ -58,7 +58,7 @@ func TestC处理响应数据_AES加密和明文回退(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			路由 := gin.New()
 			路由.Use(Z测试上下文(&common.Q请求_上下文{
-				AppInfo:      DB.DB_AppInfo{CryptoType: 2},
+				AppInfo:      dbm.DB_AppInfo{CryptoType: 2},
 				CryptoKeyAes: tt.key,
 			}))
 			路由.Use(C处理响应数据())

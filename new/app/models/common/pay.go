@@ -2,7 +2,7 @@ package common
 
 import (
 	"github.com/gogf/gf/v2/encoding/gjson"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
 )
 
 type Z在线支付 struct {
@@ -18,7 +18,7 @@ type Z在线支付 struct {
 	Z在线支付_余额支付        //id9
 }
 type PayParams struct {
-	DB.DB_LogRMBPayOrder
+	dbm.DB_LogRMBPayOrder
 	S商品名称   string
 	Y异步回调地址 string
 	T同步回调地址 string

@@ -8,12 +8,12 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strconv"
 	"time"
 )
@@ -40,7 +40,7 @@ type 请求_AgentInventoryGetList struct {
 }
 
 type 请求_AgentInventoryNew struct {
-	DB.Db_Agent_库存卡包
+	dbm.Db_Agent_库存卡包
 }
 
 type 请求_AgentInventoryDelete struct {
@@ -66,7 +66,7 @@ type Node struct {
 }
 
 type Db_Agent_库存卡包_扩展1 struct {
-	DB.Db_Agent_库存卡包
+	dbm.Db_Agent_库存卡包
 	User        string `json:"user" gorm:"column:User;index;comment:用户名"`
 	KaClassName string `json:"kaClassName" gorm:"column:KaClassName;index;comment:卡类名称"`
 	AppId       int    `json:"appId" gorm:"column:AppId;应用Id"`
@@ -75,11 +75,11 @@ type Db_Agent_库存卡包_扩展1 struct {
 
 type 响应_AgentInventoryGetList struct {
 	List  []Db_Agent_库存卡包_扩展1 `json:"list"`
-	Count int64                    `json:"count"`
+	Count int64               `json:"count"`
 }
 
 type 结构请求_代理树和卡类树 struct {
-	AgentTree   []*Node                              `json:"agentTree"`
+	AgentTree   []*Node                    `json:"agentTree"`
 	KaClassTree []Ser_KaClass.K可制卡类授权树形框结构 `json:"kaClassTree"`
 }
 
@@ -90,8 +90,8 @@ func (C *AgentInventoryCtrl) Info(c *gin.Context) {
 		return
 	}
 
-	var 卡号库存卡包 DB.Db_Agent_库存卡包
-	err := global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).Where("id = ?", 请求.Id).First(&卡号库存卡包).Error
+	var 卡号库存卡包 dbm.Db_Agent_库存卡包
+	err := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("id = ?", 请求.Id).First(&卡号库存卡包).Error
 	if err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return
@@ -107,8 +107,8 @@ func (C *AgentInventoryCtrl) GetList(c *gin.Context) {
 	}
 
 	var 总数 int64
-	局_DB := global.GVA_DB.Model(DB.Db_Agent_库存卡包{})
-	局_DB2 := global.GVA_DB.Model(DB.Db_Agent_库存卡包{})
+	局_DB := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{})
+	局_DB2 := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{})
 
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
@@ -173,7 +173,7 @@ func (C *AgentInventoryCtrl) GetList(c *gin.Context) {
 
 // New 创建库存包
 func (C *AgentInventoryCtrl) New(c *gin.Context) {
-	var 请求 DB.Db_Agent_库存卡包
+	var 请求 dbm.Db_Agent_库存卡包
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -212,7 +212,7 @@ func (C *AgentInventoryCtrl) Delete(c *gin.Context) {
 	}
 
 	var db = global.GVA_DB
-	影响行数 := db.Model(DB.Db_Agent_库存卡包{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
+	影响行数 := db.Model(dbm.Db_Agent_库存卡包{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
 		return
@@ -245,15 +245,15 @@ func (C *AgentInventoryCtrl) GetAgentTreeAndKaClassTree(c *gin.Context) {
 		return
 	}
 
-	var 局_代理信息 []DB.Db_Agent_Level
-	global.GVA_DB.Model(DB.Db_Agent_Level{}).Where("UPAgentId = ?", 请求.Id).Find(&局_代理信息)
+	var 局_代理信息 []dbm.Db_Agent_Level
+	global.GVA_DB.Model(dbm.Db_Agent_Level{}).Where("UPAgentId = ?", 请求.Id).Find(&局_代理信息)
 	var 数组_Uid = make([]int, len(局_代理信息))
 	for 索引, 值 := range 局_代理信息 {
 		数组_Uid[索引] = 值.Uid
 	}
 
-	var 局_用户数组 []DB.DB_User
-	_ = global.GVA_DB.Model(DB.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Where("Id In ?", 数组_Uid).Find(&局_用户数组).Error
+	var 局_用户数组 []dbm.DB_User
+	_ = global.GVA_DB.Model(dbm.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Where("Id In ?", 数组_Uid).Find(&局_用户数组).Error
 
 	nodes := make([]*Node, 0, len(局_用户数组))
 	for 索引 := range 局_用户数组 {

@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"server/Service/Captcha"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/log"
@@ -13,9 +13,9 @@ import (
 	logicUser "server/new/app/logic/userSafetyApi/user"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	"server/utils"
+	"server/new/app/utils"
 	"strings"
 	"time"
 )
@@ -419,7 +419,7 @@ func UserApi_用户注册(c *gin.Context) {
 	局_userInfo, _ := service.NewUser(c, &db).InfoName(局_ctx.Q请求明文.Get("User").String())
 	局_Uid := 局_userInfo.Id
 
-	var 局_AppUser DB.DB_AppUser
+	var 局_AppUser dbm.DB_AppUser
 	局_AppUser.Id = 0
 	局_AppUser.Uid = 局_Uid
 	局_AppUser.Status = 1

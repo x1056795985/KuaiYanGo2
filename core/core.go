@@ -5,39 +5,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"os"
 	"runtime"
+	"server/new/app/global"
 
-	"server/core/internal"
-	"server/global"
+	kuaiyanctrl "server/new/app/controller/admin"
 	"server/new/app/logic/common/cron"
 	"server/new/app/logic/common/cron/functions"
-	kuaiyanctrl "server/new/app/controller/admin"
-
-	utils2 "server/utils"
 )
-
-// InitZap 日志系统初始化
-// Author [SliverHorn](https://github.com/SliverHorn)
-func InitZap() (logger *zap.Logger) {
-	// 判断是否有Director文件夹  没有就创建
-	if ok, _ := utils2.PathExists(global.GVA_CONFIG.Zap.Director); !ok {
-		fmt.Printf("create %v directory\n", global.GVA_CONFIG.Zap.Director)
-		_ = os.Mkdir(global.GVA_CONFIG.Zap.Director, os.ModePerm)
-	}
-	//获取日志配置信息
-	cores := internal.Zap.GetZapCores()
-	//创建日志记录器 logger
-	logger = zap.New(zapcore.NewTee(cores...))
-	//判断全局日志配饰 是否显示文件方法行号信息
-	if global.GVA_CONFIG.Zap.ShowLine {
-		logger = logger.WithOptions(zap.AddCaller())
-	}
-	//返回创建的日志记录器
-	return logger
-}
 
 // InitViper //
 // 新建并初始化配置读写器赋值给全局变量GVA_Viper 并把配置信息反序列化到全局文件
@@ -58,20 +32,10 @@ func InitViper() *viper.Viper {
 	v.SetDefault("captcha.img-width", 240)             //设置验证码宽度
 	v.SetDefault("captcha.Key-long", 4)                //设置验证码长
 	v.SetDefault("captcha.Type", 1)                    //设置验证码 类型   mark 后期类型拓展滑动验证码
-	//==================日志默认配置
-	v.SetDefault("zap.director", "log")                            //设置日志文件目录
-	v.SetDefault("zap.encode-level", "LowercaseColorLevelEncoder") //设置日志文件编码
-	v.SetDefault("zap.format", "console")                          //设置是否替换系统日志
-	v.SetDefault("zap.level", "info")                              //设置是否替换系统日志
-	v.SetDefault("zap.log-in-console", "true")                     //设置是否输出到控制台
-	v.SetDefault("zap.max-age", 0)                                 //设置日志最大数量
-	v.SetDefault("zap.show-line", true)                            //设置显示代码行号
-	v.SetDefault("zap.stacktrace-key", "stacktrace")               //设置显示栈名
 	//==================数据库默认配置
 	v.SetDefault("mysql.Config", "")
 	v.SetDefault("mysql.Dbname", "")
 	v.SetDefault("mysql.LogMode", "error")
-	v.SetDefault("mysql.LogZap", true)
 	v.SetDefault("mysql.MaxIdleConns", 10)
 	v.SetDefault("mysql.MaxOpenConns", 100)
 	v.SetDefault("mysql.Path", "")
@@ -142,12 +106,12 @@ func InitCron定时任务() {
 	//9  "0 0 0,1,2 * * ?" 表示每天的0点，1点，2点执行一次
 	err := global.Cron定时任务.T添加本机任务("快验心跳", "0 */5 * * * *", kuaiyanctrl.K快验心跳)
 	if err != nil {
-		global.GVA_LOG.Error("T添加任务定时任务快验心跳失败:" + err.Error())
+		global.GVA_LOG.Println("T添加任务定时任务快验心跳失败:" + err.Error())
 	} //5分钟心跳执行一次
 
 	err = global.Cron定时任务.T添加本机任务("定时刷新数据库定时任务2", "0 */1 * * * *", functions.S刷新数据库定时任务2)
 	if err != nil {
-		global.GVA_LOG.Error("定时刷新数据库定时任务2失败:" + err.Error())
+		global.GVA_LOG.Println("定时刷新数据库定时任务2失败:" + err.Error())
 	}
 	_ = functions.S刷新数据库定时任务(true)
 	functions.D定时任务_统计初始化日活月活(&gin.Context{})

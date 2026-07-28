@@ -5,8 +5,8 @@ import (
 	"github.com/valyala/fastjson"
 	"server/Service/Ser_RMBPayOrder"
 	"server/new/app/controller/Common"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 )
 
 type PayWebApi struct {
@@ -29,7 +29,7 @@ func (P *PayWebApi) GetPayOrderStatus(c *gin.Context) {
 		response.FailWithMessage("订单不存在", c)
 		return
 	}
-	var 局_订单详细信息 DB.DB_LogRMBPayOrder
+	var 局_订单详细信息 dbm.DB_LogRMBPayOrder
 	局_订单详细信息, ok := Ser_RMBPayOrder.Order取订单详细(局_订单信息)
 	if !ok {
 		局_订单详细信息, ok = Ser_RMBPayOrder.Order取订单详细_第三方订单(局_订单信息)

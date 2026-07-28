@@ -4,11 +4,11 @@ import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
 	Db服务 "server/Service/Ser_AppInfo"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/publicData"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strconv"
 	"time"
 )
@@ -37,15 +37,15 @@ type 请求_PublicDataGetList struct {
 }
 
 type 请求_PublicDataDelete struct {
-	Data []DB.DB_PublicData `json:"data"`
+	Data []dbm.DB_PublicData `json:"data"`
 }
 
 type 请求_PublicDataSave struct {
-	DB.DB_PublicData
+	dbm.DB_PublicData
 }
 
 type 请求_PublicDataNew struct {
-	DB.DB_PublicData
+	dbm.DB_PublicData
 }
 
 type 请求_PublicDataSetVip struct {
@@ -56,11 +56,11 @@ type 请求_PublicDataSetVip struct {
 
 type 响应_PublicDataGetList struct {
 	List  []响应_PublicData扩展 `json:"list"`
-	Count int64                `json:"count"`
+	Count int64             `json:"count"`
 }
 
 type 响应_PublicData扩展 struct {
-	DB.DB_PublicData
+	dbm.DB_PublicData
 	AppName string `json:"appName"`
 }
 
@@ -71,8 +71,8 @@ func (C *PublicDataCtrl) Info(c *gin.Context) {
 		return
 	}
 
-	var DB_PublicData DB.DB_PublicData
-	err := global.GVA_DB.Model(DB.DB_PublicData{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_PublicData).Error
+	var DB_PublicData dbm.DB_PublicData
+	err := global.GVA_DB.Model(dbm.DB_PublicData{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_PublicData).Error
 	if err != nil {
 		response.FailWithMessage("获取公共变量失败,可能联合主键不存在", c)
 		return
@@ -87,7 +87,7 @@ func (C *PublicDataCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	局_DB := global.GVA_DB.Model(DB.DB_PublicData{})
+	局_DB := global.GVA_DB.Model(dbm.DB_PublicData{})
 	if 请求.AppId > 0 {
 		局_DB.Where("AppId=?", 请求.AppId)
 	}
@@ -114,7 +114,7 @@ func (C *PublicDataCtrl) GetList(c *gin.Context) {
 	err := 局_DB.Count(&总数).Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Omit("AppName").Find(&DB_PublicData).Error
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		global.GVA_LOG.Error("PublicDataGetList:" + err.Error())
+		global.GVA_LOG.Println("PublicDataGetList:" + err.Error())
 		return
 	}
 
@@ -143,7 +143,7 @@ func (C *PublicDataCtrl) Delete(c *gin.Context) {
 	}
 
 	var db = global.GVA_DB
-	影响行数 := db.Model(DB.DB_PublicData{}).Delete(请求.Data).RowsAffected
+	影响行数 := db.Model(dbm.DB_PublicData{}).Delete(请求.Data).RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
 		return
@@ -153,7 +153,7 @@ func (C *PublicDataCtrl) Delete(c *gin.Context) {
 
 // SaveInfo 保存公共变量信息
 func (C *PublicDataCtrl) SaveInfo(c *gin.Context) {
-	var 请求 DB.DB_PublicData
+	var 请求 dbm.DB_PublicData
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -176,7 +176,7 @@ func (C *PublicDataCtrl) SaveInfo(c *gin.Context) {
 
 // New 新建公共变量
 func (C *PublicDataCtrl) New(c *gin.Context) {
-	var 请求 DB.DB_PublicData
+	var 请求 dbm.DB_PublicData
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -219,7 +219,7 @@ func (C *PublicDataCtrl) SetVipLimit(c *gin.Context) {
 	err := publicData.L_publicData.P批量修改IsVip(c, 请求.AppID, 请求.Name, 请求.IsVip)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return
 	}
 	response.OkWithMessage("修改成功", c)

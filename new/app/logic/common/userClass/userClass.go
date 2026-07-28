@@ -3,9 +3,9 @@ package userClass
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 )
 
@@ -21,9 +21,9 @@ type userClass struct {
 
 func (j *userClass) UserClass取map列表String(Appid int) map[string]string {
 
-	var DB_UserClass = []DB.DB_UserClass{}
+	var DB_UserClass = []dbm.DB_UserClass{}
 	tx := *global.GVA_DB
-	_ = tx.Model(DB.DB_UserClass{}).Select("Id", "Name").Where("Appid=?", Appid).Find(&DB_UserClass).Error
+	_ = tx.Model(dbm.DB_UserClass{}).Select("Id", "Name").Where("Appid=?", Appid).Find(&DB_UserClass).Error
 	var AppName = make(map[string]string, len(DB_UserClass))
 	//吧 id 和 app名字 放入map
 	for 索引 := range DB_UserClass {

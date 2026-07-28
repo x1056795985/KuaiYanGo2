@@ -3,16 +3,15 @@ package controller
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"server/Service/Ser_Init"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/setting"
-	"server/structs/Http/request"
-	"server/structs/Http/response"
-	DB "server/structs/db"
-	"server/utils"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/request"
+	"server/new/app/models/old/response"
+	"server/new/app/utils"
 	"strings"
 )
 
@@ -35,7 +34,7 @@ func (i *InitDBCtrl) CheckDB(c *gin.Context) {
 		goto 结果
 	}
 
-	global.GVA_DB.Model(DB.DB_Admin{}).Count(&局_数量)
+	global.GVA_DB.Model(dbm.DB_Admin{}).Count(&局_数量)
 
 	if 局_数量 >= 1 {
 		message = "数据库无需初始化"
@@ -62,9 +61,9 @@ func (i *InitDBCtrl) InitDB(c *gin.Context) {
 
 	var J_数量 int64
 	if global.GVA_DB != nil {
-		global.GVA_DB.Model(DB.DB_Admin{}).Count(&J_数量)
+		global.GVA_DB.Model(dbm.DB_Admin{}).Count(&J_数量)
 		if J_数量 != 0 {
-			global.GVA_LOG.Error("已存在数据库配置!")
+			global.GVA_LOG.Println("已存在数据库配置!")
 			response.FailWithMessage("已存在数据库配置", c)
 			return
 		}
@@ -72,7 +71,7 @@ func (i *InitDBCtrl) InitDB(c *gin.Context) {
 
 	var 请求 request.InitDB
 	if err := c.ShouldBindJSON(&请求); err != nil {
-		global.GVA_LOG.Error("参数校验不通过!", zap.Error(err))
+		global.GVA_LOG.Println("参数校验不通过!", err)
 		response.FailWithMessage("参数校验不通过", c)
 		return
 	}

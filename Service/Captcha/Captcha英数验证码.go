@@ -2,7 +2,7 @@ package Captcha
 
 import (
 	"github.com/mojocn/base64Captcha"
-	"server/global"
+	"server/new/app/global"
 	"time"
 )
 
@@ -47,7 +47,7 @@ func Captcha_取英数验证码() (验证码id, Base64验证码图片 string, er
 	// 字符,公式,验证码配置
 	// 生成默认数字的 driver
 
-	driver := base64Captcha.NewDriverDigit(global.GVA_CONFIG.Captcha.ImgHeight, global.GVA_CONFIG.Captcha.ImgWidth, global.GVA_CONFIG.Captcha.KeyLong, 0.7, 80)
+	driver := base64Captcha.NewDriverDigit(80, 240, 4, 0.7, 80)
 	// cp := base64Captcha.NewCaptcha(driver, store.UseWithCtx(c))   // v8下使用redis
 	cp := base64Captcha.NewCaptcha(driver, H缓存验证码{})
 

@@ -12,14 +12,13 @@ import (
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/kaClassUpPrice"
 	"server/new/app/models/constant"
 
 	dbm "server/new/app/models/db"
-	DB "server/structs/db"
 	"strconv"
 	"strings"
 	"time"
@@ -27,13 +26,13 @@ import (
 
 func KaId是否存在(Appid int, id int) bool {
 	var Count int64
-	result := global.GVA_DB.Model(DB.DB_Ka{}).Select("1").Where("Id=?", id).Where("AppId=?", Appid).First(&Count)
+	result := global.GVA_DB.Model(dbm.DB_Ka{}).Select("1").Where("Id=?", id).Where("AppId=?", Appid).First(&Count)
 	return result.Error == nil
 
 }
 
 // Ka批量创建 优化版本（修复未使用变量）
-func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id, 制卡人id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) error {
+func Ka批量创建(卡信息切片 []dbm.DB_Ka, 卡类id, 制卡人id int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) error {
 	if len(卡信息切片) > 2400 { //太多数据库会显示 占位符过多,所以限制数量
 		return errors.New("每批次最大数量不能超过2400")
 	}
@@ -80,7 +79,7 @@ func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id, 制卡人id int, 制�
 				nameList[i] = rec.Name
 			}
 			var existingNames []string
-			err = tx.Model(DB.DB_Ka{}).Select("Name").Where("Name IN (?)", nameList).Find(&existingNames).Error
+			err = tx.Model(dbm.DB_Ka{}).Select("Name").Where("Name IN (?)", nameList).Find(&existingNames).Error
 			if err != nil {
 				return err
 			}
@@ -162,14 +161,14 @@ func Ka批量创建(卡信息切片 []DB.DB_Ka, 卡类id, 制卡人id int, 制�
 		}
 
 		// 5. 批量插入
-		err = tx.Model(DB.DB_Ka{}).Create(&卡信息切片).Error
+		err = tx.Model(dbm.DB_Ka{}).Create(&卡信息切片).Error
 		return err
 	})
 }
 
 // Ka代理批量购买 切片可以直接传址 所以放切片  卡信息切片[:]
 // 有效期 0=9999999999 无限制
-func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 购卡人Id int, 代理备注 string, 有效期时间戳 int64, ip string) error {
+func Ka代理批量购买(c *gin.Context, 卡信息切片 []dbm.DB_Ka, 卡类id, 购卡人Id int, 代理备注 string, 有效期时间戳 int64, ip string) error {
 	var 局_价格组成 struct {
 		总卡类价格 float64
 
@@ -245,14 +244,14 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 		// 减少余额
 		err = tx.Exec("UPDATE db_User SET RMB = RMB - ? WHERE Id = ?", 局_价格组成.总付款金额, 局_购卡人信息.Id).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(局_购卡人信息.Id) + "Id余额减少失败:" + err.Error())
+			global.GVA_LOG.Println(strconv.Itoa(局_购卡人信息.Id) + "Id余额减少失败:" + err.Error())
 			return errors.New("余额减少失败查看服务器日志检查原因")
 		}
 
 		// 查询新余额
 		err = tx.Raw("SELECT RMB FROM db_User WHERE Id = ?", 局_购卡人信息.Id).Scan(&新余额).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(局_购卡人信息.Id) + "Id查询余额失败:" + err.Error())
+			global.GVA_LOG.Println(strconv.Itoa(局_购卡人信息.Id) + "Id查询余额失败:" + err.Error())
 			return errors.New("查询余额失败查看服务器日志检查原因")
 		}
 
@@ -269,7 +268,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 				nameList[i] = rec.Name
 			}
 			var existingNames []string
-			err = tx.Model(DB.DB_Ka{}).Select("Name").Where("Name IN (?)", nameList).Find(&existingNames).Error
+			err = tx.Model(dbm.DB_Ka{}).Select("Name").Where("Name IN (?)", nameList).Find(&existingNames).Error
 			if err != nil {
 				return err
 			}
@@ -351,7 +350,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 		}
 
 		// 5. 批量插入
-		err = tx.Model(DB.DB_Ka{}).Create(&卡信息切片).Error
+		err = tx.Model(dbm.DB_Ka{}).Create(&卡信息切片).Error
 		return err
 	})
 	if err != nil {
@@ -378,20 +377,20 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 		局_日志前缀 := fmt.Sprintf("下级代理:%s,制卡ID{%s}", 局_购卡人信息.User, 局_ID列表)
 		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:%s", err.Error()))
+			global.GVA_LOG.Println(fmt.Sprintf("Z执行调价信息分成失败:%s", err.Error()))
 		}
 	}
 	//然后再计算百分比的价格
 	代理分成数据, err2 := agent.L_agent.D代理分成计算(c, 局_购卡人信息.Id, 局_价格组成.总卡类价格)
 	if err2 != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("代理制卡分成计算失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), 局_购卡人信息.UPAgentId, 局_价格组成.总卡类价格, 局_ID列表))
+		global.GVA_LOG.Println(fmt.Sprintf("代理制卡分成计算失败:%s,代理ID:%d,金额¥%v,卡号ID:%s", err2.Error(), 局_购卡人信息.UPAgentId, 局_价格组成.总卡类价格, 局_ID列表))
 		return err2
 	}
 	if len(代理分成数据) >= 0 {
 		局_日志前缀 := fmt.Sprintf("下级代理:%s,制卡ID{%s},", 局_购卡人信息.User, 局_ID列表)
 		err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_价格组成.总卡类价格, 局_日志前缀, 局_价格组成.总调价 == 0)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+			global.GVA_LOG.Println(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 
 		}
 	}
@@ -401,7 +400,7 @@ func Ka代理批量购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 卡类id, 
 
 // Ka代理批量购买 切片可以直接传址 所以放切片  卡信息切片[:]
 // 有效期 0=9999999999 无限制
-func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库存Id, 制卡数量, 购卡人Id int, 代理备注 string, ip string) error {
+func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []dbm.DB_Ka, 库存Id, 制卡数量, 购卡人Id int, 代理备注 string, ip string) error {
 	if 制卡数量 <= 0 {
 		return errors.New("生成数量必须大于0")
 	}
@@ -457,13 +456,13 @@ func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库�
 
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		// 减少库存
-		err = tx.Model(DB.Db_Agent_库存卡包{}).Where("Id = ?", 局_库存详情.Id).Update("Num", gorm.Expr("Num + ?", 制卡数量)).Error
+		err = tx.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 局_库存详情.Id).Update("Num", gorm.Expr("Num + ?", 制卡数量)).Error
 		if err != nil {
 			return err
 		}
 		var 剩余库存 int
 		// 查询新余额
-		err = tx.Model(DB.Db_Agent_库存卡包{}).Select("NumMax-Num").Where("Id = ?", 局_库存详情.Id).Take(&剩余库存).Error
+		err = tx.Model(dbm.Db_Agent_库存卡包{}).Select("NumMax-Num").Where("Id = ?", 局_库存详情.Id).Take(&剩余库存).Error
 		if err != nil {
 			return err
 		}
@@ -481,7 +480,7 @@ func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库�
 				nameList[i] = rec.Name
 			}
 			var existingNames []string
-			err = tx.Model(DB.DB_Ka{}).Select("Name").Where("Name IN (?)", nameList).Find(&existingNames).Error
+			err = tx.Model(dbm.DB_Ka{}).Select("Name").Where("Name IN (?)", nameList).Find(&existingNames).Error
 			if err != nil {
 				return err
 			}
@@ -560,7 +559,7 @@ func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库�
 		}
 
 		// 5. 批量插入
-		err = tx.Model(DB.DB_Ka{}).Create(&卡信息切片).Error
+		err = tx.Model(dbm.DB_Ka{}).Create(&卡信息切片).Error
 		return err
 	})
 
@@ -580,12 +579,12 @@ func Ka代理批量库存购买(c *gin.Context, 卡信息切片 []DB.DB_Ka, 库�
 func Q取总数() int64 {
 
 	var 局_总数 int64
-	_ = global.GVA_DB.Model(DB.DB_Ka{}).Count(&局_总数).Error
+	_ = global.GVA_DB.Model(dbm.DB_Ka{}).Count(&局_总数).Error
 	return 局_总数
 }
 
 // 有效期 0=9999999999 无限制
-func Ka单卡创建(卡类id, 制卡人ID int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) (卡信息切片 DB.DB_Ka, err error) {
+func Ka单卡创建(卡类id, 制卡人ID int, 制卡人账号 string, 管理员备注 string, 代理备注 string, 有效期时间戳 int64) (卡信息切片 dbm.DB_Ka, err error) {
 
 	KaClass详细信息, err := Ser_KaClass.KaClass取详细信息(卡类id)
 	if err != nil { //估计是卡类不存在
@@ -632,11 +631,11 @@ func Ka单卡创建(卡类id, 制卡人ID int, 制卡人账号 string, 管理员
 	if 有效期时间戳 != 0 {
 		卡信息切片.EndTime = 有效期时间戳
 	}
-	return 卡信息切片, global.GVA_DB.Model(DB.DB_Ka{}).Create(&卡信息切片).Error
+	return 卡信息切片, global.GVA_DB.Model(dbm.DB_Ka{}).Create(&卡信息切片).Error
 }
 
 func Ka修改状态(id []int, status int) error {
-	return global.GVA_DB.Model(DB.DB_Ka{}).Where("Id IN ? ", id).Update("Status", status).Error
+	return global.GVA_DB.Model(dbm.DB_Ka{}).Where("Id IN ? ", id).Update("Status", status).Error
 }
 
 // 卡号模式关联 软件用户,同时冻结解冻,用户模式不关联  冻结会注销在线
@@ -648,13 +647,13 @@ func Ka修改状态_同步卡号模式软件用户(id []int, status int) error {
 	局_db = 局_db.Raw(局_sql, id).Scan(&局数组_卡号Appid)
 	//如果卡号id数组内没有卡号类型应用id,直接执行就可以,
 	if len(局数组_卡号Appid) == 0 {
-		return global.GVA_DB.Model(DB.DB_Ka{}).Where("Id IN ? ", id).Update("Status", status).Error
+		return global.GVA_DB.Model(dbm.DB_Ka{}).Where("Id IN ? ", id).Update("Status", status).Error
 	}
 	//开启事务执行
 	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		//先获取所有卡号的AppId
-		局_ka := make([]DB.DB_Ka, 0, len(id))
-		err := tx.Model(DB.DB_Ka{}).Select("Id,AppId").Where("Id IN ?", id).Scan(&局_ka).Error
+		局_ka := make([]dbm.DB_Ka, 0, len(id))
+		err := tx.Model(dbm.DB_Ka{}).Select("Id,AppId").Where("Id IN ?", id).Scan(&局_ka).Error
 		if err != nil {
 			return err
 		}
@@ -697,14 +696,14 @@ func Ka修改状态_同步卡号模式软件用户(id []int, status int) error {
 		// 通appid 的卡id 合并完毕,开始冻结解冻
 
 		for AppId := range 局_map {
-			err = tx.Model(DB.DB_Ka{}).Where("Id IN ? ", 局_map[AppId]).Update("Status", status).Error
+			err = tx.Model(dbm.DB_Ka{}).Where("Id IN ? ", 局_map[AppId]).Update("Status", status).Error
 			if err != nil {
 				return err //出错就返回并回滚
 			}
 
 			//同步冻结软件用户AppId  用户模式的卡号ID不用冻结
 			if AppId >= 10000 {
-				err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", 局_map[AppId]).Update("Status", status).Error
+				err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", 局_map[AppId]).Update("Status", status).Error
 				if err != nil {
 					return err //出错就返回并回滚
 				}
@@ -760,7 +759,7 @@ func Ka更换卡号(c *gin.Context, id, 代理Id int, ip string) error {
 		}
 	}
 
-	err = global.GVA_DB.Model(DB.DB_Ka{}).Where("Id = ? ", id).Update("Name", 局_新卡号).Error
+	err = global.GVA_DB.Model(dbm.DB_Ka{}).Where("Id = ? ", id).Update("Name", 局_新卡号).Error
 	if err == nil {
 		局_log := fmt.Sprintf("操作更换卡号:  %s  ->  %s", 局_卡号详情.Name, 局_新卡号)
 		Ser_Log.Log_写卡号操作日志(代理User, ip, 局_log, []string{局_卡号详情.Name}, 3, agentLevel.L_agentLevel.Q取Id代理级别(c, 代理Id))
@@ -770,7 +769,7 @@ func Ka更换卡号(c *gin.Context, id, 代理Id int, ip string) error {
 
 func Ka修改已用次数加一(id []int) error {
 	now := time.Now().Unix()
-	return global.GVA_DB.Model(DB.DB_Ka{}).
+	return global.GVA_DB.Model(dbm.DB_Ka{}).
 		Where("Id IN ?", id).
 		Updates(map[string]interface{}{
 			"Num":      gorm.Expr("Num + 1"),
@@ -780,34 +779,34 @@ func Ka修改已用次数加一(id []int) error {
 }
 
 func Ka修改管理员备注(id []int, AdminNote string) error {
-	return global.GVA_DB.Model(DB.DB_Ka{}).Where("Id IN ? ", id).Update("AdminNote", AdminNote).Error
+	return global.GVA_DB.Model(dbm.DB_Ka{}).Where("Id IN ? ", id).Update("AdminNote", AdminNote).Error
 }
 
 func Ka修改代理备注(代理User string, id []int, AgentNote string) error {
-	return global.GVA_DB.Model(DB.DB_Ka{}).Where("Id IN ? ", id).Where("RegisterUser = ? ", 代理User).Update("AgentNote", AgentNote).Error
+	return global.GVA_DB.Model(dbm.DB_Ka{}).Where("Id IN ? ", id).Where("RegisterUser = ? ", 代理User).Update("AgentNote", AgentNote).Error
 }
 
 func Ka卡号是否存在(卡号 string) bool {
 	var Count int64
 	//只判断卡号不判断应用, 不然后期卡号读取很麻烦,因为有可能不知道应用信息   卡号所有应用都不可以重复
-	_ = global.GVA_DB.Select("1").Model(DB.DB_Ka{}).Where("Name=?", 卡号).First(&Count)
+	_ = global.GVA_DB.Select("1").Model(dbm.DB_Ka{}).Where("Name=?", 卡号).First(&Count)
 	return Count != 0
 }
 
 func Ka卡号取id(Appid int, 卡号 string) int {
 	var Id int
-	global.GVA_DB.Model(DB.DB_Ka{}).Select("Id").Where("Name=?", 卡号).Where("AppId=?", Appid).First(&Id)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Select("Id").Where("Name=?", 卡号).Where("AppId=?", Appid).First(&Id)
 	return Id
 }
 
 func Id取制卡人(Id int) string {
 	var 制卡人 string
-	global.GVA_DB.Model(DB.DB_Ka{}).Select("RegisterUser").Where("Id=?", Id).First(&制卡人)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Select("RegisterUser").Where("Id=?", Id).First(&制卡人)
 	return 制卡人
 }
 func Id检测制卡人(Id []int, 制卡人 string) bool {
 	var 实际制卡人 []string
-	global.GVA_DB.Model(DB.DB_Ka{}).Distinct("RegisterUser").Where("Id IN ?", Id).Find(&实际制卡人)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Distinct("RegisterUser").Where("Id IN ?", Id).Find(&实际制卡人)
 	if len(实际制卡人) == 1 && 制卡人 == 实际制卡人[0] {
 		return true
 	}
@@ -816,25 +815,25 @@ func Id检测制卡人(Id []int, 制卡人 string) bool {
 }
 func Id取卡号(Id int) string {
 	var 卡号 string
-	global.GVA_DB.Model(DB.DB_Ka{}).Select("Name").Where("Id=?", Id).First(&卡号)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Select("Name").Where("Id=?", Id).First(&卡号)
 	return 卡号
 }
-func Ka卡号取详情(卡号 string) (卡号详情卡号 DB.DB_Ka, ok error) {
-	err := global.GVA_DB.Model(DB.DB_Ka{}).Where("Name=?", 卡号).First(&卡号详情卡号).Error
+func Ka卡号取详情(卡号 string) (卡号详情卡号 dbm.DB_Ka, ok error) {
+	err := global.GVA_DB.Model(dbm.DB_Ka{}).Where("Name=?", 卡号).First(&卡号详情卡号).Error
 	return 卡号详情卡号, err
 }
-func Id取详情(Id int) (卡号详情卡号 DB.DB_Ka, err error) {
-	err = global.GVA_DB.Model(DB.DB_Ka{}).Where("Id=?", Id).First(&卡号详情卡号).Error
+func Id取详情(Id int) (卡号详情卡号 dbm.DB_Ka, err error) {
+	err = global.GVA_DB.Model(dbm.DB_Ka{}).Where("Id=?", Id).First(&卡号详情卡号).Error
 	return 卡号详情卡号, err
 }
-func Ka取已购卡列表(制卡人账号 string, 页数, 数量 int) (卡号详情卡号 []DB.DB_Ka, ok error) {
-	err := global.GVA_DB.Model(DB.DB_Ka{}).Order("Id DESC").Where("RegisterUser=?", 制卡人账号).Limit(数量).Offset((页数 - 1) * 数量).Find(&卡号详情卡号).Error
+func Ka取已购卡列表(制卡人账号 string, 页数, 数量 int) (卡号详情卡号 []dbm.DB_Ka, ok error) {
+	err := global.GVA_DB.Model(dbm.DB_Ka{}).Order("Id DESC").Where("RegisterUser=?", 制卡人账号).Limit(数量).Offset((页数 - 1) * 数量).Find(&卡号详情卡号).Error
 	return 卡号详情卡号, err
 }
 
 func Get卡号总数(AppId int) int {
 	var 局_总数 int64
-	err := global.GVA_DB.Model(DB.DB_Ka{}).Where("AppId=?", AppId).Count(&局_总数).Error
+	err := global.GVA_DB.Model(dbm.DB_Ka{}).Where("AppId=?", AppId).Count(&局_总数).Error
 	if err != nil {
 		return 0
 	}
@@ -842,19 +841,19 @@ func Get卡号总数(AppId int) int {
 }
 func Get卡类卡号总数(ClassId int) int {
 	var 局_总数 int64
-	err := global.GVA_DB.Model(DB.DB_Ka{}).Where("KaClassId=?", ClassId).Count(&局_总数).Error
+	err := global.GVA_DB.Model(dbm.DB_Ka{}).Where("KaClassId=?", ClassId).Count(&局_总数).Error
 	if err != nil {
 		return 0
 	}
 	return int(局_总数)
 }
 func Get应用已用和未用数量(AppId int) (已用, 可用 int64) {
-	global.GVA_DB.Model(DB.DB_Ka{}).Where("AppId=?", AppId).Where("Num=NumMax").Count(&已用)
-	global.GVA_DB.Model(DB.DB_Ka{}).Where("AppId=?", AppId).Where("Num<NumMax").Count(&可用)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Where("AppId=?", AppId).Where("Num=NumMax").Count(&已用)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Where("AppId=?", AppId).Where("Num<NumMax").Count(&可用)
 	return
 }
 func Get卡类已用和未用数量(卡类Id int) (已用, 可用 int64) {
-	global.GVA_DB.Model(DB.DB_Ka{}).Where("KaClassId=?", 卡类Id).Where("Num=NumMax").Count(&已用)
-	global.GVA_DB.Model(DB.DB_Ka{}).Where("KaClassId=?", 卡类Id).Where("Num<NumMax").Count(&可用)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Where("KaClassId=?", 卡类Id).Where("Num=NumMax").Count(&已用)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Where("KaClassId=?", 卡类Id).Where("Num<NumMax").Count(&可用)
 	return
 }

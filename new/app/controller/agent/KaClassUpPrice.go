@@ -2,13 +2,13 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strconv"
 
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/service"
-	"server/structs/Http/response"
 )
 
 type KaClassUpPrice struct {

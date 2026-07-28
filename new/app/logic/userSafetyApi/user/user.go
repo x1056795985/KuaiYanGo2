@@ -4,10 +4,10 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/global"
+	"server/new/app/global"
+	db2 "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	"server/utils"
+	"server/new/app/utils"
 	"strconv"
 	"time"
 	"unicode/utf8"
@@ -24,8 +24,8 @@ type user struct {
 
 // New用户信息 创建新用户(含代理关系,事务操作)
 // 多表事务: User表 + Db_Agent_Level 代理关系表
-func (j *user) New用户信息(c *gin.Context, User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注 string, UPAgentId int, AgentDiscount int, Rmb float64, RealNameAttestation string) (DB.DB_User, error) {
-	var 局_User DB.DB_User
+func (j *user) New用户信息(c *gin.Context, User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注 string, UPAgentId int, AgentDiscount int, Rmb float64, RealNameAttestation string) (db2.DB_User, error) {
+	var 局_User db2.DB_User
 	msg := ""
 	局_最短长度 := 6
 	if UPAgentId != 0 {
@@ -82,7 +82,7 @@ func (j *user) New用户信息(c *gin.Context, User, PassWord, SuperPassWord, Qq
 
 	// 再次检查用户是否存在(并发安全)
 	var count int64
-	err = db.Model(DB.DB_User{}).Where("User = ?", 局_User.User).Count(&count).Error
+	err = db.Model(db2.DB_User{}).Where("User = ?", 局_User.User).Count(&count).Error
 	if err != nil {
 		return 局_User, err
 	}
@@ -93,26 +93,26 @@ func (j *user) New用户信息(c *gin.Context, User, PassWord, SuperPassWord, Qq
 	err = db.Transaction(func(tx *gorm.DB) error {
 		_, err = service.NewUser(c, tx).Create(&局_User)
 		if err != nil {
-			global.GVA_LOG.Error("New用户信息创建失败:" + err.Error())
+			global.GVA_LOG.Println("New用户信息创建失败:" + err.Error())
 			return errors.New("添加失败")
 		}
 		if 局_User.UPAgentId == 0 {
 			return nil
 		}
 		// 有上级代理信息,添加代理关系
-		err = tx.Create(&DB.Db_Agent_Level{Uid: 局_User.Id, UPAgentId: 局_User.UPAgentId, Level: 1}).Error
+		err = tx.Create(&db2.Db_Agent_Level{Uid: 局_User.Id, UPAgentId: 局_User.UPAgentId, Level: 1}).Error
 		if err != nil {
 			return err
 		}
 		上级代理ID := 局_User.UPAgentId
 		for i := 0; 上级代理ID > 0; i++ {
-			var 上级代理的一级代理信息 DB.Db_Agent_Level
+			var 上级代理的一级代理信息 db2.Db_Agent_Level
 			err = tx.Where("Uid = ?", 上级代理ID).Where("Level = 1").First(&上级代理的一级代理信息).Error
 			if err != nil {
 				return err
 			}
 			上级代理ID = 上级代理的一级代理信息.UPAgentId
-			err = tx.Create(&DB.Db_Agent_Level{Uid: 局_User.Id, UPAgentId: 上级代理ID, Level: i + 2}).Error
+			err = tx.Create(&db2.Db_Agent_Level{Uid: 局_User.Id, UPAgentId: 上级代理ID, Level: i + 2}).Error
 			if err != nil {
 				return err
 			}

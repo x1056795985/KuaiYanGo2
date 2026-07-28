@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
 	"github.com/valyala/fastjson"
-	"server/global"
+	"server/new/app/global"
 )
 
 func G高德查询天气(c *gin.Context) (data2 string, err error) {

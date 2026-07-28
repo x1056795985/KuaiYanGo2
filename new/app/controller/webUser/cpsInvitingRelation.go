@@ -3,13 +3,12 @@ package controller
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	"server/new/app/logic/webUser/cpsInvitingRelation"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 )
 
 type CpsInvitingRelation struct {
@@ -30,9 +29,9 @@ func (C *CpsInvitingRelation) Set(c *gin.Context) {
 	}
 	var err error
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
-		上级       dbm.DB_CpsInvitingRelation
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
+		上级     dbm.DB_CpsInvitingRelation
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	//查询是否拥有邀请人   如果已设置过,需要删除,因为有唯一索引
@@ -61,9 +60,9 @@ func (C *CpsInvitingRelation) Set(c *gin.Context) {
 }
 func (C *CpsInvitingRelation) Get(c *gin.Context) {
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
-		Y邀请关系    dbm.DB_CpsInvitingRelation
+		appInfo   dbm.DB_AppInfo
+		likeInfo  dbm.DB_LinksToken
+		Y邀请关系 dbm.DB_CpsInvitingRelation
 	}{}
 
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
@@ -79,9 +78,9 @@ func (C *CpsInvitingRelation) Get(c *gin.Context) {
 
 func (C *CpsInvitingRelation) GetInvitingList(c *gin.Context) {
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
-		Y邀请关系    []dbm.DB_CpsInvitingRelation
+		appInfo   dbm.DB_AppInfo
+		likeInfo  dbm.DB_LinksToken
+		Y邀请关系 []dbm.DB_CpsInvitingRelation
 	}{}
 
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
@@ -93,7 +92,7 @@ func (C *CpsInvitingRelation) GetInvitingList(c *gin.Context) {
 	for _, v := range info.Y邀请关系 {
 		ids = append(ids, v.InviteeId)
 	}
-	var 邀请人 []DB.DB_User
+	var 邀请人 []dbm.DB_User
 	邀请人, err = service.NewUser(c, &tx).Infos(map[string]interface{}{"Id": ids})
 	if err != nil {
 		response.FailWithMessage(c, err.Error())

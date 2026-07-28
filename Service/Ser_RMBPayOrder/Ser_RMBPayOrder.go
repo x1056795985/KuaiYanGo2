@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_User"
-	"server/global"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 
-	DB "server/structs/db"
 	"strconv"
 	"sync"
 	"time"
@@ -65,9 +65,9 @@ func Order更新订单状态(订单号 string, 状态值 int) bool {
 	if 订单号 == "" {
 		return false
 	}
-	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 订单号).Update("Status", 状态值).Error
+	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 订单号).Update("Status", 状态值).Error
 	if err != nil {
-		global.GVA_LOG.Error(订单号 + "Order更新订单状态失败:" + err.Error())
+		global.GVA_LOG.Println(订单号 + "Order更新订单状态失败:" + err.Error())
 		return false
 	}
 	return true
@@ -77,7 +77,7 @@ func Order更新订单备注_批量(订单号 []string, 备注 string) error {
 	if len(订单号) == 0 {
 		return errors.New("订单号数组不能为空")
 	}
-	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("PayOrder IN ?", 订单号).Update("Note", 备注).Error
+	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("PayOrder IN ?", 订单号).Update("Note", 备注).Error
 	return err
 
 }
@@ -90,8 +90,8 @@ var C处理类型 = map[int]string{
 }
 
 // Uid类型 1账号 2卡号
-func Order订单创建(Uid, Uid类型 int, Rmb float64, 支付类型, 订单备注, Ip string, 处理类型 int, 额外信息 string) (DB.DB_LogRMBPayOrder, error) {
-	var 新订单 DB.DB_LogRMBPayOrder
+func Order订单创建(Uid, Uid类型 int, Rmb float64, 支付类型, 订单备注, Ip string, 处理类型 int, 额外信息 string) (dbm.DB_LogRMBPayOrder, error) {
+	var 新订单 dbm.DB_LogRMBPayOrder
 	新订单.Id = 0
 	新订单.Uid = Uid
 	新订单.UidType = Uid类型
@@ -110,28 +110,28 @@ func Order订单创建(Uid, Uid类型 int, Rmb float64, 支付类型, 订单备�
 	新订单.Rmb = Rmb
 	新订单.Note = 订单备注
 	新订单.PayOrder = Get获取新订单号()
-	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Create(&新订单).Error
+	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单).Error
 	if err != nil {
-		return DB.DB_LogRMBPayOrder{}, err
+		return dbm.DB_LogRMBPayOrder{}, err
 	}
 	return 新订单, err
 }
 
-func Order取订单详细(订单号 string) (DB.DB_LogRMBPayOrder, bool) {
+func Order取订单详细(订单号 string) (dbm.DB_LogRMBPayOrder, bool) {
 	if 订单号 == "" {
-		return DB.DB_LogRMBPayOrder{}, false
+		return dbm.DB_LogRMBPayOrder{}, false
 	}
-	var 局订单信息 DB.DB_LogRMBPayOrder
-	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 订单号).First(&局订单信息).Error
+	var 局订单信息 dbm.DB_LogRMBPayOrder
+	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 订单号).First(&局订单信息).Error
 
 	return 局订单信息, err == nil
 }
-func Order取订单详细_第三方订单(第三方订单 string) (DB.DB_LogRMBPayOrder, bool) {
+func Order取订单详细_第三方订单(第三方订单 string) (dbm.DB_LogRMBPayOrder, bool) {
 	if 第三方订单 == "" {
-		return DB.DB_LogRMBPayOrder{}, false
+		return dbm.DB_LogRMBPayOrder{}, false
 	}
-	var 局订单信息 DB.DB_LogRMBPayOrder
-	err := global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Where("PayOrder2 = ?", 第三方订单).First(&局订单信息).Error
+	var 局订单信息 dbm.DB_LogRMBPayOrder
+	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("PayOrder2 = ?", 第三方订单).First(&局订单信息).Error
 
 	return 局订单信息, err == nil
 }

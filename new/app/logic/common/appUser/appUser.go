@@ -6,10 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/global"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -29,9 +28,9 @@ func (j *appUser) Id点数增减(c *gin.Context, AppId, Id int, 增减值 int64,
 	db := *global.GVA_DB
 	if is增加 {
 		//增加直接处理就可以了,不用事务
-		err := db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime + ?", 增减值)).Error
+		err := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime + ?", 增减值)).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(int(Id)) + "Id点数增加失败:" + err.Error())
+			global.GVA_LOG.Println(strconv.Itoa(int(Id)) + "Id点数增加失败:" + err.Error())
 			return err
 		}
 		return nil
@@ -61,10 +60,10 @@ func (j *appUser) Id点数增减(c *gin.Context, AppId, Id int, 增减值 int64,
 
 	}
 
-	err := tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime - ?", 增减值)).Error
+	err := tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime - ?", 增减值)).Error
 	if err != nil {
 		tx.Rollback() //出错回滚
-		global.GVA_LOG.Error(strconv.Itoa(int(Id)) + "Id点数减少失败:" + err.Error())
+		global.GVA_LOG.Println(strconv.Itoa(int(Id)) + "Id点数减少失败:" + err.Error())
 		return errors.New("点数减少失败查看服务器日志检查原因")
 	}
 	tx.Commit() //操作完成提交事务
@@ -113,7 +112,7 @@ func (j *appUser) Uid积分减少(c *gin.Context, AppId, Uid int, 减少值 floa
 					局_唯一标识.EndTime = time.Now().Unix() + 唯一有效期
 					_, err = service.NewUniqueNumLog(c, tx, AppId).Update(局_唯一标识.Id, map[string]interface{}{"EndTime": 局_唯一标识.EndTime})
 					if err != nil { //如果更新失败了?? 感觉不太可能吧,
-						global.GVA_LOG.Error(strconv.Itoa(Uid) + "Uid积分唯一标识更新失败:" + err.Error())
+						global.GVA_LOG.Println(strconv.Itoa(Uid) + "Uid积分唯一标识更新失败:" + err.Error())
 						return errors.New("唯一标识重复")
 					}
 				}
@@ -133,9 +132,9 @@ func (j *appUser) Uid积分减少(c *gin.Context, AppId, Uid int, 减少值 floa
 			}
 		}
 
-		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid = ?", Uid).Update("VipNumber", gorm.Expr("VipNumber - ?", 减少值)).Error
+		err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid = ?", Uid).Update("VipNumber", gorm.Expr("VipNumber - ?", 减少值)).Error
 		if err != nil {
-			global.GVA_LOG.Error(strconv.Itoa(Uid) + "Uid积分减少失败:" + err.Error())
+			global.GVA_LOG.Println(strconv.Itoa(Uid) + "Uid积分减少失败:" + err.Error())
 			return errors.New("积分减少失败查看服务器日志检查原因")
 		}
 		var 局_积分 float64
@@ -166,7 +165,7 @@ func (j *appUser) Z置状态_同步卡号修改(c *gin.Context, AppId int, id []
 
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(AppId)
 	var info struct {
-		AppInfo DB.DB_AppInfo
+		AppInfo dbm.DB_AppInfo
 	}
 	var tx *gorm.DB
 	if tempObj, ok := c.Get("tx"); ok {
@@ -186,7 +185,7 @@ func (j *appUser) Z置状态_同步卡号修改(c *gin.Context, AppId int, id []
 		}
 		if info.AppInfo.AppType == 3 || info.AppInfo.AppType == 4 {
 			// 子查询获取所有软件用户的Uid 在修改卡号
-			err = tx.Debug().Model(&DB.DB_Ka{}).Where("Id IN (?)", tx.Table(表名_AppUser).Select("Uid").Where("Id IN (?)", id)).Update("Status", Status).Error
+			err = tx.Debug().Model(&dbm.DB_Ka{}).Where("Id IN (?)", tx.Table(表名_AppUser).Select("Uid").Where("Id IN (?)", id)).Update("Status", Status).Error
 		}
 		return err
 	})

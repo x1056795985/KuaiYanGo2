@@ -13,5 +13,5 @@ type DB_LogKa struct {
 }
 
 func (DB_LogKa) TableName() string {
-	return "db_Log_LogKa"
+	return "db_Log_LogKa" //(制卡日志)
 }

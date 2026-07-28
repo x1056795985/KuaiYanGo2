@@ -9,16 +9,16 @@ import (
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/setting"
 	"server/new/app/models/constant"
+	"server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"strconv"
 )
 
@@ -31,13 +31,13 @@ func NewUserController() *UserCtrl {
 }
 
 type 响应_GetAdminInfo struct {
-	AdminInfo     DB.DB_Admin `json:"adminInfo"`
+	AdminInfo     db.DB_Admin `json:"adminInfo"`
 	UserMsgNoRead int64       `json:"userMsgNoRead"`
 	ServerName    string      `json:"serverName"`
 }
 
 type DB_User2 struct {
-	DB.DB_User
+	db.DB_User
 	LoginAppName string `json:"loginAppName"`
 	Role         int    `json:"role"`
 }
@@ -73,11 +73,11 @@ type 请求_UserBatchRMB struct {
 // GetAdminInfo 获取当前管理员信息
 func (C *UserCtrl) GetAdminInfo(c *gin.Context) {
 	Uid := c.GetInt("Uid")
-	var DB_user DB.DB_Admin
-	err := global.GVA_DB.Model(DB.DB_Admin{}).Where("id = ?", Uid).First(&DB_user).Error
+	var DB_user db.DB_Admin
+	err := global.GVA_DB.Model(db.DB_Admin{}).Where("id = ?", Uid).First(&DB_user).Error
 	if err != nil {
 		response.FailWithMessage("查询失败", c)
-		global.GVA_LOG.Error("Uid:" + strconv.Itoa(Uid) + "GetUserInfo错误:" + err.Error())
+		global.GVA_LOG.Println("Uid:" + strconv.Itoa(Uid) + "GetUserInfo错误:" + err.Error())
 		return
 	}
 
@@ -133,7 +133,7 @@ func (C *UserCtrl) GetUserInfo(c *gin.Context) {
 	}
 
 	var DB_user DB_User2
-	err := global.GVA_DB.Model(DB.DB_User{}).Omit("PassWord", "SuperPassWord").Where("id = ?", 请求.Id).Find(&DB_user).Error
+	err := global.GVA_DB.Model(db.DB_User{}).Omit("PassWord", "SuperPassWord").Where("id = ?", 请求.Id).Find(&DB_user).Error
 	if err != nil {
 		response.FailWithMessage("查询用户详细信息失败", c)
 		return
@@ -141,7 +141,7 @@ func (C *UserCtrl) GetUserInfo(c *gin.Context) {
 	DB_user.Role = agentLevel.L_agentLevel.Q取Id代理级别(c, DB_user.Id)
 	if DB_user.LoginAppid != 0 {
 		AppName := ""
-		_ = global.GVA_DB.Model(DB.DB_AppInfo{}).Select("AppName").Where("AppId = ?", DB_user.LoginAppid).First(&AppName).Error
+		_ = global.GVA_DB.Model(db.DB_AppInfo{}).Select("AppName").Where("AppId = ?", DB_user.LoginAppid).First(&AppName).Error
 		DB_user.LoginAppName = AppName
 	}
 	response.OkWithDetailed(DB_user, "获取成功", c)
@@ -163,7 +163,7 @@ func (C *UserCtrl) GetUserList(c *gin.Context) {
 	}
 
 	var 总数 int64
-	局_DB := global.GVA_DB.Model(DB.DB_User{})
+	局_DB := global.GVA_DB.Model(db.DB_User{})
 
 	局_排序 := map[int]string{0: "Id ASC", 1: "Id DESC", 2: "Id ASC", 3: "LoginTime DESC", 4: "LoginTime ASC"}
 	if utils.Map_键名是否存在(局_排序, 请求.Order) {
@@ -205,7 +205,7 @@ func (C *UserCtrl) GetUserList(c *gin.Context) {
 	err := 局_DB.Count(&总数).Limit(请求.Size).Omit("login_app_name").Offset((请求.Page - 1) * 请求.Size).Find(&DB_User_简化实例).Error
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
-		global.GVA_LOG.Error("GetUserList:" + err.Error())
+		global.GVA_LOG.Println("GetUserList:" + err.Error())
 		return
 	}
 
@@ -222,7 +222,7 @@ func (C *UserCtrl) GetUserList(c *gin.Context) {
 
 // NewUser 新建用户
 func (C *UserCtrl) NewUser(c *gin.Context) {
-	var 请求 DB.DB_User
+	var 请求 db.DB_User
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -247,7 +247,7 @@ func (C *UserCtrl) NewUser(c *gin.Context) {
 
 // SaveUser 保存用户信息
 func (C *UserCtrl) SaveUser(c *gin.Context) {
-	var 请求 DB.DB_User
+	var 请求 db.DB_User
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -296,7 +296,7 @@ func (C *UserCtrl) SaveUser(c *gin.Context) {
 		m["SuperPassWord"] = utils2.BcryptHash(请求.SuperPassWord)
 	}
 
-	var db = global.GVA_DB.Model(DB.DB_User{}).Where("Id= ?", 请求.Id).Updates(&m)
+	var db = global.GVA_DB.Model(db.DB_User{}).Where("Id= ?", 请求.Id).Updates(&m)
 	if db.Error != nil {
 		fmt.Printf(db.Error.Error())
 		response.FailWithMessage("保存失败", c)
@@ -325,18 +325,18 @@ func (C *UserCtrl) SetUserStatus(c *gin.Context) {
 
 	var err error
 	if 请求.Status == 2 {
-		err = global.GVA_DB.Model(DB.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 2).Error
+		err = global.GVA_DB.Model(db.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 2).Error
 		局_user数组 := make([]string, 0, len(请求.Id))
 		for _, 值 := range 请求.Id {
 			局_user数组 = append(局_user数组, Ser_User.Id取User(值))
 		}
 		_ = Ser_LinkUser.Set批量注销User数组(局_user数组, constant.Z注销_管理员手动注销)
 	} else {
-		err = global.GVA_DB.Model(DB.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 1).Error
+		err = global.GVA_DB.Model(db.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 1).Error
 	}
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
-		global.GVA_LOG.Error("修改失败:" + err.Error())
+		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return
 	}
 	response.OkWithMessage("修改成功", c)
@@ -362,15 +362,15 @@ func (C *UserCtrl) DeleteUser(c *gin.Context) {
 	var 影响行数 int64
 	err := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		var 局_UserId = 请求.Id
-		影响行数 = tx.Model(DB.DB_User{}).Where("Id IN ? ", 局_UserId).Delete("").RowsAffected
+		影响行数 = tx.Model(db.DB_User{}).Where("Id IN ? ", 局_UserId).Delete("").RowsAffected
 
 		var 局数组_AppId []int
-		err2 := tx.Model(DB.DB_AppInfo{}).Select("AppId").Where("AppType IN ? ", []int{1, 2}).Scan(&局数组_AppId).Error
+		err2 := tx.Model(db.DB_AppInfo{}).Select("AppId").Where("AppType IN ? ", []int{1, 2}).Scan(&局数组_AppId).Error
 		if err2 != nil {
 			return err2
 		}
 		for _, 局_appid := range 局数组_AppId {
-			err2 = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_appid)).Where("Uid IN ? ", 局_UserId).Delete("").Error
+			err2 = tx.Model(db.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_appid)).Where("Uid IN ? ", 局_UserId).Delete("").Error
 			if err2 != nil {
 				return err2
 			}

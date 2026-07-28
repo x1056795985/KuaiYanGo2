@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
-	DB "server/structs/db"
 	"strconv"
 )
 
@@ -23,9 +23,9 @@ func NewUser(c *gin.Context, db *gorm.DB) *User {
 }
 
 // 增
-func (s *User) Create(info *DB.DB_User) (row int64, err error) {
+func (s *User) Create(info *dbm.DB_User) (row int64, err error) {
 	//创建会自动重新赋值info.Id为新插入的数据id
-	tx := s.db.Model(DB.DB_User{}).Create(info)
+	tx := s.db.Model(dbm.DB_User{}).Create(info)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -34,9 +34,9 @@ func (s *User) Delete(Id interface{}) (影响行数 int64, error error) {
 	var tx2 *gorm.DB
 	switch k := Id.(type) {
 	case int:
-		tx2 = s.db.Model(DB.DB_User{}).Where("Id = ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_User{}).Where("Id = ?", k).Delete("")
 	case []int:
-		tx2 = s.db.Model(DB.DB_User{}).Where("Id IN ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_User{}).Where("Id IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -44,7 +44,7 @@ func (s *User) Delete(Id interface{}) (影响行数 int64, error error) {
 }
 
 // 获取列表
-func (s *User) GetList(请求 request.List, Status int) (int64, []DB.DB_User, error) {
+func (s *User) GetList(请求 request.List, Status int) (int64, []dbm.DB_User, error) {
 	tx := s.db
 	if Status > 0 {
 		tx = tx.Where("Status = ?", Status)
@@ -72,15 +72,15 @@ func (s *User) GetList(请求 request.List, Status int) (int64, []DB.DB_User, er
 	case 2:
 		tx = tx.Order("Id DESC")
 	}
-	var 局_数组 []DB.DB_User
+	var 局_数组 []dbm.DB_User
 	tx = tx.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组)
 
 	return 总数, 局_数组, tx.Error
 }
 
 // 查
-func (s *User) Info(id int) (info DB.DB_User, err error) {
-	tx := s.db.Model(DB.DB_User{}).Where("Id = ?", id).First(&info)
+func (s *User) Info(id int) (info dbm.DB_User, err error) {
+	tx := s.db.Model(dbm.DB_User{}).Where("Id = ?", id).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -88,8 +88,8 @@ func (s *User) Info(id int) (info DB.DB_User, err error) {
 }
 
 // 查
-func (s *User) Info2(where map[string]interface{}) (info DB.DB_User, err error) {
-	tx := s.db.Model(DB.DB_User{}).Where(where).First(&info)
+func (s *User) Info2(where map[string]interface{}) (info dbm.DB_User, err error) {
+	tx := s.db.Model(dbm.DB_User{}).Where(where).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -97,8 +97,8 @@ func (s *User) Info2(where map[string]interface{}) (info DB.DB_User, err error) 
 }
 
 // 查
-func (s *User) Infos(where map[string]interface{}) (info []DB.DB_User, err error) {
-	tx := s.db.Model(DB.DB_User{}).Where(where).Find(&info)
+func (s *User) Infos(where map[string]interface{}) (info []dbm.DB_User, err error) {
+	tx := s.db.Model(dbm.DB_User{}).Where(where).Find(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -106,8 +106,8 @@ func (s *User) Infos(where map[string]interface{}) (info []DB.DB_User, err error
 }
 
 // 查
-func (s *User) InfoName(name string) (info DB.DB_User, err error) {
-	tx := s.db.Model(DB.DB_User{}).Where("User = ?", name).First(&info)
+func (s *User) InfoName(name string) (info dbm.DB_User, err error) {
+	tx := s.db.Model(dbm.DB_User{}).Where("User = ?", name).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -117,7 +117,7 @@ func (s *User) InfoName(name string) (info DB.DB_User, err error) {
 // 改
 func (s *User) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(DB.DB_User{}).Where("Id = ?", id).Updates(&数据)
+	tx := s.db.Model(dbm.DB_User{}).Where("Id = ?", id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
 

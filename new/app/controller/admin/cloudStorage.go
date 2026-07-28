@@ -6,9 +6,9 @@ import (
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/cloudStorage"
 	"server/new/app/models/common"
+	"server/new/app/models/old/response"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
-	"server/structs/Http/response"
 )
 
 // CloudStorage

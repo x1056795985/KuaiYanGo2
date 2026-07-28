@@ -1,0 +1,36 @@
+{
+  "ailiyunid": "3366a729e39de17d963c6fca0b047751657720b87ab7d79d500fb214385e3dfa",
+  "captcha": {
+    "img-height": 80,
+    "img-width": 240,
+    "key-long": 4,
+    "open-captcha": 1,
+    "open-captcha-timeout": 3600,
+    "type": 1
+  },
+  "duid": 2,
+  "mysql": {
+    "config": "charset=utf8mb4\u0026parseTime=True\u0026loc=Local",
+    "dbname": "fnky",
+    "logmode": "error",
+    "maxidleconns": 10,
+    "maxopenconns": 100,
+    "password": "x000000",
+    "path": "127.0.0.1",
+    "port": "3306",
+    "prefix": "",
+    "singular": false,
+    "username": "root"
+  },
+  "port": 18888,
+  "test": {
+    "db_publicjs": 1
+  },
+  "代理入口": "Agentaa",
+  "快验token": "7J4IAHFOJIYLIQIJLQKULZ0MSLHHJUQX",
+  "管理入口": "Admin",
+  "系统模式": 1056795985,
+  "系统设置": {
+    "系统地址": "http://223.102.88.59:18888"
+  }
+}

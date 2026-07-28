@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"runtime/debug"
-	"server/global"
+	"server/new/app/global"
 )
 
 // T统一恐慌恢复 全局恐慌恢复中间件

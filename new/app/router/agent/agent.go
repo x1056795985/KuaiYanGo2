@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"server/core/dist/VueAgent"
-	"server/global"
 	controller "server/new/app/controller/agent"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 	mid2 "server/new/app/router/middleware"
-	DB "server/structs/db"
 	"strings"
 )
 
@@ -61,11 +61,11 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 
 	appUserController := controller.NewAppUserController()
 	{
-		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_查看归属软件用户})).POST("AppUser/GetList", appUserController.GetList)
-		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_查看归属软件用户})).POST("AppUser/GetInfo", appUserController.GetAppUserInfo)
+		agentRouter.Group("", mid2.Is代理鉴权([]int{dbm.D代理功能_查看归属软件用户})).POST("AppUser/GetList", appUserController.GetList)
+		agentRouter.Group("", mid2.Is代理鉴权([]int{dbm.D代理功能_查看归属软件用户})).POST("AppUser/GetInfo", appUserController.GetAppUserInfo)
 		agentRouter.POST("AppUser/SetStatus", appUserController.Set修改状态)
 		agentRouter.POST("AppUser/SaveUser", appUserController.Save用户信息)
-		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_修改用户密码})).POST("AppUser/SetPassUser", appUserController.Set用户密码)
+		agentRouter.Group("", mid2.Is代理鉴权([]int{dbm.D代理功能_修改用户密码})).POST("AppUser/SetPassUser", appUserController.Set用户密码)
 	}
 
 	userClassController := controller.NewUserClassController()
@@ -107,8 +107,8 @@ func (r *AllRouter) InitAgentRouter(router *gin.RouterGroup) {
 
 	kaClassUpPriceController := controller.NewKaClassUpPriceController()
 	{
-		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_卡类调价})).POST("KaClassUpPrice/Save", kaClassUpPriceController.Save)
-		agentRouter.Group("", mid2.Is代理鉴权([]int{DB.D代理功能_卡类调价})).POST("KaClassUpPrice/Delete", kaClassUpPriceController.Delete)
+		agentRouter.Group("", mid2.Is代理鉴权([]int{dbm.D代理功能_卡类调价})).POST("KaClassUpPrice/Save", kaClassUpPriceController.Save)
+		agentRouter.Group("", mid2.Is代理鉴权([]int{dbm.D代理功能_卡类调价})).POST("KaClassUpPrice/Delete", kaClassUpPriceController.Delete)
 	}
 
 	kaController := controller.NewAgentKaController()

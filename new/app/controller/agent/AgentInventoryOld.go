@@ -8,11 +8,11 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strconv"
 	"time"
 )
@@ -37,7 +37,7 @@ type Agent库存列表请求 struct {
 }
 
 type Agent库存列表项 struct {
-	DB.Db_Agent_库存卡包
+	dbm.Db_Agent_库存卡包
 	User        string `json:"user" gorm:"column:User;index;comment:用户名"`
 	KaClassName string `json:"kaClassName" gorm:"column:KaClassName;index;comment:卡类名称"`
 	AppId       int    `json:"appId" gorm:"column:AppId;应用Id"`
@@ -78,8 +78,8 @@ func (A *AgentInventoryOld) GetAgentInventoryInfo(c *gin.Context) {
 		return
 	}
 
-	var 局_卡包 DB.Db_Agent_库存卡包
-	if err := global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).Where("id = ?", 请求.Id).First(&局_卡包).Error; err != nil {
+	var 局_卡包 dbm.Db_Agent_库存卡包
+	if err := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("id = ?", 请求.Id).First(&局_卡包).Error; err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return
 	}
@@ -93,9 +93,9 @@ func (A *AgentInventoryOld) GetAgentInventoryList(c *gin.Context) {
 		return
 	}
 
-	局_DB := global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).
+	局_DB := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).
 		Where("(Uid = ? OR RegisterUserId = ? OR SourceUid=? )", c.GetInt("Uid"), c.GetInt("Uid"), c.GetInt("Uid"))
-	局_DB2 := global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).
+	局_DB2 := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).
 		Where("(Uid = ? OR RegisterUserId = ? OR SourceUid=? )", c.GetInt("Uid"), c.GetInt("Uid"), c.GetInt("Uid"))
 
 	if 请求.Order == 1 {
@@ -165,7 +165,7 @@ func (A *AgentInventoryOld) GetAgentInventoryList(c *gin.Context) {
 }
 
 func (A *AgentInventoryOld) New库存购买(c *gin.Context) {
-	var 请求 DB.Db_Agent_库存卡包
+	var 请求 dbm.Db_Agent_库存卡包
 	if err := c.ShouldBindJSON(&请求); err != nil {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return

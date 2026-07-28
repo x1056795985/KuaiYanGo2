@@ -2,14 +2,13 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
-	DB "server/structs/db"
 )
 
 type CheckInScoreLog struct {
@@ -30,9 +29,9 @@ func (C *CheckInScoreLog) GetList(c *gin.Context) {
 
 	var err error
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
-		积分日志     []dbm.DB_CheckInScoreLog
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
+		积分日志 []dbm.DB_CheckInScoreLog
 		总数       int64
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)

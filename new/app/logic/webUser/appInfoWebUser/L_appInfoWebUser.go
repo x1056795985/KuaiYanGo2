@@ -2,7 +2,7 @@ package appInfoWebUser
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/setting"
 	"server/new/app/service"
 )

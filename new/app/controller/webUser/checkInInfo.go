@@ -4,17 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/log"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -35,8 +33,8 @@ type cardClassListItem struct {
 func (C *CheckInInfo) Info(c *gin.Context) {
 	var err error
 	var info = struct {
-		appInfo             DB.DB_AppInfo
-		likeInfo            DB.DB_LinksToken
+		appInfo             dbm.DB_AppInfo
+		likeInfo            dbm.DB_LinksToken
 		CheckInInfo         dbm.DB_CheckInInfo
 		AppPromotionConfigs []dbm.DB_AppPromotionConfig
 		AppPromotionConfig  dbm.DB_AppPromotionConfig
@@ -102,15 +100,15 @@ func (C *CheckInInfo) RedeemReward(c *gin.Context) {
 	}
 	var err error
 	var info = struct {
-		appInfo             DB.DB_AppInfo
-		likeInfo            DB.DB_LinksToken
+		appInfo             dbm.DB_AppInfo
+		likeInfo            dbm.DB_LinksToken
 		CheckInInfo         dbm.DB_CheckInInfo
 		AppPromotionConfigs []dbm.DB_AppPromotionConfig
 		AppPromotionConfig  dbm.DB_AppPromotionConfig
 		KaClass             dbm.DB_KaClass
 		checkInUser         dbm.DB_CheckInUser
-		LogMoney            []DB.DB_LogMoney
-		LogVipNumber        []DB.DB_LogVipNumber
+		LogMoney            []dbm.DB_LogMoney
+		LogVipNumber        []dbm.DB_LogVipNumber
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	db := *global.GVA_DB
@@ -196,12 +194,12 @@ func (C *CheckInInfo) RedeemReward(c *gin.Context) {
 			return err
 		}
 		if 临时数据, ok := c.Get("logMoney"); ok { //判断是否有rmb充值的日志
-			局_临时 := 临时数据.(DB.DB_LogMoney)
+			局_临时 := 临时数据.(dbm.DB_LogMoney)
 			局_临时.Note = "签到分兑换," + 局_临时.Note
 			info.LogMoney = append(info.LogMoney, 局_临时)
 		}
 		if 临时数据, ok := c.Get("logVipNumber"); ok { //判断是否有积分充值的日志
-			局_临时 := 临时数据.(DB.DB_LogVipNumber)
+			局_临时 := 临时数据.(dbm.DB_LogVipNumber)
 			局_临时.Note = "签到分兑换," + 局_临时.Note
 			info.LogVipNumber = append(info.LogVipNumber, 局_临时)
 		}
@@ -212,10 +210,10 @@ func (C *CheckInInfo) RedeemReward(c *gin.Context) {
 		return
 	}
 	if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
-		global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		global.GVA_LOG.Println("输出日志失败!", err)
 	}
 	if err = log.L_log.S输出日志(c, info.LogVipNumber); err != nil {
-		global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		global.GVA_LOG.Println("输出日志失败!", err)
 	}
 	response.Ok(c)
 	return

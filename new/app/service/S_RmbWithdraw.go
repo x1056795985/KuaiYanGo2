@@ -15,6 +15,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"server/new/app/global"
 	"strconv"
 	"strings"
 	"time"
@@ -24,9 +25,7 @@ import (
 	"github.com/makiuchi-d/gozxing/qrcode"
 	"gorm.io/gorm"
 
-	"server/global"
 	dbm "server/new/app/models/db"
-	DB "server/structs/db"
 )
 
 const (
@@ -169,8 +168,8 @@ func (s *S_RmbWithdraw) SaveConfig(tx *gorm.DB, cfg WithdrawConfig) error {
 
 func (s *S_RmbWithdraw) GetAgentConfig(tx *gorm.DB, uid int) (gin.H, error) {
 	cfg := s.GetConfig(tx)
-	var user DB.DB_User
-	if err := tx.Model(DB.DB_User{}).Where("Id = ?", uid).First(&user).Error; err != nil {
+	var user dbm.DB_User
+	if err := tx.Model(dbm.DB_User{}).Where("Id = ?", uid).First(&user).Error; err != nil {
 		return nil, errors.New("用户不存在")
 	}
 	frozen := s.sumAmount(tx, uid, []int{WithdrawStatusPending, WithdrawStatusPaying})
@@ -318,8 +317,8 @@ func (s *S_RmbWithdraw) Create(uid int, user string, ip string, req WithdrawCrea
 		}
 	}
 
-	var dbUser DB.DB_User
-	if err := tx.Model(DB.DB_User{}).Where("Id = ?", uid).First(&dbUser).Error; err != nil {
+	var dbUser dbm.DB_User
+	if err := tx.Model(dbm.DB_User{}).Where("Id = ?", uid).First(&dbUser).Error; err != nil {
 		tx.Rollback()
 		return empty, errors.New("用户不存在")
 	}
@@ -362,7 +361,7 @@ func (s *S_RmbWithdraw) Create(uid int, user string, ip string, req WithdrawCrea
 		return empty, errors.New("收款方式错误")
 	}
 
-	ret := tx.Model(DB.DB_User{}).Where("Id = ? AND Rmb >= ?", uid, req.Amount).Update("Rmb", gorm.Expr("Rmb - ?", req.Amount))
+	ret := tx.Model(dbm.DB_User{}).Where("Id = ? AND Rmb >= ?", uid, req.Amount).Update("Rmb", gorm.Expr("Rmb - ?", req.Amount))
 	if ret.Error != nil {
 		tx.Rollback()
 		return empty, ret.Error
@@ -469,8 +468,8 @@ func (s *S_RmbWithdraw) Detail(tx *gorm.DB, id int, uid int) (gin.H, error) {
 
 	var logs []dbm.DB_RmbWithdrawLog
 	_ = tx.Model(dbm.DB_RmbWithdrawLog{}).Where("WithdrawId = ?", id).Order("Id ASC").Find(&logs).Error
-	var user DB.DB_User
-	_ = tx.Model(DB.DB_User{}).Where("Id = ?", withdraw.Uid).First(&user).Error
+	var user dbm.DB_User
+	_ = tx.Model(dbm.DB_User{}).Where("Id = ?", withdraw.Uid).First(&user).Error
 	return gin.H{"info": withdraw, "logs": logs, "user": user, "riskTags": s.riskTags(tx, withdraw), "voucherHistory": voucherHistoryFromLogs(logs, withdraw.VoucherPath)}, nil
 }
 
@@ -675,7 +674,7 @@ func (s *S_RmbWithdraw) changeToRefund(tx *gorm.DB, w dbm.DB_RmbWithdraw, afterS
 	if ret.RowsAffected == 0 {
 		return errors.New("状态已被其他人处理,请刷新")
 	}
-	if err := tx.Model(DB.DB_User{}).Where("Id = ?", w.Uid).Update("Rmb", gorm.Expr("Rmb + ?", w.Amount)).Error; err != nil {
+	if err := tx.Model(dbm.DB_User{}).Where("Id = ?", w.Uid).Update("Rmb", gorm.Expr("Rmb + ?", w.Amount)).Error; err != nil {
 		return err
 	}
 	moneyNote := "提现驳回返还,提现单号:" + w.OrderNo
@@ -709,9 +708,9 @@ func (s *S_RmbWithdraw) writeLog(tx *gorm.DB, w dbm.DB_RmbWithdraw, beforeStatus
 
 func (s *S_RmbWithdraw) writeMoneyLog(tx *gorm.DB, uid int, user string, ip string, note string, amount float64) error {
 	var 局_新余额 float64
-	_ = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id = ?", uid).Scan(&局_新余额).Error
+	_ = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id = ?", uid).Scan(&局_新余额).Error
 	note = note + "|新余额≈" + strconv.FormatFloat(局_新余额, 'f', 2, 64)
-	return tx.Model(DB.DB_LogMoney{}).Create(&DB.DB_LogMoney{
+	return tx.Model(dbm.DB_LogMoney{}).Create(&dbm.DB_LogMoney{
 		User:  user,
 		Ip:    ip,
 		Time:  time.Now().Unix(),

@@ -2,10 +2,8 @@ package init
 
 import (
 	"errors"
+	"server/new/app/global"
 	"time"
-
-	"server/global"
-	"server/new/app/utils"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -24,7 +22,7 @@ func InitGormMysql() (*gorm.DB, error) {
 		SkipInitializeWithVersion: false,
 	}
 
-	if db, err := gorm.Open(mysql.New(mysqlConfig), (&utils.DbConfig{}).Config(m.Prefix)); err != nil {
+	if db, err := gorm.Open(mysql.New(mysqlConfig), (&DbConfig{}).Config(m.Prefix)); err != nil {
 		return nil, err
 	} else {
 		db.InstanceSet("gorm:table_options", "ENGINE="+m.Engine)

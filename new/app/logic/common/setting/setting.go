@@ -4,8 +4,7 @@ import (
 	. "EFunc/utils"
 	jsoniter "github.com/json-iterator/go"
 	"net/url"
-	"server/config"
-	"server/global"
+	"server/new/app/global"
 	m "server/new/app/models/common"
 	"server/new/app/service"
 	"time"
@@ -53,14 +52,14 @@ func Q获取配置[T any](配置名 string) (T, error) {
 	return 配置值, err
 }
 
-func Z系统设置(X系统设置 *config.X系统设置) error {
+func Z系统设置(X系统设置 *m.X系统设置) error {
 	return Z文本("系统设置", X系统设置)
 }
 
-func Q系统设置() config.X系统设置 {
+func Q系统设置() m.X系统设置 {
 	var 配置名 = "系统设置"
 	//这里可以配置默认值,读取失败比如没有值会返回默认值
-	var 配置值 = config.X系统设置{
+	var 配置值 = m.X系统设置{
 		X系统名称:     "飞鸟快验后台管理",
 		X系统开关:     true,
 		X系统关闭提示:   "系统已经关闭使用",
@@ -69,7 +68,7 @@ func Q系统设置() config.X系统设置 {
 		Y用户中心开关:   true,
 		B备案号:      "粤ICP备88888888号-1",
 	}
-	局_临时配置值, err := Q获取配置[config.X系统设置](配置名)
+	局_临时配置值, err := Q获取配置[m.X系统设置](配置名)
 	if err == nil {
 		配置值 = 局_临时配置值
 	}
@@ -77,18 +76,18 @@ func Q系统设置() config.X系统设置 {
 
 }
 
-func Z行为验证码平台配置(配置值 *config.X行为验证码平台配置) error {
+func Z行为验证码平台配置(配置值 *m.X行为验证码平台配置) error {
 	return Z文本("行为验证码平台配置", 配置值)
 }
 
-func Q行为验证码平台配置() config.X行为验证码平台配置 {
+func Q行为验证码平台配置() m.X行为验证码平台配置 {
 	var 配置名 = "行为验证码平台配置"
 	//这里可以配置默认值,读取失败比如没有值会返回默认值
-	var 配置值 = config.X行为验证码平台配置{
+	var 配置值 = m.X行为验证码平台配置{
 		D当前选择: 1,
 	}
 
-	局_临时配置值, err := Q获取配置[config.X行为验证码平台配置](配置名)
+	局_临时配置值, err := Q获取配置[m.X行为验证码平台配置](配置名)
 	if err == nil {
 		配置值 = 局_临时配置值
 	}
@@ -121,38 +120,38 @@ func Q在线支付配置() m.Z在线支付 {
 	return 配置值
 }
 
-func Z短信平台配置(配置值 *config.D短信平台配置) error {
+func Z短信平台配置(配置值 *m.D短信平台配置) error {
 	return Z文本("短信平台配置", 配置值)
 }
 
-func Q短信平台配置() config.D短信平台配置 {
+func Q短信平台配置() m.D短信平台配置 {
 	var 配置名 = "短信平台配置"
-	var 配置值 = config.D短信平台配置{
+	var 配置值 = m.D短信平台配置{
 		D当前选择: 1,
 	}
 
-	局_临时配置值, err := Q获取配置[config.D短信平台配置](配置名)
+	局_临时配置值, err := Q获取配置[m.D短信平台配置](配置名)
 	if err == nil {
 		配置值 = 局_临时配置值
 	}
 	return 配置值
 }
-func Z例子写出记录(配置值 *config.Test) error {
+func Z例子写出记录(配置值 *m.Test) error {
 	return Z文本("例子写出记录", 配置值)
 }
 
-func Q例子写出记录() config.Test {
+func Q例子写出记录() m.Test {
 	var 配置名 = "例子写出记录"
-	var 配置值 = config.Test{}
+	var 配置值 = m.Test{}
 
-	局_临时配置值, err := Q获取配置[config.Test](配置名)
+	局_临时配置值, err := Q获取配置[m.Test](配置名)
 	if err == nil {
 		配置值 = 局_临时配置值
 	}
 	return 配置值
 }
 
-func Z云存储配置(配置值 *config.Y云存储配置) error {
+func Z云存储配置(配置值 *m.Y云存储配置) error {
 	//处理一下七牛云外链域名只取域名部分
 
 	aa, err := url.Parse(配置值.Q七牛云对象存储.W外链域名)
@@ -163,48 +162,48 @@ func Z云存储配置(配置值 *config.Y云存储配置) error {
 	return Z文本("云存储配置", 配置值)
 }
 
-func Q云存储配置() config.Y云存储配置 {
+func Q云存储配置() m.Y云存储配置 {
 	var 配置名 = "云存储配置"
 	//这里可以配置默认值,读取失败比如没有值会返回默认值
-	var 配置值 = config.Y云存储配置{
+	var 配置值 = m.Y云存储配置{
 		D当前选择: 2,
 	}
 
-	局_临时配置值, err := Q获取配置[config.Y云存储配置](配置名)
+	局_临时配置值, err := Q获取配置[m.Y云存储配置](配置名)
 	if err == nil {
 		配置值 = 局_临时配置值
 	}
 	return 配置值
 }
 
-func Z用户消息配置(配置值 *config.Y用户消息配置) error {
+func Z用户消息配置(配置值 *m.Y用户消息配置) error {
 	return Z文本("用户消息配置", 配置值)
 }
 
-func Q用户消息配置() config.Y用户消息配置 {
+func Q用户消息配置() m.Y用户消息配置 {
 	var 配置名 = "用户消息配置"
-	var 配置值 = config.Y用户消息配置{
+	var 配置值 = m.Y用户消息配置{
 		MsgTypeList: "",
 	}
 
-	局_临时配置值, err := Q获取配置[config.Y用户消息配置](配置名)
+	局_临时配置值, err := Q获取配置[m.Y用户消息配置](配置名)
 	if err == nil {
 		配置值 = 局_临时配置值
 	}
 	return 配置值
 }
 
-func ZAI配置(配置值 *config.XAIConfig) error {
+func ZAI配置(配置值 *m.XAIConfig) error {
 	return Z文本("AI配置", 配置值)
 }
 
-func QAI配置() config.XAIConfig {
+func QAI配置() m.XAIConfig {
 	var 配置名 = "AI配置"
-	var 配置值 = config.XAIConfig{
+	var 配置值 = m.XAIConfig{
 		ApiUrl: "https://api.deepseek.com/v1/chat/completions",
 		Model:  "deepseek-chat",
 	}
-	局_临时配置值, err := Q获取配置[config.XAIConfig](配置名)
+	局_临时配置值, err := Q获取配置[m.XAIConfig](配置名)
 	if err == nil {
 		配置值 = 局_临时配置值
 	}

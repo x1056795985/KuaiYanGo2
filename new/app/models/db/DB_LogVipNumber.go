@@ -13,5 +13,5 @@ type DB_LogVipNumber struct {
 }
 
 func (DB_LogVipNumber) TableName() string {
-	return "db_Log_VipNumber"
+	return "db_Log_VipNumber" //(积分点数增减日志)  //因为需要AppId 所以不能喝余额表放在一起
 }

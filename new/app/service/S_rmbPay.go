@@ -2,7 +2,7 @@ package service
 
 import (
 	"gorm.io/gorm"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
 )
 
 // 在线列表 数据库处理
@@ -17,29 +17,29 @@ func NewRmbPayService(db *gorm.DB) *RmbPayService {
 	}
 }
 
-func (s *RmbPayService) Create(新订单 DB.DB_LogRMBPayOrder) (DB.DB_LogRMBPayOrder, error) {
+func (s *RmbPayService) Create(新订单 dbm.DB_LogRMBPayOrder) (dbm.DB_LogRMBPayOrder, error) {
 
-	tx := s.db.Model(DB.DB_LogRMBPayOrder{}).Create(&新订单)
+	tx := s.db.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单)
 
 	if tx.Error != nil {
-		return DB.DB_LogRMBPayOrder{}, tx.Error
+		return dbm.DB_LogRMBPayOrder{}, tx.Error
 	}
 
 	return 新订单, nil
 }
 
-func (s *RmbPayService) Info(id int) (info DB.DB_LogRMBPayOrder, err error) {
+func (s *RmbPayService) Info(id int) (info dbm.DB_LogRMBPayOrder, err error) {
 
-	tx := s.db.Model(DB.DB_LogRMBPayOrder{}).Where("Id = ?", id).First(&info)
+	tx := s.db.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", id).First(&info)
 
 	if tx.Error != nil {
 		err = tx.Error
 	}
 	return
 }
-func (s *RmbPayService) Info2(where map[string]interface{}) (info DB.DB_LogRMBPayOrder, err error) {
+func (s *RmbPayService) Info2(where map[string]interface{}) (info dbm.DB_LogRMBPayOrder, err error) {
 
-	tx := s.db.Model(DB.DB_LogRMBPayOrder{}).Where(where).First(&info)
+	tx := s.db.Model(dbm.DB_LogRMBPayOrder{}).Where(where).First(&info)
 
 	if tx.Error != nil {
 		err = tx.Error
@@ -49,6 +49,6 @@ func (s *RmbPayService) Info2(where map[string]interface{}) (info DB.DB_LogRMBPa
 
 func (s *RmbPayService) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(DB.DB_LogRMBPayOrder{}).Where("Id = ?", Id).Updates(&数据)
+	tx := s.db.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", Id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }

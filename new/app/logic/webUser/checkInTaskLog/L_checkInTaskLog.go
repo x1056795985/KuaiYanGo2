@@ -3,15 +3,13 @@ package checkTaskLog
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/webUser/user"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -33,7 +31,7 @@ func (j *checkTaskLog) T邀请注册成功后处理(c *gin.Context, AppId, 邀�
 		AppPromotionConfig  dbm.DB_AppPromotionConfig
 		CheckInInfo         dbm.DB_CheckInInfo
 		checkInUser         dbm.DB_CheckInUser
-		user                DB.DB_User
+		user                dbm.DB_User
 	}{}
 
 	db := *global.GVA_DB
@@ -121,7 +119,7 @@ func (j *checkTaskLog) T邀请注册成功后处理(c *gin.Context, AppId, 邀�
 	})
 
 	if err != nil {
-		global.GVA_LOG.Error("签到邀请奖励发放触发异常", zap.Any("err", err))
+		global.GVA_LOG.Println("签到邀请奖励发放触发异常", err)
 		return
 	}
 

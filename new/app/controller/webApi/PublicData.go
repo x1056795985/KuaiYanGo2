@@ -5,7 +5,7 @@ import (
 	"github.com/valyala/fastjson"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/publicData"
-	"server/structs/Http/response"
+	"server/new/app/models/old/response"
 )
 
 type PublicDataWebApi struct {

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/models/request"
-	"server/utils"
+	"server/new/app/utils"
 )
 
 // 分批执行IN查询删除，避免MySQL占位符超限(65535)
@@ -249,7 +249,7 @@ func (s *BaseService[T]) GetList(请求 request.List) (int64, []T, error) {
 		Find(&results).Error
 
 	if err != nil {
-		global.GVA_LOG.Error(utils.Q取包名结构体方法(s) + ":" + err.Error())
+		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
 	}
 
 	return count, results, err

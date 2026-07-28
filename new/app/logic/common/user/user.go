@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/global"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 )
 
@@ -42,12 +42,12 @@ func (j *user) Id余额增减(c *gin.Context, Id int, 增减值 float64, is增�
 
 	if is增加 {
 		err = db.Transaction(func(tx *gorm.DB) error {
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", Id).Update("RMB", gorm.Expr("RMB + ?", 增减值)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", Id).Update("RMB", gorm.Expr("RMB + ?", 增减值)).Error
 			if err != nil {
-				global.GVA_LOG.Error(strconv.Itoa(Id) + "Id余额增加失败:" + err.Error())
+				global.GVA_LOG.Println(strconv.Itoa(Id) + "Id余额增加失败:" + err.Error())
 				return err
 			}
-			err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id=?", Id).First(&新余额).Error
+			err = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id=?", Id).First(&新余额).Error
 			return err
 		})
 		return
@@ -61,7 +61,7 @@ func (j *user) Id余额增减(c *gin.Context, Id int, 增减值 float64, is增�
 	tx.Exec(sql, 增减值, Id)
 	if tx.Error != nil {
 		tx.Rollback()
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
+		global.GVA_LOG.Println(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
 		return 0, errors.New("余额减少失败查看服务器日志检查原因")
 	}
 
@@ -70,7 +70,7 @@ func (j *user) Id余额增减(c *gin.Context, Id int, 增减值 float64, is增�
 	tx = tx.Raw(sql, Id).Scan(&新余额)
 	if tx.Error != nil {
 		tx.Rollback()
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
+		global.GVA_LOG.Println(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
 		return 0, errors.New("查询余额失败查看服务器日志检查原因")
 	}
 

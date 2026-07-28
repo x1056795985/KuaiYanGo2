@@ -4,14 +4,14 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Log"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/log"
 	"server/new/app/models/constant"
+	db2 "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -25,7 +25,7 @@ func UserApi_取注册送卡(c *gin.Context) {
 
 	//{"Api":"GetRegisterGiveKa","Key":"677F23CB3FA0055B5FD03916D6AB3C9A"}
 
-	var 局_卡 DB.DB_Ka
+	var 局_卡 db2.DB_Ka
 
 	var err error
 	if len(局_ctx.Q请求明文.Get("Key").String()) > 191 {
@@ -55,7 +55,7 @@ func UserApi_取注册送卡(c *gin.Context) {
 		return
 	}
 
-	var 局_AppUser DB.DB_AppUser
+	var 局_AppUser db2.DB_AppUser
 	局_AppUser.Id = 0
 	局_AppUser.Uid = 局_卡.Id
 	局_AppUser.Status = 1
@@ -79,7 +79,7 @@ func UserApi_取注册送卡(c *gin.Context) {
 	}
 	_, err = service.NewAppUser(c, &db, 局_ctx.AppInfo.AppId).Create(&局_AppUser)
 	if err != nil {
-		var 日志 = DB.DB_LogUserMsg{
+		var 日志 = db2.DB_LogUserMsg{
 			User:    "系统",
 			App:     局_ctx.AppInfo.AppName,
 			AppId:   局_ctx.AppInfo.AppId,

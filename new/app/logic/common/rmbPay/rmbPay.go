@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	App服务 "server/Service/Ser_AppInfo"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/agent/L_setting"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/ka"
@@ -22,8 +21,7 @@ import (
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	"server/utils/Qqwry"
+	"server/new/app/utils/Qqwry"
 	"strconv"
 	"sync"
 	"time"
@@ -116,8 +114,8 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 
 	参数.S商品名称 = App服务.AppId取应用名称(参数.E额外信息.Get("AppId").Int()) + j.Q取提示信息(&参数)
 
-	if 参数.ReceivedUid > 0 && agent.L_agent.Id功能权限检测(c, 参数.ReceivedUid, DB.D代理功能_代收款) {
-		var 局代理Info DB.DB_User
+	if 参数.ReceivedUid > 0 && agent.L_agent.Id功能权限检测(c, 参数.ReceivedUid, dbm.D代理功能_代收款) {
+		var 局代理Info dbm.DB_User
 		var 代理在线支付信息 m.Z在线支付
 		if 局代理Info, err = service.NewUser(c, &tx).Info(参数.ReceivedUid); err == nil {
 			if 代理在线支付信息, err = L_setting.Q取代理在线支付信息(c, 参数.ReceivedUid); err == nil {
@@ -126,7 +124,7 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 					参数.Z支付配置s = 代理在线支付信息
 					参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 					局_通道数据, err = 局_通道.D订单创建(c, &参数)
-					global.GVA_LOG.Error(参数.PayOrder+"代付订单创建失败", zap.Error(err))
+					global.GVA_LOG.Println(参数.PayOrder+"代付订单创建失败", err)
 					if err == nil {
 						goto 下单成功
 					}
@@ -177,13 +175,13 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 
 func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 bool, 备注 string) (err error) {
 	var info struct {
-		user         DB.DB_User
-		Agent        DB.DB_User
-		LogMoney     []DB.DB_LogMoney
-		LogVipNumber []DB.DB_LogVipNumber
+		user         dbm.DB_User
+		Agent        dbm.DB_User
+		LogMoney     []dbm.DB_LogMoney
+		LogVipNumber []dbm.DB_LogVipNumber
 		卡类详情         dbm.DB_KaClass
-		软件用户详情       DB.DB_AppUser
-		app详情        DB.DB_AppInfo
+		软件用户详情       dbm.DB_AppUser
+		app详情        dbm.DB_AppInfo
 	}
 
 	db := *global.GVA_DB
@@ -222,7 +220,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 	err = db.Transaction(func(tx *gorm.DB) (err error) {
 
 		//加锁重新查
-		err = tx.Model(DB.DB_LogRMBPayOrder{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Id).First(&参数.DB_LogRMBPayOrder).Error
+		err = tx.Model(dbm.DB_LogRMBPayOrder{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Id).First(&参数.DB_LogRMBPayOrder).Error
 		if err != nil {
 			return errors.New("订单不存在")
 		}
@@ -234,15 +232,15 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 
 		if 追回资产 && 参数.ProcessingType == constant.D订单类型_余额充值 { //追回余额
 			if 参数.UidType == 1 { //只有账号模式的应用,才能扣余额
-				err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Uid).First(&info.user).Error
+				err = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Uid).First(&info.user).Error
 				if err != nil {
 					return errors.New("用户不存在,无法减余额")
 				}
-				err = tx.Model(DB.DB_User{}).Where("Id = ?", 参数.Uid).Update("Rmb", gorm.Expr("RMB - ?", 参数.Rmb)).Error
+				err = tx.Model(dbm.DB_User{}).Where("Id = ?", 参数.Uid).Update("Rmb", gorm.Expr("RMB - ?", 参数.Rmb)).Error
 				if err != nil {
 					return errors.New("减余额失败")
 				}
-				info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+				info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 					User:  info.user.User,
 					Time:  time.Now().Unix(),
 					Ip:    c.ClientIP(),
@@ -258,15 +256,15 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 				return
 			}
 			if 参数.UidType == 1 && info.卡类详情.RMb != 0 { //只有账号模式的应用,才能扣余额
-				err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Uid).First(&info.user).Error
+				err = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.Uid).First(&info.user).Error
 				if err != nil {
 					return errors.New("追回资产时,发现用户不存在,无法减余额")
 				}
-				err = tx.Model(DB.DB_User{}).Where("Id = ?", 参数.Uid).Update("Rmb", gorm.Expr("RMB - ?", 参数.Rmb)).Error
+				err = tx.Model(dbm.DB_User{}).Where("Id = ?", 参数.Uid).Update("Rmb", gorm.Expr("RMB - ?", 参数.Rmb)).Error
 				if err != nil {
 					return errors.New("减余额失败")
 				}
-				info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+				info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 					User:  info.user.User,
 					Time:  time.Now().Unix(),
 					Ip:    c.ClientIP(),
@@ -275,7 +273,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 				})
 			}
 
-			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+参数.E额外信息.Get("AppId").String()).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Uid = ?", 参数.E额外信息.Get("AppUserUid").Int()).First(&info.软件用户详情).Error
+			err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+参数.E额外信息.Get("AppId").String()).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Uid = ?", 参数.E额外信息.Get("AppUserUid").Int()).First(&info.软件用户详情).Error
 			if err != nil {
 				return errors.New("应用:" + 参数.E额外信息.Get("AppId").String() + "软件用户id" + 参数.E额外信息.Get("AppUserUid").String() + "已不存在")
 			}
@@ -290,7 +288,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 			}
 			if info.卡类详情.VipTime != 0 {
 				局_is计点 := App服务.App是否为计点(参数.E额外信息.Get("AppId").Int())
-				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+				info.LogVipNumber = append(info.LogVipNumber, dbm.DB_LogVipNumber{
 					User:  参数.User,
 					AppId: 参数.E额外信息.Get("AppId").Int(),
 					Type:  S三元(局_is计点, constant.Log_type_点数, constant.Log_type_时间),
@@ -301,7 +299,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 				})
 			}
 			if info.卡类详情.VipNumber != 0 {
-				info.LogVipNumber = append(info.LogVipNumber, DB.DB_LogVipNumber{
+				info.LogVipNumber = append(info.LogVipNumber, dbm.DB_LogVipNumber{
 					User:  参数.User,
 					AppId: 参数.E额外信息.Get("AppId").Int(),
 					Type:  constant.Log_type_积分,
@@ -320,28 +318,28 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 				return err
 			}
 			if 局_临时, ok2 := c.Get("info.LogVipNumber"); ok2 {
-				info.LogVipNumber = append(info.LogVipNumber, 局_临时.([]DB.DB_LogVipNumber)...)
+				info.LogVipNumber = append(info.LogVipNumber, 局_临时.([]dbm.DB_LogVipNumber)...)
 			}
 			if 局_临时, ok2 := c.Get("info.LogMoney"); ok2 {
-				info.LogMoney = append(info.LogMoney, 局_临时.([]DB.DB_LogMoney)...)
+				info.LogMoney = append(info.LogMoney, 局_临时.([]dbm.DB_LogMoney)...)
 			}
 		}
 		//判断是否有代理分成,如果有代理分成,对应扣除
 		for 索引 := range 参数.E额外信息.Len("分成详细") {
 			局_uid := 参数.E额外信息.Get("分成详细." + strconv.Itoa(索引) + ".Uid").Int()
 			局_金额 := 参数.E额外信息.Get("分成详细." + strconv.Itoa(索引) + ".S实际分成金额").Float64()
-			var 代理详情 DB.DB_User
+			var 代理详情 dbm.DB_User
 			代理详情, err = service.NewUser(c, tx).Info(局_uid)
 			if err != nil {
 				return errors.Join(err, errors.New("代理"+代理详情.User+",不存在,无法扣除分成"))
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", 局_uid).Update("Rmb", gorm.Expr("RMB - ?", 局_金额)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", 局_uid).Update("Rmb", gorm.Expr("RMB - ?", 局_金额)).Error
 
 			if err != nil {
 				return errors.Join(err, errors.New("代理分成用户扣除分成失败"))
 			}
 			代理详情.Rmb = Float64减float64(代理详情.Rmb, 局_金额, 2)
-			info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+			info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 				User:  代理详情.User,
 				Time:  time.Now().Unix(),
 				Ip:    c.ClientIP(),
@@ -355,17 +353,17 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 		for 索引 := range 参数.E额外信息.Len("调价详情") {
 			局_uid := 参数.E额外信息.Get("调价详情." + strconv.Itoa(索引) + ".AgentId").Int()
 			局_金额 := 参数.E额外信息.Get("分成详细." + strconv.Itoa(索引) + ".Markup").Float64()
-			var 代理详情 DB.DB_User
+			var 代理详情 dbm.DB_User
 			代理详情, err = service.NewUser(c, tx).Info(局_uid)
 			if err != nil {
 				return errors.Join(err, errors.New("代理"+代理详情.User+",不存在,无法扣除调价分成"))
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", 局_uid).Update("Rmb", gorm.Expr("RMB - ?", 局_金额)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", 局_uid).Update("Rmb", gorm.Expr("RMB - ?", 局_金额)).Error
 			if err != nil {
 				return errors.Join(err, errors.New("代理调价用户扣除调价失败"))
 			}
 			代理详情.Rmb = Float64减float64(代理详情.Rmb, 局_金额, 2)
-			info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+			info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 				User:  代理详情.User,
 				Time:  time.Now().Unix(),
 				Ip:    c.ClientIP(),
@@ -384,25 +382,25 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 		if 备注 != "" {
 			data["Note"] = 备注
 		}
-		if err = tx.Model(DB.DB_LogRMBPayOrder{}).Where("Id = ?", 参数.Id).Updates(data).Error; err != nil {
+		if err = tx.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 参数.Id).Updates(data).Error; err != nil {
 			return errors.Join(err, errors.New("订单状态更新失败"))
 		}
 		参数.Y异步回调地址 = setting.Q系统设置().X系统地址 + "/webApi/payNotify2/" + 参数.PayOrder //微信可能用到
 
 		if err == nil && 参数.ReceivedUid > 0 { //如果是代收款订单, 要恢复已扣的余额
-			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.ReceivedUid).First(&info.user).Error
+			err = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.ReceivedUid).First(&info.user).Error
 			if err != nil {
 				return errors.New("代收款用户不存在,无法恢复余额")
 			}
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", 参数.ReceivedUid).Update("Rmb", gorm.Expr("RMB + ?", 参数.Rmb)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", 参数.ReceivedUid).Update("Rmb", gorm.Expr("RMB + ?", 参数.Rmb)).Error
 			if err != nil {
 				return errors.New("代收款用户恢复余额失败")
 			}
-			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.ReceivedUid).First(&info.Agent).Error
+			err = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", 参数.ReceivedUid).First(&info.Agent).Error
 			if err != nil {
 				return errors.New("代收款用户不存在,无法恢复余额")
 			}
-			info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+			info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 				User:  info.Agent.User,
 				Time:  time.Now().Unix(),
 				Ip:    c.ClientIP(),
@@ -418,10 +416,10 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 	if err == nil {
 		c.Set("tx", &db)
 		if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
-			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			global.GVA_LOG.Println("输出日志失败!", err)
 		}
 		if err = log.L_log.S输出日志(c, info.LogVipNumber); err != nil {
-			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			global.GVA_LOG.Println("输出日志失败!", err)
 		}
 	}
 
@@ -465,7 +463,7 @@ func (j *rmbPay) D订单回调(c *gin.Context) (响应信息 string, 响应代�
 
 	响应信息, 响应代码, err = 局_通道.D订单支付回调(c, &参数)
 	if err != nil {
-		global.GVA_LOG.Error("订单回调失败!", zap.Any("err", err))
+		global.GVA_LOG.Println("订单回调失败!", err)
 		return
 	}
 	err = 参数.E额外信息.Set("回调时间", time.Now().Unix())
@@ -476,8 +474,8 @@ func (j *rmbPay) D订单回调(c *gin.Context) (响应信息 string, 响应代�
 	db := *global.GVA_DB
 	//先加锁修改为待处理
 	err = db.Transaction(func(tx *gorm.DB) error {
-		var 局_订单信息 DB.DB_LogRMBPayOrder
-		err = tx.Model(DB.DB_LogRMBPayOrder{}).
+		var 局_订单信息 dbm.DB_LogRMBPayOrder
+		err = tx.Model(dbm.DB_LogRMBPayOrder{}).
 			Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("Id=?", 参数.Id).
 			First(&局_订单信息).Error //加锁再查一次
@@ -486,7 +484,7 @@ func (j *rmbPay) D订单回调(c *gin.Context) (响应信息 string, 响应代�
 		}
 		//确定订单状态没问题,而且数据已经是行锁状态,开始更新状态等信息
 		参数.Status = constant.D订单状态_已付待处理
-		err = tx.Model(DB.DB_LogRMBPayOrder{}).
+		err = tx.Model(dbm.DB_LogRMBPayOrder{}).
 			Where("Id=?", 参数.Id).
 			Updates(map[string]interface{}{
 				"PayOrder":       参数.PayOrder,
@@ -558,7 +556,7 @@ func (j *rmbPay) D订单退款回调(c *gin.Context) (响应信息 string, 响�
 
 	db := *global.GVA_DB
 	//先加锁修改为待处理
-	err = db.Model(DB.DB_LogRMBPayOrder{}).
+	err = db.Model(dbm.DB_LogRMBPayOrder{}).
 		Where("Id=?", 参数.Id).
 		Updates(map[string]interface{}{
 			"Status": 参数.Status,
@@ -571,15 +569,15 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 		return
 	}
 	var info struct {
-		LogMoney     []DB.DB_LogMoney
-		LogVipNumber []DB.DB_LogVipNumber
-		LogKa        []DB.DB_LogKa
+		LogMoney     []dbm.DB_LogMoney
+		LogVipNumber []dbm.DB_LogVipNumber
+		LogKa        []dbm.DB_LogKa
 		/*
 			user用户详情 DB.DB_User*/
-		app用户详情 DB.DB_AppUser
+		app用户详情 dbm.DB_AppUser
 		卡类详情    dbm.DB_KaClass
-		卡号详情    DB.DB_Ka
-		app详情   DB.DB_AppInfo
+		卡号详情    dbm.DB_Ka
+		app详情   dbm.DB_AppInfo
 	}
 	var 临时数据 interface{}
 	var ok bool
@@ -592,8 +590,8 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 		c.Set("tx", tx) //防止 K卡类直冲_事务 死锁
 		defer delete(c.Keys, "tx")
 
-		var 局_订单信息 DB.DB_LogRMBPayOrder
-		err = tx.Model(DB.DB_LogRMBPayOrder{}).
+		var 局_订单信息 dbm.DB_LogRMBPayOrder
+		err = tx.Model(dbm.DB_LogRMBPayOrder{}).
 			Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("Id=?", 参数.Id).
 			First(&局_订单信息).Error //加锁再查一次
@@ -608,16 +606,16 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 		default:
 			return errors.New("ProcessingType错误")
 		case constant.D订单类型_余额充值: //0
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", 参数.Uid).Update("RMB", gorm.Expr("RMB + ?", 参数.Rmb)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", 参数.Uid).Update("RMB", gorm.Expr("RMB + ?", 参数.Rmb)).Error
 			if err != nil {
 				return errors.Join(err, errors.New(strconv.Itoa(参数.Uid)+"Id余额增加失败"))
 			}
 			var 局_新余额 float64
-			err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id=?", 参数.Uid).First(&局_新余额).Error
+			err = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id=?", 参数.Uid).First(&局_新余额).Error
 			if err != nil {
 				return errors.Join(err, errors.New(strconv.Itoa(参数.Uid)+"新余额读取失败"))
 			}
-			info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+			info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 				User:  参数.User,
 				Time:  time.Now().Unix(),
 				Ip:    参数.Ip,
@@ -639,23 +637,23 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				return err
 			}
 			if 临时数据, ok = c.Get("logMoney"); ok { //判断是否有rmb充值的日志
-				info.LogMoney = append(info.LogMoney, 临时数据.(DB.DB_LogMoney))
+				info.LogMoney = append(info.LogMoney, 临时数据.(dbm.DB_LogMoney))
 				info.LogMoney[len(info.LogMoney)-1].Note = "购卡直冲支付订单:" + 参数.PayOrder + info.LogMoney[len(info.LogMoney)-1].Note
 			}
 
 			if 临时数据, ok = c.Get("logVipNumber"); ok { //判断是否有积分充值的日志
-				info.LogVipNumber = append(info.LogVipNumber, 临时数据.(DB.DB_LogVipNumber))
+				info.LogVipNumber = append(info.LogVipNumber, 临时数据.(dbm.DB_LogVipNumber))
 				info.LogVipNumber[len(info.LogVipNumber)-1].Note = "购卡直冲支付订单:" + 参数.PayOrder + info.LogVipNumber[len(info.LogVipNumber)-1].Note
 			}
 
 			if 临时数据, ok = c.Get("info.app详情"); ok {
-				info.app详情 = 临时数据.(DB.DB_AppInfo)
+				info.app详情 = 临时数据.(dbm.DB_AppInfo)
 			}
 			if 临时数据, ok = c.Get("info.卡类详情"); ok {
 				info.卡类详情 = 临时数据.(dbm.DB_KaClass)
 			}
 			if text, ok2 := c.Get("info.app用户详情"); ok2 {
-				info.app用户详情 = text.(DB.DB_AppUser)
+				info.app用户详情 = text.(dbm.DB_AppUser)
 			}
 			参数.E额外信息.Get("卡类ID", 卡类ID)
 			参数.E额外信息.Get("卡类名称", info.卡类详情.Name)
@@ -668,7 +666,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				return err
 			} else {
 				if 临时数据, ok = c.Get("LogMoney"); ok && 临时数据 != nil {
-					info.LogMoney = append(info.LogMoney, 临时数据.([]DB.DB_LogMoney)...)
+					info.LogMoney = append(info.LogMoney, 临时数据.([]dbm.DB_LogMoney)...)
 				}
 			}
 		case constant.D订单类型_支付购卡: //3
@@ -695,7 +693,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 
 			参数.Note = 参数.Note + "购卡:" + info.卡号详情.Name + ",应用:" + info.app详情.AppName + ",卡类:" + info.卡类详情.Name
 			局_文本 := fmt.Sprintf("支付购卡订单ID:%s,卡类:%d,消费:%.2f)", 参数.PayOrder, info.卡号详情.KaClassId, 参数.Rmb)
-			info.LogKa = append(info.LogKa, DB.DB_LogKa{
+			info.LogKa = append(info.LogKa, dbm.DB_LogKa{
 				User:     "支付购卡",
 				UserType: constant.Log_卡操作用户_系统自动,
 				Ka:       info.卡类详情.Name,
@@ -705,7 +703,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				Note:     局_文本,
 			})
 			if text, ok2 := c.Get("info.app用户详情"); ok2 {
-				info.app用户详情 = text.(DB.DB_AppUser)
+				info.app用户详情 = text.(dbm.DB_AppUser)
 			}
 
 			if info.app用户详情.AgentUid != 0 {
@@ -720,30 +718,30 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				return err
 			} else {
 				if 临时数据, ok = c.Get("LogMoney"); ok {
-					info.LogMoney = append(info.LogMoney, 临时数据.([]DB.DB_LogMoney)...)
+					info.LogMoney = append(info.LogMoney, 临时数据.([]dbm.DB_LogMoney)...)
 				}
 			}
 		}
 		//判断是否为代收款
 		if 参数.ReceivedUid > 0 {
-			var 局_info DB.DB_User
+			var 局_info dbm.DB_User
 			//加锁再查一次 锁定数值 防止并发数据错误
-			err = tx.Model(DB.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", 参数.ReceivedUid).First(&局_info).Error
+			err = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id=?", 参数.ReceivedUid).First(&局_info).Error
 			if err != nil {
 				return errors.Join(err, errors.New(strconv.Itoa(参数.ReceivedUid)+"代理信息读取失败"))
 			}
 			//只有有信任度的代理,才可以代收款,所以可以扣到一定值的负数
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", 参数.ReceivedUid).Update("RMB", gorm.Expr("RMB - ?", 参数.Rmb)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", 参数.ReceivedUid).Update("RMB", gorm.Expr("RMB - ?", 参数.Rmb)).Error
 			if err != nil {
 				return errors.Join(err, errors.New(strconv.Itoa(参数.ReceivedUid)+"Id余额减少失败"))
 			}
 			//再查一次
-			err = tx.Model(DB.DB_User{}).Where("Id=?", 参数.ReceivedUid).First(&局_info).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id=?", 参数.ReceivedUid).First(&局_info).Error
 			if err != nil {
 				return errors.Join(err, errors.New(strconv.Itoa(参数.ReceivedUid)+"新余额读取失败"))
 			}
 			str := fmt.Sprintf("用户%s,%s订单ID:%s,第三方订单ID:%s,%s代收款:¥%s ,|新余额≈%s", 参数.User, j.Map订单类型[参数.ProcessingType], 参数.PayOrder, 参数.PayOrder2, 参数.Type, Float64到文本(参数.Rmb, 2), Float64到文本(局_info.Rmb, 2))
-			info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+			info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 				User:  局_info.User,
 				Time:  time.Now().Unix(),
 				Ip:    参数.Ip,
@@ -754,7 +752,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 		//如果能走到这里说明上面处理成功了, 订单状态改为成功
 		参数.Status = constant.D订单状态_成功
 		参数.Extra = 参数.E额外信息.String()
-		err = tx.Model(DB.DB_LogRMBPayOrder{}).
+		err = tx.Model(dbm.DB_LogRMBPayOrder{}).
 			Where("Id=?", 参数.Id).
 			Updates(map[string]interface{}{
 				"Status": constant.D订单状态_成功,
@@ -765,22 +763,22 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 	})
 	if err != nil { //如果有错误,只修改备注,然后等人工处理
 		参数.Note = 参数.Note + err.Error()
-		err = db.Model(DB.DB_LogRMBPayOrder{}).
+		err = db.Model(dbm.DB_LogRMBPayOrder{}).
 			Where("Id=?", 参数.Id).
 			Updates(map[string]interface{}{"Note": 参数.Note + err.Error()}).Error
 		if err != nil {
-			global.GVA_LOG.Error("更新数据库失败!", zap.Any("err", err))
+			global.GVA_LOG.Println("更新数据库失败!", err)
 		}
 	} else {
 		//最后写出日志
 		if err = log.L_log.S输出日志(c, info.LogKa); err != nil {
-			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			global.GVA_LOG.Println("输出日志失败!", err)
 		}
 		if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
-			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			global.GVA_LOG.Println("输出日志失败!", err)
 		}
 		if err = log.L_log.S输出日志(c, info.LogVipNumber); err != nil {
-			global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+			global.GVA_LOG.Println("输出日志失败!", err)
 		}
 	}
 
@@ -788,7 +786,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 }
 func (j *rmbPay) 代理分成(c *gin.Context, 参数 *m.PayParams, AgentMoney float64) (err error) {
 	var info struct {
-		LogMoney []DB.DB_LogMoney
+		LogMoney []dbm.DB_LogMoney
 	}
 	//下边这两个可空
 	var AgentUid int
@@ -820,24 +818,24 @@ func (j *rmbPay) 代理分成(c *gin.Context, 参数 *m.PayParams, AgentMoney fl
 		if 局_价格组成.总调价 > 0 {
 			for _, v := range 局_价格组成.调价详情 {
 				分成金额 := Float64乘int64(v.Markup, 局_价格组成.购买数量) //有多少卡就分多少个
-				err = tx.Model(DB.DB_User{}).Where("Id = ?", v.AgentId).Update("RMB", gorm.Expr("RMB + ?", 分成金额)).Error
+				err = tx.Model(dbm.DB_User{}).Where("Id = ?", v.AgentId).Update("RMB", gorm.Expr("RMB + ?", 分成金额)).Error
 				if err != nil {
 					return errors.Join(err, fmt.Errorf("代理分成失败,请检查原因%d,%s", v.AgentId, Float64到文本(分成金额, 2)))
 				}
-				var 局_userInfo DB.DB_User
-				err = tx.Model(DB.DB_User{}).Where("Id = ?", v.AgentId).Find(&局_userInfo).Error
+				var 局_userInfo dbm.DB_User
+				err = tx.Model(dbm.DB_User{}).Where("Id = ?", v.AgentId).Find(&局_userInfo).Error
 				if err != nil {
 					return errors.Join(err, fmt.Errorf("代理分成后,读取代理数据失败请检查原因%d,%s", v.AgentId, Float64到文本(分成金额, 2)))
 				}
 
 				// 构建日志记录
-				var 局_临时日志 DB.DB_LogMoney
+				var 局_临时日志 dbm.DB_LogMoney
 				局_临时日志.Time = time.Now().Unix()
 				局_临时日志.Ip = c.ClientIP() + " " + Qqwry.Ip查信息2(c.ClientIP())
 				局_临时日志.User = 局_userInfo.User
 				局_临时日志.Count = 分成金额
 				局_临时文本1, 局_临时文本2 := "", ""
-				if agent.L_agent.Id功能权限检测(c, 局_userInfo.Id, DB.D代理功能_查看归属软件用户) {
+				if agent.L_agent.Id功能权限检测(c, 局_userInfo.Id, dbm.D代理功能_查看归属软件用户) {
 					局_临时文本1 = 参数.User
 					局_临时文本2 = 参数.Note
 				}
@@ -855,20 +853,20 @@ func (j *rmbPay) 代理分成(c *gin.Context, 参数 *m.PayParams, AgentMoney fl
 		if err3 == nil {
 			for 局_索引 := range 代理分成数据 {
 				d := 代理分成数据[局_索引] //太长了,放个变量里
-				err = tx.Model(DB.DB_User{}).Where("Id = ?", d.Uid).Update("RMB", gorm.Expr("RMB + ?", d.S实际分成金额)).Error
+				err = tx.Model(dbm.DB_User{}).Where("Id = ?", d.Uid).Update("RMB", gorm.Expr("RMB + ?", d.S实际分成金额)).Error
 				if err != nil {
 					return errors.Join(err, errors.New(strconv.Itoa(d.Uid)+"Id余额增加失败"))
 				}
 				var 局_新余额 float64
-				err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id=?", d.Uid).First(&局_新余额).Error
+				err = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id=?", d.Uid).First(&局_新余额).Error
 				if err != nil {
 					return errors.Join(err, errors.New(strconv.Itoa(d.Uid)+"新余额读取失败"))
 				}
-				局_临时文本1 := S三元(agent.L_agent.Id功能权限检测(c, d.Uid, DB.D代理功能_查看归属软件用户), 参数.User, "")
-				局_临时文本2 := S三元(agent.L_agent.Id功能权限检测(c, d.Uid, DB.D代理功能_查看归属软件用户), 参数.Note, "")
+				局_临时文本1 := S三元(agent.L_agent.Id功能权限检测(c, d.Uid, dbm.D代理功能_查看归属软件用户), 参数.User, "")
+				局_临时文本2 := S三元(agent.L_agent.Id功能权限检测(c, d.Uid, dbm.D代理功能_查看归属软件用户), 参数.Note, "")
 				str := fmt.Sprintf("用户%s%s%s订单ID:%s,分成:¥%s (¥%s(实价)*(%d%%-%d%%)),|新余额≈%s", 局_临时文本1, j.Map订单类型[参数.ProcessingType], 局_临时文本2, 参数.PayOrder, Float64到文本(d.S实际分成金额, 2), Float64到文本(AgentMoney, 2), d.F分成百分比, d.F分给下级百分比, Float64到文本(局_新余额, 2))
 
-				info.LogMoney = append(info.LogMoney, DB.DB_LogMoney{
+				info.LogMoney = append(info.LogMoney, dbm.DB_LogMoney{
 					User:  d.User,
 					Time:  time.Now().Unix(),
 					Ip:    参数.Ip,
@@ -938,10 +936,10 @@ func (j *rmbPay) Pay_指定Uid待支付金额(c *gin.Context, Uid int) (金额 f
 		tx = &db
 	}
 	//获取该uid 等待支付的金额总数
-	err := tx.Model(DB.DB_LogRMBPayOrder{}).Select("sum(Rmb) as Rmb").Where("ReceivedUid=? and Status=?", Uid, constant.D订单状态_等待支付).First(&金额).Error
+	err := tx.Model(dbm.DB_LogRMBPayOrder{}).Select("sum(Rmb) as Rmb").Where("ReceivedUid=? and Status=?", Uid, constant.D订单状态_等待支付).First(&金额).Error
 	if err != nil {
 		//如果出错,就返回0   报错一般是rmb字段为null 但是给的变量类型为float64  暂不影响,以后再查
-		//global.GVA_LOG.Error("获取指定Uid待支付金额!", zap.Any("err", err))
+		//global.GVA_LOG.Println("获取指定Uid待支付金额!", err)
 	}
 	return
 }

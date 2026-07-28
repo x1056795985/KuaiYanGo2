@@ -3,9 +3,9 @@ package controller
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"

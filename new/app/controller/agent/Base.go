@@ -5,14 +5,14 @@ import (
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"server/Service/Captcha"
 	"server/Service/Ser_Log"
-	"server/global"
 	adminController "server/new/app/controller/admin"
+	"server/new/app/global"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/models/constant"
-	"server/structs/Http/response"
-	DB "server/structs/db"
-	"server/utils"
-	"server/utils/Qqwry"
+	"server/new/app/models/db"
+	"server/new/app/models/old/response"
+	"server/new/app/utils"
+	"server/new/app/utils/Qqwry"
 	"strings"
 	"time"
 )
@@ -31,7 +31,7 @@ type Agent登录请求 struct {
 }
 
 type Agent登录响应 struct {
-	UserInfo DB.DB_User `json:"userInfo"`
+	UserInfo db.DB_User `json:"userInfo"`
 	Token    string     `json:"token"`
 	KuaiYan  bool       `json:"kuaiYan"`
 }
@@ -49,8 +49,8 @@ func (A *AgentBase) Login(c *gin.Context) {
 
 	局_客户端IP := c.ClientIP()
 	局_是否校验验证码 := false
-	局_开启验证码次数 := global.GVA_CONFIG.Captcha.OpenCaptcha
-	局_缓存超时时间 := global.GVA_CONFIG.Captcha.OpenCaptchaTimeOut
+	局_开启验证码次数 := 1
+	局_缓存超时时间 := 3600
 	局_缓存值, ok := global.H缓存.Get(局_客户端IP)
 	if !ok {
 		global.H缓存.Set(局_客户端IP, 1, time.Second*time.Duration(局_缓存超时时间))
@@ -71,7 +71,7 @@ func (A *AgentBase) Login(c *gin.Context) {
 		return
 	}
 
-	var 局_用户 DB.DB_User
+	var 局_用户 db.DB_User
 	if err := global.GVA_DB.Where("User = ?", 局_请求.Username).First(&局_用户).Error; err != nil || !utils.BcryptCheck(局_请求.Password, 局_用户.PassWord) {
 		response.FailWithMessage("账号或密码错误", c)
 		go Ser_Log.Log_写登录日志(局_请求.Username, 局_客户端IP, "密码错误:"+局_请求.Password, 3)
@@ -90,7 +90,7 @@ func (A *AgentBase) Login(c *gin.Context) {
 	}
 	global.H缓存.Delete(局_客户端IP)
 
-	var 局_在线信息 DB.DB_LinksToken
+	var 局_在线信息 db.DB_LinksToken
 	局_在线信息.Uid = 局_用户.Id
 	局_在线信息.User = 局_用户.User
 	局_在线信息.Tab = ""

@@ -6,12 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -35,8 +34,8 @@ func (C *CheckInLog) Create(c *gin.Context) {
 
 	var err error
 	var info = struct {
-		appInfo     DB.DB_AppInfo
-		likeInfo    DB.DB_LinksToken
+		appInfo     dbm.DB_AppInfo
+		likeInfo    dbm.DB_LinksToken
 		checkInUser dbm.DB_CheckInUser
 		最后签到信息      dbm.DB_CheckInLog
 	}{}

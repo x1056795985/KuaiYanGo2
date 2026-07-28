@@ -3,16 +3,15 @@ package userSafetyApi
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/log"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +26,7 @@ func UserApi_用户登录(c *gin.Context) {
 		return
 	}
 	var 局_Uid = 0
-	var 局_卡 DB.DB_Ka
+	var 局_卡 dbm.DB_Ka
 	var err error
 	if len(局_ctx.Q请求明文.Get("Key").String()) > 191 {
 		response.FailMsg(c, constant.Status_操作失败, "绑定信息长度不能超过191")
@@ -52,7 +51,7 @@ func UserApi_用户登录(c *gin.Context) {
 			return
 		}
 		if 局_卡.Status != 1 {
-			go log.L_log.S输出日志(c, DB.DB_LogLogin{
+			go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 				User:      局_卡.Name,
 				Ip:        c.ClientIP(),
 				Note:      "卡号已冻结",
@@ -66,7 +65,7 @@ func UserApi_用户登录(c *gin.Context) {
 		局_卡号或用户名 = 局_卡.Name
 	} else {
 		//账号
-		var 局_User DB.DB_User
+		var 局_User dbm.DB_User
 		局_User, err = service.NewUser(c, &db).InfoName(局_卡号或用户名)
 		if err != nil {
 			response.FailMsg(c, constant.Status_登录失败, "用户不存在")
@@ -74,7 +73,7 @@ func UserApi_用户登录(c *gin.Context) {
 		}
 
 		if 局_User.PassWord == "" || !utils2.BcryptCheck(局_ctx.Q请求明文.Get("PassWord").String(), 局_User.PassWord) {
-			go log.L_log.S输出日志(c, DB.DB_LogLogin{
+			go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 				User:      局_User.User,
 				Ip:        c.ClientIP(),
 				Note:      "密码错误:" + 局_ctx.Q请求明文.Get("PassWord").String(),
@@ -85,7 +84,7 @@ func UserApi_用户登录(c *gin.Context) {
 			return
 		}
 		if 局_User.Status != 1 {
-			go log.L_log.S输出日志(c, DB.DB_LogLogin{
+			go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 				User:      局_User.User,
 				Ip:        c.ClientIP(),
 				Note:      "账号已冻结",
@@ -96,7 +95,7 @@ func UserApi_用户登录(c *gin.Context) {
 			return
 		}
 		if 局_User.UPAgentId != 0 {
-			go log.L_log.S输出日志(c, DB.DB_LogLogin{
+			go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 				User:      局_User.User,
 				Ip:        c.ClientIP(),
 				Note:      "代理商请登录代理平台",
@@ -109,7 +108,7 @@ func UserApi_用户登录(c *gin.Context) {
 		局_Uid = 局_User.Id
 		局_卡号或用户名 = 局_User.User
 	}
-	var 局_AppUser DB.DB_AppUser
+	var 局_AppUser dbm.DB_AppUser
 	局_老用户 := false
 	局_AppUser, err = service.NewAppUser(c, &db, 局_ctx.AppInfo.AppId).InfoUid(局_Uid)
 	if err == nil {
@@ -130,7 +129,7 @@ func UserApi_用户登录(c *gin.Context) {
 
 			_, err = service.NewAppUser(c, &db, 局_ctx.AppInfo.AppId).UpdateUid(局_Uid, map[string]interface{}{"Key": 局_ctx.Q请求明文.Get("Key").String()})
 			if err != nil {
-				global.GVA_LOG.Error("设置绑定信息失败:" + err.Error())
+				global.GVA_LOG.Println("设置绑定信息失败:" + err.Error())
 			}
 
 			_, err = service.NewLogKey(c, &db).Create(&dbm.DB_LogKey{
@@ -145,7 +144,7 @@ func UserApi_用户登录(c *gin.Context) {
 				Note:   "无绑定信息登陆自动绑定",
 			})
 			if err != nil {
-				global.GVA_LOG.Error("修改绑定信息日志写入失败:" + err.Error())
+				global.GVA_LOG.Println("修改绑定信息日志写入失败:" + err.Error())
 			}
 			局_AppUser.Key = 局_ctx.Q请求明文.Get("Key").String()
 		}
@@ -154,7 +153,7 @@ func UserApi_用户登录(c *gin.Context) {
 		if 局_ctx.AppInfo.VerifyKey == 3 || 局_ctx.AppInfo.VerifyKey == 4 {
 			//1 免验证可以换绑 2 免验证禁止换绑 3 验证可以换绑 4 验证禁止换
 			if 局_AppUser.Key != 局_ctx.Q请求明文.Get("Key").String() {
-				go log.L_log.S输出日志(c, DB.DB_LogLogin{
+				go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 					User:      局_卡号或用户名,
 					Ip:        c.ClientIP(),
 					Note:      "登录绑定信息验证失败:" + 局_ctx.Q请求明文.Get("Key").String(),
@@ -173,7 +172,7 @@ func UserApi_用户登录(c *gin.Context) {
 			//1 免验证可以换绑 2 免验证禁止换绑 3 验证可以换绑 4 验证禁止换
 			_, err = service.NewAppUser(c, &db, 局_ctx.AppInfo.AppId).InfoKey(局_ctx.Q请求明文.Get("Key").String())
 			if err == nil {
-				go log.L_log.S输出日志(c, DB.DB_LogLogin{
+				go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 					User:      局_卡号或用户名,
 					Ip:        c.ClientIP(),
 					Note:      "登录注册绑定信息已存在:" + 局_ctx.Q请求明文.Get("Key").String(),
@@ -193,7 +192,7 @@ func UserApi_用户登录(c *gin.Context) {
 		}
 
 		//没有这个用户,应该是第一次登录应用,添加进去
-		var 局_新AppUser DB.DB_AppUser
+		var 局_新AppUser dbm.DB_AppUser
 		局_新AppUser.Id = 0
 		局_新AppUser.Uid = 局_Uid
 		局_新AppUser.Status = 1
@@ -239,7 +238,7 @@ func UserApi_用户登录(c *gin.Context) {
 
 		_, err = service.NewAppUser(c, &db, 局_ctx.AppInfo.AppId).Create(&局_新AppUser)
 		if err != nil {
-			go log.L_log.S输出日志(c, DB.DB_LogUserMsg{
+			go log.L_log.S输出日志(c, dbm.DB_LogUserMsg{
 				User:    局_卡号或用户名,
 				App:     局_ctx.AppInfo.AppName,
 				AppId:   局_ctx.AppInfo.AppId,
@@ -277,7 +276,7 @@ func UserApi_用户登录(c *gin.Context) {
 			Note:   "新用户登陆自动绑定",
 		})
 		if err != nil {
-			global.GVA_LOG.Error("修改绑定信息日志写入失败:" + err.Error())
+			global.GVA_LOG.Println("修改绑定信息日志写入失败:" + err.Error())
 		}
 
 		// 注册送卡  只有 账号模式才使用
@@ -297,7 +296,7 @@ func UserApi_用户登录(c *gin.Context) {
 		return
 	}
 	if 局_AppUser.Status == 2 {
-		go log.L_log.S输出日志(c, DB.DB_LogLogin{
+		go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 			User:      局_卡号或用户名,
 			Ip:        c.ClientIP(),
 			Note:      "已冻结无法登录",
@@ -313,7 +312,7 @@ func UserApi_用户登录(c *gin.Context) {
 	} else {
 		if 局_ctx.AppInfo.AppType == 2 || 局_ctx.AppInfo.AppType == 4 { //计点方式
 			if 局_AppUser.VipTime <= 0 {
-				go log.L_log.S输出日志(c, DB.DB_LogLogin{
+				go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 					User:      局_卡号或用户名,
 					Ip:        c.ClientIP(),
 					Note:      "非Vip禁止登录",
@@ -325,7 +324,7 @@ func UserApi_用户登录(c *gin.Context) {
 			}
 		} else { //计时模式
 			if 局_AppUser.VipTime <= time.Now().Unix() { // 相等也限制登录, 防止刚注册 时间和过期正好相当
-				go log.L_log.S输出日志(c, DB.DB_LogLogin{
+				go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 					User:      局_卡号或用户名,
 					Ip:        c.ClientIP(),
 					Note:      "Vip已过期",
@@ -362,7 +361,7 @@ func UserApi_用户登录(c *gin.Context) {
 				"LogoutCode": 1, //超过同时在线注销
 			})
 			//已经登录的数量-最大数量 +1
-			go log.L_log.S输出日志(c, DB.DB_LogLogin{
+			go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 				User:      局_卡号或用户名,
 				Ip:        c.ClientIP(),
 				Note:      "登录同时在线超过最大值已注销最早登录:" + strconv.Itoa(局_要踢掉的数量),
@@ -372,7 +371,7 @@ func UserApi_用户登录(c *gin.Context) {
 
 		} else if 局_ctx.AppInfo.ExceedMaxOnlineOut == 2 {
 			//直接提示
-			go log.L_log.S输出日志(c, DB.DB_LogLogin{
+			go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 				User:      局_卡号或用户名,
 				Ip:        c.ClientIP(),
 				Note:      "同时在线超过最大值",
@@ -419,7 +418,7 @@ func UserApi_用户登录(c *gin.Context) {
 	//登录成功写日志
 	_ = log.L_log.R日活月活增加_登陆处理(局_ctx.AppInfo.AppId, 局_卡号或用户名) //需要先处理日活,在写日志
 	if 局_老用户 {
-		go log.L_log.S输出日志(c, DB.DB_LogLogin{
+		go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 			User:      局_卡号或用户名,
 			Ip:        c.ClientIP(),
 			Note:      "用户登录",
@@ -427,7 +426,7 @@ func UserApi_用户登录(c *gin.Context) {
 			Time:      time.Now().Unix(),
 		})
 	} else {
-		go log.L_log.S输出日志(c, DB.DB_LogLogin{
+		go log.L_log.S输出日志(c, dbm.DB_LogLogin{
 			User:      局_卡号或用户名,
 			Ip:        c.ClientIP(),
 			Note:      "新用户登录注册",
@@ -445,7 +444,7 @@ func UserApi_用户登录(c *gin.Context) {
 		})
 	}
 
-	var 局_用户类型 DB.DB_UserClass
+	var 局_用户类型 dbm.DB_UserClass
 	局_用户类型, err = service.NewUserClass(c, &db).Info(局_AppUser.UserClassId)
 	if err != nil {
 		局_用户类型.Name = "已删待改"
@@ -538,7 +537,7 @@ func UserApi_用户登录远程注销(c *gin.Context) {
 		//用户远程注销
 		err = service.NewLinksToken(c, &db).Set批量注销Uid数组([]int{局_id}, 局_ctx.AppInfo.AppId, constant.Z注销_用户远程注销)
 	} else {
-		var 局_临时在线信息 DB.DB_LinksToken
+		var 局_临时在线信息 dbm.DB_LinksToken
 		局_临时在线信息, err = service.NewLinksToken(c, &db).InfoToken(局_指定token)
 		if err != nil {
 			response.Fail(c, constant.Status_操作失败)

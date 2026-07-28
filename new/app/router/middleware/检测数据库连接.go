@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 )
 
 // 检测数据库连接

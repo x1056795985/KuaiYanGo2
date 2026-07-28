@@ -3,12 +3,11 @@ package controller
 import (
 	"EFunc/utils"
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 )
 
 type CpsPayOrder struct {
@@ -21,9 +20,9 @@ func NewCpsPayOrderController() *CpsPayOrder {
 
 func (C *CpsPayOrder) List(c *gin.Context) {
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
-		数组好友订单   []dbm.DB_CpsPayOrder
+		appInfo      dbm.DB_AppInfo
+		likeInfo     dbm.DB_LinksToken
+		数组好友订单 []dbm.DB_CpsPayOrder
 		数组裂变订单   []dbm.DB_CpsPayOrder
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)

@@ -4,12 +4,11 @@ import (
 	. "EFunc/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 	"strings"
 	"time"
@@ -92,7 +91,7 @@ func 版本号_分解(文本 string) (版本号 版本号格式) {
 	return 版本号
 }
 
-func 检测用户登录在线正常(在线信息 *DB.DB_LinksToken) bool {
+func 检测用户登录在线正常(在线信息 *dbm.DB_LinksToken) bool {
 	if 在线信息.Uid > 0 && 在线信息.Status == 1 {
 		return true
 	}
@@ -110,7 +109,7 @@ func 更新上下文缓存在线信息(c *gin.Context) bool {
 }
 
 // 绑定信息更换规则校验 - 校验用户是否可以进行换绑操作
-func 绑定信息更换规则校验(c *gin.Context, AppInfo DB.DB_AppInfo, Uid int) (err error, 扣费 int) {
+func 绑定信息更换规则校验(c *gin.Context, AppInfo dbm.DB_AppInfo, Uid int) (err error, 扣费 int) {
 	var info struct {
 		logKey []dbm.DB_LogKey
 	}

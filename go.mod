@@ -21,7 +21,6 @@ require (
 	github.com/idoubi/goz v1.4.5
 	github.com/imroc/req/v3 v3.35.1
 	github.com/json-iterator/go v1.1.12
-	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/minio/minio-go/v7 v7.0.90
 	github.com/mojocn/base64Captcha v1.3.1
 	github.com/pkg/errors v0.9.1
@@ -38,7 +37,6 @@ require (
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/valyala/fastjson v1.6.4
 	github.com/wechatpay-apiv3/wechatpay-go v0.2.21
-	go.uber.org/zap v1.24.0
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
 	golang.org/x/net v0.38.0
 	golang.org/x/text v0.23.0
@@ -84,7 +82,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/launchdarkly/eventsource v1.7.1 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/lestrrat-go/strftime v1.0.6 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/makiuchi-d/gozxing v0.1.1 // indirect
@@ -122,9 +119,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opentelemetry.io/otel v1.15.1 // indirect
 	go.opentelemetry.io/otel/trace v1.15.1 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/mock v0.4.0 // indirect
-	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect

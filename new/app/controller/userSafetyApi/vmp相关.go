@@ -6,8 +6,8 @@ import (
 	"encoding/pem"
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/VMP"
 	"server/new/app/logic/common/log"
 	"server/new/app/models/common"
@@ -79,7 +79,7 @@ func UserApi_VMP计算授权码防山寨(c *gin.Context) {
 	}
 
 	_, ok := global.H缓存.Get("VMP计算code_" + strconv.Itoa(局_ctx.Z在线信息.Id)) //获取
-	if ok {                                                              //如果ok说明已经存在这个记录了
+	if ok {                                                                       //如果ok说明已经存在这个记录了
 		go log.L_log.S写风控日志(c, 局_ctx.Z在线信息.Id, 1, 局_ctx.Z在线信息.User, c.ClientIP(), "用户一次登陆,多次重复计算VMP授权码,可能在尝试转发请求破解")
 		response.FailMsg(c, constant.Status_操作失败, "禁止重复计算授权")
 		//写风控日志

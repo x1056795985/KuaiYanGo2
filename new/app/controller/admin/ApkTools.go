@@ -5,12 +5,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"server/Service/Ser_AppInfo"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/setting"
+	"server/new/app/models/old/response"
 	"server/new/app/models/request"
 
-	"server/structs/Http/response"
 	"strconv"
 )
 

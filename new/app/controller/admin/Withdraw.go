@@ -4,17 +4,17 @@ import (
 	"encoding/base64"
 	"html"
 	"net/http"
+	"server/new/app/global"
+	"server/new/app/models/old/response"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/skip2/go-qrcode"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
 )
 
 type Withdraw struct {

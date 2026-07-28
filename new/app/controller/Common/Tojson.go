@@ -3,8 +3,8 @@ package Common
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"server/global"
-	"server/structs/Http/response"
+	"server/new/app/global"
+	"server/new/app/models/old/response"
 )
 
 type Common struct {

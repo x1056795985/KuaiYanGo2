@@ -3,8 +3,8 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"server/Service/Captcha"
-	"server/global"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
@@ -31,9 +31,9 @@ func (b *Base) Captcha2(c *gin.Context) {
 		response.FailWithMessage(c, constant.C常_关闭提示)
 		return
 	}
-	局_缓存超时时间 := global.GVA_CONFIG.Captcha.OpenCaptchaTimeOut // 缓存超时时间
-	key := c.ClientIP()                                      //获取客户端ip
-	局_难度, ok := global.H缓存.Get(key)                          //获取
+	局_缓存超时时间 := 3600                // 缓存超时时间
+	key := c.ClientIP()             //获取客户端ip
+	局_难度, ok := global.H缓存.Get(key) //获取
 	if !ok {
 		global.H缓存.Set(key, 1, time.Second*time.Duration(局_缓存超时时间))
 	}
@@ -72,7 +72,7 @@ func (b *Base) Captcha2(c *gin.Context) {
 	response.OkWithDetailed(c, sysCaptchaResponse{
 		CaptchaId:     验证码id,
 		PicPath:       Base64验证码图片,
-		CaptchaLength: global.GVA_CONFIG.Captcha.KeyLong,
+		CaptchaLength: 4,
 		OpenCaptcha:   局_是否显示验证码,
 	}, "ok")
 

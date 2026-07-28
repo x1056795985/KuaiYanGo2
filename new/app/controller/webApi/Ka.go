@@ -8,10 +8,10 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
-	"server/global"
 	"server/new/app/controller/Common"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 )
 
 type KaWebApi struct {
@@ -43,8 +43,8 @@ func (K *KaWebApi) GetKaInfo(c *gin.Context) {
 		return
 	}
 
-	var DB_Ka DB.DB_Ka
-	err = global.GVA_DB.Model(DB.DB_Ka{}).Where("Name = ?", 请求.Name).First(&DB_Ka).Error
+	var DB_Ka dbm.DB_Ka
+	err = global.GVA_DB.Model(dbm.DB_Ka{}).Where("Name = ?", 请求.Name).First(&DB_Ka).Error
 	if err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return
@@ -83,7 +83,7 @@ func (K *KaWebApi) NewKa(c *gin.Context) {
 		return
 	}
 
-	数组_卡 := make([]DB.DB_Ka, 请求.Number)
+	数组_卡 := make([]dbm.DB_Ka, 请求.Number)
 
 	用户名 := Ser_LinkUser.Token取Name(c.Request.Header.Get("Token"))
 	err = Ser_Ka.Ka批量创建(数组_卡[:], 请求.Id, -1, 用户名, 请求.AdminNote, "", 0)

@@ -3,7 +3,7 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"server/new/app/logic/common/agent"
-	"server/structs/Http/response"
+	"server/new/app/models/old/response"
 )
 
 func Is代理鉴权(权限名称 []int) gin.HandlerFunc {

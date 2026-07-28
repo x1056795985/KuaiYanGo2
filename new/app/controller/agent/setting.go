@@ -2,14 +2,13 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/agent/L_setting"
 	m "server/new/app/models/common"
 	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
-	DB "server/structs/db"
 	"strings"
 	"time"
 )
@@ -98,7 +97,7 @@ func (s *Setting) GetBaseInfo(c *gin.Context) {
 // 获取代理云配置
 func (s *Setting) GetAgentUserConfig(c *gin.Context) {
 	tx := *global.GVA_DB
-	var infos []DB.DB_UserConfig
+	var infos []dbm.DB_UserConfig
 	var err error
 	infos, err = service.NewUserConfig(c, &tx).Infos(map[string]interface{}{
 		"Uid":   c.GetInt("Uid"),
@@ -148,7 +147,7 @@ func (s *Setting) NewAgentUserConfig(c *gin.Context) {
 		response.FailWithMessage("变量名已存在", c)
 		return
 	}
-	var 代理云配置 DB.DB_UserConfig
+	var 代理云配置 dbm.DB_UserConfig
 	代理云配置.Time = time.Now().Unix()
 	代理云配置.UpdateTime = time.Now().Unix()
 	代理云配置.User = c.GetString("User")

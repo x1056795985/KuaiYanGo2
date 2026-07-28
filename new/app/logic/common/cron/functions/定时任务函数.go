@@ -11,13 +11,12 @@ import (
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
 	"server/Service/Ser_TaskPool"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/admin/L_pay"
 	"server/new/app/models/db"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -52,7 +51,7 @@ func S刷新数据库定时任务(主动 bool) error {
 		tx := *global.GVA_DB
 		infoArr, err := S.GetAllInfo(&tx, 1)
 		if err != nil {
-			global.GVA_LOG.Error("刷新数据库定时任务失败:" + err.Error())
+			global.GVA_LOG.Println("刷新数据库定时任务失败:" + err.Error())
 			return err
 		}
 
@@ -75,7 +74,7 @@ func S刷新数据库定时任务(主动 bool) error {
 			if infoArr[索引].Status == 1 {
 				err = c.T添加集群任务(infoArr[索引], T通用任务包装函数)
 				if err != nil {
-					global.GVA_LOG.Error("T添加任务定时任务id:" + strconv.Itoa(infoArr[索引].Id) + ",失败:" + err.Error())
+					global.GVA_LOG.Println("T添加任务定时任务id:" + strconv.Itoa(infoArr[索引].Id) + ",失败:" + err.Error())
 				}
 				//所有影响任务执行的参数,都需要加入哈希值
 				hashStr += strconv.Itoa(infoArr[索引].Id) + "|" + infoArr[索引].Cron + "|" + strconv.Itoa(infoArr[索引].IsLog) + "|" + strconv.Itoa(infoArr[索引].Type) + "|" + infoArr[索引].RunText
@@ -84,7 +83,7 @@ func S刷新数据库定时任务(主动 bool) error {
 		hashStr = utils2.Md5String(hashStr)
 		c.Map集群任务Hash = hashStr
 		if 主动 {
-			global.GVA_LOG.Info("已刷新定时任务,新任务hash:" + hashStr)
+			global.GVA_LOG.Println("已刷新定时任务,新任务hash:" + hashStr)
 			global.H缓存.Set("map集群任务Hash", hashStr, -1) //谁更新数据库任务信息,谁主动更新缓存的hash值
 		}
 	}
@@ -93,7 +92,7 @@ func S刷新数据库定时任务(主动 bool) error {
 
 // D定时集群任务预处理分发
 func T通用任务包装函数(时间戳 int64, R任务数据 db.DB_Cron) {
-	//global.GVA_LOG.Info(fmt.Sprintf("T通用任务包装函数被触发:%v \r\n", R任务数据))
+	//global.GVA_LOG.Println(fmt.Sprintf("T通用任务包装函数被触发:%v \r\n", R任务数据))
 	局_hast := utils2.Md5String("hash" + strconv.Itoa(int(时间戳)) + "|" + strconv.Itoa(R任务数据.Id) + "|" + R任务数据.Name)
 	err := global.H缓存.Add(局_hast, 1, time.Second*time.Duration(300))
 	if err != nil { //抢锁失败,跳过.被别的机器抢到执行了
@@ -159,7 +158,7 @@ func T通用任务执行函数2(时间戳 int64, R任务数据 db.DB_Cron) (stri
 			ReturnText: 返回,
 		})
 		if err != nil {
-			global.GVA_LOG.Error("D定时任务_日志插入失败:" + err.Error())
+			global.GVA_LOG.Println("D定时任务_日志插入失败:" + err.Error())
 		}
 	}
 	return 返回, err
@@ -173,7 +172,7 @@ func D定时任务_注销已过期的Token(c *gin.Context) {
 	s := service.NewLinksToken(c, &tx)
 	err := s.Z注销已过期的Token()
 	if err != nil {
-		global.GVA_LOG.Error("在线列表定时注销已过期失败:" + err.Error())
+		global.GVA_LOG.Println("在线列表定时注销已过期失败:" + err.Error())
 	}
 }
 
@@ -186,7 +185,7 @@ func D定时任务_删除已过期的Token(c *gin.Context) {
 	s := service.NewLinksToken(c, &tx)
 	err := s.S删除已过期的Token()
 	if err != nil {
-		global.GVA_LOG.Error("在线列表定时删除已过期失败:" + err.Error())
+		global.GVA_LOG.Println("在线列表定时删除已过期失败:" + err.Error())
 	}
 }
 func D定时任务_统计应用在线用户总数(c *gin.Context) {
@@ -204,7 +203,7 @@ func D定时任务_统计应用在线用户总数(c *gin.Context) {
     GROUP BY LoginAppid
 `).Scan(&results).Error
 	if err != nil {
-		global.GVA_LOG.Error("D定时任务_统计应用在线用户总数失败:" + err.Error())
+		global.GVA_LOG.Println("D定时任务_统计应用在线用户总数失败:" + err.Error())
 		return
 	}
 	if len(results) == 0 {
@@ -225,7 +224,7 @@ func D定时任务_统计应用在线用户总数(c *gin.Context) {
 	})
 	err = s.BatchCreate(&results)
 	if err != nil {
-		global.GVA_LOG.Error("D定时任务_统计应用在线用户总数失败:" + err.Error())
+		global.GVA_LOG.Println("D定时任务_统计应用在线用户总数失败:" + err.Error())
 	}
 	// 删除4天前的数据
 	err = tx.Where("createdAt < ?", time.Now().AddDate(0, 0, -4).Unix()).Delete(&db.DB_TongJiZaiXian{}).Error
@@ -261,7 +260,7 @@ func D定时任务_统计初始化日活月活(c *gin.Context) {
 				Scan(&日活记录.Count).Error
 			err = tx.Create(&日活记录).Error
 			if err != nil {
-				global.GVA_LOG.Error("D定时任务_统计初始化日活月活:" + err.Error())
+				global.GVA_LOG.Println("D定时任务_统计初始化日活月活:" + err.Error())
 			}
 		}
 
@@ -282,7 +281,7 @@ func D定时任务_统计初始化日活月活(c *gin.Context) {
 				Scan(&月活记录.Count).Error
 			err = tx.Create(&月活记录).Error
 			if err != nil {
-				global.GVA_LOG.Error("D定时任务_统计初始化日活月活:" + err.Error())
+				global.GVA_LOG.Println("D定时任务_统计初始化日活月活:" + err.Error())
 			}
 		}
 	}
@@ -332,7 +331,7 @@ func D定时任务_执行公共函数(时间戳 int64, R任务数据 db.DB_Cron)
 	if err != nil {
 		return 返回, errors.New("获取全局公共js函数失败:" + err.Error())
 	}
-	vm := Ser_Js.JS引擎初始化_用户(&gin.Context{}, &DB.DB_AppInfo{}, &DB.DB_LinksToken{}, &局_js数据)
+	vm := Ser_Js.JS引擎初始化_用户(&gin.Context{}, &dbm.DB_AppInfo{}, &dbm.DB_LinksToken{}, &局_js数据)
 	_, err = vm.RunString(局_js数据.Value)
 	if 局_详细错误, ok := err.(*goja.Exception); ok {
 		return 返回, errors.New("JS代码运行失败:" + 局_详细错误.String())
@@ -366,10 +365,10 @@ func D定时任务_删除已过期唯一积分记录(c *gin.Context) {
 		s := service.NewUniqueNumLog(c, &tx, key)
 		局_数量, err := s.Delete已过期()
 		if err != nil {
-			global.GVA_LOG.Error("删除已过期唯一积分记录失败:" + err.Error())
+			global.GVA_LOG.Println("删除已过期唯一积分记录失败:" + err.Error())
 		}
 		if 局_数量 > 0 {
-			global.GVA_LOG.Info("删除已过期唯一积分记录:" + strconv.Itoa(int(局_数量)))
+			global.GVA_LOG.Println("删除已过期唯一积分记录:" + strconv.Itoa(int(局_数量)))
 		}
 	}
 

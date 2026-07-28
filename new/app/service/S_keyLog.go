@@ -3,10 +3,10 @@ package service
 import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/global"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
-	"server/utils"
+	"server/new/app/utils"
 	"strconv"
 )
 
@@ -68,7 +68,7 @@ func (s *LogKey) GetList(请求 request.List, AppId int, rangeTime []string) (in
 	var 局_数组 []dbm.DB_LogKey
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组).Error
 	if err != nil {
-		global.GVA_LOG.Error(utils.Q取包名结构体方法(s) + ":" + err.Error())
+		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
 	}
 	return 总数, 局_数组, err
 }

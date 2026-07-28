@@ -11,9 +11,8 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_UserClass"
-	"server/global"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
-	DB "server/structs/db"
 	"sort"
 	"strconv"
 	"strings"
@@ -202,12 +201,12 @@ func Get在线用户统计(c *gin.Context) []gin.H {
 	局_耗时 := time.Now().Unix()
 	var 局_appId列表 []int
 	var 局_appId名称 = Ser_AppInfo.AppInfo取map列表Int(true)
-	_ = global.GVA_DB.Model(DB.DB_LinksToken{}).Distinct("LoginAppid").Find(&局_appId列表).Error
+	_ = global.GVA_DB.Model(dbm.DB_LinksToken{}).Distinct("LoginAppid").Find(&局_appId列表).Error
 	var Data = make([]gin.H, 0, len(局_appId列表))
 	var 局_数量 int64
 	for 索引, _ := range 局_appId列表 {
 		局_数量 = 0
-		global.GVA_DB.Model(DB.DB_LinksToken{}).Where("LoginAppid=?", 局_appId列表[索引]).Where("Status=1").Where("User!=?", "游客").Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("LoginAppid=?", 局_appId列表[索引]).Where("Status=1").Where("User!=?", "游客").Count(&局_数量)
 		if 局_数量 > 0 {
 			Data = append(Data, gin.H{"name": 局_appId名称[局_appId列表[索引]], "value": 局_数量})
 		}
@@ -356,12 +355,12 @@ func Get应用用户类型统计(c *gin.Context) []gin.H {
 	var 局_ClassId列表 []int
 	var 局_名称 = Ser_UserClass.UserClass取map列表Int(局_Appid)
 	局_名称[0] = "未分类"
-	_ = global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(局_Appid)).Distinct("UserClassId").Find(&局_ClassId列表).Error
+	_ = global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(局_Appid)).Distinct("UserClassId").Find(&局_ClassId列表).Error
 	var Data = make([]gin.H, len(局_ClassId列表))
 	var 局_数量 int64
 	for 索引, _ := range 局_ClassId列表 {
 		局_数量 = 0
-		global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_Appid)).Where("UserClassId=?", 局_ClassId列表[索引]).Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_Appid)).Where("UserClassId=?", 局_ClassId列表[索引]).Count(&局_数量)
 		Data[索引] = gin.H{"name": 局_名称[局_ClassId列表[索引]], "value": 局_数量}
 	}
 
@@ -624,7 +623,7 @@ func Get余额充值消费统计(c *gin.Context) []gin.H {
 	*/
 	var 局_数量 [7]string
 
-	global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).
+	global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).
 		Select("SUM(case when ( Time between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then Rmb else null end) as  '1' ",
 			"SUM(case when ( Time between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then Rmb else null end) as  '2' ",
 			"SUM(case when ( Time between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then Rmb else null end) as  '3' ",
@@ -646,7 +645,7 @@ func Get余额充值消费统计(c *gin.Context) []gin.H {
 	}
 	Data[0] = gin.H{"name": "充值金额", "type": "line", "data": 局_数量}
 
-	global.GVA_DB.Model(DB.DB_LogMoney{}).
+	global.GVA_DB.Model(dbm.DB_LogMoney{}).
 		Select("Count(case when ( Time between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then Count else null end) as  '1' ",
 			"SUM(case when ( Time between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then Count else null end) as  '2' ",
 			"SUM(case when ( Time between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then Count else null end) as  '3' ",
@@ -720,7 +719,7 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 	*/
 	var 局_数量 [7]string
 
-	global.GVA_DB.Model(DB.DB_LogVipNumber{}).
+	global.GVA_DB.Model(dbm.DB_LogVipNumber{}).
 		Select("SUM(case when ( Time between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then Count else null end) as  '1' ",
 			"SUM(case when ( Time between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then Count else null end) as  '2' ",
 			"SUM(case when ( Time between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then Count else null end) as  '3' ",
@@ -743,7 +742,7 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 	}
 	Data[0] = gin.H{"name": "消费积分", "type": "line", "data": 局_数量}
 
-	global.GVA_DB.Model(DB.DB_LogVipNumber{}).
+	global.GVA_DB.Model(dbm.DB_LogVipNumber{}).
 		Select("Count(case when ( Time between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then Count else null end) as  '1' ",
 			"SUM(case when ( Time between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then Count else null end) as  '2' ",
 			"SUM(case when ( Time between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then Count else null end) as  '3' ",
@@ -808,7 +807,7 @@ func Get卡号列表统计制卡(c *gin.Context) []gin.H {
 	var 局_临时 = make(map[string]interface{})
 
 	var 局_数量 [7]int
-	局_db := global.GVA_DB.Model(DB.DB_Ka{})
+	局_db := global.GVA_DB.Model(dbm.DB_Ka{})
 	if 局_type.AppId > 0 {
 		局_db = 局_db.Where("AppId = ?", 局_type.AppId)
 	}
@@ -866,7 +865,7 @@ func Get卡号月度汇总(c *gin.Context) gin.H {
 	本月结束 := 取相对时间0点时间戳月(1)
 	上月开始 := 取相对时间0点时间戳月(-1)
 
-	局_db := global.GVA_DB.Model(DB.DB_Ka{})
+	局_db := global.GVA_DB.Model(dbm.DB_Ka{})
 	if 局_type.AppId > 0 {
 		局_db = 局_db.Where("AppId = ?", 局_type.AppId)
 	}
@@ -915,8 +914,8 @@ func Get仪表台汇总(c *gin.Context) gin.H {
 
 	// 卡号总数 & 未使用数量 (UseTime=0 表示未使用)
 	var 局_卡号总数, 局_卡号未使用 int64
-	global.GVA_DB.Model(DB.DB_Ka{}).Count(&局_卡号总数)
-	global.GVA_DB.Model(DB.DB_Ka{}).Where("UseTime = 0").Count(&局_卡号未使用)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Count(&局_卡号总数)
+	global.GVA_DB.Model(dbm.DB_Ka{}).Where("UseTime = 0").Count(&局_卡号未使用)
 
 	// 充值成功总额: Status=3 表示充值成功, 月份以每月1日0点0分作为分隔
 	本月开始 := 取相对时间0点时间戳月(0)
@@ -924,10 +923,10 @@ func Get仪表台汇总(c *gin.Context) gin.H {
 	上月开始 := 取相对时间0点时间戳月(-1)
 
 	var 局_本月充值, 局_上月充值 float64
-	global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).
+	global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).
 		Where("Status = 3 AND Time >= ? AND Time < ?", 本月开始, 本月结束).
 		Select("COALESCE(SUM(Rmb), 0)").Scan(&局_本月充值)
-	global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).
+	global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).
 		Where("Status = 3 AND Time >= ? AND Time < ?", 上月开始, 本月开始).
 		Select("COALESCE(SUM(Rmb), 0)").Scan(&局_上月充值)
 
@@ -977,7 +976,7 @@ func Get卡号列表统计制卡_代理(c *gin.Context) []gin.H {
 	var 局_临时 = make(map[string]interface{})
 
 	var 局_数量 [7]int
-	局_db := global.GVA_DB.Model(DB.DB_Ka{}).Where("RegisterUser = ?", c.GetString("User"))
+	局_db := global.GVA_DB.Model(dbm.DB_Ka{}).Where("RegisterUser = ?", c.GetString("User"))
 	if 局_type.AppId > 0 {
 		局_db = 局_db.Where("AppId = ?", 局_type.AppId)
 	}
@@ -1063,7 +1062,7 @@ func Get应用用户账号注册统计(c *gin.Context) []gin.H {
 
 	var 局_数量 [7]int
 	//
-	global.GVA_DB.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_type.AppId)).
+	global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_type.AppId)).
 		Select("Count(case when ( RegisterTime between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then 1 else null end) as  '1' ",
 			"Count(case when ( RegisterTime between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then 1 else null end) as  '2' ",
 			"Count(case when ( RegisterTime between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then 1 else null end) as  '3' ",
@@ -1153,7 +1152,7 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 	}
 	Data[0] = gin.H{"name": "用户总数", "type": "line", "data": 局_数量}*/
 
-	global.GVA_DB.Model(DB.DB_User{}).
+	global.GVA_DB.Model(dbm.DB_User{}).
 		Select("Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset-6)+" and "+时间处理函数(局_type.Offset-5)+") then 1 else null end) as  '1' ",
 			"Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset-5)+" and "+时间处理函数(局_type.Offset-4)+") then 1 else null end) as  '2' ",
 			"Count(case when ( RegisterTime between "+时间处理函数(局_type.Offset-4)+" and "+时间处理函数(局_type.Offset-3)+") then 1 else null end) as  '3' ",
@@ -1184,7 +1183,7 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 			"Count(case when ( LoginTime between "+时间处理函数(0)+" and "+时间处理函数(1)+") then 1 else null end) as  '7' ").
 		First(&局_临时)*/
 	//老老实实读取登录日志吧
-	global.GVA_DB.Model(DB.DB_LogLogin{}).
+	global.GVA_DB.Model(dbm.DB_LogLogin{}).
 		Select("Count(case when ( Time between "+时间处理函数(局_type.Offset-6)+" and "+时间处理函数(局_type.Offset-5)+") then 1 else null end) as  '1' ",
 			"Count(case when ( Time between "+时间处理函数(局_type.Offset-5)+" and "+时间处理函数(局_type.Offset-4)+") then 1 else null end) as  '2' ",
 			"Count(case when ( Time between "+时间处理函数(局_type.Offset-4)+" and "+时间处理函数(局_type.Offset-3)+") then 1 else null end) as  '3' ",
@@ -1247,9 +1246,9 @@ func Get代理组织架构图(c *gin.Context, 根代理ID int) []*Node {
 		}
 	*/
 	//局_耗时 := time.Now().Unix()
-	var 局_用户数组 []DB.DB_User
+	var 局_用户数组 []dbm.DB_User
 
-	_ = global.GVA_DB.Model(DB.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Where("UPAgentId !=0").Find(&局_用户数组).Error
+	_ = global.GVA_DB.Model(dbm.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Where("UPAgentId !=0").Find(&局_用户数组).Error
 	if len(局_用户数组) == 0 { //防止无代理会报错
 		return []*Node{}
 	}
@@ -1338,7 +1337,7 @@ func Get任务池任务Id分析(c *gin.Context) [][]string {
 		Fail    int `json:"Fail"`
 	}
 	var 局_统计结果 []局_日统计
-	err := global.GVA_DB.Model(DB.DB_TaskPoolData{}).
+	err := global.GVA_DB.Model(dbm.DB_TaskPoolData{}).
 		Select("TimeStart DIV 86400 AS DayNum, "+
 			"SUM(CASE WHEN Status = 3 THEN 1 ELSE 0 END) AS Success, "+
 			"SUM(CASE WHEN Status = 4 THEN 1 ELSE 0 END) AS Fail").
@@ -1347,7 +1346,7 @@ func Get任务池任务Id分析(c *gin.Context) [][]string {
 		Find(&局_统计结果).Error
 	_ = err
 
-	global.GVA_LOG.Info(fmt.Sprintf("[任务Id分析] Tid=%d 查询耗时=%v 结果数=%d", 局_type.TaskId, time.Since(局_总开始), len(局_统计结果)))
+	global.GVA_LOG.Println(fmt.Sprintf("[任务Id分析] Tid=%d 查询耗时=%v 结果数=%d", 局_type.TaskId, time.Since(局_总开始), len(局_统计结果)))
 
 	// 构建日期->统计映射
 	局_Map := make(map[string]*局_日统计, len(局_统计结果))
@@ -1380,6 +1379,6 @@ func Get任务池任务Id分析(c *gin.Context) [][]string {
 		})
 	}
 
-	global.GVA_LOG.Info(fmt.Sprintf("[任务Id分析] Tid=%d 总耗时=%v", 局_type.TaskId, time.Since(局_总开始)))
+	global.GVA_LOG.Println(fmt.Sprintf("[任务Id分析] Tid=%d 总耗时=%v", 局_type.TaskId, time.Since(局_总开始)))
 	return Data
 }

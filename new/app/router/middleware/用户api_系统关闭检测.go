@@ -4,7 +4,7 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/blacklist"
 	"server/new/app/logic/common/setting"
 	"server/new/app/models/common"

@@ -2,12 +2,11 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 )
 
 type CpsInfo struct {
@@ -21,9 +20,9 @@ func NewCpsInfoController() *CpsInfo {
 func (C *CpsInfo) Info(c *gin.Context) {
 	var err error
 	var info = struct {
-		appInfo             DB.DB_AppInfo
-		likeInfo            DB.DB_LinksToken
-		CpsInfo             dbm.DB_CpsInfo
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
+		CpsInfo  dbm.DB_CpsInfo
 		AppPromotionConfigs []dbm.DB_AppPromotionConfig
 		AppPromotionConfig  dbm.DB_AppPromotionConfig
 	}{}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/cache/local_cache"
-	"go.uber.org/zap"
+	"server/new/app/global"
 	"server/new/app/logic/webSocket"
 
 	//"net/http"
@@ -13,12 +13,11 @@ import (
 	"os"
 	"runtime/debug"
 	"server/Service/Ser_Init"
-	"server/new/app/router/userSafetyApi"
 	"server/core"
-	"server/global"
 	"server/new"
 	_ "server/new/app/logic"
 	"server/new/app/logic/common/setting"
+	"server/new/app/router/userSafetyApi"
 	"time"
 )
 
@@ -47,8 +46,6 @@ func main() {
 
 	global.GVA_Viper = core.InitViper() //初始化配置读写器 和全局配置结构变量GVA_config
 
-	global.GVA_LOG = core.InitZap()    // 初始化zap日志记录器
-	zap.ReplaceGlobals(global.GVA_LOG) //替换系统的log记录器 为zap的全局日志记录器 方便统一管理
 	global.H缓存 = local_cache.NewCache( //需要比数据库先初始化,因为读取系统配置就用到缓存了
 		//设置缓存默认超时时间 为24小时
 		local_cache.SetDefaultExpire(time.Hour*24),
@@ -64,11 +61,11 @@ func main() {
 
 		// 程序结束前关闭数据库链接
 		db, _ := global.GVA_DB.DB()
-		defer db.Close()                                                  //延迟关闭程序结束前关闭表
+		defer db.Close()                                                     //延迟关闭程序结束前关闭表
 		userSafetyApi.J集_UserAPi路由_加密.G更新md5APi名称(setting.Q系统设置().Y用户API加密盐) //只有数据库成功才可以操作 不然或报错
 		webSocket.L_webSocket.D断开所有连接()
 	} else {
-		global.GVA_LOG.Info(fmt.Sprintf("数据库连接失败,等待输入数据库信息"))
+		global.GVA_LOG.Println(fmt.Sprintf("数据库连接失败,等待输入数据库信息"))
 	}
 	core.InitCron定时任务()
 	new.Main()

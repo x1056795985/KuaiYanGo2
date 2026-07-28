@@ -5,7 +5,7 @@ import (
 	"server/new/app/controller/Common"
 	"server/new/app/logic/admin/L_chart"
 	"server/new/app/logic/admin/L_gaoDe"
-	"server/structs/Http/response"
+	"server/new/app/models/old/response"
 )
 
 type Echart struct {

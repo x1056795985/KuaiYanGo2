@@ -6,9 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"reflect"
-	"server/global"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -39,102 +38,102 @@ func (j *log) S输出日志(c *gin.Context, logData interface{}) (err error) {
 		switch v := logData.(type) {
 		default:
 			return errors.New(fmt.Sprintf("不支持的日志类型:%v", logData))
-		case DB.DB_LogRMBPayOrder: //支付信息日志
+		case dbm.DB_LogRMBPayOrder: //支付信息日志
 			if v.Time == 0 {
 				v.Time = time.Now().Unix()
 			}
-			err3 = tx.Model(DB.DB_LogRMBPayOrder{}).Create(&v).Error
-		case []DB.DB_LogRMBPayOrder: //支付信息日志
+			err3 = tx.Model(dbm.DB_LogRMBPayOrder{}).Create(&v).Error
+		case []dbm.DB_LogRMBPayOrder: //支付信息日志
 			for i := range v {
 				if v[i].Time == 0 {
 					v[i].Time = time.Now().Unix()
 				}
-				err3 = tx.Model(DB.DB_LogRMBPayOrder{}).Create(&v[i]).Error
+				err3 = tx.Model(dbm.DB_LogRMBPayOrder{}).Create(&v[i]).Error
 			}
 
-		case DB.DB_LogVipNumber: //积分点数时间日志
+		case dbm.DB_LogVipNumber: //积分点数时间日志
 			if v.Time == 0 {
 				v.Time = time.Now().Unix()
 			}
-			err3 = tx.Model(DB.DB_LogVipNumber{}).Create(&v).Error
-		case []DB.DB_LogVipNumber: //积分点数时间日志
+			err3 = tx.Model(dbm.DB_LogVipNumber{}).Create(&v).Error
+		case []dbm.DB_LogVipNumber: //积分点数时间日志
 			for i := range v {
 				if v[i].Time == 0 {
 					v[i].Time = time.Now().Unix()
 				}
-				err3 = tx.Model(DB.DB_LogVipNumber{}).Create(&v[i]).Error
+				err3 = tx.Model(dbm.DB_LogVipNumber{}).Create(&v[i]).Error
 			}
-		case DB.DB_LogMoney: //余额日志
+		case dbm.DB_LogMoney: //余额日志
 			if v.Time == 0 {
 				v.Time = time.Now().Unix()
 			}
-			err3 = tx.Model(DB.DB_LogMoney{}).Create(&v).Error
-		case []DB.DB_LogMoney: //余额日志
+			err3 = tx.Model(dbm.DB_LogMoney{}).Create(&v).Error
+		case []dbm.DB_LogMoney: //余额日志
 			for i := range v {
 				if v[i].Time == 0 {
 					v[i].Time = time.Now().Unix()
 				}
-				err3 = tx.Model(DB.DB_LogMoney{}).Create(&v[i]).Error
+				err3 = tx.Model(dbm.DB_LogMoney{}).Create(&v[i]).Error
 			}
-		case DB.DB_LogKa: //卡号操作日志
+		case dbm.DB_LogKa: //卡号操作日志
 			if v.Time == 0 {
 				v.Time = time.Now().Unix()
 			}
-			err3 = tx.Model(DB.DB_LogKa{}).Create(&v).Error
-		case []DB.DB_LogKa: //卡号操作日志
+			err3 = tx.Model(dbm.DB_LogKa{}).Create(&v).Error
+		case []dbm.DB_LogKa: //卡号操作日志
 			for i := range v {
 				if v[i].Time == 0 {
 					v[i].Time = time.Now().Unix()
 				}
-				err3 = tx.Model(DB.DB_LogKa{}).Create(&v[i]).Error
+				err3 = tx.Model(dbm.DB_LogKa{}).Create(&v[i]).Error
 			}
-		case DB.DB_LogLogin: //登录日志
+		case dbm.DB_LogLogin: //登录日志
 			if v.Time == 0 {
 				v.Time = time.Now().Unix()
 			}
-			err3 = tx.Model(DB.DB_LogLogin{}).Create(&v).Error
-		case []DB.DB_LogLogin: //登录日志
+			err3 = tx.Model(dbm.DB_LogLogin{}).Create(&v).Error
+		case []dbm.DB_LogLogin: //登录日志
 			for i := range v {
 				if v[i].Time == 0 {
 					v[i].Time = time.Now().Unix()
 				}
-				err3 = tx.Model(DB.DB_LogLogin{}).Create(&v[i]).Error
+				err3 = tx.Model(dbm.DB_LogLogin{}).Create(&v[i]).Error
 			}
-		case DB.DB_LogAgentOtherFunc: //代理操作日志
+		case dbm.DB_LogAgentOtherFunc: //代理操作日志
 			if v.Time == 0 {
 				v.Time = time.Now().Unix()
 			}
-			err3 = tx.Model(DB.DB_LogAgentOtherFunc{}).Create(&v).Error
-		case []DB.DB_LogAgentOtherFunc: //代理操作日志
+			err3 = tx.Model(dbm.DB_LogAgentOtherFunc{}).Create(&v).Error
+		case []dbm.DB_LogAgentOtherFunc: //代理操作日志
 			for i := range v {
 				if v[i].Time == 0 {
 					v[i].Time = time.Now().Unix()
 				}
-				err3 = tx.Model(DB.DB_LogAgentOtherFunc{}).Create(&v[i]).Error
+				err3 = tx.Model(dbm.DB_LogAgentOtherFunc{}).Create(&v[i]).Error
 			}
-		case DB.DB_LogUserMsg: //用户消息日志
+		case dbm.DB_LogUserMsg: //用户消息日志
 			if v.Time == 0 {
 				v.Time = time.Now().Unix()
 			}
-			err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v).Error
-		case []DB.DB_LogUserMsg: //用户消息日志
+			err3 = tx.Model(dbm.DB_LogUserMsg{}).Create(&v).Error
+		case []dbm.DB_LogUserMsg: //用户消息日志
 			for i := range v {
 				if v[i].Time == 0 {
 					v[i].Time = time.Now().Unix()
 				}
-				err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v[i]).Error
+				err3 = tx.Model(dbm.DB_LogUserMsg{}).Create(&v[i]).Error
 			}
-		case DB.DB_LogRiskControl: //风控日志
+		case dbm.DB_LogRiskControl: //风控日志
 			if v.Time == 0 {
 				v.Time = time.Now().Unix()
 			}
-			err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v).Error
-		case []DB.DB_LogRiskControl: //风控日志
+			err3 = tx.Model(dbm.DB_LogUserMsg{}).Create(&v).Error
+		case []dbm.DB_LogRiskControl: //风控日志
 			for i := range v {
 				if v[i].Time == 0 {
 					v[i].Time = time.Now().Unix()
 				}
-				err3 = tx.Model(DB.DB_LogUserMsg{}).Create(&v[i]).Error
+				err3 = tx.Model(dbm.DB_LogUserMsg{}).Create(&v[i]).Error
 			}
 		}
 		return
@@ -163,8 +162,8 @@ func (j *log) R日活月活增加_登陆处理(AppId int, user string) (err erro
 
 	db := *global.GVA_DB // 创建用户活跃服务
 	//上次登陆日志
-	var 时间戳 DB.DB_LogLogin
-	db.Model(DB.DB_LogLogin{}).Where("LoginType = ? and user = ?  AND (Note=? OR Note =?)", AppId, user, "用户登录", "新用户登录注册").
+	var 时间戳 dbm.DB_LogLogin
+	db.Model(dbm.DB_LogLogin{}).Where("LoginType = ? and user = ?  AND (Note=? OR Note =?)", AppId, user, "用户登录", "新用户登录注册").
 		Order("Id DESC").First(&时间戳)
 	//如果不是今日,则日活+1
 	DateStr := time.Now().Format("2006-01-02")
@@ -185,9 +184,9 @@ func (j *log) R日活月活增加_登陆处理(AppId int, user string) (err erro
 func (j *log) S写风控日志(c *gin.Context, LId, 风控规则类型 int, User, IP, 风控信息 string) {
 	db := *global.GVA_DB
 	// 增加风控分
-	_ = db.Model(DB.DB_LinksToken{}).Where("Id=?", LId).Update("RiskControl", gorm.Expr("RiskControl +?", 1)).Error
+	_ = db.Model(dbm.DB_LinksToken{}).Where("Id=?", LId).Update("RiskControl", gorm.Expr("RiskControl +?", 1)).Error
 	// 写风控日志
-	login := DB.DB_LogRiskControl{
+	login := dbm.DB_LogRiskControl{
 		LId:  LId,
 		User: User,
 		Ip:   IP,
@@ -195,5 +194,5 @@ func (j *log) S写风控日志(c *gin.Context, LId, 风控规则类型 int, User
 		Type: 风控规则类型,
 		Note: 风控信息,
 	}
-	_ = db.Model(DB.DB_LogRiskControl{}).Create(&login).Error
+	_ = db.Model(dbm.DB_LogRiskControl{}).Create(&login).Error
 }

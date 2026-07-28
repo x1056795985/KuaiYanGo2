@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"server/core/dist/VueAdmin"
-	"server/global"
 	controller "server/new/app/controller/admin"
+	"server/new/app/global"
 	"server/new/app/router/middleware"
 	"strings"
 )

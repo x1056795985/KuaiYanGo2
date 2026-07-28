@@ -13,22 +13,20 @@ import (
 	"server/Service/Ser_RMBPayOrder"
 	"server/Service/Ser_TaskPool"
 	"server/Service/Ser_User"
-	"server/config"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/appInfo"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/publicData"
 	"server/new/app/logic/common/setting"
+	"server/new/app/models/common"
 	dbm "server/new/app/models/db"
 
 	"server/new/app/service"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -38,36 +36,36 @@ func InitDbTables(c *gin.Context) {
 
 	tables := []interface{}{
 		// 系统模块表
-		DB.DB_PublicData{},
-		DB.DB_PublicJs{},
-		DB.DB_UserConfig{},
+		dbm.DB_PublicData{},
+		dbm.DB_PublicJs{},
+		dbm.DB_UserConfig{},
 
-		DB.DB_Admin{},
-		DB.DB_User{},
-		DB.DB_LinksToken{},
+		dbm.DB_Admin{},
+		dbm.DB_User{},
+		dbm.DB_LinksToken{},
 
-		DB.DB_AppInfo{},
-		DB.DB_UserClass{},
+		dbm.DB_AppInfo{},
+		dbm.DB_UserClass{},
 
 		dbm.DB_KaClass{},
-		DB.DB_Ka{},
+		dbm.DB_Ka{},
 
-		DB.DB_LogMoney{},
-		DB.DB_LogLogin{},
+		dbm.DB_LogMoney{},
+		dbm.DB_LogLogin{},
 
-		DB.DB_LogUserMsg{},
-		DB.DB_LogRMBPayOrder{},
-		DB.DB_LogKa{},
-		DB.DB_LogRiskControl{},
-		DB.DB_LogVipNumber{},
-		DB.DB_LogAgentOtherFunc{},
+		dbm.DB_LogUserMsg{},
+		dbm.DB_LogRMBPayOrder{},
+		dbm.DB_LogKa{},
+		dbm.DB_LogRiskControl{},
+		dbm.DB_LogVipNumber{},
+		dbm.DB_LogAgentOtherFunc{},
 		dbm.DB_LogKey{},
 
 		// 代理相关
-		DB.Db_Agent_Level{},
-		DB.Db_Agent_卡类授权{},
-		DB.Db_Agent_库存日志{},
-		DB.Db_Agent_库存卡包{},
+		dbm.Db_Agent_Level{},
+		dbm.Db_Agent_卡类授权{},
+		dbm.Db_Agent_库存日志{},
+		dbm.Db_Agent_库存卡包{},
 
 		dbm.DB_Setting{},
 		dbm.DB_Blacklist{},
@@ -96,14 +94,14 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_TongJiZaiXian{},
 
 		// 任务池数据库
-		DB.TaskPool_类型{},
-		DB.TaskPool_队列{},
-		DB.DB_TaskPoolData{},
+		dbm.TaskPool_类型{},
+		dbm.TaskPool_队列{},
+		dbm.DB_TaskPoolData{},
 	}
 
 	for _, table := range tables {
 		if err := db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(table); err != nil {
-			global.GVA_LOG.Error("表创建失败", zap.String("table", fmt.Sprintf("%T", table)), zap.Error(err))
+			global.GVA_LOG.Println("表创建失败", "table", fmt.Sprintf("%T", table), err)
 		}
 	}
 
@@ -121,9 +119,9 @@ func InitDbTableData(c *gin.Context) {
 
 	// 检查 admin表是否有账号
 	var 局_数量 int64
-	db.Model(DB.DB_Admin{}).Count(&局_数量)
+	db.Model(dbm.DB_Admin{}).Count(&局_数量)
 	if 局_数量 == 0 {
-		entities := []DB.DB_Admin{{
+		entities := []dbm.DB_Admin{{
 			Id:            1,
 			User:          "admin",
 			PassWord:      utils2.BcryptHash("admin"),
@@ -141,7 +139,7 @@ func InitDbTableData(c *gin.Context) {
 	// 检查 用户表
 	局_例子版本 := 1
 	if 局_例子记录.DbUser < 局_例子版本 {
-		global.GVA_DB.Model(DB.DB_User{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_User{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_User.New用户信息("test0001", "test0001", "test0001test0001", "10001", "10001@qq.com", "", "127.0.0.1", "", 0, 0, 0, "")
 		}
@@ -151,7 +149,7 @@ func InitDbTableData(c *gin.Context) {
 	// 检查 DB_AppInfo表
 	局_例子版本 = 1
 	if 局_例子记录.DbAppinfo < 局_例子版本 {
-		global.GVA_DB.Model(DB.DB_AppInfo{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_AppInfo{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			_ = appInfo.L_appInfo.NewApp信息(c, 10001, 1, "演示对接账密限时Rsa交换密匙")
 			Ser_AppUser.New用户信息(10001, 1, "测试绑定", 1, time.Now().Unix(), 11.02, 0, "")
@@ -170,7 +168,7 @@ func InitDbTableData(c *gin.Context) {
 	// 检查 余额充值订单
 	局_例子版本 = 1
 	if 局_例子记录.DbLogrmbpayorder < 局_例子版本 {
-		global.GVA_DB.Model(DB.DB_LogRMBPayOrder{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			订单创建, _ := Ser_RMBPayOrder.Order订单创建(1, 1, 0.01, "支付宝PC", "演示数据", "127.0.0.1", 0, "")
 			Ser_RMBPayOrder.Order更新订单状态(订单创建.PayOrder, Ser_RMBPayOrder.D订单状态_成功)
@@ -197,7 +195,7 @@ func InitDbTableData(c *gin.Context) {
 	// 检查 余额日志
 	局_例子版本 = 1
 	if 局_例子记录.DbLogmoney < 局_例子版本 {
-		global.GVA_DB.Model(DB.DB_LogMoney{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_LogMoney{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_Log.Log_写余额日志("test0001", "127.0.0.1", "演示积分效果", -0.01)
 			Ser_Log.Log_写余额日志("test0001", "127.0.0.1", "演示积分效果", 0.01)
@@ -208,7 +206,7 @@ func InitDbTableData(c *gin.Context) {
 	// 检查 积分点数
 	局_例子版本 = 1
 	if 局_例子记录.DbLogvipnumber < 局_例子版本 {
-		global.GVA_DB.Model(DB.DB_LogVipNumber{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_LogVipNumber{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_Log.Log_写积分点数时间日志("test0001", "127.0.0.1", "演示积分效果", -0.01, 10001, 1)
 			Ser_Log.Log_写积分点数时间日志("test0001", "127.0.0.1", "演示积分效果", 0.01, 10001, 1)
@@ -221,15 +219,15 @@ func InitDbTableData(c *gin.Context) {
 	// 检查 公共变量表
 	局_例子版本 = 1
 	if 局_例子记录.DbPublicdata < 局_例子版本 {
-		global.GVA_DB.Model(DB.DB_PublicData{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_PublicData{}).Count(&局_数量)
 		if 局_数量 == 0 {
-			_ = publicData.L_publicData.C创建(&gin.Context{}, DB.DB_PublicData{
+			_ = publicData.L_publicData.C创建(&gin.Context{}, dbm.DB_PublicData{
 				AppId: 1,
 				Type:  3,
 				Name:  "测试逻辑开关",
 				Value: "1",
 			})
-			_ = publicData.L_publicData.C创建(&gin.Context{}, DB.DB_PublicData{
+			_ = publicData.L_publicData.C创建(&gin.Context{}, dbm.DB_PublicData{
 				AppId: 1,
 				Type:  1,
 				Name:  "系统名称",
@@ -245,7 +243,7 @@ func InitDbTableData(c *gin.Context) {
 
 	// 检查 任务类型
 	if 局_例子记录.Taskpool < 局_例子版本 {
-		global.GVA_DB.Model(DB.TaskPool_类型{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.TaskPool_类型{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			_ = Ser_TaskPool.Task类型创建("测试任务1", "hook模板_任务创建入库前", "", "", "")
 		}
@@ -255,7 +253,7 @@ func InitDbTableData(c *gin.Context) {
 	// 检查 用户消息
 	局_例子版本 = 1
 	if 局_例子记录.DbLogusermsg < 局_例子版本 {
-		global.GVA_DB.Model(DB.DB_LogUserMsg{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.DB_LogUserMsg{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_Log.Log_写用户消息(3, 10001, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.0", "建议做个自动赚钱的功能,启动软件后,微信余额就蹭蹭涨", "127.0.0.1")
 			Ser_Log.Log_写用户消息(2, 10001, "test0001", "演示对接账密限时Rsa交换密匙", "1.0.0", "捕获到异常bug...", "127.0.0.1")
@@ -267,7 +265,7 @@ func InitDbTableData(c *gin.Context) {
 	// 检查 代理数量
 	局_例子版本 = 1
 	if 局_例子记录.DbAgentLevel < 局_例子版本 {
-		global.GVA_DB.Model(DB.Db_Agent_Level{}).Count(&局_数量)
+		global.GVA_DB.Model(dbm.Db_Agent_Level{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			Ser_User.New用户信息("刘备", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", -1, 50, 0, "")
 			局_Uid := Ser_User.User用户名取id("刘备")
@@ -307,7 +305,7 @@ func InitDbTableData(c *gin.Context) {
 	局_例子版本 = 1
 	if global.GVA_DB.Exec("Select 1 FROM `db_Ka`  WHERE  `UserTime` != '' and UseTime=0").RowsAffected > 0 {
 		局_sql := "UPDATE `db_Ka`  SET `UseTime` = CAST(LEFT(`UserTime`, 10) AS UNSIGNED)  WHERE  `UserTime` != '' and UseTime=0"
-		global.GVA_LOG.Info("兼容执行修改旧卡的卡号时间,执行数量:" + strconv.Itoa(int(global.GVA_DB.Exec(局_sql).RowsAffected)))
+		global.GVA_LOG.Println("兼容执行修改旧卡的卡号时间,执行数量:" + strconv.Itoa(int(global.GVA_DB.Exec(局_sql).RowsAffected)))
 		局_例子记录.KaUseTime = 局_例子版本
 	}
 
@@ -325,13 +323,13 @@ func 插入公共Js例子() {
 	}
 
 	var 局_数量 int64
-	global.GVA_DB.Model(DB.DB_PublicJs{}).Count(&局_数量)
+	global.GVA_DB.Model(dbm.DB_PublicJs{}).Count(&局_数量)
 	if 局_数量 != 0 {
 		return
 	}
 
 	// 测试公共JS函数
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "测试1111",
 		Value: `function 测试1111(JSON形参文本) {
@@ -343,7 +341,7 @@ func 插入公共Js例子() {
 		Note:  "例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "测试网页访问",
 		Value: `function 测试网页访问(JSON形参文本) {
@@ -356,7 +354,7 @@ func 插入公共Js例子() {
 		Note:  "例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "任务池创建延迟查询结果例子",
 		Value: `function 任务池创建查询例子(形参) {
@@ -383,7 +381,7 @@ func 插入公共Js例子() {
 		Note:  "例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "用户余额增减案例",
 		Value: `function 用户余额增减案例(JSON形参文本) {
@@ -403,7 +401,7 @@ func 插入公共Js例子() {
 		Note:  "例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "获取用户相关信息",
 		Value: `function 获取用户相关信息(形参) {
@@ -417,7 +415,7 @@ func 插入公共Js例子() {
 		Note:  "例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "读写公共变量案例",
 		Value: `function 读写公共变量案例(JSON形参文本) {
@@ -430,7 +428,7 @@ func 插入公共Js例子() {
 		Note:  "例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "执行SQL功能测试",
 		Value: `function 执行SQL功能测试(JSON形参文本) {
@@ -447,7 +445,7 @@ func 插入公共Js例子() {
 		Note:  "例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "执行SQL查询测试",
 		Value: `function 执行SQL查询测试(JSON形参文本) {
@@ -463,7 +461,7 @@ func 插入公共Js例子() {
 		Note:  "例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "测试调用管理员后台接口冻结卡号",
 		Value: `function 测试调用管理员后台接口冻结卡号(参数) {
@@ -479,7 +477,7 @@ func 插入公共Js例子() {
 		Note:  "例程调用管理员后台接口冻结卡号",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "WebApi_用户Id取详情",
 		Value: `function WebApi_用户Id取详情(JSON形参文本) {
@@ -494,7 +492,7 @@ func 插入公共Js例子() {
 		Note:  "例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 2,
 		Name:  "hook模板_任务创建入库前",
 		Value: `function hook模板_任务创建入库前(任务JSON格式参数) {
@@ -505,7 +503,7 @@ func 插入公共Js例子() {
 		Note:  "任务池hook例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "置用户云配置",
 		Value: `function 置用户云配置(JSON形参文本) {
@@ -523,7 +521,7 @@ func 插入公共Js例子() {
 		Note:  "置用户云配置例程",
 	})
 
-	Ser_PublicJs.C创建(DB.DB_PublicJs{
+	Ser_PublicJs.C创建(dbm.DB_PublicJs{
 		AppId: 1,
 		Name:  "取用户云配置",
 		Value: `function 取用户云配置(JSON形参文本) {
@@ -546,22 +544,22 @@ func 插入公共Js例子() {
 // 数据库兼容旧版本 数据库兼容旧版本升级
 func 数据库兼容旧版本(c *gin.Context) {
 	db := *global.GVA_DB
-	var 局_待处理订单Id数组 []DB.DB_LogRMBPayOrder
-	_ = db.Model(DB.DB_LogRMBPayOrder{}).Where("UidType is NULL ").Find(&局_待处理订单Id数组).Error
+	var 局_待处理订单Id数组 []dbm.DB_LogRMBPayOrder
+	_ = db.Model(dbm.DB_LogRMBPayOrder{}).Where("UidType is NULL ").Find(&局_待处理订单Id数组).Error
 	for _, 局_订单 := range 局_待处理订单Id数组 {
-		err := db.Model(DB.DB_LogRMBPayOrder{}).Where("Id = ?", 局_订单.Id).Updates(map[string]interface{}{
+		err := db.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 局_订单.Id).Updates(map[string]interface{}{
 			"UidType":        1,
 			"User":           Ser_User.Id取User(局_订单.Uid),
 			"ProcessingType": 0,
 			"Extra":          "",
 		}).Error
 		if err != nil {
-			global.GVA_LOG.Info("支付支付订单,兼容旧版本处理失败ID:" + strconv.Itoa(局_订单.Uid))
+			global.GVA_LOG.Println("支付支付订单,兼容旧版本处理失败ID:" + strconv.Itoa(局_订单.Uid))
 		}
 	}
 
 	// 把支付方式 微信PC修改成 微信支付
-	_ = db.Model(DB.DB_LogRMBPayOrder{}).Where("Type = ? ", "微信PC").Update("Type", "微信支付").Error
+	_ = db.Model(dbm.DB_LogRMBPayOrder{}).Where("Type = ? ", "微信PC").Update("Type", "微信支付").Error
 
 	// 把appUser 积分 字段类型 修改成 双精度小数型
 	局_已有AppID := Ser_AppInfo.App取map列表String(true)
@@ -591,17 +589,17 @@ func 数据库兼容旧版本(c *gin.Context) {
 	var 局_总数 int64
 	_ = db.Model(dbm.DB_Setting{}).Count(&局_总数).Error
 	if 局_总数 == 0 && global.GVA_Viper.IsSet("系统设置.系统开关") {
-		var Test = config.Test{
-			DbAgentLevel:      global.GVA_Viper.GetInt("test.db_agent_level"),
-			DbAppinfo:         global.GVA_Viper.GetInt("test.db_appinfo"),
-			DbLogmoney:        global.GVA_Viper.GetInt("test.db_logmoney"),
-			DbLogrmbpayorder:  global.GVA_Viper.GetInt("test.db_logrmbpayorder"),
-			DbLogusermsg:      global.GVA_Viper.GetInt("test.db_logusermsg"),
-			DbLogvipnumber:    global.GVA_Viper.GetInt("test.db_logvipnumber"),
-			DbPublicdata:      global.GVA_Viper.GetInt("test.db_publicdata"),
-			DbUser:            global.GVA_Viper.GetInt("test.db_user"),
-			Taskpool:          global.GVA_Viper.GetInt("test.taskpool_类型"),
-			User:              global.GVA_Viper.GetInt("test.user"),
+		var Test = common.Test{
+			DbAgentLevel:     global.GVA_Viper.GetInt("test.db_agent_level"),
+			DbAppinfo:        global.GVA_Viper.GetInt("test.db_appinfo"),
+			DbLogmoney:       global.GVA_Viper.GetInt("test.db_logmoney"),
+			DbLogrmbpayorder: global.GVA_Viper.GetInt("test.db_logrmbpayorder"),
+			DbLogusermsg:     global.GVA_Viper.GetInt("test.db_logusermsg"),
+			DbLogvipnumber:   global.GVA_Viper.GetInt("test.db_logvipnumber"),
+			DbPublicdata:     global.GVA_Viper.GetInt("test.db_publicdata"),
+			DbUser:           global.GVA_Viper.GetInt("test.db_user"),
+			Taskpool:         global.GVA_Viper.GetInt("test.taskpool_类型"),
+			User:             global.GVA_Viper.GetInt("test.user"),
 		}
 		_ = setting.Z例子写出记录(&Test)
 	}
@@ -637,10 +635,10 @@ func 数据库兼容旧版本(c *gin.Context) {
 	}
 
 	// 用户消息新增 AppID字段
-	_ = db.Model(DB.DB_LogUserMsg{}).Where("AppId = ?", 0).Count(&局_总数).Error
+	_ = db.Model(dbm.DB_LogUserMsg{}).Where("AppId = ?", 0).Count(&局_总数).Error
 	if 局_总数 > 0 {
 		db.Exec("UPDATE db_log_usermsg  AS a SET  AppId=(SELECT AppId FROM db_app_info WHERE AppName =a.App)")
-		err = db.Model(DB.DB_LogUserMsg{}).Where("AppId = ?", 0).Update("AppId", gorm.Expr("App")).Error
-		err = db.Model(DB.DB_LogUserMsg{}).Where("AppId IS NULL").Delete(&DB.DB_LogUserMsg{}).Error
+		err = db.Model(dbm.DB_LogUserMsg{}).Where("AppId = ?", 0).Update("AppId", gorm.Expr("App")).Error
+		err = db.Model(dbm.DB_LogUserMsg{}).Where("AppId IS NULL").Delete(&dbm.DB_LogUserMsg{}).Error
 	}
 }

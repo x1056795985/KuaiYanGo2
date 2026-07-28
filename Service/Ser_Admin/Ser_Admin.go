@@ -1,8 +1,8 @@
 package Ser_Admin
 
 import (
-	"server/global"
-	DB "server/structs/db"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 )
 
 func Id取User(Id int) string {
@@ -10,6 +10,6 @@ func Id取User(Id int) string {
 		return ""
 	}
 	var 用户名 string
-	global.GVA_DB.Model(DB.DB_Admin{}).Select("User").Where("Id=?", Id).Take(&用户名)
+	global.GVA_DB.Model(dbm.DB_Admin{}).Select("User").Where("Id=?", Id).Take(&用户名)
 	return 用户名
 }

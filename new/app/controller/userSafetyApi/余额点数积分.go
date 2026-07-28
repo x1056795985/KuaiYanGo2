@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/appUser"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/common/user"
 	"server/new/app/models/constant"
+	db2 "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	"server/utils/Qqwry"
+	"server/new/app/utils/Qqwry"
 	"strings"
 	"time"
 )
@@ -50,7 +50,7 @@ func UserApi_用户减少余额(c *gin.Context) {
 		return
 	}
 
-	go log.L_log.S输出日志(c, DB.DB_LogMoney{
+	go log.L_log.S输出日志(c, db2.DB_LogMoney{
 		User:  局_User.User,
 		Ip:    c.ClientIP() + " " + Qqwry.Ip查信息2(c.ClientIP()),
 		Time:  time.Now().Unix(),
@@ -92,7 +92,7 @@ func UserApi_用户减少点数(c *gin.Context) {
 
 	局_AppUser.VipTime -= 局_增减值
 	response.OkData(c, gin.H{"VipTime": 局_AppUser.VipTime})
-	go log.L_log.S输出日志(c, DB.DB_LogVipNumber{
+	go log.L_log.S输出日志(c, db2.DB_LogVipNumber{
 		User:  局_ctx.Z在线信息.User,
 		AppId: 局_ctx.AppInfo.AppId,
 		Type:  2,
@@ -158,7 +158,7 @@ func UserApi_用户减少积分(c *gin.Context) {
 	局_增减值, _ = 局_增减值D.Mul(decimal.NewFromFloat(-1)).Float64() //乘-1 变成负数
 
 	response.OkData(c, gin.H{"VipNumber": 局_AppUser.VipNumber})
-	go log.L_log.S输出日志(c, DB.DB_LogVipNumber{
+	go log.L_log.S输出日志(c, db2.DB_LogVipNumber{
 		User:  局_ctx.Z在线信息.User,
 		AppId: 局_ctx.AppInfo.AppId,
 		Type:  1,

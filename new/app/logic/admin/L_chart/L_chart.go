@@ -2,8 +2,8 @@ package L_chart
 
 import (
 	. "EFunc/utils"
-	"server/global"
-	DB "server/structs/db"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 	"time"
 )
 
@@ -29,7 +29,7 @@ func Q取余额消费排行榜(Type int64) (data2 map[string]interface{}, err er
 		局_时间戳 -= 30 * 86400
 	}
 
-	err = db.Model(DB.DB_LogMoney{}).Select("User, SUM(count) AS total_spent").
+	err = db.Model(dbm.DB_LogMoney{}).Select("User, SUM(count) AS total_spent").
 		Where("Count<0").
 		Where("Time>?", 局_时间戳).
 		Group("User").Limit(10).
@@ -46,7 +46,7 @@ func Q取余额消费排行榜(Type int64) (data2 map[string]interface{}, err er
 		User        string  `json:"User"`
 		Total_spent float64 `gorm:"column:total_spent"`
 	}
-	err = db.Model(DB.DB_LogMoney{}).Select("User, SUM(count) AS total_spent").
+	err = db.Model(dbm.DB_LogMoney{}).Select("User, SUM(count) AS total_spent").
 		Where("Count>0").
 		Where("Time>?", 局_时间戳).
 		Where("User IN ?", 用户名).
@@ -90,7 +90,7 @@ func Q取余额增长排行榜(Type int64) (data2 map[string]interface{}, err er
 		局_时间戳 -= 30 * 86400
 	}
 
-	err = db.Model(DB.DB_LogMoney{}).Select("User, SUM(count) AS total_spent").
+	err = db.Model(dbm.DB_LogMoney{}).Select("User, SUM(count) AS total_spent").
 		Where("Count>0").
 		Where("Time>?", 局_时间戳).
 		Group("User").Limit(10).
@@ -107,7 +107,7 @@ func Q取余额增长排行榜(Type int64) (data2 map[string]interface{}, err er
 		User        string  `json:"User"`
 		Total_spent float64 `gorm:"column:total_spent"`
 	}
-	err = db.Model(DB.DB_LogMoney{}).Select("User, SUM(count) AS total_spent").
+	err = db.Model(dbm.DB_LogMoney{}).Select("User, SUM(count) AS total_spent").
 		Where("Count<0").
 		Where("Time>?", 局_时间戳).
 		Where("User IN ?", 用户名).
@@ -152,7 +152,7 @@ func Q取积分消费排行榜(Type int64) (data2 map[string]interface{}, err er
 		局_时间戳 -= 30 * 86400
 	}
 
-	err = db.Model(DB.DB_LogVipNumber{}).Select("CONCAT(AppId, '-',User) AS User, SUM(count) AS total_spent").
+	err = db.Model(dbm.DB_LogVipNumber{}).Select("CONCAT(AppId, '-',User) AS User, SUM(count) AS total_spent").
 		Where("Count<0").
 		Where("Time>?", 局_时间戳).
 		Group("User").Group("AppId").Limit(20).

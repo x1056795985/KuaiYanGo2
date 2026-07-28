@@ -4,14 +4,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_AppInfo"
 	"server/Service/Ser_UserClass"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"server/new/app/models/request"
 	"server/new/app/service"
-	"server/structs/Http/response"
-	"server/utils"
+	"server/new/app/utils"
 	"strconv"
 )
 
@@ -39,7 +39,7 @@ type 请求_KaClassGetList struct {
 }
 
 type 请求_KaClassDelete struct {
-	Id    []int `json:"id"`    //id数组
+	Id    []int `json:"id"` //id数组
 	AppId int   `json:"appId"`
 }
 

@@ -11,12 +11,12 @@ import (
 	"log"
 	"runtime/debug"
 	"server/Service/Ser_PublicJs"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/cycleNot"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	db "server/structs/db"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -254,7 +254,7 @@ func (j *webSocket) ProcessTextMessage(ws *websocket.Conn, linkId int, message *
 		return
 	}
 
-	var 局_PublicJs db.DB_PublicJs
+	var 局_PublicJs dbm.DB_PublicJs
 	if W文本_是否为数字(局_json.Api) {
 		局_PublicJs, err = Ser_PublicJs.Q取值2(D到整数(局_json.Api))
 	} else {
@@ -265,8 +265,8 @@ func (j *webSocket) ProcessTextMessage(ws *websocket.Conn, linkId int, message *
 		return
 	}
 
-	var AppInfo db.DB_AppInfo
-	var 局_在线信息 db.DB_LinksToken
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
 	var c = gin.Context{}
 	var response common.WsMsgResponse
 	response.I = 局_json.I

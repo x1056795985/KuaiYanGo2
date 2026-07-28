@@ -5,8 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -27,21 +27,21 @@ func NewLinksToken(c *gin.Context, db *gorm.DB) *LinksToken {
 // DeleteExpiredTokens 删除已过期的 token
 func (s *LinksToken) S删除已过期的Token() error {
 	// 删除已注销并 6 小时没活动的 token
-	tx := s.db.Model(DB.DB_LinksToken{}).Where("Status = 2").Where("LastTime < ?", time.Now().Unix()-21600).Delete("")
+	tx := s.db.Model(dbm.DB_LinksToken{}).Where("Status = 2").Where("LastTime < ?", time.Now().Unix()-21600).Delete("")
 	return tx.Error
 }
 
 // RevokeExpiredTokens 定时注销已过期的 token
 func (s *LinksToken) Z注销已过期的Token() error {
 	// 注销超时的 token
-	tx := s.db.Model(DB.DB_LinksToken{}).Where("Status = 1").Where("LastTime + OutTime < ?", time.Now().Unix()).Updates(map[string]interface{}{"Status": 2, "LogoutCode": constant.Z注销_心跳超时自动注销})
+	tx := s.db.Model(dbm.DB_LinksToken{}).Where("Status = 1").Where("LastTime + OutTime < ?", time.Now().Unix()).Updates(map[string]interface{}{"Status": 2, "LogoutCode": constant.Z注销_心跳超时自动注销})
 	return tx.Error
 }
 
 // 增
-func (s *LinksToken) Create(info DB.DB_LinksToken) (row int64, err error) {
+func (s *LinksToken) Create(info dbm.DB_LinksToken) (row int64, err error) {
 	//创建会自动重新赋值info.Id为新插入的数据id
-	tx := s.db.Model(DB.DB_LinksToken{}).Create(&info)
+	tx := s.db.Model(dbm.DB_LinksToken{}).Create(&info)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -50,9 +50,9 @@ func (s *LinksToken) Delete(Id interface{}) (影响行数 int64, error error) {
 	var tx2 *gorm.DB
 	switch k := Id.(type) {
 	case int:
-		tx2 = s.db.Model(DB.DB_LinksToken{}).Where("Id = ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_LinksToken{}).Where("Id = ?", k).Delete("")
 	case []int:
-		tx2 = s.db.Model(DB.DB_LinksToken{}).Where("Id IN ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_LinksToken{}).Where("Id IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -60,7 +60,7 @@ func (s *LinksToken) Delete(Id interface{}) (影响行数 int64, error error) {
 }
 
 // 获取列表
-func (s *LinksToken) GetList(请求 request.List, Status int) (int64, []DB.DB_LinksToken, error) {
+func (s *LinksToken) GetList(请求 request.List, Status int) (int64, []dbm.DB_LinksToken, error) {
 	tx := s.db
 	if Status > 0 {
 		tx = tx.Where("Status = ?", Status)
@@ -88,15 +88,15 @@ func (s *LinksToken) GetList(请求 request.List, Status int) (int64, []DB.DB_Li
 	case 2:
 		tx = tx.Order("Id DESC")
 	}
-	var 局_数组 []DB.DB_LinksToken
+	var 局_数组 []dbm.DB_LinksToken
 	tx = tx.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组)
 
 	return 总数, 局_数组, tx.Error
 }
 
 // 查
-func (s *LinksToken) Info(id int) (info DB.DB_LinksToken, err error) {
-	tx := s.db.Model(DB.DB_LinksToken{}).Where("Id = ?", id).First(&info)
+func (s *LinksToken) Info(id int) (info dbm.DB_LinksToken, err error) {
+	tx := s.db.Model(dbm.DB_LinksToken{}).Where("Id = ?", id).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -104,8 +104,8 @@ func (s *LinksToken) Info(id int) (info DB.DB_LinksToken, err error) {
 }
 
 // 查
-func (s *LinksToken) Infos(where map[string]interface{}) (info []DB.DB_LinksToken, err error) {
-	tx := s.db.Model(DB.DB_LinksToken{}).Where(where).Find(&info)
+func (s *LinksToken) Infos(where map[string]interface{}) (info []dbm.DB_LinksToken, err error) {
+	tx := s.db.Model(dbm.DB_LinksToken{}).Where(where).Find(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -113,8 +113,8 @@ func (s *LinksToken) Infos(where map[string]interface{}) (info []DB.DB_LinksToke
 }
 
 // 查
-func (s *LinksToken) InfosId排序(where map[string]interface{}) (info []DB.DB_LinksToken, err error) {
-	tx := s.db.Model(DB.DB_LinksToken{}).Where(where).Order("Id ASC").Find(&info)
+func (s *LinksToken) InfosId排序(where map[string]interface{}) (info []dbm.DB_LinksToken, err error) {
+	tx := s.db.Model(dbm.DB_LinksToken{}).Where(where).Order("Id ASC").Find(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -123,13 +123,13 @@ func (s *LinksToken) InfosId排序(where map[string]interface{}) (info []DB.DB_L
 
 // 改
 func (s *LinksToken) Update(id int, 数据 map[string]interface{}) (row int64, err error) {
-	tx := s.db.Model(DB.DB_LinksToken{}).Where("Id = ?", id).Updates(&数据)
+	tx := s.db.Model(dbm.DB_LinksToken{}).Where("Id = ?", id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
 
 // 可指定AppId,0为全部注销
 func (s *LinksToken) Set批量注销Uid数组(UId []int, AppId int, 注销原因 int) (err error) {
-	db := s.db.Model(DB.DB_LinksToken{}).Where("UId IN ? ", UId)
+	db := s.db.Model(dbm.DB_LinksToken{}).Where("UId IN ? ", UId)
 	if AppId != 0 {
 		db.Where("LoginAppid =? ", AppId)
 	}
@@ -138,8 +138,8 @@ func (s *LinksToken) Set批量注销Uid数组(UId []int, AppId int, 注销原因
 }
 
 // 查
-func (s *LinksToken) InfoToken(Token string) (info DB.DB_LinksToken, err error) {
-	tx := s.db.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).First(&info)
+func (s *LinksToken) InfoToken(Token string) (info dbm.DB_LinksToken, err error) {
+	tx := s.db.Model(dbm.DB_LinksToken{}).Where("Token = ?", Token).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -147,6 +147,6 @@ func (s *LinksToken) InfoToken(Token string) (info DB.DB_LinksToken, err error) 
 }
 
 func (s *LinksToken) Updates(ids []int, 数据 map[string]interface{}) (row int64, err error) {
-	tx := s.db.Model(DB.DB_LinksToken{}).Where("Id IN ?", ids).Updates(&数据)
+	tx := s.db.Model(dbm.DB_LinksToken{}).Where("Id IN ?", ids).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }

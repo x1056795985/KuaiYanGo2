@@ -12,12 +12,12 @@ import (
 	"server/Service/Ser_Log"
 	"server/Service/Ser_UserClass"
 	"server/Service/Ser_UserConfig"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
 	"server/new/app/logic/common/ka"
 	"server/new/app/models/constant"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strconv"
 )
 
@@ -50,8 +50,8 @@ func (C *KaFull) Info(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	var DB_Ka DB.DB_Ka
-	err := global.GVA_DB.Model(DB.DB_Ka{}).Where("Id = ?", 请求.Id).First(&DB_Ka).Error
+	var DB_Ka dbm.DB_Ka
+	err := global.GVA_DB.Model(dbm.DB_Ka{}).Where("Id = ?", 请求.Id).First(&DB_Ka).Error
 	if err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return
@@ -82,9 +82,9 @@ func (C *KaFull) GetList(c *gin.Context) {
 		return
 	}
 
-	var DB_Ka []DB.DB_Ka
+	var DB_Ka []dbm.DB_Ka
 	var 总数 int64
-	局_DB := global.GVA_DB.Model(DB.DB_Ka{})
+	局_DB := global.GVA_DB.Model(dbm.DB_Ka{})
 	if 请求.AppId != 0 {
 		局_DB.Where("AppId = ?", 请求.AppId)
 	}
@@ -186,7 +186,7 @@ func (C *KaFull) New(c *gin.Context) {
 		return
 	}
 
-	数组_卡 := make([]DB.DB_Ka, 请求.Number)
+	数组_卡 := make([]dbm.DB_Ka, 请求.Number)
 	用户名 := Ser_LinkUser.Token取Name(c.Request.Header.Get("Token"))
 	err = Ser_Ka.Ka批量创建(数组_卡[:], 请求.Id, -c.GetInt("Uid"), 用户名, 请求.AdminNote, "", 0)
 	if err != nil {
@@ -247,7 +247,7 @@ func (C *KaFull) BatchKaNameNew(c *gin.Context) {
 		return
 	}
 
-	数组_卡 := make([]DB.DB_Ka, len(请求.KaName))
+	数组_卡 := make([]dbm.DB_Ka, len(请求.KaName))
 	for 索引 := range 数组_卡 {
 		数组_卡[索引].Name = 请求.KaName[索引]
 	}
@@ -287,7 +287,7 @@ func (C *KaFull) BatchKaNameNew(c *gin.Context) {
 
 // SaveInfo 保存卡号信息
 func (C *KaFull) SaveInfo(c *gin.Context) {
-	var 请求 DB.DB_Ka
+	var 请求 dbm.DB_Ka
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -312,12 +312,12 @@ func (C *KaFull) SaveInfo(c *gin.Context) {
 	}
 
 	err := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(DB.DB_Ka{}).Where("Id= ?", 局_旧卡号信息.Id).Updates(&m).Error
+		err := tx.Model(dbm.DB_Ka{}).Where("Id= ?", 局_旧卡号信息.Id).Updates(&m).Error
 		if err != nil {
 			return err
 		}
 		if Ser_AppInfo.App是否为卡号(局_旧卡号信息.AppId) {
-			err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_旧卡号信息.AppId)).Where("Id = ?", 局_旧卡号信息.Id).Update("Status", 请求.Status).Error
+			err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_旧卡号信息.AppId)).Where("Id = ?", 局_旧卡号信息.Id).Update("Status", 请求.Status).Error
 		}
 		return err
 	})
@@ -456,7 +456,7 @@ func (C *KaFull) Delete(c *gin.Context) {
 	}
 
 	var db = global.GVA_DB
-	影响行数 := db.Model(DB.DB_Ka{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
+	影响行数 := db.Model(dbm.DB_Ka{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
 		return

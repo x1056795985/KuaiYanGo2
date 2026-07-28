@@ -5,13 +5,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/Service/Ser_LinkUser"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
+	db2 "server/new/app/models/db"
 
 	"server/new/app/service"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -38,11 +38,11 @@ func (C *AppUser) BatchAddUser(c *gin.Context) {
 	db := *global.GVA_DB
 	var err error
 	var info struct {
-		AppInfo   DB.DB_AppInfo
+		AppInfo   db2.DB_AppInfo
 		用户数组      []string
-		数组ka      []DB.DB_Ka
-		数组User    []DB.DB_User
-		数组AppUser []DB.DB_AppUser
+		数组ka      []db2.DB_Ka
+		数组User    []db2.DB_User
+		数组AppUser []db2.DB_AppUser
 	}
 	局_制卡人 := Ser_LinkUser.Token取Name(c.Request.Header.Get("Token"))
 	局_时间戳 := time.Now().Unix()
@@ -52,9 +52,9 @@ func (C *AppUser) BatchAddUser(c *gin.Context) {
 		return
 	}
 	info.用户数组 = strings.Split(请求.Note, "\n")
-	info.数组ka = make([]DB.DB_Ka, len(info.用户数组))
-	info.数组User = make([]DB.DB_User, len(info.用户数组))
-	info.数组AppUser = make([]DB.DB_AppUser, len(info.用户数组))
+	info.数组ka = make([]db2.DB_Ka, len(info.用户数组))
+	info.数组User = make([]db2.DB_User, len(info.用户数组))
+	info.数组AppUser = make([]db2.DB_AppUser, len(info.用户数组))
 
 	//账号|密码|到期时间|积分|绑定信息
 	//卡号|到期时间|积分|绑定信息
@@ -91,7 +91,7 @@ func (C *AppUser) BatchAddUser(c *gin.Context) {
 			局_VipTime = t.Unix()
 		}
 
-		info.数组AppUser[i] = DB.DB_AppUser{
+		info.数组AppUser[i] = db2.DB_AppUser{
 			Uid:          0,
 			Status:       1,
 			Key:          局_临时数组[len(局_临时数组)-1],
@@ -102,7 +102,7 @@ func (C *AppUser) BatchAddUser(c *gin.Context) {
 		}
 
 		if info.AppInfo.AppType < 3 {
-			info.数组User[i] = DB.DB_User{
+			info.数组User[i] = db2.DB_User{
 				User:          局_账号,
 				PassWord:      S三元(len(局_临时数组[1]) == 32, 局_密码, utils2.Md5String(局_密码)),
 				SuperPassWord: utils2.Md5String(局_密码),
@@ -110,7 +110,7 @@ func (C *AppUser) BatchAddUser(c *gin.Context) {
 				RegisterIp:    "",
 			}
 		} else {
-			info.数组ka[i] = DB.DB_Ka{
+			info.数组ka[i] = db2.DB_Ka{
 				AppId:        请求.AppId,
 				Name:         局_账号,
 				Status:       1,
@@ -141,7 +141,7 @@ func (C *AppUser) BatchAddUser(c *gin.Context) {
 	//执行批量插入 事务处理
 	err = db.Transaction(func(tx *gorm.DB) error {
 		if info.AppInfo.AppType < 3 {
-			err = tx.Model(DB.DB_User{}).CreateInBatches(&info.数组User, len(info.数组User)).Error
+			err = tx.Model(db2.DB_User{}).CreateInBatches(&info.数组User, len(info.数组User)).Error
 			if err != nil {
 				return err
 			}
@@ -150,7 +150,7 @@ func (C *AppUser) BatchAddUser(c *gin.Context) {
 			}
 
 		} else {
-			err = tx.Model(DB.DB_Ka{}).CreateInBatches(&info.数组ka, len(info.数组ka)).Error
+			err = tx.Model(db2.DB_Ka{}).CreateInBatches(&info.数组ka, len(info.数组ka)).Error
 			if err != nil {
 				return err
 			}
@@ -158,7 +158,7 @@ func (C *AppUser) BatchAddUser(c *gin.Context) {
 				info.数组AppUser[i].Uid = v.Id
 			}
 		}
-		err = tx.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).CreateInBatches(&info.数组AppUser, len(info.数组AppUser)).Error
+		err = tx.Model(db2.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).CreateInBatches(&info.数组AppUser, len(info.数组AppUser)).Error
 		return err
 	})
 

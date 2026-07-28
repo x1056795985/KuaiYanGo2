@@ -4,17 +4,17 @@ import (
 	"EFunc/utils"
 	"fmt"
 	"server/Service/Ser_LinkUser"
-	"server/global"
+	"server/new/app/global"
+	"server/new/app/models/db"
 
-	DB "server/structs/db"
-	"server/utils/Qqwry"
+	"server/new/app/utils/Qqwry"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func Log_写登录日志(User, IP, Note string, LoginType int) {
-	login := DB.DB_LogLogin{
+	login := db.DB_LogLogin{
 		Id:        0,
 		User:      User,
 		Ip:        IP + " " + Qqwry.Ip查信息2(IP),
@@ -23,9 +23,9 @@ func Log_写登录日志(User, IP, Note string, LoginType int) {
 		Note:      Note,
 	}
 
-	err := global.GVA_DB.Model(DB.DB_LogLogin{}).Create(&login).Error
+	err := global.GVA_DB.Model(db.DB_LogLogin{}).Create(&login).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Log_写登录日志失败:%v,%v,%v,%v,%v,", err.Error(), User, IP, Note, LoginType))
+		global.GVA_LOG.Println(fmt.Sprintf("Log_写登录日志失败:%v,%v,%v,%v,%v,", err.Error(), User, IP, Note, LoginType))
 	}
 	return
 }
@@ -33,10 +33,10 @@ func Log_写登录日志(User, IP, Note string, LoginType int) {
 // msg 支持 变量 {{卡号}} {{卡号索引}} 索引从1开始
 // UserType 0 普通用户  1 2 3 级代理  4  管理员  5 系统自动
 func Log_写卡号操作日志(User, IP, Note string, Ka []string, 卡操作类型, UserType int) {
-	logins := make([]DB.DB_LogKa, 0, len(Ka))
+	logins := make([]db.DB_LogKa, 0, len(Ka))
 	卡号批次 := strconv.FormatInt(utils.S时间_取现行时间戳13(), 10)
 	for 索引, ka := range Ka {
-		login := DB.DB_LogKa{
+		login := db.DB_LogKa{
 			Id:       0,
 			User:     User,
 			UserType: UserType,
@@ -51,9 +51,9 @@ func Log_写卡号操作日志(User, IP, Note string, Ka []string, 卡操作类�
 	if len(logins) == 0 {
 		return
 	}
-	err := global.GVA_DB.Model(DB.DB_LogKa{}).Create(&logins).Error
+	err := global.GVA_DB.Model(db.DB_LogKa{}).Create(&logins).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Log_写卡操作日志失败:%v,%v,%v,%v,%v,%v,", err.Error(), User, IP, Note, Ka, 卡操作类型, UserType))
+		global.GVA_LOG.Println(fmt.Sprintf("Log_写卡操作日志失败:%v,%v,%v,%v,%v,%v,", err.Error(), User, IP, Note, Ka, 卡操作类型, UserType))
 	}
 	return
 }
@@ -62,7 +62,7 @@ const Log风控类型_Api异常调用 = 1
 
 func Log_写风控日志(LId, 风控规则类型 int, User, IP, 风控信息 string) {
 	Ser_LinkUser.Lid增减风控分(LId, 1)
-	login := DB.DB_LogRiskControl{
+	login := db.DB_LogRiskControl{
 		Id:   0,
 		LId:  LId,
 		User: User,
@@ -71,9 +71,9 @@ func Log_写风控日志(LId, 风控规则类型 int, User, IP, 风控信息 str
 		Type: 风控规则类型,
 		Note: 风控信息,
 	}
-	err := global.GVA_DB.Model(DB.DB_LogRiskControl{}).Create(&login).Error
+	err := global.GVA_DB.Model(db.DB_LogRiskControl{}).Create(&login).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Log_写登录日志失败:%v,%v,%v,%v,%v,%v", err.Error(), LId, 风控规则类型, User, IP, 风控信息))
+		global.GVA_LOG.Println(fmt.Sprintf("Log_写登录日志失败:%v,%v,%v,%v,%v,%v", err.Error(), LId, 风控规则类型, User, IP, 风控信息))
 	}
 	return
 }
@@ -84,7 +84,7 @@ const Log用户消息类型_投诉建议 = 4
 const Log用户消息类型_系统执行错误 = 4
 
 func Log_写用户消息(消息类型, AppId int, User, App名称, AppVer, 消息内容, IP string) {
-	login := DB.DB_LogUserMsg{
+	login := db.DB_LogUserMsg{
 		Id:           0,
 		User:         User,
 		App:          App名称,
@@ -96,15 +96,15 @@ func Log_写用户消息(消息类型, AppId int, User, App名称, AppVer, 消�
 		Note:         消息内容,
 		IsReadIsRead: false,
 	}
-	err := global.GVA_DB.Model(DB.DB_LogUserMsg{}).Create(&login).Error
+	err := global.GVA_DB.Model(db.DB_LogUserMsg{}).Create(&login).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Log_写用户消息失败:%v,%v,%v,%v,%v,%v", err.Error(), 消息类型, User, App名称, 消息内容, IP))
+		global.GVA_LOG.Println(fmt.Sprintf("Log_写用户消息失败:%v,%v,%v,%v,%v,%v", err.Error(), 消息类型, User, App名称, 消息内容, IP))
 	}
 	return
 }
 
 func Log_写余额日志(User, IP, Note string, Count float64) {
-	LogMoney := DB.DB_LogMoney{
+	LogMoney := db.DB_LogMoney{
 		Id:    0,
 		User:  User,
 		Ip:    IP + " " + Qqwry.Ip查信息2(IP),
@@ -112,16 +112,16 @@ func Log_写余额日志(User, IP, Note string, Count float64) {
 		Count: Count,
 		Note:  Note,
 	}
-	err := global.GVA_DB.Model(DB.DB_LogMoney{}).Create(&LogMoney).Error
+	err := global.GVA_DB.Model(db.DB_LogMoney{}).Create(&LogMoney).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Log_写余额日志失败:%v,%v,%v,%v,%v,", err.Error(), User, IP, Note, Count))
+		global.GVA_LOG.Println(fmt.Sprintf("Log_写余额日志失败:%v,%v,%v,%v,%v,", err.Error(), User, IP, Note, Count))
 	}
 	return
 }
 
 // Log_写积分点数时间日志 类型 1 积分 2 点数 3 时间
 func Log_写积分点数时间日志(User, IP, Note string, Count float64, AppId, Type int) {
-	DB_LogVipNumber := DB.DB_LogVipNumber{
+	DB_LogVipNumber := db.DB_LogVipNumber{
 		Id:    0,
 		User:  User,
 		AppId: AppId,
@@ -131,9 +131,9 @@ func Log_写积分点数时间日志(User, IP, Note string, Count float64, AppId
 		Count: Count,
 		Note:  Note,
 	}
-	err := global.GVA_DB.Model(DB.DB_LogVipNumber{}).Create(&DB_LogVipNumber).Error
+	err := global.GVA_DB.Model(db.DB_LogVipNumber{}).Create(&DB_LogVipNumber).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Log_写积分点数日志失败:%v,%v,%v,%v,%v,", err.Error(), User, IP, Note, Count))
+		global.GVA_LOG.Println(fmt.Sprintf("Log_写积分点数日志失败:%v,%v,%v,%v,%v,", err.Error(), User, IP, Note, Count))
 	}
 	return
 }
@@ -142,7 +142,7 @@ func Log_写积分点数时间日志(User, IP, Note string, Count float64, AppId
 // 类型 1转出,2转入 3创建
 func Log_写库存转移日志(操作库存ID, 数量, 类型 int, User1 string, User1角色 int, User2 string, User2角色 int, IP, Note string) {
 
-	Log := DB.Db_Agent_库存日志{
+	Log := db.Db_Agent_库存日志{
 		ID:          0,
 		User1:       User1,
 		User1Role:   User1角色,
@@ -156,17 +156,17 @@ func Log_写库存转移日志(操作库存ID, 数量, 类型 int, User1 string,
 		Ip:          IP,
 	}
 
-	err := global.GVA_DB.Model(DB.Db_Agent_库存日志{}).Create(&Log).Error
+	err := global.GVA_DB.Model(db.Db_Agent_库存日志{}).Create(&Log).Error
 
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Log_写库存转移日志:%v,%v,%v,%v,%v,%v,%v,%v,", err.Error(), 操作库存ID, 数量, 类型, User1, User2, IP, Note))
+		global.GVA_LOG.Println(fmt.Sprintf("Log_写库存转移日志:%v,%v,%v,%v,%v,%v,%v,%v,", err.Error(), 操作库存ID, 数量, 类型, User1, User2, IP, Note))
 	}
 	return
 }
 
 // 写操作日志,主要是代理的操作用户,比如修改用户绑定信息
 func Log_写代理操作日志(AgentUid, AgentType, AppId, AppUserid int, AppUser string, Func int, IP string, Note string) {
-	login := DB.DB_LogAgentOtherFunc{
+	login := db.DB_LogAgentOtherFunc{
 		Id:        0,
 		AgentType: AgentType,
 		AgentUid:  AgentUid,
@@ -179,9 +179,9 @@ func Log_写代理操作日志(AgentUid, AgentType, AppId, AppUserid int, AppUse
 		Time:      time.Now().Unix(),
 	}
 
-	err := global.GVA_DB.Model(DB.DB_LogAgentOtherFunc{}).Create(&login).Error
+	err := global.GVA_DB.Model(db.DB_LogAgentOtherFunc{}).Create(&login).Error
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Log_写操作失败:%v,%v,%v,%v,%v,%v,%v,%v", err.Error(), AgentUid, AgentType, AppId, AppUserid, Func, IP, Note))
+		global.GVA_LOG.Println(fmt.Sprintf("Log_写操作失败:%v,%v,%v,%v,%v,%v,%v,%v", err.Error(), AgentUid, AgentType, AppId, AppUserid, Func, IP, Note))
 	}
 	return
 }

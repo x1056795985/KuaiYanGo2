@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/setting"
 	"time"
 )

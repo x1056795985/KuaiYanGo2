@@ -2,9 +2,9 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
+	"server/new/app/global"
+	"server/new/app/models/old/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
 )
 
 type Setting struct {

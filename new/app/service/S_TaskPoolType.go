@@ -4,8 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	db "server/structs/db"
-
+	"server/new/app/models/db"
 	"server/new/app/models/request"
 )
 

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/setting"
-	"server/structs/Http/response"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
+	"server/new/app/models/old/response"
 	"strings"
 	"time"
 )
@@ -59,9 +59,9 @@ func IsTokenWebApi() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		var DB_LinksToken DB.DB_LinksToken
+		var DB_LinksToken dbm.DB_LinksToken
 		//这里如果报错  invalid memory address or nil pointer dereference   可能是配置文件数据库配置北山,global.GVA_DB 值为空
-		err := global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
+		err := global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
 		// 没查到数据 或状态不正常
 		if err != nil || DB_LinksToken.Status != 1 {
 			response.FailTokenErr(gin.H{}, "令牌已失效", c)
@@ -113,7 +113,7 @@ func IsTokenWebApi() gin.HandlerFunc {
 		c.Set("局_在线信息", DB_LinksToken)
 		c.Set("局_json明文", string(data))
 		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
-			global.GVA_DB.Model(DB.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
+			global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
 		}
 
 		// 继续处理请求

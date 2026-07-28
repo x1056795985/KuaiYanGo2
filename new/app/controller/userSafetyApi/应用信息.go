@@ -5,17 +5,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 	"regexp"
+	"server/new/app/global"
 	"server/new/app/models/constant"
 	"strings"
 
 	"github.com/gogf/gf/v2/util/gconv"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
 	"server/new/app/logic/common/cloudStorage"
 	"server/new/app/logic/common/publicData"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 )
 
 // UserApi_取应用公告 取应用公告
@@ -177,7 +176,7 @@ func UserApi_取开启验证码接口(c *gin.Context) {
 }
 
 // App下载更新地址变量处理 处理应用下载更新地址中的模板变量
-func App下载更新地址变量处理(DB_AppInfo DB.DB_AppInfo) string {
+func App下载更新地址变量处理(DB_AppInfo dbm.DB_AppInfo) string {
 	局_新文本 := DB_AppInfo.UrlDownload
 
 	局_新文本 = strings.Replace(局_新文本, "{{AppName}}", DB_AppInfo.AppName, -1)

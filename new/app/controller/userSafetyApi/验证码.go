@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"server/Service/Captcha"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/models/constant"
 	"server/new/app/service"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 )
 
 // UserApi_取验证码信息 取验证码信息
@@ -61,7 +61,7 @@ func UserApi_取短信验证码信息(c *gin.Context) {
 
 	err := Captcha.Sms_当前选择发送短信验证码([]string{局_验证码}, 局_手机号)
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 局_手机号, err.Error()))
+		global.GVA_LOG.Println(fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, 局_手机号, err.Error()))
 		response.FailMsg(c, constant.Status_操作失败, err.Error())
 		return
 	}

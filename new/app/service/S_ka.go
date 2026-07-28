@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
 )
 
 const batchSize = 5000
@@ -22,38 +22,38 @@ func NewKa(c *gin.Context, db *gorm.DB) *Ka {
 	}
 }
 
-func (s *Ka) Info(id int) (info DB.DB_Ka, err error) {
-	tx := s.db.Model(DB.DB_Ka{}).Where("Id = ?", id).First(&info)
+func (s *Ka) Info(id int) (info dbm.DB_Ka, err error) {
+	tx := s.db.Model(dbm.DB_Ka{}).Where("Id = ?", id).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
 	return
 }
-func (s *Ka) InfoKa(Name string) (info DB.DB_Ka, err error) {
-	tx := s.db.Model(DB.DB_Ka{}).Where("Name = ?", Name).First(&info)
-	if tx.Error != nil {
-		err = tx.Error
-	}
-	return
-}
-
-func (s *Ka) Info2(where map[string]interface{}) (info DB.DB_Ka, err error) {
-	tx := s.db.Model(DB.DB_Ka{}).Where(where).First(&info)
+func (s *Ka) InfoKa(Name string) (info dbm.DB_Ka, err error) {
+	tx := s.db.Model(dbm.DB_Ka{}).Where("Name = ?", Name).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
 	return
 }
 
-func (s *Ka) Infos(where map[string]interface{}) (info []DB.DB_Ka, err error) {
-	tx := s.db.Model(DB.DB_Ka{}).Where(where).Find(&info)
+func (s *Ka) Info2(where map[string]interface{}) (info dbm.DB_Ka, err error) {
+	tx := s.db.Model(dbm.DB_Ka{}).Where(where).First(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
+func (s *Ka) Infos(where map[string]interface{}) (info []dbm.DB_Ka, err error) {
+	tx := s.db.Model(dbm.DB_Ka{}).Where(where).Find(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
 	return
 }
 func (s *Ka) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
-	tx := s.db.Model(DB.DB_Ka{}).Where("Id = ?", Id).Updates(&数据)
+	tx := s.db.Model(dbm.DB_Ka{}).Where("Id = ?", Id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -61,7 +61,7 @@ func (s *Ka) Update(Id int, 数据 map[string]interface{}) (row int64, err error
 func (s *Ka) Delete(Id interface{}) (影响行数 int64, error error) {
 	switch k := Id.(type) {
 	case int:
-		tx := s.db.Model(DB.DB_Ka{}).Where("Id = ?", k).Delete("")
+		tx := s.db.Model(dbm.DB_Ka{}).Where("Id = ?", k).Delete("")
 		return tx.RowsAffected, tx.Error
 	case []int:
 		var total int64
@@ -70,7 +70,7 @@ func (s *Ka) Delete(Id interface{}) (影响行数 int64, error error) {
 			if end > len(k) {
 				end = len(k)
 			}
-			tx := s.db.Model(DB.DB_Ka{}).Where("Id IN ?", k[i:end]).Delete("")
+			tx := s.db.Model(dbm.DB_Ka{}).Where("Id IN ?", k[i:end]).Delete("")
 			if tx.Error != nil {
 				return total, tx.Error
 			}

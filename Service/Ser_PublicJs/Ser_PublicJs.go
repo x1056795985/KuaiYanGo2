@@ -3,9 +3,8 @@ package Ser_PublicJs
 import (
 	. "EFunc/utils"
 	"errors"
-	"server/global"
-	DB "server/structs/db"
-
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 	"time"
 )
 
@@ -16,24 +15,24 @@ const Js类型_ApiHook函数 = 3
 // 不要再继续添加了,一切以Appid为准
 func Id是否存在(Id int) bool {
 	var Count int64
-	result := global.GVA_DB.Model(DB.DB_PublicJs{}).Select("1").Where("Id=?", Id).First(&Count)
+	result := global.GVA_DB.Model(dbm.DB_PublicJs{}).Select("1").Where("Id=?", Id).First(&Count)
 	return result.Error == nil
 }
 func Name是否存在(AppId int, Name string) bool {
 
 	var Count int64
 	db := *global.GVA_DB
-	db.Model(DB.DB_PublicJs{}).Select("1").Where("AppId=?", AppId).Where("Name=?", Name).Take(&Count)
+	db.Model(dbm.DB_PublicJs{}).Select("1").Where("AppId=?", AppId).Where("Name=?", Name).Take(&Count)
 	return Count > 0
 }
 func Q取值(AppId int, Name string) string {
 	var value string
-	global.GVA_DB.Model(DB.DB_PublicJs{}).Select("Value").Where("AppId=?", AppId).Where("Name=?", Name).First(&value)
+	global.GVA_DB.Model(dbm.DB_PublicJs{}).Select("Value").Where("AppId=?", AppId).Where("Name=?", Name).First(&value)
 	return value
 }
-func Q取值2(id int) (DB.DB_PublicJs, error) {
-	var value DB.DB_PublicJs
-	err := global.GVA_DB.Model(DB.DB_PublicJs{}).Where("Id=?", id).First(&value).Error
+func Q取值2(id int) (dbm.DB_PublicJs, error) {
+	var value dbm.DB_PublicJs
+	err := global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("Id=?", id).First(&value).Error
 	return value, err
 }
 func Name取Id(AppId []int, Name string) int {
@@ -42,13 +41,13 @@ func Name取Id(AppId []int, Name string) int {
 	}
 	var Id int
 
-	global.GVA_DB.Model(DB.DB_PublicJs{}).Select("Id").Where("AppId IN ?", AppId).Where("Name=?", Name).First(&Id)
+	global.GVA_DB.Model(dbm.DB_PublicJs{}).Select("Id").Where("AppId IN ?", AppId).Where("Name=?", Name).First(&Id)
 	return Id
 }
 func Z置值(id int, Value string) error {
-	return global.GVA_DB.Model(DB.DB_PublicJs{}).Select("Value").Where("id=?", id).Update("Value", Value).Error
+	return global.GVA_DB.Model(dbm.DB_PublicJs{}).Select("Value").Where("id=?", id).Update("Value", Value).Error
 }
-func Z置值2(PublicJs DB.DB_PublicJs) error {
+func Z置值2(PublicJs dbm.DB_PublicJs) error {
 	//注意宝塔写文件 文件会在 /www/server/panel 文件夹
 	err := W文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
 	if err != nil {
@@ -62,30 +61,30 @@ func Z置值2(PublicJs DB.DB_PublicJs) error {
 	m["Value"] = PublicJs.Value
 	m["IsVip"] = PublicJs.IsVip
 	m["Note"] = PublicJs.Note
-	err = global.GVA_DB.Model(DB.DB_PublicJs{}).Where("Id=?", PublicJs.Id).Updates(&m).Error
+	err = global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("Id=?", PublicJs.Id).Updates(&m).Error
 	if err == nil { //删除缓存
 		global.H缓存.Delete(global.GVA_CONFIG.Q取运行目录 + PublicJs.Value)
 	}
 	return err
 }
-func C创建(PublicJs DB.DB_PublicJs) error {
+func C创建(PublicJs dbm.DB_PublicJs) error {
 	//注意宝塔写文件 文件会在 /www/server/panel 文件夹
 	err := W文件_保存(global.GVA_CONFIG.Q取运行目录+"/云函数/"+PublicJs.Name+".js", PublicJs.Value)
 	if err != nil {
 		return errors.New("Js写入文件失败:" + err.Error())
 	}
 	PublicJs.Value = "/云函数/" + PublicJs.Name + ".js"
-	err = global.GVA_DB.Model(DB.DB_PublicJs{}).Create(&PublicJs).Error
+	err = global.GVA_DB.Model(dbm.DB_PublicJs{}).Create(&PublicJs).Error
 	return err
 }
 
 func P批量修改IsVip(Id []int, IsVip int) error {
-	return global.GVA_DB.Model(DB.DB_PublicJs{}).Where("Id in ?", Id).Update("IsVip", IsVip).Error
+	return global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("Id in ?", Id).Update("IsVip", IsVip).Error
 }
 
-func P取值2(Appid int, Name string) (DB.DB_PublicJs, error) {
-	var 局_PublicJs DB.DB_PublicJs
-	err := global.GVA_DB.Model(DB.DB_PublicJs{}).Where("AppId=?", Appid).Where("Name=?", Name).First(&局_PublicJs).Error
+func P取值2(Appid int, Name string) (dbm.DB_PublicJs, error) {
+	var 局_PublicJs dbm.DB_PublicJs
+	err := global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("AppId=?", Appid).Where("Name=?", Name).First(&局_PublicJs).Error
 
 	if err != nil {
 		return 局_PublicJs, errors.New("[" + Name + "],Hook函数不存在")
@@ -107,7 +106,7 @@ func P取值2(Appid int, Name string) (DB.DB_PublicJs, error) {
 }
 func P取全部公共函数名称(Appid int) []string {
 	var 局_PublicJs []string
-	err := global.GVA_DB.Model(DB.DB_PublicJs{}).Select("Name").Where("AppId=?", Appid).Find(&局_PublicJs).Error
+	err := global.GVA_DB.Model(dbm.DB_PublicJs{}).Select("Name").Where("AppId=?", Appid).Find(&局_PublicJs).Error
 	if err != nil {
 		return []string{}
 	}

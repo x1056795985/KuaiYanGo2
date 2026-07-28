@@ -5,12 +5,12 @@ import (
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"server/Service/Captcha"
 	"server/Service/Ser_Log"
-	"server/global"
 	"server/new/app/controller/Common"
-	"server/structs/Http/response"
-	DB "server/structs/db"
-	"server/utils"
-	"server/utils/Qqwry"
+	"server/new/app/global"
+	"server/new/app/models/db"
+	"server/new/app/models/old/response"
+	"server/new/app/utils"
+	"server/new/app/utils/Qqwry"
 	"strings"
 	"time"
 )
@@ -33,7 +33,7 @@ type 结构_登录请求 struct {
 
 // 登录响应结构体
 type 结构_登录响应 struct {
-	UserInfo DB.DB_Admin `json:"userInfo"`
+	UserInfo db.DB_Admin `json:"userInfo"`
 	Token    string      `json:"token"`
 	KuaiYan  bool        `json:"kuaiYan"`
 }
@@ -50,8 +50,8 @@ func (l *LoginCtrl) Login(c *gin.Context) {
 	}
 
 	// 判断验证码是否开启
-	openCaptcha := global.GVA_CONFIG.Captcha.OpenCaptcha
-	openCaptchaTimeOut := global.GVA_CONFIG.Captcha.OpenCaptchaTimeOut
+	openCaptcha := 1
+	openCaptchaTimeOut := 3600
 	v, ok := global.H缓存.Get(客户端ip)
 	if !ok {
 		global.H缓存.Set(客户端ip, 1, time.Second*time.Duration(openCaptchaTimeOut))
@@ -76,7 +76,7 @@ func (l *LoginCtrl) Login(c *gin.Context) {
 		return
 	}
 
-	var DB_user DB.DB_Admin
+	var DB_user db.DB_Admin
 	err = global.GVA_DB.Where("User = ?", Request.Username).First(&DB_user).Error
 
 	if err != nil || !utils.BcryptCheck(Request.Password, DB_user.PassWord) {
@@ -95,7 +95,7 @@ func (l *LoginCtrl) Login(c *gin.Context) {
 		return
 	}
 	global.H缓存.Delete(客户端ip)
-	var DB_links_user DB.DB_LinksToken
+	var DB_links_user db.DB_LinksToken
 	DB_links_user.Uid = DB_user.Id
 	DB_links_user.User = DB_user.User
 	DB_links_user.Tab = ""

@@ -4,14 +4,13 @@ import (
 	. "EFunc/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/kaClassUpPrice"
 	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 )
 
@@ -24,8 +23,8 @@ type KaClass struct {
 func (j *KaClass) GetList(c *gin.Context, 请求 request.List, AppId int) (总数 int64, 响应 []KaClassUp带调价信息, err error) {
 
 	var info struct {
-		AgentInfo    DB.DB_User
-		已授权卡类Id      []int
+		AgentInfo    dbm.DB_User
+		已授权卡类Id []int
 		局_list卡类     []dbm.DB_KaClass
 		map用户类型id_名称 map[int]string
 	}

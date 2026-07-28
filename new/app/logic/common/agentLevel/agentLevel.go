@@ -2,9 +2,8 @@ package agentLevel
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
+	"server/new/app/global"
 	dbm "server/new/app/models/db"
-	DB "server/structs/db"
 )
 
 var L_agentLevel = new(agentLevel)
@@ -13,9 +12,9 @@ type agentLevel struct {
 }
 
 // 第一个成员为三级代理,最后一个成员为 顶级代理
-func (j *agentLevel) Q取代理层级信息(c *gin.Context, userID int) ([]DB.Db_Agent_Level, error) {
+func (j *agentLevel) Q取代理层级信息(c *gin.Context, userID int) ([]dbm.Db_Agent_Level, error) {
 	var info struct {
-		数组_代理信息 []DB.Db_Agent_Level
+		数组_代理信息 []dbm.Db_Agent_Level
 		卡类详情    dbm.DB_KaClass
 	}
 	if j.Q取Id代理级别(c, userID) == 0 {
@@ -34,12 +33,12 @@ func (j *agentLevel) Q取代理层级信息(c *gin.Context, userID int) ([]DB.Db
 func (j *agentLevel) Q取Id代理级别(c *gin.Context, 用户ID int) int {
 	var Count int64 = 0
 	db := *global.GVA_DB
-	db.Model(DB.Db_Agent_Level{}).Where("Uid=?", 用户ID).Count(&Count)
+	db.Model(dbm.Db_Agent_Level{}).Where("Uid=?", 用户ID).Count(&Count)
 	return int(Count)
 }
 
-func (j *agentLevel) 递归获取上级代理ID(userID int, 数组_代理信息 *[]DB.Db_Agent_Level) error {
-	var 代理信息 DB.Db_Agent_Level
+func (j *agentLevel) 递归获取上级代理ID(userID int, 数组_代理信息 *[]dbm.Db_Agent_Level) error {
+	var 代理信息 dbm.Db_Agent_Level
 	db := *global.GVA_DB
 	err := db.Where("Uid = ?", userID).First(&代理信息).Error
 	if err != nil {
@@ -53,7 +52,7 @@ func (j *agentLevel) 递归获取上级代理ID(userID int, 数组_代理信息 
 }
 
 // 修改递归获取上级代理ID方法为CTE查询  /这种方式虽然只读取一次,但是实际效果,不如索引多次读取速度快,放弃
-func (j *agentLevel) 递归获取上级代理ID2(userID int, 数组_代理信息 *[]DB.Db_Agent_Level) error {
+func (j *agentLevel) 递归获取上级代理ID2(userID int, 数组_代理信息 *[]dbm.Db_Agent_Level) error {
 	query := `
         WITH RECURSIVE cte AS (
             SELECT Uid, UPAgentId, Level 

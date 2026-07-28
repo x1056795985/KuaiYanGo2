@@ -4,20 +4,20 @@ import (
 	utils2 "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/songzhibin97/gkit/tools/rand_string"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
 	"server/new/app/utils"
-	DB "server/structs/db"
-	"server/utils/Qqwry"
+	"server/new/app/utils/Qqwry"
 	"strings"
 	"time"
 )
 
 func UserApi_GetToken(c *gin.Context) {
 	ctx := utils.Q取上下文(c)
-	var DB_links_user DB.DB_LinksToken
+	var DB_links_user dbm.DB_LinksToken
 	DB_links_user.User = "游客"
 	DB_links_user.Ip = c.ClientIP()
 	省市, 运行商, err := Qqwry.Ip查信息(DB_links_user.Ip)

@@ -2,12 +2,12 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/Common"
+	"server/new/app/global"
+	"server/new/app/models/old/response"
 	"server/new/app/models/request"
 	. "server/new/app/models/response"
 	"server/new/app/service"
-	"server/structs/Http/response"
 )
 
 type Withdraw struct {

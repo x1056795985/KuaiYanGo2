@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	"server/new/app/global"
+	"server/new/app/models/old/response"
 	"time"
 
 	"EFunc/utils"
@@ -17,10 +19,8 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_User"
-	"server/global"
 	"server/new/app/controller/Common"
-	"server/structs/Http/response"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 )
 
 type KuaiYan struct {
@@ -454,7 +454,7 @@ func (k *KuaiYan) Updater(c *gin.Context) {
 	KuaiYanUpdater.J_系统更新提示 = "准备中"
 	go KuaiYanUpdater.K快验系统开始更新(响应信息, func(执行程序本地路径 string) {
 		fmt.Printf("系统更新%v,马上启动新版本程序继承端口,退出旧版本\n\n", 执行程序本地路径)
-		global.GVA_LOG.Info("系统更新,马上启动新版本程序继承端口,退出旧版本\n")
+		global.GVA_LOG.Println("系统更新,马上启动新版本程序继承端口,退出旧版本\n")
 		err := os.Chmod(执行程序本地路径, 0755)
 		if err != nil {
 			KuaiYanUpdater.J_系统更新状态 = 2

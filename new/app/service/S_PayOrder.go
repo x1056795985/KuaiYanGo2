@@ -4,26 +4,26 @@ import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/global"
+	"server/new/app/global"
+	dbm "server/new/app/models/db"
 	"server/new/app/models/request"
-	DB "server/structs/db"
-	"server/utils"
+	"server/new/app/utils"
 )
 
 type PayOrder struct {
-	*BaseService[DB.DB_LogRMBPayOrder] // 嵌入泛型基础服务
+	*BaseService[dbm.DB_LogRMBPayOrder] // 嵌入泛型基础服务
 }
 
 func NewPayOrder(c *gin.Context, db *gorm.DB) *PayOrder {
 	return &PayOrder{
-		BaseService: NewBaseService[DB.DB_LogRMBPayOrder](c, db),
+		BaseService: NewBaseService[dbm.DB_LogRMBPayOrder](c, db),
 	}
 }
 
 // 优化查询链式操作
-func (s *PayOrder) GetList(请求 request.List) (int64, []DB.DB_LogRMBPayOrder, error) {
+func (s *PayOrder) GetList(请求 request.List) (int64, []dbm.DB_LogRMBPayOrder, error) {
 	// 创建查询构建器
-	db := s.db.Model(new(DB.DB_LogRMBPayOrder))
+	db := s.db.Model(new(dbm.DB_LogRMBPayOrder))
 	if 请求.Page == 0 {
 		请求.Page = 1
 	}
@@ -57,14 +57,14 @@ func (s *PayOrder) GetList(请求 request.List) (int64, []DB.DB_LogRMBPayOrder, 
 	}
 
 	// 分页查询
-	var results []DB.DB_LogRMBPayOrder
+	var results []dbm.DB_LogRMBPayOrder
 	err := db.Order(order).
 		Limit(请求.Size).
 		Offset((请求.Page - 1) * 请求.Size).
 		Find(&results).Error
 
 	if err != nil {
-		global.GVA_LOG.Error(utils.Q取包名结构体方法(s) + ":" + err.Error())
+		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
 	}
 
 	return count, results, err

@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"server/global"
+	"server/new/app/global"
 	"strconv"
 	"strings"
 	"time"
@@ -206,13 +206,13 @@ func B宝塔_修改项目信息pid() {
 		pid := os.Getpid()
 		err = os.WriteFile(files[0], []byte(strconv.Itoa(pid)), 0644)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("写出pid失败:%v", err.Error()))
+			global.GVA_LOG.Println(fmt.Sprintf("写出pid失败:%v", err.Error()))
 			return
 		}
-		global.GVA_LOG.Info(fmt.Sprintf("写出pid成功:%v", pid))
+		global.GVA_LOG.Println(fmt.Sprintf("写出pid成功:%v", pid))
 		return
 	}
-	global.GVA_LOG.Info(fmt.Sprintf("扫描pid文件信息:%v", files))
+	global.GVA_LOG.Println(fmt.Sprintf("扫描pid文件信息:%v", files))
 	return
 }
 
@@ -221,21 +221,21 @@ func B宝塔_修改项目信息() {
 	db, err := gorm.Open(sqlite.Open("/www/server/panel/data/default.db"), &gorm.Config{})
 	if err != nil {
 		// 处理错误
-		global.GVA_LOG.Error(err.Error())
+		global.GVA_LOG.Println(err.Error())
 		return
 	}
 	pid := os.Getpid()
 	执行文件名 := os.Args[0]
-	global.GVA_LOG.Info("执行文件名:" + 执行文件名)
+	global.GVA_LOG.Println("执行文件名:" + 执行文件名)
 	dir, err := os.Getwd()
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("获取当前路径失败:%v", err.Error()))
+		global.GVA_LOG.Println(fmt.Sprintf("获取当前路径失败:%v", err.Error()))
 		return
 	}
 
-	global.GVA_LOG.Info(fmt.Sprintf("当前路径:%v,pid:%v\n", dir, pid))
+	global.GVA_LOG.Println(fmt.Sprintf("当前路径:%v,pid:%v\n", dir, pid))
 	path := dir + 执行文件名
-	global.GVA_LOG.Info(fmt.Sprintf("path:%v\n", path))
+	global.GVA_LOG.Println(fmt.Sprintf("path:%v\n", path))
 	var info struct {
 		Id             int    `json:"id" gorm:"column:id"`
 		Name           string `json:"name" gorm:"column:name;comment:名称"`
@@ -246,7 +246,7 @@ func B宝塔_修改项目信息() {
 	tx := db.Raw(SQL).First(&info)
 	if tx.Error != nil {
 		// 处理错误
-		global.GVA_LOG.Error(tx.Error.Error())
+		global.GVA_LOG.Println(tx.Error.Error())
 		return
 	}
 	fmt.Printf("项目信息:%v", info)
@@ -257,7 +257,7 @@ func B宝塔_修改项目信息() {
 	//  /var/tmp/gopids  修改这个可以修改宝塔检测飞鸟的pid值,用来显示是否运行中
 	err = os.WriteFile("/var/tmp/gopids/"+info.Name+".pid", []byte(strconv.Itoa(pid)), 0644)
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("写出pid失败:%v", err.Error()))
+		global.GVA_LOG.Println(fmt.Sprintf("写出pid失败:%v", err.Error()))
 		return
 	}
 
@@ -289,14 +289,14 @@ func B宝塔_修改项目信息() {
 	tx = db.Debug().Exec(SQL, path, json, info.Id)
 	if tx.Error != nil {
 		// 处理错误
-		global.GVA_LOG.Error(tx.Error.Error())
+		global.GVA_LOG.Println(tx.Error.Error())
 		return
 	}
 	// 删除脚本就可以,启动时会自动再创建
 	err = utils.W文件_删除("/www/server/go_project/vhost/scripts/" + info.Name + ".sh")
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("脚本删除失败:" + err.Error()))
+		global.GVA_LOG.Println(fmt.Sprintf("脚本删除失败:" + err.Error()))
 		return
 	}
-	global.GVA_LOG.Info(fmt.Sprintf("处理成功"))
+	global.GVA_LOG.Println(fmt.Sprintf("处理成功"))
 }

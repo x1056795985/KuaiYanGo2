@@ -9,14 +9,13 @@ import (
 	"server/Service/Ser_KaClass"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/agent"
 	"server/new/app/logic/common/agentLevel"
 	"server/new/app/logic/common/kaClassUpPrice"
 
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -24,23 +23,23 @@ import (
 // 只有管理员才会调用
 // 库存卡包创建人ID 负数为管理员
 // 资源包来源ID 直接购买为0 管理员下发为-1
-func New(c *gin.Context, 归属Uid, KaClassId, NumMax, 库存卡包创建人ID, 资源包来源ID int, 有效期 int64, 备注 string) (DB.Db_Agent_库存卡包, error) {
+func New(c *gin.Context, 归属Uid, KaClassId, NumMax, 库存卡包创建人ID, 资源包来源ID int, 有效期 int64, 备注 string) (dbm.Db_Agent_库存卡包, error) {
 
 	if !Ser_KaClass.KaClassId是否存在(KaClassId) {
-		return DB.Db_Agent_库存卡包{}, errors.New("卡类ID不存在")
+		return dbm.Db_Agent_库存卡包{}, errors.New("卡类ID不存在")
 	}
 	if agentLevel.L_agentLevel.Q取Id代理级别(c, 归属Uid) == 0 {
-		return DB.Db_Agent_库存卡包{}, errors.New("代理ID不存在")
+		return dbm.Db_Agent_库存卡包{}, errors.New("代理ID不存在")
 	}
 	if NumMax <= 0 {
-		return DB.Db_Agent_库存卡包{}, errors.New("库存卡包可使用次数必须大于0")
+		return dbm.Db_Agent_库存卡包{}, errors.New("库存卡包可使用次数必须大于0")
 	}
 
 	if 库存卡包创建人ID > 0 {
-		return DB.Db_Agent_库存卡包{}, errors.New("只有管理员或开发者可以直接创建库存")
+		return dbm.Db_Agent_库存卡包{}, errors.New("只有管理员或开发者可以直接创建库存")
 	}
 
-	库存卡包 := DB.Db_Agent_库存卡包{
+	库存卡包 := dbm.Db_Agent_库存卡包{
 		Uid:            归属Uid,
 		KaClassId:      KaClassId,
 		Num:            0,
@@ -59,27 +58,27 @@ func New(c *gin.Context, 归属Uid, KaClassId, NumMax, 库存卡包创建人ID, 
 	return 库存卡包, err
 }
 
-func New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, ip string) (DB.Db_Agent_库存卡包, error) {
+func New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int, 有效期 int64, 备注, ip string) (dbm.Db_Agent_库存卡包, error) {
 
 	局_卡类详情, err := Ser_KaClass.KaClass取详细信息(KaClassId)
 	if err != nil {
-		return DB.Db_Agent_库存卡包{}, errors.New("卡类ID不存在")
+		return dbm.Db_Agent_库存卡包{}, errors.New("卡类ID不存在")
 	}
 	if 局_卡类详情.AgentMoney < 0 { //0元也可以购买
-		return DB.Db_Agent_库存卡包{}, errors.New("卡类代理价格为负数,不可购买,请联系管理员")
+		return dbm.Db_Agent_库存卡包{}, errors.New("卡类代理价格为负数,不可购买,请联系管理员")
 	}
 	if agentLevel.L_agentLevel.Q取Id代理级别(c, 归属Uid) == 0 {
-		return DB.Db_Agent_库存卡包{}, errors.New("代理ID不存在")
+		return dbm.Db_Agent_库存卡包{}, errors.New("代理ID不存在")
 	}
 	if NumMax <= 0 {
-		return DB.Db_Agent_库存卡包{}, errors.New("库存卡包可使用次数必须大于0")
+		return dbm.Db_Agent_库存卡包{}, errors.New("库存卡包可使用次数必须大于0")
 	}
 
 	可制卡号, _ := agent.L_agent.Id取代理可制卡类和可用代理功能列表(c, 归属Uid)
 	if !S数组_整数是否存在(可制卡号, KaClassId) {
-		return DB.Db_Agent_库存卡包{}, errors.New("权限不足,无法创建卡类ID:" + strconv.Itoa(KaClassId) + "的库存卡包,请联系上级代理授权该卡类")
+		return dbm.Db_Agent_库存卡包{}, errors.New("权限不足,无法创建卡类ID:" + strconv.Itoa(KaClassId) + "的库存卡包,请联系上级代理授权该卡类")
 	}
-	库存卡包 := DB.Db_Agent_库存卡包{
+	库存卡包 := dbm.Db_Agent_库存卡包{
 		Uid:            归属Uid,
 		KaClassId:      KaClassId,
 		Num:            0,
@@ -104,15 +103,15 @@ func New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int, 有效期
 		付款金额 float64
 	}
 	db := *global.GVA_DB
-	var 局_代理详情 DB.DB_User
+	var 局_代理详情 dbm.DB_User
 	局_代理详情, err = service.NewUser(c, &db).Info(归属Uid)
 	if err != nil {
-		return DB.Db_Agent_库存卡包{}, errors.Join(err, errors.New("取代理详情失败"))
+		return dbm.Db_Agent_库存卡包{}, errors.Join(err, errors.New("取代理详情失败"))
 	}
 
 	局_价格组成.总调价, 局_价格组成.调价详情, err = kaClassUpPrice.L_kaClassUpPrice.J计算代理调价(c, 局_卡类详情.Id, 局_代理详情.UPAgentId)
 	if err != nil {
-		return DB.Db_Agent_库存卡包{}, errors.Join(err, errors.New("计算代理调价失败"))
+		return dbm.Db_Agent_库存卡包{}, errors.Join(err, errors.New("计算代理调价失败"))
 	}
 	局_价格组成.购买数量 = int64(NumMax)
 	局_价格组成.总调价 = Float64乘int64(局_价格组成.总调价, 局_价格组成.购买数量)
@@ -121,11 +120,11 @@ func New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int, 有效期
 
 	var 局_新余额 float64
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		err = tx.Model(DB.DB_User{}).Where("Id = ?", 归属Uid).Update("RMB", gorm.Expr("RMB - ?", 局_价格组成.付款金额)).Error
+		err = tx.Model(dbm.DB_User{}).Where("Id = ?", 归属Uid).Update("RMB", gorm.Expr("RMB - ?", 局_价格组成.付款金额)).Error
 		if err != nil {
 			return err
 		}
-		err = tx.Model(DB.DB_User{}).Select("RMB").Where("Id = ?", 归属Uid).Take(&局_新余额).Error
+		err = tx.Model(dbm.DB_User{}).Select("RMB").Where("Id = ?", 归属Uid).Take(&局_新余额).Error
 		if err != nil {
 			return err
 		}
@@ -150,7 +149,7 @@ func New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int, 有效期
 		局_日志前缀 := fmt.Sprintf("代理:%s,购买库存包ID{%d}", 局_代理详情.User, 库存卡包.Id)
 		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
 		if err != nil {
-			global.GVA_LOG.Error(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
+			global.GVA_LOG.Println(fmt.Sprintf("Z执行调价信息分成失败:", err.Error()))
 		}
 	}
 	if 局_价格组成.卡类金额 > 0 {
@@ -160,7 +159,7 @@ func New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int, 有效期
 			局_日志前缀 := fmt.Sprintf("代理:%s,购买库存包ID{%d}", 局_代理详情.User, 库存卡包.Id)
 			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_价格组成.卡类金额, 局_日志前缀, 局_价格组成.总调价 == 0)
 			if err != nil {
-				global.GVA_LOG.Error(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+				global.GVA_LOG.Println(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
 			}
 		}
 	}
@@ -191,12 +190,12 @@ func K库存发送(c *gin.Context, 原库存ID, 新代理Uid, 转出数量 int, 
 	}
 
 	err返回 := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(DB.Db_Agent_库存卡包{}).Where("Id = ?", 原库存ID).Update("Num", gorm.Expr("Num + ?", 转出数量)).Error
+		err := tx.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 原库存ID).Update("Num", gorm.Expr("Num + ?", 转出数量)).Error
 		if err != nil {
 			return err
 		}
 
-		err = tx.Model(DB.Db_Agent_库存卡包{}).Where("Id=?", 原库存ID).First(&原库存详情).Error
+		err = tx.Model(dbm.Db_Agent_库存卡包{}).Where("Id=?", 原库存ID).First(&原库存详情).Error
 		if err != nil {
 			return err
 		}
@@ -205,7 +204,7 @@ func K库存发送(c *gin.Context, 原库存ID, 新代理Uid, 转出数量 int, 
 		}
 		//原库存,扣除成功,开始创建新库存ID
 
-		新库存卡包 := DB.Db_Agent_库存卡包{
+		新库存卡包 := dbm.Db_Agent_库存卡包{
 			Uid:            新代理Uid,
 			KaClassId:      原库存详情.KaClassId,
 			Num:            0,
@@ -257,12 +256,12 @@ func K库存撤回(c *gin.Context, 操作UId, 原库存ID, 撤回数量 int, 备
 	}
 
 	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(DB.Db_Agent_库存卡包{}).Where("Id = ?", 原库存ID).Update("Num", gorm.Expr("Num + ?", 撤回数量)).Error
+		err := tx.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 原库存ID).Update("Num", gorm.Expr("Num + ?", 撤回数量)).Error
 		if err != nil {
 			return err
 		}
 
-		err = tx.Model(DB.Db_Agent_库存卡包{}).Where("Id=?", 原库存ID).First(&原库存详情).Error
+		err = tx.Model(dbm.Db_Agent_库存卡包{}).Where("Id=?", 原库存ID).First(&原库存详情).Error
 		if err != nil {
 			return err
 		}
@@ -275,7 +274,7 @@ func K库存撤回(c *gin.Context, 操作UId, 原库存ID, 撤回数量 int, 备
 			//如果是管理员直接成功,不用实际撤回
 			err = nil
 		} else {
-			err = tx.Model(DB.Db_Agent_库存卡包{}).Where("Id = ?", 原库存详情.SourceID).Update("Num", gorm.Expr("Num - ?", 撤回数量)).Error
+			err = tx.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 原库存详情.SourceID).Update("Num", gorm.Expr("Num - ?", 撤回数量)).Error
 		}
 		if err == nil {
 
@@ -319,8 +318,8 @@ func K库存撤回(c *gin.Context, 操作UId, 原库存ID, 撤回数量 int, 备
 		return err
 	})
 }
-func Id取详情(Id int) (库存卡包详情 DB.Db_Agent_库存卡包, ok bool) {
-	err := global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).Where("Id=?", Id).First(&库存卡包详情).Error
+func Id取详情(Id int) (库存卡包详情 dbm.Db_Agent_库存卡包, ok bool) {
+	err := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("Id=?", Id).First(&库存卡包详情).Error
 	return 库存卡包详情, err == nil
 }
 
@@ -330,12 +329,12 @@ func Id取归属Uid(Id int) int {
 	}
 
 	Uid := 0
-	_ = global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).Select("Uid").Where("Id=?", Id).First(&Uid).Error
+	_ = global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Select("Uid").Where("Id=?", Id).First(&Uid).Error
 	return Uid
 }
 func Id是否存在(Id int) bool {
 	var Count int64
-	result := global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).Select("1").Where("Id=?", Id).First(&Count)
+	result := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Select("1").Where("Id=?", Id).First(&Count)
 	return result.Error == nil
 }
 
@@ -354,9 +353,9 @@ func K库存延期(库存ID, 代理Uid, 延期秒数 int) error {
 	}
 	var err error
 	if 延期秒数 > 9999999999 {
-		err = global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("EndTime", 9999999999).Error
+		err = global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("EndTime", 9999999999).Error
 	} else {
-		err = global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("EndTime", gorm.Expr("EndTime + ?", 延期秒数)).Error
+		err = global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("EndTime", gorm.Expr("EndTime + ?", 延期秒数)).Error
 	}
 
 	return err
@@ -373,7 +372,7 @@ func K库存修改备注(库存ID, 代理Uid int, 新备注 string) error {
 		return errors.New("只能修改归属自己的库存")
 	}
 
-	err := global.GVA_DB.Model(DB.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("Note", 新备注).Error
+	err := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("Note", 新备注).Error
 
 	return err
 }

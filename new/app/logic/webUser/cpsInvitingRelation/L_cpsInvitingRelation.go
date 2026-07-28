@@ -3,16 +3,14 @@ package cpsInvitingRelation
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/common/log"
 	"server/new/app/logic/webUser/cps"
 	"server/new/app/logic/webUser/user"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strconv"
 	"time"
 )
@@ -29,11 +27,11 @@ type appUser struct {
 // 四舍五入  索引越小,代理级别越靠下  cps邀请专用
 func (j *appUser) S设置邀请人(c *gin.Context, AppId, 邀请人, 被邀请人 int, Referer string) (err error) {
 	var info struct {
-		AppInfo DB.DB_AppInfo
+		AppInfo dbm.DB_AppInfo
 		上级      dbm.DB_CpsInvitingRelation
 		上上级     dbm.DB_CpsInvitingRelation
 		插入数据    []dbm.DB_CpsInvitingRelation
-		邀请人信息   DB.DB_User
+		邀请人信息   dbm.DB_User
 	}
 	var tx *gorm.DB
 	if tempObj, ok := c.Get("tx"); ok {
@@ -98,11 +96,11 @@ func (j *appUser) S设置邀请人(c *gin.Context, AppId, 邀请人, 被邀请�
 func (j *appUser) F发放被邀奖励卡(c *gin.Context, AppId int, Uid int) (err error) {
 
 	var info struct {
-		AppUser DB.DB_AppUser
+		AppUser dbm.DB_AppUser
 		cpsInfo dbm.DB_CpsInfo
 
-		LogMoney     []DB.DB_LogMoney
-		LogVipNumber []DB.DB_LogVipNumber
+		LogMoney     []dbm.DB_LogMoney
+		LogVipNumber []dbm.DB_LogVipNumber
 	}
 	var tx *gorm.DB
 	if tempObj, ok := c.Get("tx"); ok {
@@ -129,20 +127,20 @@ func (j *appUser) F发放被邀奖励卡(c *gin.Context, AppId int, Uid int) (er
 	}
 
 	if 临时数据, ok := c.Get("logMoney"); ok { //判断是否有rmb充值的日志
-		info.LogMoney = append(info.LogMoney, 临时数据.(DB.DB_LogMoney))
+		info.LogMoney = append(info.LogMoney, 临时数据.(dbm.DB_LogMoney))
 		info.LogMoney[len(info.LogMoney)-1].Note = "归属代理送卡,卡类id:" + strconv.Itoa(info.cpsInfo.BindGiveKaClassId) + info.LogMoney[len(info.LogMoney)-1].Note
 	}
 
 	if 临时数据, ok := c.Get("logVipNumber"); ok { //判断是否有积分充值的日志
-		info.LogVipNumber = append(info.LogVipNumber, 临时数据.(DB.DB_LogVipNumber))
+		info.LogVipNumber = append(info.LogVipNumber, 临时数据.(dbm.DB_LogVipNumber))
 		info.LogVipNumber[len(info.LogVipNumber)-1].Note = "归属代理送卡,卡类id:" + strconv.Itoa(info.cpsInfo.BindGiveKaClassId) + info.LogVipNumber[len(info.LogVipNumber)-1].Note
 	}
 	//最后写出日志
 	if err = log.L_log.S输出日志(c, info.LogMoney); err != nil {
-		global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		global.GVA_LOG.Println("输出日志失败!", err)
 	}
 	if err = log.L_log.S输出日志(c, info.LogVipNumber); err != nil {
-		global.GVA_LOG.Error("输出日志失败!", zap.Any("err", err))
+		global.GVA_LOG.Println("输出日志失败!", err)
 	}
 
 	return

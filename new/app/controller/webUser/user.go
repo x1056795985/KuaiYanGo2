@@ -8,14 +8,13 @@ import (
 	"server/Service/Ser_LinkUser"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_User"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 	"strconv"
 	"strings"
 )
@@ -47,7 +46,7 @@ func (C *User) NewUserInfo(c *gin.Context) {
 	}
 	var info = struct {
 		网页用户中心配置 dbm.DB_AppInfoWebUser
-		user     DB.DB_User
+		user     dbm.DB_User
 	}{}
 	var err error
 	tx := *global.GVA_DB
@@ -86,7 +85,7 @@ func (C *User) GetPwSendSms(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		user DB.DB_User
+		user dbm.DB_User
 	}{}
 	var err error
 	tx := *global.GVA_DB
@@ -119,9 +118,9 @@ func (C *User) GetPwSendSms(c *gin.Context) {
 }
 func (C *User) GetInfo(c *gin.Context) {
 	var info = struct {
-		user     DB.DB_User
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
+		user     dbm.DB_User
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
 	}{}
 	var err error
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
@@ -164,7 +163,7 @@ func (C *User) SmsCodeSetPassWord(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		user DB.DB_User
+		user dbm.DB_User
 	}{}
 	var err error
 
@@ -209,8 +208,8 @@ func (C *User) SmsCodeSetPassWord(c *gin.Context) {
 func (C *User) Logout(c *gin.Context) {
 	var err error
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 
@@ -235,8 +234,8 @@ func (C *User) SetBaseInfo(c *gin.Context) {
 	}
 	var err error
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	if !Y限账号模式应用(c, &info.appInfo) {
@@ -284,8 +283,8 @@ func (C *User) SendSms(c *gin.Context) {
 	}
 	var err error
 	var info = struct {
-		appInfo  DB.DB_AppInfo
-		likeInfo DB.DB_LinksToken
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
 		网页用户中心配置 dbm.DB_AppInfoWebUser
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)

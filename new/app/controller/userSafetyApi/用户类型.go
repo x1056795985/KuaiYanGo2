@@ -2,11 +2,11 @@ package userSafetyApi
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"time"
 )
 
@@ -51,7 +51,7 @@ func UserApi_置用户类型(c *gin.Context) {
 
 	局_旧用户类型, err := service.NewUserClass(c, &db).InfoByMark(局_ctx.AppInfo.AppId, 局_App用户.UserClassId)
 	if err != nil { //如果是没有的类型就赋值 未分类
-		局_旧用户类型 = DB.DB_UserClass{AppId: 局_ctx.AppInfo.AppId, Name: "未分类", Weight: 1}
+		局_旧用户类型 = dbm.DB_UserClass{AppId: 局_ctx.AppInfo.AppId, Name: "未分类", Weight: 1}
 	}
 
 	if 局_旧用户类型.Mark == 局_新用户类型.Mark { //代号相同,直接转换即可

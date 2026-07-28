@@ -10,13 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/Service/Ser_Js"
 	"server/Service/Ser_PublicJs"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/cloudStorage"
 	"server/new/app/logic/webUser/appInfoWebUser"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
 	"strings"
 	"time"
 )
@@ -73,7 +73,7 @@ func UserApi_云函数执行(c *gin.Context) {
 	}
 	局_耗时 := time.Now().UnixMilli()
 
-	var 局_PublicJs DB.DB_PublicJs
+	var 局_PublicJs dbm.DB_PublicJs
 	var err error
 	局_PublicJs, err = Ser_PublicJs.Q取值2(局_JSid)
 

@@ -10,7 +10,8 @@ import (
 	zhTranslations "github.com/go-playground/validator/v10/translations/zh"
 	"io"
 	"reflect"
-	"server/global"
+	"server/new/app/global"
+	"server/new/app/models/old/response"
 	"server/new/app/router/admin"
 	"server/new/app/router/agent"
 	"server/new/app/router/middleware"
@@ -18,7 +19,6 @@ import (
 	"server/new/app/router/webApi2"
 	"server/new/app/router/webSocket"
 	"server/new/app/router/webUser"
-	"server/structs/Http/response"
 )
 
 // 初始化总路由
@@ -45,7 +45,7 @@ func InitRouters() *gin.Engine {
 		})
 	}
 
-	//global.GVA_LOG.Info("router register success(路由注册成功)")
+	//global.GVA_LOG.Println("router register success(路由注册成功)")
 	return Router
 }
 

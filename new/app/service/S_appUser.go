@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	DB "server/structs/db"
+	dbm "server/new/app/models/db"
 	"strconv"
 )
 
@@ -24,55 +24,55 @@ func NewAppUser(c *gin.Context, db *gorm.DB, appId int) *AppUser {
 }
 
 // 增
-func (s *AppUser) Create(info *DB.DB_AppUser) (row int64, err error) {
+func (s *AppUser) Create(info *dbm.DB_AppUser) (row int64, err error) {
 	//创建会自动重新赋值info.AppId为新插入的数据AppId
-	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(s.appid)).Create(info)
+	tx := s.db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(s.appid)).Create(info)
 	return tx.RowsAffected, tx.Error
 }
 
 // 业务逻辑操作尽量不用appUserId,容易造成混乱,请使用uid
-func (s *AppUser) Info(id int) (info DB.DB_AppUser, err error) {
-	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Id = ?", id).First(&info)
+func (s *AppUser) Info(id int) (info dbm.DB_AppUser, err error) {
+	tx := s.db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Id = ?", id).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
 	return
 }
-func (s *AppUser) InfoKey(绑定信息 string) (info DB.DB_AppUser, err error) {
-	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("`Key` = ?", 绑定信息).First(&info)
-	if tx.Error != nil {
-		err = tx.Error
-	}
-	return
-}
-
-func (s *AppUser) InfoUid(Uid int) (info DB.DB_AppUser, err error) {
-
-	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Uid = ?", Uid).First(&info)
+func (s *AppUser) InfoKey(绑定信息 string) (info dbm.DB_AppUser, err error) {
+	tx := s.db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("`Key` = ?", 绑定信息).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
 	return
 }
 
-func (s *AppUser) Infos(where map[string]interface{}) (info []DB.DB_AppUser, err error) {
-	info = make([]DB.DB_AppUser, 0)
-	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(s.appid)).Where(where).Find(&info)
+func (s *AppUser) InfoUid(Uid int) (info dbm.DB_AppUser, err error) {
+
+	tx := s.db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Uid = ?", Uid).First(&info)
+	if tx.Error != nil {
+		err = tx.Error
+	}
+	return
+}
+
+func (s *AppUser) Infos(where map[string]interface{}) (info []dbm.DB_AppUser, err error) {
+	info = make([]dbm.DB_AppUser, 0)
+	tx := s.db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(s.appid)).Where(where).Find(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
 	return
 }
 func (s *AppUser) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
-	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Id = ?", Id).Updates(&数据)
+	tx := s.db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Id = ?", Id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
 func (s *AppUser) Update2(where map[string]interface{}, 数据 map[string]interface{}) (row int64, err error) {
-	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(s.appid)).Where(where).Updates(&数据)
+	tx := s.db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(s.appid)).Where(where).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
 func (s *AppUser) UpdateUid(Uid int, 数据 map[string]interface{}) (row int64, err error) {
-	tx := s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Uid = ?", Uid).Updates(&数据)
+	tx := s.db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Uid = ?", Uid).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -90,7 +90,7 @@ func (s *AppUser) Id点数增减_批量(Id []int, 增减值 int64, is增加 bool
 	if is增加 {
 		sql = "VipTime + ?"
 	}
-	err = s.db.Model(DB.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Id IN ?", Id).Update("VipTime", gorm.Expr(sql, 增减值)).Error
+	err = s.db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(s.appid)).Where("Id IN ?", Id).Update("VipTime", gorm.Expr(sql, 增减值)).Error
 	return err
 
 }

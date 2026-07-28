@@ -8,11 +8,11 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"server/Service/Ser_Log"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	. "server/utils"
+	. "server/new/app/utils"
 	"strconv"
 	"time"
 	"unicode/utf8"
@@ -20,7 +20,7 @@ import (
 
 func UserId是否存在(id int) bool {
 	var Count int64
-	result := global.GVA_DB.Model(DB.DB_User{}).Select("1").Where("Id=?", id).Take(&Count)
+	result := global.GVA_DB.Model(dbm.DB_User{}).Select("1").Where("Id=?", id).Take(&Count)
 	return result.Error == nil
 }
 
@@ -30,7 +30,7 @@ func User用户名取id(用户名 string) int {
 	}
 
 	var Id = 0
-	_ = global.GVA_DB.Model(DB.DB_User{}).Select("Id").Where("User=?", 用户名).Take(&Id)
+	_ = global.GVA_DB.Model(dbm.DB_User{}).Select("Id").Where("User=?", 用户名).Take(&Id)
 	return Id
 }
 
@@ -41,11 +41,11 @@ func Id取User(Id int) string {
 	}
 	var 用户名 string
 	if Id < 0 {
-		global.GVA_DB.Model(DB.DB_Admin{}).Select("User").Where("Id=?", -Id).Scan(&用户名)
+		global.GVA_DB.Model(dbm.DB_Admin{}).Select("User").Where("Id=?", -Id).Scan(&用户名)
 		return 用户名
 	}
 
-	err := global.GVA_DB.Debug().Model(DB.DB_User{}).Select("User").Where("Id=?", Id).Scan(&用户名).Error
+	err := global.GVA_DB.Debug().Model(dbm.DB_User{}).Select("User").Where("Id=?", Id).Scan(&用户名).Error
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -57,8 +57,8 @@ func Id取User_批量(Id []int) map[int]string {
 	if len(Id) == 0 {
 		return map[int]string{}
 	}
-	var 用户名 []DB.DB_User
-	global.GVA_DB.Model(DB.DB_User{}).Select("Id,User").Where("Id IN ?", Id).Find(&用户名)
+	var 用户名 []dbm.DB_User
+	global.GVA_DB.Model(dbm.DB_User{}).Select("Id,User").Where("Id IN ?", Id).Find(&用户名)
 	var 局_返回 = make(map[int]string, len(用户名))
 
 	for 索引, _ := range 用户名 {
@@ -75,11 +75,11 @@ func Id取状态(Id int) int {
 	}
 	var Status int
 	if Id < 0 {
-		global.GVA_DB.Model(DB.DB_Admin{}).Select("Status").Where("Id=?", -Id).First(&Status)
+		global.GVA_DB.Model(dbm.DB_Admin{}).Select("Status").Where("Id=?", -Id).First(&Status)
 		return Status
 	}
 
-	global.GVA_DB.Model(DB.DB_User{}).Select("Status").Where("Id=?", Id).First(&Status)
+	global.GVA_DB.Model(dbm.DB_User{}).Select("Status").Where("Id=?", Id).First(&Status)
 	return Status
 }
 
@@ -105,7 +105,7 @@ func Id余额增减_批量(Id []int, 增减值 float64, is增加 bool) error {
 	if !is增加 {
 		sql = "RMB - ?"
 	}
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id IN ?", Id).Update("RMB", gorm.Expr(sql, 增减值)).Error
+	err := global.GVA_DB.Model(dbm.DB_User{}).Where("Id IN ?", Id).Update("RMB", gorm.Expr(sql, 增减值)).Error
 	return err
 }
 
@@ -121,12 +121,12 @@ func Id余额增减(Id int, 增减值 float64, is增加 bool) (新余额 float64
 
 	if is增加 {
 		err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-			err = tx.Model(DB.DB_User{}).Where("Id = ?", Id).Update("RMB", gorm.Expr("RMB + ?", 增减值)).Error
+			err = tx.Model(dbm.DB_User{}).Where("Id = ?", Id).Update("RMB", gorm.Expr("RMB + ?", 增减值)).Error
 			if err != nil {
-				global.GVA_LOG.Error(strconv.Itoa(Id) + "Id余额增加失败:" + err.Error())
+				global.GVA_LOG.Println(strconv.Itoa(Id) + "Id余额增加失败:" + err.Error())
 				return err
 			}
-			err = tx.Model(DB.DB_User{}).Select("Rmb").Where("Id=?", Id).First(&新余额).Error
+			err = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id=?", Id).First(&新余额).Error
 			return err
 		})
 		return
@@ -141,7 +141,7 @@ func Id余额增减(Id int, 增减值 float64, is增加 bool) (新余额 float64
 	tx.Exec(sql, 增减值, Id)
 	if tx.Error != nil {
 		tx.Rollback()
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
+		global.GVA_LOG.Println(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
 		return 0, errors.New("余额减少失败查看服务器日志检查原因")
 	}
 
@@ -150,7 +150,7 @@ func Id余额增减(Id int, 增减值 float64, is增加 bool) (新余额 float64
 	tx = tx.Raw(sql, Id).Scan(&新余额)
 	if tx.Error != nil {
 		tx.Rollback()
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
+		global.GVA_LOG.Println(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
 		return 0, errors.New("查询余额失败查看服务器日志检查原因")
 	}
 
@@ -172,7 +172,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 	if 增减值 <= 0 {
 		return 源新余额, 目标新余额, errors.New("金额必须大于0")
 	}
-	var 源用户详情 DB.DB_User
+	var 源用户详情 dbm.DB_User
 
 	var ok bool
 	//首次查询,无锁先判断一次
@@ -183,7 +183,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 	if 源用户详情.Rmb < 增减值 {
 		return 源新余额, 目标新余额, errors.New("余额不足")
 	}
-	var 目标用户详情 DB.DB_User
+	var 目标用户详情 dbm.DB_User
 	if 目标用户详情, ok = Id取详情(目标id); !ok {
 		return 源新余额, 目标新余额, errors.New("目标用户不存在")
 	}
@@ -205,7 +205,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 
 	if tx.Error != nil {
 		tx.Rollback()
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
+		global.GVA_LOG.Println(strconv.Itoa(Id) + "Id余额减少失败:" + tx.Error.Error())
 		return 源新余额, 目标新余额, errors.New("余额减少失败查看服务器日志检查原因")
 	}
 
@@ -214,7 +214,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 	tx = tx.Raw(sql, Id).Scan(&源新余额)
 	if tx.Error != nil {
 		tx.Rollback()
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
+		global.GVA_LOG.Println(strconv.Itoa(Id) + "Id查询余额失败:" + tx.Error.Error())
 		return 源新余额, 目标新余额, errors.New("查询余额失败查看服务器日志检查原因")
 	}
 
@@ -230,7 +230,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 
 	if tx.Error != nil {
 		tx.Rollback()
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "目标Id余额增加失败:" + tx.Error.Error())
+		global.GVA_LOG.Println(strconv.Itoa(Id) + "目标Id余额增加失败:" + tx.Error.Error())
 		return 源新余额, 目标新余额, errors.New("余额增加失败查看服务器日志检查原因")
 	}
 	// 查询新余额
@@ -238,7 +238,7 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 	tx = tx.Raw(sql, 目标id).Scan(&目标新余额)
 	if tx.Error != nil {
 		tx.Rollback()
-		global.GVA_LOG.Error(strconv.Itoa(Id) + "目标id查询余额失败:" + tx.Error.Error())
+		global.GVA_LOG.Println(strconv.Itoa(Id) + "目标id查询余额失败:" + tx.Error.Error())
 		return 源新余额, 目标新余额, errors.New("目标id查询余额失败查看服务器日志检查原因")
 	}
 	tx.Commit() //操作完成提交事务
@@ -250,36 +250,36 @@ func Id余额转账(Id, 目标id int, 增减值 float64, ip string) (源新余�
 	return 源新余额, 目标新余额, nil
 
 }
-func User取详情(User string) (用户详情 DB.DB_User, ok bool) {
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("User=?", User).First(&用户详情).Error
+func User取详情(User string) (用户详情 dbm.DB_User, ok bool) {
+	err := global.GVA_DB.Model(dbm.DB_User{}).Where("User=?", User).First(&用户详情).Error
 	return 用户详情, err == nil
 }
 
-func Id取详情(Id int) (用户详情 DB.DB_User, ok bool) {
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id=?", Id).First(&用户详情).Error
+func Id取详情(Id int) (用户详情 dbm.DB_User, ok bool) {
+	err := global.GVA_DB.Model(dbm.DB_User{}).Where("Id=?", Id).First(&用户详情).Error
 	return 用户详情, err == nil
 }
 
-func Id取详情_数组(Id []int) ([]DB.DB_User, error) {
-	var 局_用户详情 = make([]DB.DB_User, 0, len(Id))
+func Id取详情_数组(Id []int) ([]dbm.DB_User, error) {
+	var 局_用户详情 = make([]dbm.DB_User, 0, len(Id))
 	if len(Id) == 0 {
 		return 局_用户详情, nil
 	}
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id IN ?", Id).Find(&局_用户详情).Error
+	err := global.GVA_DB.Model(dbm.DB_User{}).Where("Id IN ?", Id).Find(&局_用户详情).Error
 	return 局_用户详情, err
 }
 func Id取余额(Id int) (余额 float64) {
-	_ = global.GVA_DB.Model(DB.DB_User{}).Select("Rmb").Where("Id=?", Id).First(&余额).Error
+	_ = global.GVA_DB.Model(dbm.DB_User{}).Select("Rmb").Where("Id=?", Id).First(&余额).Error
 	return
 }
 func Id置最后登录AppId(Id, AppId int, Ip string) {
 	if Id == 0 {
 		return
 	}
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id = ?", Id).Updates(map[string]interface{}{"LoginAppid": AppId, "LoginIp": Ip, "LoginTime": time.Now().Unix()}).Error
+	err := global.GVA_DB.Model(dbm.DB_User{}).Where("Id = ?", Id).Updates(map[string]interface{}{"LoginAppid": AppId, "LoginIp": Ip, "LoginTime": time.Now().Unix()}).Error
 
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Id置最后登录AppId失败ID:%v,AppId,%v,Ip,%v,%v", Id, AppId, Ip, err.Error()))
+		global.GVA_LOG.Println(fmt.Sprintf("Id置最后登录AppId失败ID:%v,AppId,%v,Ip,%v,%v", Id, AppId, Ip, err.Error()))
 	}
 	return
 
@@ -300,10 +300,10 @@ func Id置QQ邮箱手机号(Id int, QQ, 邮箱, 手机号 string) error {
 		局data["Phone"] = 手机号
 	}
 
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id = ?", Id).Updates(&局data).Error
+	err := global.GVA_DB.Model(dbm.DB_User{}).Where("Id = ?", Id).Updates(&局data).Error
 
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Id置QQ邮箱手机号失败ID:%v,%v,%v,%v,%v", Id, QQ, 邮箱, 手机号, err.Error()))
+		global.GVA_LOG.Println(fmt.Sprintf("Id置QQ邮箱手机号失败ID:%v,%v,%v,%v,%v", Id, QQ, 邮箱, 手机号, err.Error()))
 		return err
 	}
 	return nil
@@ -311,8 +311,8 @@ func Id置QQ邮箱手机号(Id int, QQ, 邮箱, 手机号 string) error {
 }
 
 // New用户信息
-func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注 string, UPAgentId int, AgentDiscount int, Rmb float64, RealNameAttestation string) (DB.DB_User, error) {
-	var 局_User DB.DB_User
+func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注 string, UPAgentId int, AgentDiscount int, Rmb float64, RealNameAttestation string) (dbm.DB_User, error) {
+	var 局_User dbm.DB_User
 	msg := ""
 	局_最短长度 := 6
 	if UPAgentId != 0 {
@@ -348,7 +348,7 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 		return errors.New("超级密码" + msg)
 	}*/
 	db := global.GVA_DB
-	var 局_管理结果 DB.DB_Admin
+	var 局_管理结果 dbm.DB_Admin
 	局_管理结果, _ = service.NewAdmin(&gin.Context{}, db).Info2(map[string]interface{}{"User": User})
 
 	if User用户名取id(User) != 0 || 局_管理结果.Id != 0 {
@@ -375,14 +375,14 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 	局_User.Rmb = Rmb
 
 	var count int64
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("User = ?", 局_User.User).Count(&count).Error
+	err := global.GVA_DB.Model(dbm.DB_User{}).Where("User = ?", 局_User.User).Count(&count).Error
 	// 没查到数据
 	if count != 0 {
 		return 局_User, errors.New("用户已存在")
 	}
 
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		err = tx.Model(DB.DB_User{}).Create(&局_User).Error
+		err = tx.Model(dbm.DB_User{}).Create(&局_User).Error
 		if err != nil {
 			go Ser_Log.Log_写用户消息(Ser_Log.Log用户消息类型_系统执行错误, constant.APPID_管理平台, "系统", "系统", global.X系统信息.B版本号当前, "New用户信息非预计错误:"+err.Error(), Ip)
 			return errors.New("添加失败")
@@ -391,13 +391,13 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 			return nil
 		}
 		//有上级代理信息,添加代理关系
-		err = tx.Create(&DB.Db_Agent_Level{Uid: 局_User.Id, UPAgentId: 局_User.UPAgentId, Level: 1}).Error
+		err = tx.Create(&dbm.Db_Agent_Level{Uid: 局_User.Id, UPAgentId: 局_User.UPAgentId, Level: 1}).Error
 		if err != nil {
 			return err
 		}
 		上级代理ID := 局_User.UPAgentId //是上级的代理信息
 		for i := 0; 上级代理ID > 0; i++ {
-			var 上级代理的一级代理信息 DB.Db_Agent_Level
+			var 上级代理的一级代理信息 dbm.Db_Agent_Level
 			//查询代理上一级代理的信息
 			err = tx.Where("Uid = ?", 上级代理ID).Where("Level = 1").First(&上级代理的一级代理信息).Error
 			if err != nil {
@@ -405,7 +405,7 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 			}
 			//几级代理循环几次 查询上级代理ID的一级代理
 			上级代理ID = 上级代理的一级代理信息.UPAgentId
-			err = tx.Create(&DB.Db_Agent_Level{Uid: 局_User.Id, UPAgentId: 上级代理ID, Level: i + 2}).Error
+			err = tx.Create(&dbm.Db_Agent_Level{Uid: 局_User.Id, UPAgentId: 上级代理ID, Level: i + 2}).Error
 			if err != nil {
 				return err
 			}
@@ -420,7 +420,7 @@ func New用户信息(User, PassWord, SuperPassWord, Qq, Email, Phone, Ip, 备注
 // 0 非代理,1 一级代理 2 二级代理 3 三级代理 本包专用, 方式环形导包
 func 取Id代理级别(用户ID int) int {
 	var Count int64 = 0
-	global.GVA_DB.Model(DB.Db_Agent_Level{}).Where("Uid=?", 用户ID).Count(&Count)
+	global.GVA_DB.Model(dbm.Db_Agent_Level{}).Where("Uid=?", 用户ID).Count(&Count)
 	return int(Count)
 }
 func Id置新密码(Id int, NewPassWord string) error {
@@ -428,10 +428,10 @@ func Id置新密码(Id int, NewPassWord string) error {
 		return errors.New("Id不能为0")
 	}
 
-	err := global.GVA_DB.Model(DB.DB_User{}).Where("Id = ?", Id).Updates(map[string]interface{}{"PassWord": Md5String(NewPassWord)}).Error
+	err := global.GVA_DB.Model(dbm.DB_User{}).Where("Id = ?", Id).Updates(map[string]interface{}{"PassWord": Md5String(NewPassWord)}).Error
 
 	if err != nil {
-		global.GVA_LOG.Error(fmt.Sprintf("Id置新密码失败:%v,%v,%v", Id, NewPassWord, err.Error()))
+		global.GVA_LOG.Println(fmt.Sprintf("Id置新密码失败:%v,%v,%v", Id, NewPassWord, err.Error()))
 		return errors.New("修改密码失败")
 	}
 	return nil
@@ -440,7 +440,7 @@ func Id置新密码(Id int, NewPassWord string) error {
 
 func Q取总数() int64 {
 	var 局_总数 int64
-	_ = global.GVA_DB.Model(DB.DB_User{}).Count(&局_总数).Error
+	_ = global.GVA_DB.Model(dbm.DB_User{}).Count(&局_总数).Error
 	return 局_总数
 }
 func Id取上级代理ID(Id int) int {
@@ -448,7 +448,7 @@ func Id取上级代理ID(Id int) int {
 		return 0
 	}
 	var 上级代理ID int
-	global.GVA_DB.Model(DB.DB_User{}).Select("UPAgentId").Where("Id=?", Id).First(&上级代理ID)
+	global.GVA_DB.Model(dbm.DB_User{}).Select("UPAgentId").Where("Id=?", Id).First(&上级代理ID)
 	return 上级代理ID
 }
 
@@ -457,7 +457,7 @@ func Id取下级代理分成最高(Id int) int {
 		return 0
 	}
 	var 上级代理ID = 0
-	global.GVA_DB.Model(DB.DB_User{}).Select(" Max(AgentDiscount) ").Where("UPAgentId=?", Id).First(&上级代理ID)
+	global.GVA_DB.Model(dbm.DB_User{}).Select(" Max(AgentDiscount) ").Where("UPAgentId=?", Id).First(&上级代理ID)
 	//如果没有下级代理,报错,直接返回0
 	return 上级代理ID
 }

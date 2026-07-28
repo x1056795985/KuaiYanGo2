@@ -10,18 +10,17 @@ import (
 	"server/Service/Ser_Ka"
 	"server/Service/Ser_Log"
 	"server/Service/Ser_UserClass"
-	"server/config"
-	"server/global"
 	"server/new/app/controller/Common"
 	"server/new/app/controller/Common/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/ka"
 	"server/new/app/logic/webUser/appInfoWebUser"
+	"server/new/app/models/common"
 	"server/new/app/models/constant"
 	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	"server/utils"
-	"server/utils/Qqwry"
+	"server/new/app/utils"
+	"server/new/app/utils/Qqwry"
 	"strconv"
 	"strings"
 	"time"
@@ -50,11 +49,11 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	}
 	var info = struct {
 		Uid           int
-		appInfo       DB.DB_AppInfo
-		appUser       DB.DB_AppUser
-		DB_links_user DB.DB_LinksToken
-		kaInfo        DB.DB_Ka
-		user          DB.DB_User
+		appInfo       dbm.DB_AppInfo
+		appUser       dbm.DB_AppUser
+		DB_links_user dbm.DB_LinksToken
+		kaInfo        dbm.DB_Ka
+		user          dbm.DB_User
 		网页用户中心配置      dbm.DB_AppInfoWebUser
 	}{}
 
@@ -199,7 +198,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		}
 	}
 
-	var 局_用户类型 DB.DB_UserClass
+	var 局_用户类型 dbm.DB_UserClass
 	局_用户类型, ok = Ser_UserClass.Id取详情(请求.AppId, info.appUser.UserClassId)
 	if !ok {
 		局_用户类型.Name = "已删待改"
@@ -208,7 +207,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 
 	// 用户信息结构体
 	type userInfo struct {
-		DB.DB_AppUser
+		dbm.DB_AppUser
 		Name          string `json:"name"`
 		UserClassMark int    `json:"userClassMark"`
 		UserClassName string `json:"userClassName"`
@@ -240,10 +239,10 @@ func (C *Base) LoginKey(c *gin.Context) {
 	局_key := c.Query("k")
 	局_jumpUrl := c.Query("j") //302 回跳的地址
 	var info = struct {
-		来源links_user  DB.DB_LinksToken
-		DB_links_user DB.DB_LinksToken
-		appInfo       DB.DB_AppInfo
-		系统设置          config.X系统设置
+		来源links_user  dbm.DB_LinksToken
+		DB_links_user dbm.DB_LinksToken
+		appInfo       dbm.DB_AppInfo
+		系统设置          common.X系统设置
 		网页用户中心配置      dbm.DB_AppInfoWebUser
 	}{}
 	var err error

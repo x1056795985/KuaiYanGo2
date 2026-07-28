@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/new/app/controller/Common"
 	"server/new/app/logic/common/userClass"
-	"server/structs/Http/response"
+	"server/new/app/models/old/response"
 	"sort"
 	"strconv"
 )

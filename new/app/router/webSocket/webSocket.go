@@ -4,12 +4,12 @@ import (
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"net/http"
 	"server/Service/Ser_Log"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/webSocket"
 	"server/new/app/models/constant"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	"server/utils/Qqwry"
+	"server/new/app/utils/Qqwry"
 	"strconv"
 	"strings"
 	"time"
@@ -57,7 +57,7 @@ func WebSocketHandler(c *gin.Context) {
 	}
 
 	db := *global.GVA_DB
-	var 局_在线信息_旧 DB.DB_LinksToken
+	var 局_在线信息_旧 dbm.DB_LinksToken
 	//这里如果报错  invalid memory address or nil pointer dereference   可能是配置文件数据库配置北山,global.GVA_DB 值为空
 
 	局_在线信息_旧, err = service.NewLinksToken(c, &db).InfoToken(局_Token)
@@ -76,7 +76,7 @@ func WebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	var 局_在线信息_新 DB.DB_LinksToken
+	var 局_在线信息_新 dbm.DB_LinksToken
 	局_在线信息_新.Uid = 局_在线信息_旧.Uid
 	局_在线信息_新.User = 局_在线信息_旧.User
 	局_在线信息_新.AppIdEx = 局_在线信息_旧.LoginAppid

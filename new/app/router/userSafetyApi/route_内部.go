@@ -2,13 +2,13 @@ package userSafetyApi
 
 import (
 	"fmt"
+	"server/new/app/global"
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"server/global"
 	controller "server/new/app/controller/userSafetyApi"
 	"server/new/app/logic/common/setting"
-	utils2 "server/utils"
+	utils2 "server/new/app/utils"
 )
 
 // 键名不能有长度正好32的名称, 否则可能会和md5(用户api) 冲突隐患

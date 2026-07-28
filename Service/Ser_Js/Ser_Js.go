@@ -22,7 +22,7 @@ import (
 	"server/Service/Ser_TaskPool"
 	"server/Service/Ser_User"
 	"server/Service/Ser_UserConfig"
-	"server/global"
+	"server/new/app/global"
 	"server/new/app/logic/common/VMP"
 	"server/new/app/logic/common/cloudStorage"
 	"server/new/app/logic/common/cycleNot"
@@ -31,10 +31,9 @@ import (
 	"server/new/app/logic/webSocket"
 	"server/new/app/models/common"
 	"server/new/app/models/constant"
-	"server/new/app/models/db"
+	dbm "server/new/app/models/db"
 	"server/new/app/service"
-	DB "server/structs/db"
-	"server/utils/Qqwry"
+	"server/new/app/utils/Qqwry"
 	"strconv"
 	"strings"
 	"time"
@@ -44,7 +43,7 @@ func init() {
 	// 注册初始化函数
 	cycleNot.SetJsEngineInitializer(JS引擎初始化_用户)
 }
-func JS引擎初始化_用户(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, 局_PublicJs *DB.DB_PublicJs) *goja.Runtime {
+func JS引擎初始化_用户(c *gin.Context, AppInfo *dbm.DB_AppInfo, 在线信息 *dbm.DB_LinksToken, 局_PublicJs *dbm.DB_PublicJs) *goja.Runtime {
 	vm := goja.New() // 创建engine实例
 	_ = vm.Set("$用户在线信息", 在线信息)
 
@@ -168,7 +167,7 @@ func JS引擎初始化_用户(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信�
 
 	return vm
 }
-func JS引擎初始化_任务池Hook处理(c *gin.Context, AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, Hook函数, 任务数据 string, 局_任务状态 int) (string, int, error) {
+func JS引擎初始化_任务池Hook处理(c *gin.Context, AppInfo *dbm.DB_AppInfo, 在线信息 *dbm.DB_LinksToken, Hook函数, 任务数据 string, 局_任务状态 int) (string, int, error) {
 	局_PublicJs, err := Ser_PublicJs.P取值2(Ser_PublicJs.Js类型_任务池Hook函数, Hook函数)
 	if err != nil {
 		return "", 局_任务状态, err
@@ -204,7 +203,7 @@ func JS引擎初始化_任务池Hook处理(c *gin.Context, AppInfo *DB.DB_AppInf
 	return 局_return, 局_任务状态, nil
 
 }
-func JS引擎初始化_ApiHook处理(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB_LinksToken, Hook函数 string, 明文信息 string, c *gin.Context) (局_明文信息 string, err error) {
+func JS引擎初始化_ApiHook处理(AppInfo *dbm.DB_AppInfo, 在线信息 *dbm.DB_LinksToken, Hook函数 string, 明文信息 string, c *gin.Context) (局_明文信息 string, err error) {
 	defer func() {
 		err2 := recover() // recover()内置函数，可以捕获到异常
 		if err2 != nil {  //说明捕获到错误
@@ -252,12 +251,12 @@ func JS引擎初始化_ApiHook处理(AppInfo *DB.DB_AppInfo, 在线信息 *DB.DB
 func jS_log(call goja.FunctionCall) goja.Value {
 	str := call.Argument(0)
 	fmt.Print(str.String())
-	global.GVA_LOG.Info(str.String())
+	global.GVA_LOG.Println(str.String())
 	return str
 }
 
-func jS_用户Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_User {
-	var 局_用户详情 DB.DB_User
+func jS_用户Id取详情(局_在线信息 dbm.DB_LinksToken) dbm.DB_User {
+	var 局_用户详情 dbm.DB_User
 	if 局_在线信息.Uid == 0 {
 		局_在线信息.Uid = Ser_User.User用户名取id(局_在线信息.User)
 	}
@@ -272,8 +271,8 @@ func jS_程序_延时(毫秒数 int64) bool {
 	time.Sleep(time.Duration(毫秒数) * time.Millisecond)
 	return true
 }
-func jS_卡号Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_Ka {
-	var 局_卡详情 DB.DB_Ka
+func jS_卡号Id取详情(局_在线信息 dbm.DB_LinksToken) dbm.DB_Ka {
+	var 局_卡详情 dbm.DB_Ka
 	if 局_在线信息.Uid == 0 {
 		局_在线信息.Uid = Ser_Ka.Ka卡号取id(局_在线信息.LoginAppid, 局_在线信息.User)
 	}
@@ -284,8 +283,8 @@ func jS_卡号Id取详情(局_在线信息 DB.DB_LinksToken) DB.DB_Ka {
 	}
 	return 局_卡详情
 }
-func jS_取软件用户详情(局_在线信息 DB.DB_LinksToken) DB.DB_AppUser {
-	var 局_详情 DB.DB_AppUser
+func jS_取软件用户详情(局_在线信息 dbm.DB_LinksToken) dbm.DB_AppUser {
+	var 局_详情 dbm.DB_AppUser
 	if 局_在线信息.Uid == 0 {
 		局_在线信息.Uid = Ser_AppUser.User或卡号取Uid(局_在线信息.LoginAppid, 局_在线信息.User)
 	}
@@ -295,9 +294,9 @@ func jS_取软件用户详情(局_在线信息 DB.DB_LinksToken) DB.DB_AppUser {
 	}
 	return 局_详情
 }
-func jS_在线注销(局_在线信息 DB.DB_LinksToken) js对象_通用返回 {
+func jS_在线注销(局_在线信息 dbm.DB_LinksToken) js对象_通用返回 {
 	var err error
-	var 局_数组_在线 []DB.DB_LinksToken
+	var 局_数组_在线 []dbm.DB_LinksToken
 	db := *global.GVA_DB
 	if 局_在线信息.Id != 0 {
 		局_数组_在线, err = service.NewLinksToken(&gin.Context{}, &db).Infos(map[string]interface{}{"Id": 局_在线信息.Id})
@@ -330,7 +329,7 @@ func jS_在线注销(局_在线信息 DB.DB_LinksToken) js对象_通用返回 {
 
 }
 
-func jS_用户Id增减余额(局_在线信息 DB.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
+func jS_用户Id增减余额(局_在线信息 dbm.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
 	if 局_在线信息.Uid == 0 {
 		局_在线信息.Uid = Ser_User.User用户名取id(局_在线信息.User)
@@ -344,7 +343,7 @@ func jS_用户Id增减余额(局_在线信息 DB.DB_LinksToken, 增减值 float6
 
 	return js对象_通用返回{IsOk: true, Err: ""}
 }
-func jS_用户Id增减积分(局_在线信息 DB.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
+func jS_用户Id增减积分(局_在线信息 dbm.DB_LinksToken, 增减值 float64, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
 	//如果有uid 则直接用uid 如果没有uid 通过用户名获取
 	局_AppUserId := Ser_AppUser.Uid取Id(局_在线信息.LoginAppid, 局_在线信息.Uid)
@@ -358,7 +357,7 @@ func jS_用户Id增减积分(局_在线信息 DB.DB_LinksToken, 增减值 float6
 	go Ser_Log.Log_写积分点数时间日志(局_在线信息.User, 局_在线信息.Ip, 原因, 增减值, 局_在线信息.LoginAppid, 1)
 	return js对象_通用返回{IsOk: true, Err: ""}
 }
-func jS_用户Id增减时间点数(AppId int, 局_在线信息 DB.DB_LinksToken, 增减值 int, 原因 string) js对象_通用返回 {
+func jS_用户Id增减时间点数(AppId int, 局_在线信息 dbm.DB_LinksToken, 增减值 int, 原因 string) js对象_通用返回 {
 	is增加 := 增减值 >= 0
 	//获取增减值的绝对值
 	局_增减值 := S三元(增减值 > 0, 增减值, -增减值)
@@ -396,12 +395,12 @@ func jS_置公共变量(变量名, 值 string) bool {
 	if publicData.L_publicData.Name是否存在(&gin.Context{}, 1, 变量名) {
 		err = publicData.L_publicData.Z置值(&gin.Context{}, 1, 变量名, 值)
 	} else {
-		var 局_新公共变量 = DB.DB_PublicData{AppId: 1, Name: 变量名, Value: 值, Type: 1, IsVip: 0, Time: time.Now().Unix(), Note: ""}
+		var 局_新公共变量 = dbm.DB_PublicData{AppId: 1, Name: 变量名, Value: 值, Type: 1, IsVip: 0, Time: time.Now().Unix(), Note: ""}
 		err = publicData.L_publicData.C创建(&gin.Context{}, 局_新公共变量)
 	}
 	return err == nil
 }
-func jS_置在线动态标签(局_在线信息 DB.DB_LinksToken, 新动态标签 string) bool {
+func jS_置在线动态标签(局_在线信息 dbm.DB_LinksToken, 新动态标签 string) bool {
 	return Ser_LinkUser.Set动态标签(局_在线信息.Id, 新动态标签) == nil
 }
 func jS_网页访问_GET(Url string, 协议头一行一个 string, Cookies string, 超时秒数 int, 代理ip string) js对象_网页响应 {
@@ -551,7 +550,7 @@ func jS_执行SQL功能(SQL string, data []interface{}) js对象_通用返回 {
 	return js对象_通用返回{IsOk: true, Err: strconv.FormatInt(局_执行结果.RowsAffected, 10)}
 }
 
-func jS_任务池_任务创建(局_在线信息 DB.DB_LinksToken, 任务类型ID int, 任务数据 string) js对象_通用返回 {
+func jS_任务池_任务创建(局_在线信息 dbm.DB_LinksToken, 任务类型ID int, 任务数据 string) js对象_通用返回 {
 	//{"Api":"TaskPoolNew","TaskTypeId":1,"Parameter":"{'a':1}","Time":1684752350,"Status":28986}
 
 	局_任务类型, err := Ser_TaskPool.Task类型读取(任务类型ID)
@@ -605,7 +604,7 @@ func jS_任务池_任务查询(任务Uuid string) js对象_通用返回 {
 	return js对象_通用返回{IsOk: true, Err: "", Data: a}
 
 }
-func jS_置用户云配置(局_在线信息 DB.DB_LinksToken, 配置名称, 配置值 string) js对象_通用返回 {
+func jS_置用户云配置(局_在线信息 dbm.DB_LinksToken, 配置名称, 配置值 string) js对象_通用返回 {
 
 	if 配置名称 == "" {
 		return js对象_通用返回{IsOk: false, Err: "配置名称不能为空"}
@@ -617,7 +616,7 @@ func jS_置用户云配置(局_在线信息 DB.DB_LinksToken, 配置名称, 配�
 		return js对象_通用返回{IsOk: false, Err: "Uid必须大于0"}
 	}
 	if 配置值 == "" { //值为空则删
-		global.GVA_DB.Model(DB.DB_UserConfig{}).Delete(DB.DB_UserConfig{
+		global.GVA_DB.Model(dbm.DB_UserConfig{}).Delete(dbm.DB_UserConfig{
 			AppId: 局_在线信息.LoginAppid,
 			Uid:   局_在线信息.Uid,
 			Name:  配置值,
@@ -629,7 +628,7 @@ func jS_置用户云配置(局_在线信息 DB.DB_LinksToken, 配置名称, 配�
 	return js对象_通用返回{IsOk: true, Err: "成功"}
 }
 
-func jS_取用户云配置(局_在线信息 DB.DB_LinksToken, 配置名称 string) js对象_通用返回 {
+func jS_取用户云配置(局_在线信息 dbm.DB_LinksToken, 配置名称 string) js对象_通用返回 {
 
 	if 配置名称 == "" {
 		return js对象_通用返回{IsOk: false, Err: "配置名称不能为空"}
@@ -679,7 +678,7 @@ func jS_用户名或卡号取uid(应用id int, 用户名或卡号 string) int {
 func jS_置黑名单(AppId int, 黑名单信息, 备注 string) js对象_通用返回 {
 	var S = service.S_Blacklist{}
 	tx := *global.GVA_DB
-	err := S.Create(&tx, db.DB_Blacklist{AppId: AppId, ItemKey: 黑名单信息, Note: 备注})
+	err := S.Create(&tx, dbm.DB_Blacklist{AppId: AppId, ItemKey: 黑名单信息, Note: 备注})
 	if err != nil {
 		return js对象_通用返回{IsOk: false, Err: err.Error()}
 	}
@@ -762,7 +761,7 @@ func jS_VMP计算授权码(Rsa位数 int, RsaBase64私钥, RsaBase64模数, base
 }
 
 // 批量修改状态
-func jS_置软件用户状态(局_在线信息 DB.DB_LinksToken, 状态 int) js对象_通用返回 {
+func jS_置软件用户状态(局_在线信息 dbm.DB_LinksToken, 状态 int) js对象_通用返回 {
 
 	if 局_在线信息.LoginAppid <= 10000 {
 		return js对象_通用返回{IsOk: false, Err: "AppId必须大于10000"}
@@ -818,7 +817,7 @@ func jS_ws_筛选id(AppIdEx, uid int, tap string) js对象_通用返回 {
 	db := *global.GVA_DB
 	var 返回 []int
 	tx := &db
-	tx = tx.Model(DB.DB_LinksToken{}).Select("Id").Where("LoginAppid = ?", constant.APPID_WebSocket).Where("Status = ?", 1)
+	tx = tx.Model(dbm.DB_LinksToken{}).Select("Id").Where("LoginAppid = ?", constant.APPID_WebSocket).Where("Status = ?", 1)
 	if uid != 0 {
 		tx = tx.Where("Uid = ?", uid)
 	}

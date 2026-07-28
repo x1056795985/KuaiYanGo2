@@ -2,8 +2,8 @@ package userSafetyApi
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/global"
 	"server/new/app/controller/userSafetyApi/response"
+	"server/new/app/global"
 	"server/new/app/logic/common/userConfig"
 	"server/new/app/models/constant"
 	"server/new/app/service"
