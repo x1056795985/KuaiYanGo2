@@ -234,53 +234,69 @@ func Get统计用户日活月活(c *gin.Context) []gin.H {
 	return Data
 }
 
-// Get统计分时段在线总数 统计分时段在线总数
+// Get统计分时段在线总数 统计分时段在线总数(一次性返回今日/昨日/前日三天数据,方便对比)
 func Get统计分时段在线总数(c *gin.Context) []gin.H {
 	请求 := 结构_请求类型{Type: 1, AppId: 0}
 	_ = c.ShouldBindJSON(&请求)
-	var 局_开始时间戳 int64
+
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
-	switch 请求.Type {
-	case 1:
-		局_开始时间戳 = today.Unix()
-	case 2:
-		局_开始时间戳 = today.AddDate(0, 0, -1).Unix()
-	case 3:
-		局_开始时间戳 = today.AddDate(0, 0, -2).Unix()
-	}
+	// 三天的时间范围:前日0点 ~ 明日0点(即今日结束)
+	局_前日0点 := today.AddDate(0, 0, -2).Unix()
+	局_明日0点 := today.AddDate(0, 0, 1).Unix()
 
-	Data缓存, ok := global.H缓存.Get("Get统计分时段在线总数" + strconv.Itoa(请求.Type))
+	Data缓存, ok := global.H缓存.Get("Get统计分时段在线总数_三天对比_" + strconv.FormatInt(int64(请求.AppId), 10))
 	if ok {
 		return Data缓存.([]gin.H)
 	}
 
 	局_耗时 := time.Now().Unix()
+
+	// 单次查询三天数据,用一条SQL搞定,按createdAt正序排列
 	var 局_临时 = []dbm.DB_TongJiZaiXian{}
+	global.GVA_DB.Model(dbm.DB_TongJiZaiXian{}).
+		Where("appId = ?", 请求.AppId).
+		Where("createdAt >= ?", 局_前日0点).
+		Where("createdAt < ?", 局_明日0点).
+		Order("createdAt ASC").
+		Find(&局_临时)
 
-	tx := global.GVA_DB
-	tx.Model(dbm.DB_TongJiZaiXian{}).Where("appId=?", 请求.AppId).Where("createdAt>=?", 局_开始时间戳).Where("createdAt<?", 局_开始时间戳+86400).Order("createdAt ASC").Find(&局_临时)
-
-	var 局_登录数量 = make([]int64, 0, 24)
-	var 局_登录时间 = make([]string, 0, 24)
+	// 准备三个24小时的数组
+	局_今日数量 := make([]int64, 24)
+	局_昨日数量 := make([]int64, 24)
+	局_前日数量 := make([]int64, 24)
+	局_登录时间 := make([]string, 24)
 	for v := range 24 {
-		局_登录数量 = append(局_登录数量, 0)
-		局_登录时间 = append(局_登录时间, strconv.Itoa(v)+"时")
+		局_登录时间[v] = strconv.Itoa(v) + "时"
 	}
 
-	for I, _ := range 局_临时 {
-		//将时间戳转为时间 类型
-		局_时 := time.Unix(局_临时[I].CreatedAt, 0).Hour()
-		局_登录数量[局_时] += 局_临时[I].Count
+	// 今日0点、昨日0点的时间戳,用于判断每条记录属于哪一天
+	局_今日0点 := today.Unix()
+	局_昨日0点 := today.AddDate(0, 0, -1).Unix()
+
+	for I := range 局_临时 {
+		局_记录 := 局_临时[I]
+		局_时 := time.Unix(局_记录.CreatedAt, 0).Hour()
+		switch {
+		case 局_记录.CreatedAt >= 局_今日0点:
+			局_今日数量[局_时] += 局_记录.Count
+		case 局_记录.CreatedAt >= 局_昨日0点:
+			局_昨日数量[局_时] += 局_记录.Count
+		default:
+			局_前日数量[局_时] += 局_记录.Count
+		}
 	}
+
 	Data := []gin.H{
-		{"name": "统计分时段在线总数", "type": "line", "data": 局_登录数量},
+		{"name": "今日", "type": "line", "data": 局_今日数量},
+		{"name": "昨日", "type": "line", "data": 局_昨日数量},
+		{"name": "前日", "type": "line", "data": 局_前日数量},
 		{"name": "统计分时段在线时间", "type": "line", "data": 局_登录时间},
 	}
 
 	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
-		global.H缓存.Set("Get统计分时段在线总数"+strconv.Itoa(请求.Type), Data, time.Minute*5)
+		global.H缓存.Set("Get统计分时段在线总数_三天对比_"+strconv.FormatInt(int64(请求.AppId), 10), Data, time.Minute*5)
 	}
 
 	return Data
@@ -651,61 +667,163 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 	return Data
 }
 
-// Get卡号列表统计制卡 卡号列表统计制卡
+// Get卡号列表统计制卡 卡号制卡统计(本月/上月/上上月按天对比)
+// 单条SQL按天聚合三个月的制卡数据,返回三条series + x轴日期标签
 func Get卡号列表统计制卡(c *gin.Context) []gin.H {
 	局_type := 结构_请求类型{Type: 1, AppId: 0}
 	_ = c.ShouldBindJSON(&局_type)
-	var 时间处理函数 func(int) string
-	if 局_type.Type == 2 {
-		时间处理函数 = 取相对时间0点时间戳月
-	} else {
-		时间处理函数 = 取相对时间0点时间戳天
-	}
 
-	var Data = make([]gin.H, 2)
+	now := time.Now()
+	// 本月、上月、上上月的第一天0点
+	本月1日 := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	上月1日 := 本月1日.AddDate(0, -1, 0)
+	上上月1日 := 本月1日.AddDate(0, -2, 0)
+	下月1日 := 本月1日.AddDate(0, 1, 0) // 查询上界(不含)
+
+	// 演示模式
 	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
-		Data[0] = gin.H{"name": "制卡数量", "type": "line", "data": []int{320, 332, 341, 354, 390, 220, 450}}
-		return Data
+		return 生成演示制卡数据(本月1日, 上月1日, 上上月1日)
 	}
 
-	Data缓存, ok := global.H缓存.Get("图表数据_Get卡号制卡使用统计" + strconv.Itoa(局_type.Type) + "_" + strconv.Itoa(局_type.AppId))
+	缓存键 := "图表数据_制卡统计_三月对比_" + strconv.FormatInt(int64(局_type.AppId), 10)
+	Data缓存, ok := global.H缓存.Get(缓存键)
 	if ok {
 		return Data缓存.([]gin.H)
 	}
 
 	局_耗时 := time.Now().Unix()
-	var 局_临时 = make(map[string]interface{})
-	var 局_数量 [7]int
-	局_db := global.GVA_DB.Model(dbm.DB_Ka{})
+
+	// 单条SQL: 查询上上月1日~下月1日之间所有卡号,按 FLOOR(RegisterTime / 86400) 得到"天序号"
+	// 然后用 Go 按 年-月-日 归入对应月份的数组
+	type 日统计 struct {
+		DayIdx int64 `gorm:"column:DayIdx"` // FLOOR(RegisterTime / 86400)
+		Cnt    int64 `gorm:"column:Cnt"`
+	}
+	var 局_日统计 []日统计
+	局_db := global.GVA_DB.Model(dbm.DB_Ka{}).
+		Select("FLOOR(RegisterTime / 86400) AS DayIdx, COUNT(*) AS Cnt").
+		Where("RegisterTime >= ? AND RegisterTime < ?", 上上月1日.Unix(), 下月1日.Unix()).
+		Group("DayIdx").
+		Order("DayIdx ASC")
 	if 局_type.AppId > 0 {
 		局_db = 局_db.Where("AppId = ?", 局_type.AppId)
 	}
-	局_db.Select("SUM(case when (  RegisterTime between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then 1 else null end) as  '1' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then 1 else null end) as  '2' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then 1 else null end) as  '3' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-3)+" and "+时间处理函数(-2)+") then 1 else null end) as  '4' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-2)+" and "+时间处理函数(-0)+") then 1 else null end) as  '5' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-1)+" and "+时间处理函数(0)+") then 1 else null end) as  '6' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(0)+" and "+时间处理函数(1)+") then 1 else null end) as  '7' ").
-		Order("").
-		First(&局_临时)
+	局_db.Find(&局_日统计)
 
-	for 键名, 值 := range 局_临时 {
-		索引, _ := strconv.Atoi(键名)
-		if 值 == nil {
-			局_数量[索引-1] = 0
-		} else {
-			a, _ := strconv.Atoi(string(值.([]uint8)))
-			局_数量[索引-1] = a
+	// 调试: 打印查询结果帮助排查
+	if len(局_日统计) == 0 {
+		global.GVA_LOG.Println("[制卡统计] 未查到数据, AppId=", 局_type.AppId, " 范围=", 上上月1日.Unix(), "~", 下月1日.Unix())
+	} else {
+		global.GVA_LOG.Println("[制卡统计] 查到", len(局_日统计), "天数据, 第一天DayIdx=", 局_日统计[0].DayIdx, " Cnt=", 局_日统计[0].Cnt)
+	}
+
+	// 构建一个 map[天序号]数量, 方便O(1)查找
+	局_天map := make(map[int64]int64, len(局_日统计))
+	for _, v := range 局_日统计 {
+		局_天map[v.DayIdx] = v.Cnt
+	}
+
+	// 三个月各自的天数
+	本月天数 := 取月份天数(本月1日)
+	上月天数 := 取月份天数(上月1日)
+	上上月天数 := 取月份天数(上上月1日)
+	// x轴取三者最大天数(最多31), 不足的月份对应位置留空(null)
+	最大天数 := 本月天数
+	if 上月天数 > 最大天数 {
+		最大天数 = 上月天数
+	}
+	if 上上月天数 > 最大天数 {
+		最大天数 = 上上月天数
+	}
+
+	局_x轴 := make([]string, 最大天数)
+	局_本月数据 := make([]interface{}, 最大天数)
+	局_上月数据 := make([]interface{}, 最大天数)
+	局_上上月数据 := make([]interface{}, 最大天数)
+
+	本月0点序号 := 本月1日.Unix() / 86400
+	上月0点序号 := 上月1日.Unix() / 86400
+	上上月0点序号 := 上上月1日.Unix() / 86400
+
+	for 日 := int64(1); 日 <= int64(最大天数); 日++ {
+		局_x轴[日-1] = strconv.FormatInt(日, 10) + "日"
+
+		// 在该月实际天数内的日期,没数据就填0; 超出该月天数的日期保持null(折线断开)
+		if int(日) <= 本月天数 {
+			序号 := 本月0点序号 + 日 - 1
+			if v, ok := 局_天map[序号]; ok {
+				局_本月数据[日-1] = v
+			} else {
+				局_本月数据[日-1] = int64(0)
+			}
+		}
+		if int(日) <= 上月天数 {
+			序号 := 上月0点序号 + 日 - 1
+			if v, ok := 局_天map[序号]; ok {
+				局_上月数据[日-1] = v
+			} else {
+				局_上月数据[日-1] = int64(0)
+			}
+		}
+		if int(日) <= 上上月天数 {
+			序号 := 上上月0点序号 + 日 - 1
+			if v, ok := 局_天map[序号]; ok {
+				局_上上月数据[日-1] = v
+			} else {
+				局_上上月数据[日-1] = int64(0)
+			}
 		}
 	}
-	Data[0] = gin.H{"name": "制卡数量", "type": "line", "data": 局_数量}
+
+	Data := []gin.H{
+		{"name": "本月", "type": "line", "data": 局_本月数据},
+		{"name": "上月", "type": "line", "data": 局_上月数据},
+		{"name": "上上月", "type": "line", "data": 局_上上月数据},
+		{"name": "x轴日期", "data": 局_x轴},
+	}
 
 	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
-		global.H缓存.Set("图表数据_Get卡号制卡统计"+strconv.Itoa(局_type.Type)+"_"+strconv.Itoa(局_type.AppId), Data, time.Minute*10)
+		global.H缓存.Set(缓存键, Data, time.Minute*5)
 	}
 
 	return Data
+}
+
+// 取月份天数 返回该月有多少天
+func 取月份天数(月1日 time.Time) int {
+	下月1日 := 月1日.AddDate(0, 1, 0)
+	return 下月1日.AddDate(0, 0, -1).Day()
+}
+
+// 生成演示制卡数据 演示模式下生成三个月的假数据
+func 生成演示制卡数据(本月1日, 上月1日, 上上月1日 time.Time) []gin.H {
+	本月天数 := 取月份天数(本月1日)
+	上月天数 := 取月份天数(上月1日)
+	上上月天数 := 取月份天数(上上月1日)
+	最大天数 := 本月天数
+	if 上月天数 > 最大天数 {
+		最大天数 = 上月天数
+	}
+	if 上上月天数 > 最大天数 {
+		最大天数 = 上上月天数
+	}
+
+	局_x轴 := make([]string, 最大天数)
+	局_本月 := make([]int64, 最大天数)
+	局_上月 := make([]int64, 最大天数)
+	局_上上月 := make([]int64, 最大天数)
+	for i := range 最大天数 {
+		局_x轴[i] = strconv.Itoa(i+1) + "日"
+		局_本月[i] = int64(100 + (i*13)%300)
+		局_上月[i] = int64(80 + (i*17)%250)
+		局_上上月[i] = int64(60 + (i*11)%200)
+	}
+	return []gin.H{
+		{"name": "本月", "type": "line", "data": 局_本月},
+		{"name": "上月", "type": "line", "data": 局_上月},
+		{"name": "上上月", "type": "line", "data": 局_上上月},
+		{"name": "x轴日期", "data": 局_x轴},
+	}
 }
 
 // Get卡号月度汇总 卡号月度汇总
@@ -802,54 +920,114 @@ func Get仪表台汇总(c *gin.Context) gin.H {
 	return Data
 }
 
-// Get卡号列表统计制卡_代理 代理卡号列表统计制卡
+// Get卡号列表统计制卡_代理 代理卡号制卡统计(本月/上月/上上月按天对比)
+// 与管理端逻辑相同,额外过滤 RegisterUser = 当前代理账号
 func Get卡号列表统计制卡_代理(c *gin.Context) []gin.H {
 	局_type := 结构_请求类型{Type: 1, AppId: 0}
 	_ = c.ShouldBindJSON(&局_type)
-	var 时间处理函数 func(int) string
-	if 局_type.Type == 2 {
-		时间处理函数 = 取相对时间0点时间戳月
-	} else {
-		时间处理函数 = 取相对时间0点时间戳天
+
+	now := time.Now()
+	本月1日 := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	上月1日 := 本月1日.AddDate(0, -1, 0)
+	上上月1日 := 本月1日.AddDate(0, -2, 0)
+	下月1日 := 本月1日.AddDate(0, 1, 0)
+
+	if global.GVA_Viper.GetInt("系统模式") == 系统演示模式 {
+		return 生成演示制卡数据(本月1日, 上月1日, 上上月1日)
 	}
 
-	var Data = make([]gin.H, 2)
-
-	Data缓存, ok := global.H缓存.Get("图表数据_Get代理" + c.GetString("User") + "卡号制卡使用统计" + strconv.Itoa(局_type.Type) + "_" + strconv.Itoa(局_type.AppId))
+	缓存键 := "图表数据_代理制卡统计_三月对比_" + c.GetString("User") + "_" + strconv.FormatInt(int64(局_type.AppId), 10)
+	Data缓存, ok := global.H缓存.Get(缓存键)
 	if ok {
 		return Data缓存.([]gin.H)
 	}
 
 	局_耗时 := time.Now().Unix()
-	var 局_临时 = make(map[string]interface{})
-	var 局_数量 [7]int
-	局_db := global.GVA_DB.Model(dbm.DB_Ka{}).Where("RegisterUser = ?", c.GetString("User"))
+
+	type 日统计 struct {
+		DayIdx int64 `gorm:"column:DayIdx"`
+		Cnt    int64 `gorm:"column:Cnt"`
+	}
+	var 局_日统计 []日统计
+	局_db := global.GVA_DB.Model(dbm.DB_Ka{}).
+		Select("FLOOR(RegisterTime / 86400) AS DayIdx, COUNT(*) AS Cnt").
+		Where("RegisterTime >= ? AND RegisterTime < ?", 上上月1日.Unix(), 下月1日.Unix()).
+		Where("RegisterUser = ?", c.GetString("User")).
+		Group("DayIdx").
+		Order("DayIdx ASC")
 	if 局_type.AppId > 0 {
 		局_db = 局_db.Where("AppId = ?", 局_type.AppId)
 	}
-	局_db.Select("SUM(case when (  RegisterTime between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then 1 else null end) as  '1' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then 1 else null end) as  '2' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then 1 else null end) as  '3' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-3)+" and "+时间处理函数(-2)+") then 1 else null end) as  '4' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-2)+" and "+时间处理函数(-0)+") then 1 else null end) as  '5' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(-1)+" and "+时间处理函数(0)+") then 1 else null end) as  '6' ",
-		"SUM(case when (  RegisterTime between "+时间处理函数(0)+" and "+时间处理函数(1)+") then 1 else null end) as  '7' ").
-		Order("").
-		First(&局_临时)
+	局_db.Find(&局_日统计)
 
-	for 键名, 值 := range 局_临时 {
-		索引, _ := strconv.Atoi(键名)
-		if 值 == nil {
-			局_数量[索引-1] = 0
-		} else {
-			a, _ := strconv.Atoi(string(值.([]uint8)))
-			局_数量[索引-1] = a
+	if len(局_日统计) == 0 {
+		global.GVA_LOG.Println("[代理制卡统计] 未查到数据, User=", c.GetString("User"), " AppId=", 局_type.AppId, " 范围=", 上上月1日.Unix(), "~", 下月1日.Unix())
+	}
+
+	局_天map := make(map[int64]int64, len(局_日统计))
+	for _, v := range 局_日统计 {
+		局_天map[v.DayIdx] = v.Cnt
+	}
+
+	本月天数 := 取月份天数(本月1日)
+	上月天数 := 取月份天数(上月1日)
+	上上月天数 := 取月份天数(上上月1日)
+	最大天数 := 本月天数
+	if 上月天数 > 最大天数 {
+		最大天数 = 上月天数
+	}
+	if 上上月天数 > 最大天数 {
+		最大天数 = 上上月天数
+	}
+
+	局_x轴 := make([]string, 最大天数)
+	局_本月数据 := make([]interface{}, 最大天数)
+	局_上月数据 := make([]interface{}, 最大天数)
+	局_上上月数据 := make([]interface{}, 最大天数)
+
+	本月0点序号 := 本月1日.Unix() / 86400
+	上月0点序号 := 上月1日.Unix() / 86400
+	上上月0点序号 := 上上月1日.Unix() / 86400
+
+	for 日 := int64(1); 日 <= int64(最大天数); 日++ {
+		局_x轴[日-1] = strconv.FormatInt(日, 10) + "日"
+
+		// 在该月实际天数内的日期,没数据就填0; 超出该月天数的日期保持null(折线断开)
+		if int(日) <= 本月天数 {
+			序号 := 本月0点序号 + 日 - 1
+			if v, ok := 局_天map[序号]; ok {
+				局_本月数据[日-1] = v
+			} else {
+				局_本月数据[日-1] = int64(0)
+			}
+		}
+		if int(日) <= 上月天数 {
+			序号 := 上月0点序号 + 日 - 1
+			if v, ok := 局_天map[序号]; ok {
+				局_上月数据[日-1] = v
+			} else {
+				局_上月数据[日-1] = int64(0)
+			}
+		}
+		if int(日) <= 上上月天数 {
+			序号 := 上上月0点序号 + 日 - 1
+			if v, ok := 局_天map[序号]; ok {
+				局_上上月数据[日-1] = v
+			} else {
+				局_上上月数据[日-1] = int64(0)
+			}
 		}
 	}
-	Data[0] = gin.H{"name": "制卡数量", "type": "line", "data": 局_数量}
+
+	Data := []gin.H{
+		{"name": "本月", "type": "line", "data": 局_本月数据},
+		{"name": "上月", "type": "line", "data": 局_上月数据},
+		{"name": "上上月", "type": "line", "data": 局_上上月数据},
+		{"name": "x轴日期", "data": 局_x轴},
+	}
 
 	if time.Now().Unix()-局_耗时 > 5 { //超过5秒的缓存
-		global.H缓存.Set("图表数据_Get代理"+c.GetString("User")+"卡号制卡使用统计"+strconv.Itoa(局_type.Type)+"_"+strconv.Itoa(局_type.AppId), Data, time.Minute*10)
+		global.H缓存.Set(缓存键, Data, time.Minute*5)
 	}
 
 	return Data

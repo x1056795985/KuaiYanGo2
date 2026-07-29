@@ -85,16 +85,16 @@ const Log用户消息类型_系统执行错误 = 4
 
 func Log_写用户消息(消息类型, AppId int, User, App名称, AppVer, 消息内容, IP string) {
 	login := db.DB_LogUserMsg{
-		Id:           0,
-		User:         User,
-		App:          App名称,
-		AppId:        AppId,
-		AppVer:       AppVer,
-		MsgType:      消息类型,
-		Time:         time.Now().Unix(),
-		Ip:           IP + " " + Qqwry.Ip查信息2(IP),
-		Note:         消息内容,
-		IsReadIsRead: false,
+		Id:      0,
+		User:    User,
+		App:     App名称,
+		AppId:   AppId,
+		AppVer:  AppVer,
+		MsgType: 消息类型,
+		Time:    time.Now().Unix(),
+		Ip:      IP + " " + Qqwry.Ip查信息2(IP),
+		Note:    消息内容,
+		IsRead:  false,
 	}
 	err := global.GVA_DB.Model(db.DB_LogUserMsg{}).Create(&login).Error
 	if err != nil {

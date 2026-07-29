@@ -259,16 +259,16 @@ func (j *log) Log_写卡号操作日志(User, IP, Note string, Ka []string, 卡�
 // Log_写用户消息 写用户消息日志
 func (j *log) Log_写用户消息(消息类型, AppId int, User, App名称, AppVer, 消息内容, IP string) {
 	login := dbm.DB_LogUserMsg{
-		Id:           0,
-		User:         User,
-		App:          App名称,
-		AppId:        AppId,
-		AppVer:       AppVer,
-		MsgType:      消息类型,
-		Time:         time.Now().Unix(),
-		Ip:           IP + " " + Qqwry.Ip查信息2(IP),
-		Note:         消息内容,
-		IsReadIsRead: false,
+		Id:      0,
+		User:    User,
+		App:     App名称,
+		AppId:   AppId,
+		AppVer:  AppVer,
+		MsgType: 消息类型,
+		Time:    time.Now().Unix(),
+		Ip:      IP + " " + Qqwry.Ip查信息2(IP),
+		Note:    消息内容,
+		IsRead:  false,
 	}
 	err := j.S输出日志(nil, login)
 	if err != nil {
@@ -365,6 +365,6 @@ func (j *log) Log_写代理操作日志(AgentUid, AgentType, AppId, AppUserid in
 // Y用户消息_取未读数量 取用户未读消息数量
 func (j *log) Y用户消息_取未读数量(User string) int64 {
 	var Count int64
-	_ = global.GVA_DB.Model(dbm.DB_LogUserMsg{}).Where("User = ?", User).Where("IsReadIsRead = ?", false).Count(&Count)
+	_ = global.GVA_DB.Model(dbm.DB_LogUserMsg{}).Where("IsRead = ?", false).Count(&Count)
 	return Count
 }
