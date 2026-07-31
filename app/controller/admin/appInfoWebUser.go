@@ -1,0 +1,47 @@
+package controller
+
+import (
+	"github.com/gin-gonic/gin"
+	"server/app/controller/Common"
+	"server/app/global"
+	dbm "server/app/models/db"
+	"server/app/models/old/response"
+	"server/app/service"
+)
+
+type AppInfoWebUser struct {
+	Common.Common
+}
+
+func NewAppInfoWebUserController() *AppInfoWebUser {
+	return &AppInfoWebUser{}
+}
+
+// 修改app排序
+func (C *AppInfoWebUser) GetInfo(c *gin.Context) {
+	var 请求 struct {
+		Id int `json:"id"`
+	}
+	//解析失败
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	tx := *global.GVA_DB
+	var S = service.NewAppInfoWebUser(c, &tx)
+
+	info, err := S.Info(请求.Id)
+	if err != nil {
+		info = dbm.DB_AppInfoWebUser{
+			Id:             请求.Id,
+			Status:         2,
+			CaptchaLogin:   3,
+			UrlDownload:    "https://www.fnkuaiyan.com/",
+			CaptchaReg:     2,
+			CaptchaSendSms: 1,
+		}
+		_, _ = S.Create(info)
+
+	}
+	response.OkWithData(info, c)
+	return
+}

@@ -12,10 +12,10 @@
       <excludeFolder url="file://$MODULE_DIR$/SDK" />
       <excludeFolder url="file://$MODULE_DIR$/core/dist/VueAdmin/assets" />
       <excludeFolder url="file://$MODULE_DIR$/core/dist/VueAgent/assets" />
-      <excludeFolder url="file://$MODULE_DIR$/new/app/web/webUser/assets" />
-      <excludeFolder url="file://$MODULE_DIR$/new/app/web/webUser/static" />
-      <excludeFolder url="file://$MODULE_DIR$/new/app/web" />
       <excludeFolder url="file://$MODULE_DIR$/runtime" />
+      <excludeFolder url="file://$MODULE_DIR$/app/web" />
+      <excludeFolder url="file://$MODULE_DIR$/app/web/webUser/assets" />
+      <excludeFolder url="file://$MODULE_DIR$/app/web/webUser/static" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

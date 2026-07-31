@@ -13,7 +13,7 @@ description: 飞鸟快验Go项目中文命名规范指南。此技能应在编�
 负责参数接收、请求编排和响应格式统一,简单单一功能直接调用Service,不可处理复杂功能和需要多表联动功能。
 ## Logic 层
 路径`new/app/logic`
-负责核心业务运算，逻辑处理,以及多表事务等复杂功能实现。
+负责核心业务运算，逻辑处理,以及多表事务等复杂功能实现。只操作单表调用Service增删改查,等简单功能不可放到这里.
 ## Service 层
 路径`new/app/service`
 负责数据库对象级操作及通用增删改查封装。
@@ -209,9 +209,9 @@ func (agentUserFull *AgentUserFull) Info(c *gin.Context) {}  //   接收者变�
 ```go
 import (
     . "EFunc/utils"
-    . "server/new/app/models/request"
-    . "server/new/app/models/response"
-    dbm "server/new/app/models/db"
+    . "server/app/models/request"
+    . "server/app/models/response"
+    dbm "server/app/models/db"
     utils2 "server/utils"
 )
 ```

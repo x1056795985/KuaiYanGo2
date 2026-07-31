@@ -1,0 +1,308 @@
+package controller
+
+import (
+	"encoding/json"
+	"github.com/dop251/goja"
+	"github.com/gin-gonic/gin"
+	"github.com/valyala/fastjson"
+	"server/app/controller/Common"
+	"server/app/global"
+	"server/app/logic/common/jsEngine"
+	"server/app/logic/common/publicJs"
+	"server/app/logic/common/taskPool"
+	dbm "server/app/models/db"
+	"server/app/models/old/response"
+	"server/app/service"
+	"strconv"
+	"time"
+)
+
+type TaskPoolWebApi struct {
+	Common.Common
+}
+
+func NewTaskPoolWebApiController() *TaskPoolWebApi {
+	return &TaskPoolWebApi{}
+}
+
+// Y用户数据信息还原 从上下文恢复用户数据
+func (T *TaskPoolWebApi) Y用户数据信息还原(c *gin.Context, AppInfo *dbm.DB_AppInfo, 在线信息 *dbm.DB_LinksToken) {
+	db := *global.GVA_DB
+	*AppInfo, _ = service.NewAppInfo(c, &db).Info(3)
+	局_临时通用, _ := c.Get("局_在线信息")
+	*在线信息 = 局_临时通用.(dbm.DB_LinksToken)
+	return
+}
+
+// R任务池_任务处理获取 获取待处理任务
+func (T *TaskPoolWebApi) TaskPoolGetTask(c *gin.Context) {
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
+	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+
+	if 局_在线信息.Status != 1 {
+		response.FailWithMessage("未登录", c)
+		return
+	}
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
+	局_最大数量 := 请求json.GetInt("GetTaskNumber")
+	局_临时 := 请求json.GetArray("GetTaskTypeId")
+	var 局_可获取任务类型ID = make([]int, len(局_临时))
+	for 索引, _ := range 局_临时 {
+		局_可获取任务类型ID[索引], _ = 局_临时[索引].Int()
+	}
+	局_任务UUID := taskPool.L_taskPool.Task队列弹出任务(c, 局_可获取任务类型ID, 局_最大数量, 局_在线信息.LoginAppid, 局_在线信息.Uid)
+	var 局_已获取任务数据 []dbm.TaskPool_数据_精简
+	if len(局_任务UUID) > 0 {
+		局_已获取任务数据 = service.NewTaskPoolData(c, global.GVA_DB).Task数据读取_数组(局_任务UUID)
+	} else {
+		response.OkWithDetailed([]gin.H{}, "获取成功", c)
+		return
+	}
+	response.OkWithDetailed(局_已获取任务数据, "获取成功", c)
+	return
+}
+
+// R任务池_任务处理返回 返回任务处理结果
+func (T *TaskPoolWebApi) TaskPoolSetTask(c *gin.Context) {
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
+	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
+	局_uuid := string(请求json.GetStringBytes("TaskUuid"))
+	if len(局_uuid) != 36 {
+		response.FailWithMessage("UUid错误", c)
+		return
+	}
+	局_Tid := service.NewTaskPoolData(c, global.GVA_DB).Task数据读取Tid(局_uuid)
+
+	局_任务类型, err := service.NewTaskPoolType(c, global.GVA_DB).Task类型读取(局_Tid)
+	if err != nil {
+		response.FailWithMessage("该UUID的任务类型Id不存在", c)
+		return
+	}
+	局_任务数据 := ""
+	if 请求json.Get("TaskReturnData").Type().String() == "object" {
+		局_任务数据 = 请求json.Get("TaskReturnData").String()
+	} else {
+		局_任务数据 = string(请求json.GetStringBytes("TaskReturnData"))
+	}
+
+	局_任务状态 := 请求json.GetInt("TaskStatus")
+	if 局_任务类型.HookReturnDataStart != "" {
+		局_任务数据, 局_任务状态, err = jsEngine.J脚本引擎_处理任务池Hook(c, &AppInfo, &局_在线信息, 局_任务类型.HookReturnDataStart, 局_任务数据, 局_任务状态)
+		if err != nil {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+	}
+
+	err = service.NewTaskPoolData(c, global.GVA_DB).Task数据修改(局_uuid, 局_任务状态, 局_任务数据)
+	if err != nil {
+		response.FailWithMessage("任务数据写入数据库失败", c)
+		return
+	}
+
+	if 局_任务类型.HookReturnDataEnd != "" {
+		局_任务数据, 局_任务状态, err = jsEngine.J脚本引擎_处理任务池Hook(c, &AppInfo, &局_在线信息, 局_任务类型.HookReturnDataEnd, 局_任务数据, 局_任务状态)
+		if err != nil {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+	}
+
+	response.Ok(c)
+	return
+}
+
+// R任务池_任务创建 创建新任务
+func (T *TaskPoolWebApi) TaskPoolNewData(c *gin.Context) {
+	defer func() {
+		if err2 := recover(); err2 != nil {
+			局_GoJa错误, ok := err2.(*goja.Exception)
+			if ok {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:"+局_GoJa错误.String(), c)
+			} else {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:js引擎未返回报错信息", c)
+			}
+			return
+		}
+	}()
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
+	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
+	局_任务类型, err := service.NewTaskPoolType(c, global.GVA_DB).Task类型读取(请求json.GetInt("TaskTypeId"))
+	if err != nil {
+		response.FailWithMessage("任务类型Id不存在", c)
+		return
+	}
+	if 局_任务类型.Status != 1 {
+		response.FailWithMessage("维护中", c)
+		return
+	}
+	局_任务数据 := ""
+	if 请求json.Get("Parameter").Type().String() == "object" {
+		局_任务数据 = 请求json.Get("Parameter").String()
+	} else {
+		局_任务数据 = string(请求json.GetStringBytes("Parameter"))
+	}
+	if 局_任务类型.HookSubmitDataStart != "" {
+		局_任务数据, _, err = jsEngine.J脚本引擎_处理任务池Hook(c, &AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataStart, 局_任务数据, 0)
+		if err != nil {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+	}
+	任务Id, err := taskPool.L_taskPool.Task数据创建加入队列(c, 局_任务类型.Id, 局_任务数据, 局_在线信息.LoginAppid, 局_在线信息.Uid)
+	if err != nil {
+		response.FailWithMessage("Task数据创建加入队列失败", c)
+		return
+	}
+	if 局_任务类型.HookSubmitDataEnd != "" {
+		局_任务数据, _, err = jsEngine.J脚本引擎_处理任务池Hook(c, &AppInfo, &局_在线信息, 局_任务类型.HookSubmitDataEnd, 局_任务数据, 1)
+		if err != nil {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+	}
+
+	response.OkWithData(gin.H{"TaskUuid": 任务Id}, c)
+	return
+}
+
+// R任务池_任务查询 查询任务数据
+func (T *TaskPoolWebApi) TaskPoolGetData(c *gin.Context) {
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
+	局_uuid := string(请求json.GetStringBytes("TaskUuid"))
+	if len(局_uuid) != 36 {
+		response.FailWithMessage("任务Uuid错误", c)
+		return
+	}
+	局_任务数据, err := service.NewTaskPoolData(c, global.GVA_DB).Task数据读取_单条(局_uuid)
+	if err != nil {
+		response.FailWithMessage("任务Uuid错误", c)
+		return
+	}
+	var mapkv map[string]interface{}
+
+	if json.Unmarshal([]byte(局_任务数据.ReturnData), &mapkv) == nil {
+		response.OkWithData(gin.H{"Status": 局_任务数据.Status, "ReturnData": mapkv, "TimeStart": 局_任务数据.TimeStart, "TimeEnd": 局_任务数据.TimeEnd}, c)
+	} else {
+		response.OkWithData(gin.H{"Status": 局_任务数据.Status, "ReturnData": 局_任务数据.ReturnData, "TimeStart": 局_任务数据.TimeStart, "TimeEnd": 局_任务数据.TimeEnd}, c)
+	}
+	return
+}
+
+// RunJs 运行公共函数
+func (T *TaskPoolWebApi) RunJs(c *gin.Context) {
+	defer func() {
+		if err2 := recover(); err2 != nil {
+			局_GoJa错误, ok := err2.(*goja.Exception)
+			if ok {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:"+局_GoJa错误.String(), c)
+			} else {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:js引擎未返回报错信息", c)
+			}
+			return
+		}
+	}()
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
+	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
+	局_耗时 := time.Now().UnixMilli()
+	var 局_PublicJs dbm.DB_PublicJs
+	var err error
+	局_PublicJs, err = publicJs.L_publicJs.P取值2(c, service.Js类型_公共函数, string(请求json.GetStringBytes("JsName")))
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	vm := jsEngine.J脚本引擎_初始化用户(c, &AppInfo, &局_在线信息, &局_PublicJs)
+	局_云函数型参数 := ""
+	if 请求json.Get("Parameter").Type() == fastjson.TypeObject {
+		局_云函数型参数 = 请求json.Get("Parameter").String()
+	} else {
+		局_云函数型参数 = string(请求json.GetStringBytes("Parameter"))
+	}
+
+	_, err = vm.RunString(局_PublicJs.Value)
+	if 局_详细错误, ok := err.(*goja.Exception); ok {
+		response.FailWithMessage("JS代码运行失败:"+局_详细错误.String(), c)
+		return
+	}
+	var 局_待执行js函数名 func(string) interface{}
+	ret := vm.Get(局_PublicJs.Name)
+	if ret == nil {
+		response.FailWithMessage("Js中没有["+局_PublicJs.Name+"()]函数", c)
+		return
+	}
+	err = vm.ExportTo(ret, &局_待执行js函数名)
+	if err != nil {
+		response.FailWithMessage("Js绑定函数到变量失败", c)
+		return
+	}
+	局_return := 局_待执行js函数名(局_云函数型参数)
+	response.OkWithDetailed(局_return, "ok,ms:"+strconv.Itoa(int(time.Now().UnixMilli()-局_耗时)), c)
+	return
+}
+
+// RunJs2 运行公共函数(路径参数版)
+func (T *TaskPoolWebApi) RunJs2(c *gin.Context) {
+	defer func() {
+		if err2 := recover(); err2 != nil {
+			局_GoJa错误, ok := err2.(*goja.Exception)
+			if ok {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:"+局_GoJa错误.String(), c)
+			} else {
+				response.FailWithMessage("异常:可能Hook函数传参或返回值类型错误,具体:js引擎未返回报错信息", c)
+			}
+			return
+		}
+	}()
+	var AppInfo dbm.DB_AppInfo
+	var 局_在线信息 dbm.DB_LinksToken
+	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
+	局_公共函数名 := c.Param("JsName")
+
+	var 局_post string
+	if c.Request.Method == "GET" {
+		局_post = c.Request.URL.String()
+	} else {
+		局_post = c.GetString("局_json明文")
+	}
+
+	局_耗时 := time.Now().UnixMilli()
+	var 局_PublicJs dbm.DB_PublicJs
+	var err error
+	局_PublicJs, err = publicJs.L_publicJs.P取值2(c, service.Js类型_公共函数, 局_公共函数名)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	vm := jsEngine.J脚本引擎_初始化用户(c, &AppInfo, &局_在线信息, &局_PublicJs)
+
+	_, err = vm.RunString(局_PublicJs.Value)
+	if 局_详细错误, ok := err.(*goja.Exception); ok {
+		response.FailWithMessage("JS代码运行失败:"+局_详细错误.String(), c)
+		return
+	}
+	var 局_待执行js函数名 func(string) interface{}
+	ret := vm.Get(局_PublicJs.Name)
+	if ret == nil {
+		response.FailWithMessage("Js中没有["+局_PublicJs.Name+"()]函数", c)
+		return
+	}
+	err = vm.ExportTo(ret, &局_待执行js函数名)
+	if err != nil {
+		response.FailWithMessage("Js绑定函数到变量失败", c)
+		return
+	}
+	局_return := 局_待执行js函数名(局_post)
+	response.OkWithDetailed(局_return, "ok,ms:"+strconv.Itoa(int(time.Now().UnixMilli()-局_耗时)), c)
+	return
+}
