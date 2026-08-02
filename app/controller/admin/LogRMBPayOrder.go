@@ -60,6 +60,11 @@ type 请求_LogRMBPayOrderOut struct {
 	Note     string `json:"note"`
 }
 
+type 请求_LogRMBPayOrderMakeUp struct {
+	PayOrder string `json:"payOrder"`
+	Note     string `json:"note"`
+}
+
 type 请求_LogRMBPayOrderSetNote struct {
 	PayOrder []string `json:"payOrder"`
 	Note     string   `json:"note"`
@@ -295,4 +300,85 @@ func (C *LogRMBPayOrderCtrl) SetNote(c *gin.Context) {
 		return
 	}
 	response.OkWithMessage("修改成功", c)
+}
+
+// MakeUp 手动补单 - 对未支付订单进行手动补单,执行充值并修改状态为成功
+func (C *LogRMBPayOrderCtrl) MakeUp(c *gin.Context) {
+	var 请求 请求_LogRMBPayOrderMakeUp
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	if 请求.PayOrder == "" {
+		response.FailWithMessage("订单号不能为空", c)
+		return
+	}
+
+	// 查询订单
+	var 订单 dbm.DB_LogRMBPayOrder
+	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 请求.PayOrder).First(&订单).Error
+	if err != nil {
+		response.FailWithMessage("订单不存在", c)
+		return
+	}
+
+	// 只有等待支付(1)的订单才能补单
+	if 订单.Status != constant.D订单状态_等待支付 {
+		response.FailWithMessage("只有等待支付的订单才能手动补单", c)
+		return
+	}
+
+	// 根据处理类型执行充值
+	switch 订单.ProcessingType {
+	case constant.D订单类型_余额充值:
+		// 余额充值: 直接增加用户余额
+		var 新余额 float64
+		if 新余额, err = user.L_user.Id余额增减(c, 订单.Uid, 订单.Rmb, true); err != nil {
+			response.FailWithMessage("充值用户余额失败:"+err.Error(), c)
+			return
+		}
+		备注 := "管理员手动补单,订单:" + 订单.PayOrder + "|新余额≈" + fmt.Sprintf("%.2f", 新余额)
+		if 请求.Note != "" {
+			备注 = 请求.Note + "|" + 备注
+		}
+		log.L_log.Log_写余额日志(订单.User, c.ClientIP(), 备注, 订单.Rmb)
+
+	case constant.D订单类型_购卡直冲:
+		// 购卡直冲: 调用支付成功后处理逻辑
+		var 参数 common.PayParams
+		参数.DB_LogRMBPayOrder = 订单
+		参数.Status = constant.D订单状态_已付待处理
+		// 先将状态改为已付待处理
+		global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 订单.Id).Update("Status", constant.D订单状态_已付待处理)
+		if err = rmbPay.L_rmbPay.Z支付成功_后处理(c, &参数); err != nil {
+			// 后处理失败,恢复为等待支付状态
+			global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 订单.Id).Update("Status", constant.D订单状态_等待支付)
+			response.FailWithMessage("购卡直冲补单失败:"+err.Error(), c)
+			return
+		}
+
+	case constant.D订单类型_支付购卡:
+		// 支付购卡: 调用支付成功后处理逻辑
+		var 参数 common.PayParams
+		参数.DB_LogRMBPayOrder = 订单
+		参数.Status = constant.D订单状态_已付待处理
+		// 先将状态改为已付待处理
+		global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 订单.Id).Update("Status", constant.D订单状态_已付待处理)
+		if err = rmbPay.L_rmbPay.Z支付成功_后处理(c, &参数); err != nil {
+			// 后处理失败,恢复为等待支付状态
+			global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 订单.Id).Update("Status", constant.D订单状态_等待支付)
+			response.FailWithMessage("支付购卡补单失败:"+err.Error(), c)
+			return
+		}
+
+	default:
+		response.FailWithMessage("未知的订单处理类型:"+strconv.Itoa(订单.ProcessingType), c)
+		return
+	}
+
+	// 补单成功后更新备注
+	if 请求.Note != "" {
+		global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 订单.Id).Update("Note", 请求.Note)
+	}
+
+	response.OkWithMessage("手动补单成功", c)
 }
