@@ -98,7 +98,7 @@ type 结构请求_余额充值 struct {
 
 // Q取支付通道状态 取支付通道状态
 func (A *AgentMenu) Q取支付通道状态(c *gin.Context) {
-	局map := rmbPay.L_rmbPay.Pay_取支付通道状态()
+	局map := rmbPay.L_rmbPay.Pay_取支付通道状态(true)
 	response.OkWithData(局map, c)
 	return
 }

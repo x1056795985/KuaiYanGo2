@@ -17,6 +17,7 @@ import (
 	"server/app/models/constant"
 	dbm "server/app/models/db"
 	"server/app/service"
+	"server/app/utils"
 	"strings"
 )
 
@@ -213,7 +214,9 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 	return
 }
 func UserApi_取支付通道状态(c *gin.Context) {
-	局map := rmbPay.L_rmbPay.Pay_取支付通道状态()
+	局_上下文 := utils.Q取上下文(c)
+	局map := rmbPay.L_rmbPay.Pay_取支付通道状态(局_上下文.Z在线信息.Uid > 0)
+ 
 	response.OkData(c, 局map)
 	return
 }
@@ -334,7 +337,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 
 	//开始处理调价信息
 	var 局_价格组成 struct {
-		总调价  float64
+		总调价   float64
 		调价详情 []dbm.DB_KaClassUpPrice
 		购买数量 int64
 

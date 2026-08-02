@@ -71,6 +71,8 @@ func (C *CloudStorage) GetUpToken(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	// 上传相同路径文件会使ETag缓存失效, 清除缓存使下次获取时重新拉取
+	cloudStorage.L_云存储.G更新ETag缓存(请求.Path)
 	response.OkWithDetailed(局_list, "操作成功", c)
 	return
 	//继续对接前端
@@ -94,6 +96,9 @@ func (C *CloudStorage) MoveTo(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	// 文件移动后清除新旧路径的ETag缓存
+	cloudStorage.L_云存储.G更新ETag缓存(请求.Path1)
+	cloudStorage.L_云存储.G更新ETag缓存(请求.Path2)
 	response.OkWithDetailed(局_list, "操作成功", c)
 	return
 }
@@ -114,6 +119,10 @@ func (C *CloudStorage) Delete(c *gin.Context) {
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
+	}
+	// 文件删除后清除对应路径的ETag缓存
+	for _, 局_路径 := range 请求.Path {
+		cloudStorage.L_云存储.G更新ETag缓存(局_路径)
 	}
 	response.OkWithDetailed(局_list, "操作成功", c)
 	return

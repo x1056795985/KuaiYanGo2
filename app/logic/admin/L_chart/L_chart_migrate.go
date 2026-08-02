@@ -553,7 +553,7 @@ func Get余额充值消费统计(c *gin.Context) []gin.H {
 		if 值 == nil {
 			局_数量[索引-1] = "0"
 		} else {
-			a := string(值.([]uint8))
+			a := fmt.Sprintf("%v", 值)
 			局_数量[索引-1] = a
 		}
 	}
@@ -575,7 +575,7 @@ func Get余额充值消费统计(c *gin.Context) []gin.H {
 		if 值 == nil {
 			局_数量[索引-1] = "0"
 		} else {
-			a := string(值.([]uint8))
+			a := fmt.Sprintf("%v", 值)
 			局_数量[索引-1] = strings.Replace(a, "-", "", 1)
 		}
 	}
@@ -631,7 +631,7 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 		if 值 == nil {
 			局_数量[索引-1] = "0"
 		} else {
-			a := string(值.([]uint8))
+			a := fmt.Sprintf("%v", 值)
 			局_数量[索引-1] = a
 			局_数量[索引-1] = strings.Replace(a, "-", "", 1)
 		}
@@ -654,7 +654,7 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 		if 值 == nil {
 			局_数量[索引-1] = "0"
 		} else {
-			a := string(值.([]uint8))
+			a := fmt.Sprintf("%v", 值)
 			局_数量[索引-1] = strings.Replace(a, "-", "", 1)
 		}
 	}
@@ -1074,7 +1074,7 @@ func Get应用用户账号注册统计(c *gin.Context) []gin.H {
 		if 值 == nil {
 			局_数量[索引-1] = 0
 		} else {
-			a, _ := strconv.Atoi(string(值.([]uint8)))
+			a, _ := strconv.Atoi(fmt.Sprintf("%v", 值))
 			局_数量[索引-1] = a
 		}
 	}

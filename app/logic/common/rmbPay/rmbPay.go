@@ -884,11 +884,15 @@ func (j *rmbPay) 代理分成(c *gin.Context, 参数 *m.PayParams, AgentMoney fl
 	return
 }
 
-func (j *rmbPay) Pay_取支付通道状态() gin.H {
+func (j *rmbPay) Pay_取支付通道状态(is已登陆 bool) gin.H {
 	局_数组 := j.Pay_取支付通道基本信息()
 	局map := make(gin.H, len(局_数组))
 
 	for _, v := range 局_数组 {
+		if is已登陆 == false && v.Id == 9 { //未登录状态余额支付不返回
+			continue
+		}
+
 		if v.Alias != "" {
 			局map[v.Alias] = v.Status
 		} else {

@@ -321,9 +321,9 @@ func (C *LogRMBPayOrderCtrl) MakeUp(c *gin.Context) {
 		return
 	}
 
-	// 只有等待支付(1)的订单才能补单
-	if 订单.Status != constant.D订单状态_等待支付 {
-		response.FailWithMessage("只有等待支付的订单才能手动补单", c)
+	// 等待支付(1)或已关闭(7)的订单可以补单
+	if 订单.Status != constant.D订单状态_等待支付 && 订单.Status != constant.D订单状态_已关闭 {
+		response.FailWithMessage("只有等待支付或已关闭的订单才能手动补单", c)
 		return
 	}
 

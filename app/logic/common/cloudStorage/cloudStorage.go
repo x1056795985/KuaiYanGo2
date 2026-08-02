@@ -8,11 +8,67 @@ import (
 	"server/app/models/common"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 )
 
 var L_云存储 Item
 
 type Item struct {
+}
+
+// ETag缓存结构
+type 缓存_ETag项 struct {
+	ETag      string
+	写入时间戳 int64
+}
+
+// 全局ETag缓存, key=文件路径
+var 集_ETag缓存 = struct {
+	sync.RWMutex
+	数据 map[string]缓存_ETag项
+}{
+	数据: make(map[string]缓存_ETag项),
+}
+
+// ETag缓存有效期(秒), 超时后自动重新获取
+const ETag缓存有效期 = 300
+
+// Q取ETag 获取指定路径文件的ETag, 优先从全局缓存读取, 缓存过期或不存在时从云存储获取
+func (j *Item) Q取ETag(c *gin.Context, 文件路径 string) (ETag string, err error) {
+	// 先查缓存
+	集_ETag缓存.RLock()
+	局_项, 局_存在 := 集_ETag缓存.数据[文件路径]
+	集_ETag缓存.RUnlock()
+
+	if 局_存在 && (time.Now().Unix()-局_项.写入时间戳) < ETag缓存有效期 {
+		return 局_项.ETag, nil
+	}
+
+	// 缓存不存在或已过期, 从云存储获取
+	局_文件信息, 局_错误 := j.Q取文件信息(c, 文件路径)
+	if 局_错误 != nil {
+		return "", 局_错误
+	}
+
+	ETag = 局_文件信息.MD5
+
+	// 写入缓存
+	集_ETag缓存.Lock()
+	集_ETag缓存.数据[文件路径] = 缓存_ETag项{
+		ETag:      ETag,
+		写入时间戳: time.Now().Unix(),
+	}
+	集_ETag缓存.Unlock()
+
+	return ETag, nil
+}
+
+// G更新ETag缓存 在文件上传后调用, 删除旧缓存使下次获取时重新从云存储拉取
+func (j *Item) G更新ETag缓存(文件路径 string) {
+	集_ETag缓存.Lock()
+	delete(集_ETag缓存.数据, 文件路径)
+	集_ETag缓存.Unlock()
 }
 
 // 注册通道接口

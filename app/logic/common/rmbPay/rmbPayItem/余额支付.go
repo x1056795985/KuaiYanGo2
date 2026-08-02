@@ -14,6 +14,7 @@ import (
 	"server/app/models/constant"
 	dbm "server/app/models/db"
 	"server/app/service"
+	"server/app/utils"
 )
 
 func init() {
@@ -52,19 +53,16 @@ func (j 余额支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 		appInfo  dbm.DB_AppInfo
 		userInfo dbm.DB_User
 	}{}
-	局_临时通用, _ := c.Get("局_在线信息")
-	info.likeInfo = 局_临时通用.(dbm.DB_LinksToken)
+	info.likeInfo = utils.Q取上下文(c).Z在线信息
 	if info.likeInfo.Uid <= 0 {
 		err = errors.New("余额支付仅限已登陆后使用")
 		return
 	}
 	db := *global.GVA_DB
 	if info.likeInfo.LoginAppid == constant.APPID_Web用户中心 {
-		局_临时通用, err = service.NewAppInfo(c, &db).Info(D到整数(info.likeInfo.AppIdEx))
-		info.appInfo = 局_临时通用.(dbm.DB_AppInfo)
+		info.appInfo, err = service.NewAppInfo(c, &db).Info(D到整数(info.likeInfo.AppIdEx))
 	} else {
-		局_临时通用, err = service.NewAppInfo(c, &db).Info(info.likeInfo.LoginAppid)
-		info.appInfo = 局_临时通用.(dbm.DB_AppInfo)
+		info.appInfo, err = service.NewAppInfo(c, &db).Info(info.likeInfo.LoginAppid)
 	}
 	if err != nil {
 		err = errors.New("读取应用信息错误")

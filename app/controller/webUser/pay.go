@@ -25,7 +25,7 @@ func NewPayController() *Pay {
 }
 
 func (C *Pay) GetPayStatus(c *gin.Context) {
-	局map := rmbPay.L_rmbPay.Pay_取支付通道状态()
+	局map := rmbPay.L_rmbPay.Pay_取支付通道状态(true)
 	response.OkWithData(c, 局map)
 	return
 }

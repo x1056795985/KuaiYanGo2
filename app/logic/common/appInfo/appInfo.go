@@ -309,6 +309,7 @@ func (j *appInfo) App下载更新地址变量处理(c *gin.Context, DB_AppInfo d
 
 	局_新文本 = strings.Replace(局_新文本, "{{AppName}}", DB_AppInfo.AppName, -1)
 
+	// 先处理所有 {{AppVer}}, 包括指令参数中的 {{AppVer}}, 如 {{云存储_取外链('10001/飞鸟快验{{AppVer}}.bin',0)}}
 	if strings.Index(局_新文本, "{{AppVer}}") != -1 && DB_AppInfo.AppVer != "" {
 		局_可用版本 := utils.W文本_分割文本(DB_AppInfo.AppVer, "\n")
 		if len(局_可用版本) > 0 {
@@ -330,6 +331,13 @@ func (j *appInfo) App下载更新地址变量处理(c *gin.Context, DB_AppInfo d
 					下载地址, err := cloudStorage.L_云存储.Q取外链地址(&gin.Context{}, strings.Trim(局_参数[0], "'"), gconv.Int64(局_参数[1]))
 					if err == nil {
 						局_新文本 = strings.Replace(局_新文本, 局_完整文本, 下载地址, -1)
+					}
+				}
+			case "云存储_取ETag":
+				if len(局_参数) == 1 {
+					ETag, err := cloudStorage.L_云存储.Q取ETag(&gin.Context{}, strings.Trim(局_参数[0], "'"))
+					if err == nil {
+						局_新文本 = strings.Replace(局_新文本, 局_完整文本, ETag, -1)
 					}
 				}
 			}
