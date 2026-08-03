@@ -175,7 +175,7 @@ func UserApi_取开启验证码接口(c *gin.Context) {
 	return
 }
 
-// App下载更新地址变量处理 处理应用下载更新地址中的模板变量
+// 处理应用下载更新地址中的模板变量
 func App下载更新地址变量处理(DB_AppInfo dbm.DB_AppInfo) string {
 	局_新文本 := DB_AppInfo.UrlDownload
 
@@ -202,6 +202,13 @@ func App下载更新地址变量处理(DB_AppInfo dbm.DB_AppInfo) string {
 					下载地址, err := cloudStorage.L_云存储.Q取外链地址(&gin.Context{}, strings.Trim(局_参数[0], "'"), gconv.Int64(局_参数[1]))
 					if err == nil {
 						局_新文本 = strings.Replace(局_新文本, 局_完整文本, 下载地址, -1)
+					}
+				}
+			case "云存储_取ETag":
+				if len(局_参数) == 1 {
+					ETag, err := cloudStorage.L_云存储.Q取ETag(&gin.Context{}, strings.Trim(局_参数[0], "'"))
+					if err == nil {
+						局_新文本 = strings.Replace(局_新文本, 局_完整文本, ETag, -1)
 					}
 				}
 			}

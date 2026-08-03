@@ -5,19 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/songzhibin97/gkit/tools/rand_string"
 	"gorm.io/gorm"
-	"regexp"
 	"server/app/global"
-	"server/app/logic/common/cloudStorage"
 	"server/app/logic/common/publicData"
 	"server/app/models/db"
 	dbm "server/app/models/db"
 	"server/app/service"
 	utils2 "server/app/utils"
 	"strconv"
-	"strings"
 	"unicode/utf8"
 )
 
@@ -301,48 +297,4 @@ func (j *appInfo) CopyApp信息(c *gin.Context, AppId, AppType int, AppName stri
 	})
 
 	return err
-}
-
-// App下载更新地址变量处理 处理下载地址中的变量替换(涉及正则匹配和云存储调用)
-func (j *appInfo) App下载更新地址变量处理(c *gin.Context, DB_AppInfo dbm.DB_AppInfo) string {
-	局_新文本 := DB_AppInfo.UrlDownload
-
-	局_新文本 = strings.Replace(局_新文本, "{{AppName}}", DB_AppInfo.AppName, -1)
-
-	// 先处理所有 {{AppVer}}, 包括指令参数中的 {{AppVer}}, 如 {{云存储_取外链('10001/飞鸟快验{{AppVer}}.bin',0)}}
-	if strings.Index(局_新文本, "{{AppVer}}") != -1 && DB_AppInfo.AppVer != "" {
-		局_可用版本 := utils.W文本_分割文本(DB_AppInfo.AppVer, "\n")
-		if len(局_可用版本) > 0 {
-			局_新文本 = strings.Replace(局_新文本, "{{AppVer}}", 局_可用版本[0], -1)
-		}
-	}
-
-	//{{(.*?)\((.*?)\)}}  正则匹配指令,  子匹配1为指令名 子匹配2为参数
-	if strings.Index(局_新文本, "{{") != -1 { //判断是否还有变量
-		re := regexp.MustCompile(`{{(.*?)\((.*?)\)}}`)
-		result := re.FindAllStringSubmatch(局_新文本, -1)
-		for i, _ := range result {
-			局_完整文本 := result[i][0]
-			局_指令名 := result[i][1]
-			局_参数 := utils.W文本_分割文本(result[i][2], ",")
-			switch 局_指令名 {
-			case "云存储_取外链":
-				if len(局_参数) == 2 {
-					下载地址, err := cloudStorage.L_云存储.Q取外链地址(&gin.Context{}, strings.Trim(局_参数[0], "'"), gconv.Int64(局_参数[1]))
-					if err == nil {
-						局_新文本 = strings.Replace(局_新文本, 局_完整文本, 下载地址, -1)
-					}
-				}
-			case "云存储_取ETag":
-				if len(局_参数) == 1 {
-					ETag, err := cloudStorage.L_云存储.Q取ETag(&gin.Context{}, strings.Trim(局_参数[0], "'"))
-					if err == nil {
-						局_新文本 = strings.Replace(局_新文本, 局_完整文本, ETag, -1)
-					}
-				}
-			}
-		}
-	}
-
-	return 局_新文本
 }
