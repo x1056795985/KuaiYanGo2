@@ -6,6 +6,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/controller/Common/response"
 	"server/app/global"
+	"server/app/logic/common/appInfo"
 	dbm "server/app/models/db"
 	"server/app/service"
 )
@@ -58,8 +59,7 @@ func (C *AppInfo) GetAppBaseInfo(c *gin.Context) {
 	}
 	//如果下载地址url不是json则直接填写, 如果是json,则获取 data 第一个成员的 url地址
 	info.appInfo.UrlDownload = info.appInfoUser.UrlDownload
-
-	局_downloadUrl := service.NewAppInfo(c, global.GVA_DB).App下载更新地址变量处理(info.appInfo)
+	局_downloadUrl := appInfo.App下载更新地址变量处理(info.appInfo)
 
 	data := gin.H{
 		"appId":            info.appInfo.AppId,

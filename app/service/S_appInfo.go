@@ -172,14 +172,6 @@ func (s *AppInfo) App取App详情(Appid int) (AppName dbm.DB_AppInfo) {
 	return AppName
 }
 
-// App取App最新下载地址Json 按Appid取最新下载地址Json
-func (s *AppInfo) App取App最新下载地址Json(Appid int) (下载地址 string) {
-	var DB_AppInfo dbm.DB_AppInfo
-	_ = s.db.Model(dbm.DB_AppInfo{}).Where("AppId=?", Appid).First(&DB_AppInfo).Error
-	下载地址 = s.App下载更新地址变量处理(DB_AppInfo)
-	return 下载地址
-}
-
 // AppId是否存在 AppId是否存在
 func (s *AppInfo) AppId是否存在(AppId int) bool {
 	var appInfo int
@@ -229,16 +221,4 @@ func (s *AppInfo) App存在数量(Appid int) int64 {
 	_ = s.db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", Appid).Count(&count).Error
 
 	return count
-}
-
-// App下载更新地址变量处理 处理下载地址中的变量替换
-func (s *AppInfo) App下载更新地址变量处理(DB_AppInfo dbm.DB_AppInfo) string {
-	//此方法涉及复杂逻辑(正则匹配、云存储调用)，属于多表操作，应放到logic层
-	//但在service层保留简单调用入口，实际实现委托给logic/common/appInfo
-	//为避免循环引用，暂时在service中直接实现简单变量替换，复杂逻辑由调用方处理
-	局_新文本 := DB_AppInfo.UrlDownload
-
-	//简单的变量替换（不涉及正则和云存储的部分）
-	//完整实现请参考 logic/common/appInfo.App下载更新地址变量处理
-	return 局_新文本
 }
