@@ -71,7 +71,7 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
  "data": [
   {
      "WenJianMin": "飞鸟快验{{AppVer}}.bin",
-     "md5": "E655BDD4DF35C94AA2A706E2E55C4FF5",
+     "md5": "{{云存储_取ETag('10001/飞鸟快验{{AppVer}}.bin')}}",
      "Lujing": "/",
      "size": "",
      "url": "{{云存储_取外链('10001/飞鸟快验{{AppVer}}.bin',0)}}",

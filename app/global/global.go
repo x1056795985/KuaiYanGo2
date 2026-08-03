@@ -40,7 +40,7 @@ var (
 	Q快验 KuaiYanSDK.Api快验_类
 
 	X系统信息 = K快验帐号信息{
-		B版本号当前: "1.0.481",
+		B版本号当前: "1.0.482",
 	}
 	// 定义一个全局翻译器T
 	Trans ut.Translator
