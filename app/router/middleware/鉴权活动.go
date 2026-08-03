@@ -42,13 +42,15 @@ func isPromotionActive(promotionType int) gin.HandlerFunc {
 			}
 		}
 		if info.AppPromotionConfig.Id == 0 {
-			局_活动类型 := ""
-			switch promotionType {
-			case constant.H活动类型_cps:
-				局_活动类型 = "CPS"
-			case constant.H活动类型_签到:
-				局_活动类型 = "签到"
-			}
+		局_活动类型 := ""
+		switch promotionType {
+		case constant.H活动类型_cps:
+			局_活动类型 = "CPS"
+		case constant.H活动类型_签到:
+			局_活动类型 = "签到"
+		case constant.H活动类型_大转盘:
+			局_活动类型 = "大转盘"
+		}
 			response.FailWithMessage(c, "未开启"+局_活动类型+"活动")
 			c.Abort()
 			return
@@ -66,4 +68,8 @@ func Is存在活动_cps() gin.HandlerFunc {
 
 func Is存在活动_签到() gin.HandlerFunc {
 	return isPromotionActive(constant.H活动类型_签到)
+}
+
+func Is存在活动_大转盘() gin.HandlerFunc {
+	return isPromotionActive(constant.H活动类型_大转盘)
 }

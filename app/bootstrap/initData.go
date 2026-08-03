@@ -85,6 +85,10 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_CheckInLog{},
 		dbm.DB_CheckInTaskLog{},
 
+		dbm.DB_LuckyWheelInfo{},
+		dbm.DB_LuckyWheelUser{},
+		dbm.DB_LuckyWheelLog{},
+
 		// 统计数据用的表
 		dbm.DB_LogUserActive{},
 		dbm.DB_TongJiZaiXian{},

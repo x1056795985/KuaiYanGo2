@@ -552,6 +552,19 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("checkInScoreLog/delete", 局_CheckInScoreLog.Delete)
 	}
 
+	// ========== 大转盘管理 ==========
+	局_LuckyWheelInfo := controller.NewLuckyWheelInfoController()
+	{
+		adminRouter.POST("luckyWheelInfo/getList", 局_LuckyWheelInfo.GetList)
+		adminRouter.POST("luckyWheelInfo/info", 局_LuckyWheelInfo.Info)
+		adminRouter.POST("luckyWheelInfo/update", 局_LuckyWheelInfo.Update)
+	}
+	局_LuckyWheelLog := controller.NewLuckyWheelLogController()
+	{
+		adminRouter.POST("luckyWheelLog/getList", 局_LuckyWheelLog.GetList)
+		adminRouter.POST("luckyWheelLog/delete", 局_LuckyWheelLog.Delete)
+	}
+
 	// ========== 快验个人中心 ==========
 	局_KuaiYan := controller.NewKuaiYanController()
 	{

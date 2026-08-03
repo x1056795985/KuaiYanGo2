@@ -9,7 +9,7 @@ type DB_AppPromotionConfig struct {
 	UpdateTime       int64  `json:"updateTime" gorm:"column:updateTime;comment:更新时间戳"`
 	StartTime        int64  `json:"startTime" gorm:"column:startTime;comment:开始时间戳"` //让活动有即将开始的状态
 	EndTime          int64  `json:"endTime" gorm:"column:endTime;comment:结束时间戳"`
-	PromotionType    int    `json:"promotionType" gorm:"column:promotionType;comment:类型 1-cps 2-签到"`
+	PromotionType    int    `json:"promotionType" gorm:"column:promotionType;comment:类型 1-cps 2-签到 3-大转盘"`
 	TypeAssociatedId int    `json:"typeAssociatedId" gorm:"column:typeAssociatedId;comment:类型关联对应表id"`
 	Sort             int64  `json:"sort" gorm:"column:sort;default:0;comment:排序权重; "`
 }

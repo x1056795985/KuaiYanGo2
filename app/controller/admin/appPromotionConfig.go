@@ -228,7 +228,11 @@ func (C *AppPromotionConfig) Reset(c *gin.Context) {
 		局_数量_用户数量, err = service.NewCheckInLog(c, &tx).DeleteWhere(map[string]interface{}{"appId": info.AppId})
 		//删除该应用用户的积分记录
 		局_数量_用户数量, err = service.NewCheckInScoreLog(c, &tx).DeleteWhere(map[string]interface{}{"appId": info.AppId})
-
+	case constant.H活动类型_大转盘: //
+		//删除该应用用户大转盘数据
+		局_数量_用户数量, err = service.NewLuckyWheelUser(c, &tx).DeleteWhere(map[string]interface{}{"appId": info.AppId})
+		//删除该应用抽奖记录
+		局_数量_佣金订单, err = service.NewLuckyWheelLog(c, &tx).DeleteWhere(map[string]interface{}{"appId": info.AppId})
 	}
 
 	if err != nil {

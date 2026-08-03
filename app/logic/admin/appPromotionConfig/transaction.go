@@ -51,6 +51,18 @@ func C活动_创建(c *gin.Context, 数据库 *gorm.DB, appInfo dbm.DB_AppInfo, 
 				return 局_错误
 			}
 			局_关联配置id = 局_cps配置.Id
+		case constant.H活动类型_大转盘:
+			局_大转盘配置 := dbm.DB_LuckyWheelInfo{
+				CreateTime:      time.Now().Unix(),
+				UpdateTime:      time.Now().Unix(),
+				DailyFreeCount:  1,
+				InviteGiveCount: 1,
+				PrizeList:       "[]",
+			}
+			if _, 局_错误 := service.NewLuckyWheelInfo(c, tx).Create(&局_大转盘配置); 局_错误 != nil {
+				return 局_错误
+			}
+			局_关联配置id = 局_大转盘配置.Id
 		}
 
 		_, 局_错误 := service.NewAppPromotionConfig(c, tx).Create(&dbm.DB_AppPromotionConfig{
@@ -75,13 +87,21 @@ func S活动_删除(数据库 *gorm.DB, ids []int) (影响行数 int64, err erro
 			return 局_错误
 		}
 		var 局_cpsIds []int
+		var 局_luckyWheelIds []int
 		for _, 局_单项配置 := range 局_配置 {
 			if 局_单项配置.PromotionType == constant.H活动类型_cps {
 				局_cpsIds = append(局_cpsIds, 局_单项配置.TypeAssociatedId)
+			} else if 局_单项配置.PromotionType == constant.H活动类型_大转盘 {
+				局_luckyWheelIds = append(局_luckyWheelIds, 局_单项配置.TypeAssociatedId)
 			}
 		}
 		if len(局_cpsIds) > 0 {
 			if 局_错误 := tx.Where("id IN (?)", 局_cpsIds).Delete(&dbm.DB_CpsInfo{}).Error; 局_错误 != nil {
+				return 局_错误
+			}
+		}
+		if len(局_luckyWheelIds) > 0 {
+			if 局_错误 := tx.Where("id IN (?)", 局_luckyWheelIds).Delete(&dbm.DB_LuckyWheelInfo{}).Error; 局_错误 != nil {
 				return 局_错误
 			}
 		}

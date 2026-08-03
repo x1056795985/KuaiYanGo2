@@ -130,4 +130,11 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 		根路由.Group("", mid2.Is存在活动_签到()).POST("checkInInfo/redeemReward", 局_checkInInfo.RedeemReward)
 	}
 
+	局_LuckyWheel := controller.NewLuckyWheelController()
+	{
+		根路由.Group("", mid2.Is存在活动_大转盘()).POST("luckyWheel/info", 局_LuckyWheel.Info)
+		根路由.Group("", mid2.Is存在活动_大转盘()).POST("luckyWheel/draw", 局_LuckyWheel.Draw)
+		根路由.Group("", mid2.Is存在活动_大转盘()).POST("luckyWheel/logList", 局_LuckyWheel.LogList)
+	}
+
 }
