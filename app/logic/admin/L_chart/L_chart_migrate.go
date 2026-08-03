@@ -16,6 +16,26 @@ import (
 
 const 系统演示模式 = 1
 
+// 值转字符串 将数据库聚合查询返回的值([]byte/string/float64等)转为字符串
+func 值转字符串(值 interface{}) string {
+	switch v := 值.(type) {
+	case []byte:
+		return string(v)
+	case string:
+		return v
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'f', -1, 32)
+	case int:
+		return strconv.Itoa(v)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	default:
+		return fmt.Sprintf("%v", 值)
+	}
+}
+
 type 临时应用id总数键值对 struct {
 	应用AppId int
 	总数      int
@@ -553,8 +573,7 @@ func Get余额充值消费统计(c *gin.Context) []gin.H {
 		if 值 == nil {
 			局_数量[索引-1] = "0"
 		} else {
-			a := fmt.Sprintf("%v", 值)
-			局_数量[索引-1] = a
+			局_数量[索引-1] = 值转字符串(值)
 		}
 	}
 	Data[0] = gin.H{"name": "充值金额", "type": "line", "data": 局_数量}
@@ -575,7 +594,7 @@ func Get余额充值消费统计(c *gin.Context) []gin.H {
 		if 值 == nil {
 			局_数量[索引-1] = "0"
 		} else {
-			a := fmt.Sprintf("%v", 值)
+			a := 值转字符串(值)
 			局_数量[索引-1] = strings.Replace(a, "-", "", 1)
 		}
 	}
@@ -631,7 +650,7 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 		if 值 == nil {
 			局_数量[索引-1] = "0"
 		} else {
-			a := fmt.Sprintf("%v", 值)
+			a := 值转字符串(值)
 			局_数量[索引-1] = a
 			局_数量[索引-1] = strings.Replace(a, "-", "", 1)
 		}
@@ -654,7 +673,7 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 		if 值 == nil {
 			局_数量[索引-1] = "0"
 		} else {
-			a := fmt.Sprintf("%v", 值)
+			a := 值转字符串(值)
 			局_数量[索引-1] = strings.Replace(a, "-", "", 1)
 		}
 	}
