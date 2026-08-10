@@ -2,80 +2,71 @@ package router
 
 import (
 	"fmt"
+	"io"
+	"reflect"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	zhTranslations "github.com/go-playground/validator/v10/translations/zh"
-	"io"
-	"reflect"
+
 	"server/app/global"
 	"server/app/models/old/response"
+	"server/app/monitoring"
 	"server/app/router/admin"
 	"server/app/router/agent"
 	"server/app/router/middleware"
 	userSafetyApi2 "server/app/router/userSafetyApi"
-	"server/app/router/webApi2"
+	webApi2 "server/app/router/webApi2"
 	"server/app/router/webSocket"
 	"server/app/router/webUser"
 )
 
-// 初始化总路由
 func InitRouters() *gin.Engine {
-
 	if !(global.GVA_Viper.GetInt("系统模式") == 1056795985) {
-		gin.DefaultWriter = io.Discard //禁止控制台输出
-		gin.SetMode(gin.ReleaseMode)   //设置为生产模式
+		gin.DefaultWriter = io.Discard
+		gin.SetMode(gin.ReleaseMode)
 	}
 
-	Router := gin.Default() //返回路由实例
+	局_路由 := gin.Default()
 	_ = InitTrans("ZH")
-	// 跨域，如需跨域可以打开下面的注释
-	Router.Use(middleware.Cors())    // 直接放行全部跨域请求
-	Router.Use(middleware.T统一恐慌恢复()) // 全局恐慌恢复中间件
-	//公共路由器 无需鉴权
-	PublicGroup := Router.Group("")
 
-	RouterInit(PublicGroup)
+	局_路由.Use(middleware.Cors())
+	局_路由.Use(middleware.T统一恐慌恢复())
+	局_路由.Use(monitoring.Q监控.Q监控中间件())
+
+	局_公开分组 := 局_路由.Group("")
+	RouterInit(局_公开分组)
+
 	if global.GVA_Viper.GetInt("系统模式") == 1 {
-		Router.NoRoute(func(c *gin.Context) {
-			response.FailWithMessage("演示模式不可操作,请部署到自己服务器深度体验", c)
-			return
+		局_路由.NoRoute(func(c *gin.Context) {
+			response.FailWithMessage("演示模式不可操作，请部署到自己的服务器深度体验", c)
 		})
 	}
 
-	//global.GVA_LOG.Println("router register success(路由注册成功)")
-	return Router
+	return 局_路由
 }
 
-// InitTrans 初始化控制器翻译器
 func InitTrans(locale string) (err error) {
-	// 修改gin框架中的Validator引擎属性，实现自定制
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-
-		// 注册一个获取json tag的自定义方法 将字段名改为中文,
 		v.RegisterTagNameFunc(func(fld reflect.StructField) string {
-			name := fld.Tag.Get("zh") //如果有这个信息,就是用这个
+			name := fld.Tag.Get("zh")
 			if name == "" {
-				name = fld.Tag.Get("json") //没有就用json
+				name = fld.Tag.Get("json")
 			}
 			return name
 		})
 
-		zhT := zh.New() // 中文翻译器
-		// 第一个参数是备用（fallback）的语言环境
-		// 后面的参数是应该支持的语言环境（支持多个）
-		uni := ut.New(zhT, zhT) //也是可以的
+		局_中文翻译器 := zh.New()
+		局_翻译器集合 := ut.New(局_中文翻译器, 局_中文翻译器)
 
-		// locale 通常取决于 http 请求头的 'Accept-Language'
-		// 也可以使用 uni.FindTranslator(...) 传入多个locale进行查找
-		global.Trans, ok = uni.GetTranslator(locale)
+		global.Trans, ok = 局_翻译器集合.GetTranslator(locale)
 		if !ok {
 			return fmt.Errorf("uni.GetTranslator(%s) failed", locale)
 		}
 
-		// 注册翻译器
 		switch locale {
 		case "en":
 			err = zhTranslations.RegisterDefaultTranslations(v, global.Trans)
@@ -89,26 +80,26 @@ func InitTrans(locale string) (err error) {
 	return
 }
 
-func RouterInit(gin *gin.RouterGroup) *gin.RouterGroup {
+func RouterInit(routerGroup *gin.RouterGroup) *gin.RouterGroup {
+	局_路由分组 := routerGroup
 
-	Router := gin //返回路由实例
+	局_用户安全接口路由 := userSafetyApi2.AllRouter{}
+	局_用户安全接口路由.InitWebApiRouter(局_路由分组)
 
-	routerUserSafetyApi2 := userSafetyApi2.AllRouter{}
-	routerUserSafetyApi2.InitWebApiRouter(Router) //先注册用户路由,因为管理员应用设置需要验证码接口需要获取用户api列表
+	局_后台路由 := admin.AllRouter{}
+	局_后台路由.InitAdminRouter(局_路由分组)
 
-	router := admin.AllRouter{}
-	router.InitAdminRouter(Router) //初始化管理员路由
+	局_代理路由 := agent.AllRouter{}
+	局_代理路由.InitAgentRouter(局_路由分组)
 
-	routerAgent := agent.AllRouter{}
-	routerAgent.InitAgentRouter(Router) //初始化Agent路由
+	局_WebApi路由 := webApi2.AllRouter{}
+	局_WebApi路由.InitWebApiRouter(局_路由分组)
 
-	routerWebApi := webApi2.AllRouter{}
-	routerWebApi.InitWebApiRouter(Router) //初始化WEBAPi路由
+	局_WebUser路由 := webUser.AllRouter{}
+	局_WebUser路由.InitWebUserRouter(局_路由分组)
 
-	routerWebUser := webUser.AllRouter{}
-	routerWebUser.InitWebUserRouter(Router) //初始化WEBUser路由
+	局_WebSocket路由 := webSocket.AllRouter{}
+	局_WebSocket路由.InitWebSocketRouter(局_路由分组)
 
-	routerWebSocket := webSocket.AllRouter{}
-	routerWebSocket.InitWebSocketRouter(Router) //初始化WebSocket路由
-	return gin
+	return routerGroup
 }

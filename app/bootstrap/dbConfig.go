@@ -1,14 +1,16 @@
 package bootstrap
 
 import (
-	"gorm.io/gorm/schema"
 	"log"
 	"os"
-	"server/app/global"
 	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
+
+	"server/app/global"
+	"server/app/monitoring"
 )
 
 type DBBASE interface {
@@ -19,33 +21,35 @@ type DBBASE interface {
 type DbConfig struct{}
 
 func (g *DbConfig) Config(表前缀 string) *gorm.Config {
-	config := &gorm.Config{
+	局_配置 := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   表前缀,
 			SingularTable: true,
 		},
 		DisableForeignKeyConstraintWhenMigrating: true,
 	}
-	_default := logger.New(NewDbWriter(log.New(os.Stdout, "\r\n", log.LstdFlags)), logger.Config{
+
+	局_默认日志器 := logger.New(NewDbWriter(log.New(os.Stdout, "\r\n", log.LstdFlags)), logger.Config{
 		SlowThreshold:             200 * time.Millisecond,
 		LogLevel:                  logger.Warn,
 		IgnoreRecordNotFoundError: true,
 		Colorful:                  true,
 	})
 
-	var logMode DBBASE
-	logMode = &global.GVA_CONFIG.Mysql
-	switch logMode.GetLogMode() {
+	var 局_日志模式 DBBASE
+	局_日志模式 = &global.GVA_CONFIG.Mysql
+	switch 局_日志模式.GetLogMode() {
 	case "silent", "Silent":
-		config.Logger = _default.LogMode(logger.Silent)
+		局_配置.Logger = monitoring.C初始化Gorm日志器(局_默认日志器.LogMode(logger.Silent), 200*time.Millisecond)
 	case "error", "Error":
-		config.Logger = _default.LogMode(logger.Error)
+		局_配置.Logger = monitoring.C初始化Gorm日志器(局_默认日志器.LogMode(logger.Error), 200*time.Millisecond)
 	case "warn", "Warn":
-		config.Logger = _default.LogMode(logger.Warn)
+		局_配置.Logger = monitoring.C初始化Gorm日志器(局_默认日志器.LogMode(logger.Warn), 200*time.Millisecond)
 	case "info", "Info":
-		config.Logger = _default.LogMode(logger.Info)
+		局_配置.Logger = monitoring.C初始化Gorm日志器(局_默认日志器.LogMode(logger.Info), 200*time.Millisecond)
 	default:
-		config.Logger = _default.LogMode(logger.Info)
+		局_配置.Logger = monitoring.C初始化Gorm日志器(局_默认日志器.LogMode(logger.Info), 200*time.Millisecond)
 	}
-	return config
+
+	return 局_配置
 }

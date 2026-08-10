@@ -73,6 +73,13 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	局_Panel := controller.NewPanelController()
 	{
 		adminRouter.POST("panel/getServerInfo", 局_Panel.GetServerInfo)
+		adminRouter.POST("panel/getMonitorOverview", 局_Panel.Q监控总览)
+		adminRouter.POST("panel/getMonitorProcessTop", 局_Panel.Q监控进程排行)
+		adminRouter.POST("panel/getMonitorProfileText", 局_Panel.Q监控画像文本)
+		adminRouter.POST("panel/updateMonitorSettings", 局_Panel.G监控设置)
+		adminRouter.POST("panel/captureCPUProfile", 局_Panel.C抓取CPU画像)
+		adminRouter.POST("panel/downloadMonitorProfile", 局_Panel.Q下载监控画像)
+		adminRouter.POST("panel/downloadLastCPUProfile", 局_Panel.Q下载最近CPU画像)
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			adminRouter.POST("panel/reloadSystem", 局_Panel.ReloadSystem)
 			adminRouter.POST("panel/stopSystem", 局_Panel.StopSystem)
