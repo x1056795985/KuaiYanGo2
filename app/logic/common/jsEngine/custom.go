@@ -31,7 +31,8 @@ func 脚本引擎_定制批量注册(online dbm.DB_LinksToken, usernames []strin
 		return 脚本引擎_失败(局_错误)
 	}
 	局_结果数组 := make([]脚本引擎_批量用户结果, 0, len(usernames))
-	局_软件用户服务 := service.NewAppUser(局_上下文, global.GVA_DB, 局_应用信息.AppId)
+	db := *global.GVA_DB
+	局_软件用户服务 := service.NewAppUser(局_上下文, &db, 局_应用信息.AppId)
 	for _, 局_用户名 := range usernames {
 		局_用户信息, 局_创建错误 := user.L_user.New用户信息(局_上下文, 局_用户名, password, password, "", "", "", "127.0.0.1", "批量注册", 0, 0, 0, "")
 		if 局_创建错误 != nil {
@@ -66,7 +67,8 @@ func 脚本引擎_定制批量充值(online dbm.DB_LinksToken, usernames, cardNu
 		return 脚本引擎_失败消息("账号和卡号数量必须一致")
 	}
 	局_已检查卡号 := make(map[string]struct{}, len(cardNumbers))
-	局_卡号服务 := service.NewKa(局_上下文, global.GVA_DB)
+	db := *global.GVA_DB
+	局_卡号服务 := service.NewKa(局_上下文, &db)
 	for _, 局_卡号 := range cardNumbers {
 		if _, 局_存在 := 局_已检查卡号[局_卡号]; 局_存在 {
 			return 脚本引擎_失败消息("卡号有重复不可充值")
@@ -80,7 +82,7 @@ func 脚本引擎_定制批量充值(online dbm.DB_LinksToken, usernames, cardNu
 			return 脚本引擎_失败消息("卡号[" + 局_卡号 + "]已耗尽使用次数")
 		}
 	}
-	局_软件用户服务 := service.NewAppUser(局_上下文, global.GVA_DB, 局_应用信息.AppId)
+	局_软件用户服务 := service.NewAppUser(局_上下文, &db, 局_应用信息.AppId)
 	for _, 局_用户名 := range usernames {
 		if 局_软件用户服务.User或卡号取Id(局_应用信息.AppId, 局_用户名) == 0 {
 			return 脚本引擎_失败消息("账号[" + 局_用户名 + "]不存在")
@@ -88,7 +90,7 @@ func 脚本引擎_定制批量充值(online dbm.DB_LinksToken, usernames, cardNu
 	}
 
 	局_结果数组 := make([]脚本引擎_批量用户结果, 0, len(usernames))
-	局_用户服务 := service.NewUser(局_上下文, global.GVA_DB)
+	局_用户服务 := service.NewUser(局_上下文, &db)
 	for 局_索引, 局_用户名 := range usernames {
 		局_卡号 := cardNumbers[局_索引]
 		if 局_充值错误 := ka.L_ka.K卡号充值_事务(局_上下文, 局_应用信息.AppId, 局_卡号, 局_用户名, ""); 局_充值错误 != nil {
@@ -117,8 +119,9 @@ func 脚本引擎_定制批量取账号信息(online dbm.DB_LinksToken, username
 		return 脚本引擎_失败(局_错误)
 	}
 	局_结果数组 := make([]脚本引擎_批量用户结果, 0, len(usernames))
-	局_用户服务 := service.NewUser(局_上下文, global.GVA_DB)
-	局_软件用户服务 := service.NewAppUser(局_上下文, global.GVA_DB, 局_应用信息.AppId)
+	db := *global.GVA_DB
+	局_用户服务 := service.NewUser(局_上下文, &db)
+	局_软件用户服务 := service.NewAppUser(局_上下文, &db, 局_应用信息.AppId)
 	for _, 局_用户名 := range usernames {
 		局_用户信息, 局_详情错误 := 局_用户服务.InfoName(局_用户名)
 		if 局_详情错误 != nil {
@@ -143,7 +146,8 @@ func 脚本引擎_取账号模式应用(c *gin.Context, appID int) (dbm.DB_AppIn
 	if appID <= 10000 {
 		return dbm.DB_AppInfo{}, errors.New("AppId必须大于10000")
 	}
-	局_应用信息, 局_错误 := service.NewAppInfo(c, global.GVA_DB).Info(appID)
+	db := *global.GVA_DB
+	局_应用信息, 局_错误 := service.NewAppInfo(c, &db).Info(appID)
 	if 局_错误 != nil {
 		return dbm.DB_AppInfo{}, errors.New("无该应用信息")
 	}

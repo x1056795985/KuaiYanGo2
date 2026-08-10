@@ -12,7 +12,7 @@ import (
 	"server/app/logic/common/log"
 	"server/app/logic/common/user"
 	"server/app/models/constant"
-	"server/app/models/db"
+	dbm "server/app/models/db"
 	"server/app/models/old/response"
 	"server/app/service"
 	utils2 "server/app/utils"
@@ -21,7 +21,7 @@ import (
 )
 
 type Agent用户详情 struct {
-	db.DB_User
+	dbm.DB_User
 	LoginAppName string `json:"loginAppName"`
 	Role         int    `json:"role"`
 	UPAgentUser  string `json:"upAgentUser"`
@@ -85,7 +85,7 @@ func (C *AgentUser) GetAgentUserInfo(c *gin.Context) {
 	}
 
 	var 局_用户详情 Agent用户详情
-	if err := global.GVA_DB.Model(db.DB_User{}).
+	if err := global.GVA_DB.Model(dbm.DB_User{}).
 		Omit("Note", "PassWord", "SuperPassWord").
 		Where("id = ?", 请求.Id).
 		Find(&局_用户详情).Error; err != nil {
@@ -104,7 +104,7 @@ func (C *AgentUser) GetAgentUserList(c *gin.Context) {
 	}
 
 	局_所有子级代理ID := agent.L_agent.Q取下级代理数组含子级(c, []int{c.GetInt("Uid")})
-	局_DB := global.GVA_DB.Model(db.DB_User{}).Where("UPAgentId != 0").Where("Id IN ?", 局_所有子级代理ID)
+	局_DB := global.GVA_DB.Model(dbm.DB_User{}).Where("UPAgentId != 0").Where("Id IN ?", 局_所有子级代理ID)
 
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
@@ -149,7 +149,7 @@ func (C *AgentUser) GetAgentUserList(c *gin.Context) {
 }
 
 func (C *AgentUser) New代理信息(c *gin.Context) {
-	var 请求 db.DB_User
+	var 请求 dbm.DB_User
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -173,7 +173,8 @@ func (C *AgentUser) New代理信息(c *gin.Context) {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
 	}
-	局_下级代理分成 := service.NewUser(c, global.GVA_DB).Id取下级代理分成最高(请求.Id)
+	db := *global.GVA_DB
+	局_下级代理分成 := service.NewUser(c, &db).Id取下级代理分成最高(请求.Id)
 	if 局_下级代理分成 > 请求.AgentDiscount {
 		response.FailWithMessage("该代理的下级代理已设置分成百分比为"+strconv.Itoa(局_下级代理分成)+"%,故不能设置低于该值,请联系协商", c)
 		return
@@ -197,7 +198,7 @@ func (C *AgentUser) New代理信息(c *gin.Context) {
 }
 
 func (C *AgentUser) Save代理信息(c *gin.Context) {
-	var 请求 db.DB_User
+	var 请求 dbm.DB_User
 	if !C.ToJSON(c, &请求) {
 		return
 	}
@@ -224,7 +225,8 @@ func (C *AgentUser) Save代理信息(c *gin.Context) {
 		return
 	}
 
-	局_用户详情, ok := service.NewUser(c, global.GVA_DB).Id取详情(请求.Id)
+	db := *global.GVA_DB
+	局_用户详情, ok := service.NewUser(c, &db).Id取详情(请求.Id)
 	if !ok {
 		response.FailWithMessage("用户不存在", c)
 		return
@@ -239,7 +241,7 @@ func (C *AgentUser) Save代理信息(c *gin.Context) {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
 	}
-	局_下级代理分成 := service.NewUser(c, global.GVA_DB).Id取下级代理分成最高(请求.Id)
+	局_下级代理分成 := service.NewUser(c, &db).Id取下级代理分成最高(请求.Id)
 	if 局_下级代理分成 > 请求.AgentDiscount {
 		response.FailWithMessage("该代理的下级代理已设置分成百分比为"+strconv.Itoa(局_下级代理分成)+"%,故不能设置低于该值,请联系协商", c)
 		return
@@ -261,7 +263,7 @@ func (C *AgentUser) Save代理信息(c *gin.Context) {
 		局_更新字段["SuperPassWord"] = utils2.BcryptHash(请求.SuperPassWord)
 	}
 
-	局_DB := global.GVA_DB.Model(db.DB_User{}).Where("Id= ?", 请求.Id).Updates(&局_更新字段)
+	局_DB := global.GVA_DB.Model(dbm.DB_User{}).Where("Id= ?", 请求.Id).Updates(&局_更新字段)
 	if 局_DB.Error != nil {
 		response.FailWithMessage("保存失败", c)
 		return
@@ -287,18 +289,19 @@ func (C *AgentUser) Set修改状态(c *gin.Context) {
 		return
 	}
 
-	if err := global.GVA_DB.Model(db.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 请求.Status).Error; err != nil {
+	if err := global.GVA_DB.Model(dbm.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 请求.Status).Error; err != nil {
 		response.FailWithMessage("修改失败", c)
 		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return
 	}
 
 	if 请求.Status == 2 {
+		db := *global.GVA_DB
 		局_User数组 := make([]string, 0, len(请求.Id))
 		for _, 局_Id := range 请求.Id {
-			局_User数组 = append(局_User数组, service.NewUser(c, global.GVA_DB).Id取User(局_Id))
+			局_User数组 = append(局_User数组, service.NewUser(c, &db).Id取User(局_Id))
 		}
-		_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销User数组(局_User数组, constant.Z注销_管理员手动注销)
+		_ = service.NewLinksToken(c, &db).Set批量注销User数组(局_User数组, constant.Z注销_管理员手动注销)
 	}
 
 	response.OkWithMessage("修改成功", c)
@@ -313,7 +316,8 @@ func (C *AgentUser) GetAgentKaClassAuthority(c *gin.Context) {
 	}
 
 	var 局_返回 Agent权限响应
-	局_上级代理ID := service.NewUser(c, global.GVA_DB).Id取上级代理ID(请求.Id)
+	db := *global.GVA_DB
+	局_上级代理ID := service.NewUser(c, &db).Id取上级代理ID(请求.Id)
 	局_返回.KaList = ka.L_ka.Q取全部可制卡类树形框列表(c, 局_上级代理ID)
 	局_返回.FunctionList = agent.L_agent.Q取全部代理功能名称_MAP(c)
 
@@ -342,7 +346,7 @@ func (C *AgentUser) SetAgentKaClassAuthority(c *gin.Context) {
 		response.FailWithMessage("只能操作自己的直属下级代理", c)
 		return
 	}
-	if utils.S数组_整数是否存在(请求.KId, db.D代理功能_发展下级代理) && agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.Id) >= 3 {
+	if utils.S数组_整数是否存在(请求.KId, dbm.D代理功能_发展下级代理) && agentLevel.L_agentLevel.Q取Id代理级别(c, 请求.Id) >= 3 {
 		response.FailWithMessage("该代理不可设置发展下级代理功能权限", c)
 		return
 	}

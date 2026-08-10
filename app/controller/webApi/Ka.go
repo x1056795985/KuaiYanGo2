@@ -68,7 +68,8 @@ func (K *KaWebApi) NewKa(c *gin.Context) {
 		return
 	}
 
-	if !service.NewKaClass(c, global.GVA_DB).KaClassId是否存在(请求.Id) {
+	db := *global.GVA_DB
+	if !service.NewKaClass(c, &db).KaClassId是否存在(请求.Id) {
 		response.FailWithMessage("卡类id不存在", c)
 		return
 	}
@@ -83,7 +84,7 @@ func (K *KaWebApi) NewKa(c *gin.Context) {
 
 	数组_卡 := make([]dbm.DB_Ka, 请求.Number)
 
-	用户名 := service.NewLinksToken(c, global.GVA_DB).Token取Name(c.Request.Header.Get("Token"))
+	用户名 := service.NewLinksToken(c, &db).Token取Name(c.Request.Header.Get("Token"))
 	err = ka.L_ka.Ka批量创建(c, 数组_卡[:], 请求.Id, -1, 用户名, 请求.AdminNote, "", 0)
 
 	if err != nil {
@@ -104,7 +105,7 @@ func (K *KaWebApi) NewKa(c *gin.Context) {
 
 	response.OkWithDetailed(数组_卡_精简, "制卡成功", c)
 
-	局_文本 := fmt.Sprintf("新制卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", service.NewAppInfo(c, global.GVA_DB).App取AppName(数组_卡[0].AppId), service.NewKaClass(c, global.GVA_DB).Id取Name(数组_卡[0].KaClassId), 请求.Number)
+	局_文本 := fmt.Sprintf("新制卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", service.NewAppInfo(c, &db).App取AppName(数组_卡[0].AppId), service.NewKaClass(c, &db).Id取Name(数组_卡[0].KaClassId), 请求.Number)
 	go log.L_log.Log_写卡号操作日志(用户名, c.ClientIP(), 局_文本, 数组_卡号, 1, 4)
 
 	return

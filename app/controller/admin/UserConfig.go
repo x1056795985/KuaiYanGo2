@@ -67,7 +67,8 @@ func (C *UserConfig) Info(c *gin.Context) {
 	}
 
 	var DB_UserConfig dbm.DB_UserConfig
-	service.NewUserConfig(c, global.GVA_DB).Q取值(请求.AppId, 请求.Uid, 请求.Name)
+	db := *global.GVA_DB
+	service.NewUserConfig(c, &db).Q取值(请求.AppId, 请求.Uid, 请求.Name)
 	err := global.GVA_DB.Model(dbm.DB_UserConfig{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_UserConfig).Error
 	if err != nil {
 		response.FailWithMessage("获取公共变量失败,可能联合主键不存在", c)
@@ -115,7 +116,8 @@ func (C *UserConfig) GetList(c *gin.Context) {
 		return
 	}
 
-	var AppName = service.NewAppInfo(c, global.GVA_DB).App取map列表String(true)
+	db := *global.GVA_DB
+	var AppName = service.NewAppInfo(c, &db).App取map列表String(true)
 	AppName["50"] = "代理云配置"
 
 	var AdminIdNameMap = make(map[int]string)
@@ -123,7 +125,7 @@ func (C *UserConfig) GetList(c *gin.Context) {
 		DB_PublicData[索引].AppName = AppName[strconv.Itoa(DB_PublicData[索引].AppId)]
 		if DB_PublicData[索引].AppId == 1 {
 			if AdminIdNameMap[DB_PublicData[索引].Uid] == "" {
-				AdminIdNameMap[DB_PublicData[索引].Uid] = service.NewAdmin(c, global.GVA_DB).Id取User(DB_PublicData[索引].Uid)
+				AdminIdNameMap[DB_PublicData[索引].Uid] = service.NewAdmin(c, &db).Id取User(DB_PublicData[索引].Uid)
 			}
 			DB_PublicData[索引].User = AdminIdNameMap[DB_PublicData[索引].Uid]
 			DB_PublicData[索引].Uid = -DB_PublicData[索引].Uid
@@ -168,20 +170,21 @@ func (C *UserConfig) New(c *gin.Context) {
 		response.FailWithMessage("AppId错误", c)
 		return
 	}
-	if !service.NewAppUser(c, global.GVA_DB, 请求.AppId).Uid是否存在(请求.AppId, 请求.Uid) {
+	db := *global.GVA_DB
+	if !service.NewAppUser(c, &db, 请求.AppId).Uid是否存在(请求.AppId, 请求.Uid) {
 		response.FailWithMessage("软件用户不存在", c)
 		return
 	}
-	if service.NewUserConfig(c, global.GVA_DB).Name是否存在(请求.AppId, 请求.Uid, 请求.Name) {
+	if service.NewUserConfig(c, &db).Name是否存在(请求.AppId, 请求.Uid, 请求.Name) {
 		response.FailWithMessage("变量名已存在", c)
 		return
 	}
 
 	请求.Time = time.Now().Unix()
 	请求.UpdateTime = time.Now().Unix()
-	请求.User = service.NewAppUser(c, global.GVA_DB, 请求.AppId).Uid取User(请求.AppId, 请求.Uid)
+	请求.User = service.NewAppUser(c, &db, 请求.AppId).Uid取User(请求.AppId, 请求.Uid)
 
-	err := service.NewUserConfig(c, global.GVA_DB).C创建(请求)
+	err := service.NewUserConfig(c, &db).C创建(请求)
 	if err != nil {
 		response.FailWithMessage("添加失败", c)
 		return
@@ -203,12 +206,13 @@ func (C *UserConfig) SetUserConfig(c *gin.Context) {
 		response.FailWithMessage("变量名不能为空", c)
 		return
 	}
-	if !service.NewUserConfig(c, global.GVA_DB).Name是否存在(请求.AppId, 请求.Uid, 请求.Name) {
+	db := *global.GVA_DB
+	if !service.NewUserConfig(c, &db).Name是否存在(请求.AppId, 请求.Uid, 请求.Name) {
 		response.FailWithMessage("配置不存在", c)
 		return
 	}
 
-	err := service.NewUserConfig(c, global.GVA_DB).Z置值(请求.AppId, 请求.Uid, 请求.Name, 请求.Value)
+	err := service.NewUserConfig(c, &db).Z置值(请求.AppId, 请求.Uid, 请求.Name, 请求.Value)
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
 		return

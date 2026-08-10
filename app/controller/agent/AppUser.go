@@ -234,7 +234,7 @@ func (C *AppUser) GetList(c *gin.Context) {
 		global.GVA_LOG.Println("GetAppUserList:" + err.Error())
 		return
 	}
-	UserClass := service.NewUserClass(c, global.GVA_DB).UserClass取map列表Int(请求.AppId)
+	UserClass := service.NewUserClass(c, &tx).UserClass取map列表Int(请求.AppId)
 
 	response.OkWithDetailed(结构响应_GetAppUserList{
 		GetList:   GetList{DB_AppUser, 总数},
@@ -435,7 +435,7 @@ func (C *AppUser) New用户信息(c *gin.Context) {
 	response.OkWithMessage("添加成功", c)
 
 	if 局_信息.VipNumber != 0 {
-		go log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, global.GVA_DB, 请求.AppId).Uid取User(请求.AppId, 请求.Uid), c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带积分:%v", c.GetInt("Uid"), 局_信息.VipNumber), 局_信息.VipNumber, 请求.AppId, 1)
+		go log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, &tx, 请求.AppId).Uid取User(请求.AppId, 请求.Uid), c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带积分:%v", c.GetInt("Uid"), 局_信息.VipNumber), 局_信息.VipNumber, 请求.AppId, 1)
 	}
 	return
 }
@@ -523,7 +523,7 @@ func (C *AppUser) Set批量维护_增减时间点数(c *gin.Context) {
 	response.OkWithMessage("修改成功", c)
 
 	for _, 局_id := range 请求.Id {
-		log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+service.NewAdmin(c, global.GVA_DB).Id取User(c.GetInt("Uid"))+"批量增减点数", float64(请求.Status), 请求.AppId, S三元(service.NewAppInfo(c, global.GVA_DB).App是否为计点(请求.AppId), 2, 3))
+		log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, &tx, 请求.AppId).Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+service.NewAdmin(c, &tx).Id取User(c.GetInt("Uid"))+"批量增减点数", float64(请求.Status), 请求.AppId, S三元(service.NewAppInfo(c, &tx).App是否为计点(请求.AppId), 2, 3))
 	}
 	return
 }

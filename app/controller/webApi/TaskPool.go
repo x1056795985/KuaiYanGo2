@@ -36,6 +36,7 @@ func (T *TaskPoolWebApi) Y用户数据信息还原(c *gin.Context, AppInfo *dbm.
 
 // R任务池_任务处理获取 获取待处理任务
 func (T *TaskPoolWebApi) TaskPoolGetTask(c *gin.Context) {
+	db := *global.GVA_DB
 	var AppInfo dbm.DB_AppInfo
 	var 局_在线信息 dbm.DB_LinksToken
 	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
@@ -54,7 +55,7 @@ func (T *TaskPoolWebApi) TaskPoolGetTask(c *gin.Context) {
 	局_任务UUID := taskPool.L_taskPool.Task队列弹出任务(c, 局_可获取任务类型ID, 局_最大数量, 局_在线信息.LoginAppid, 局_在线信息.Uid)
 	var 局_已获取任务数据 []dbm.TaskPool_数据_精简
 	if len(局_任务UUID) > 0 {
-		局_已获取任务数据 = service.NewTaskPoolData(c, global.GVA_DB).Task数据读取_数组(局_任务UUID)
+		局_已获取任务数据 = service.NewTaskPoolData(c, &db).Task数据读取_数组(局_任务UUID)
 	} else {
 		response.OkWithDetailed([]gin.H{}, "获取成功", c)
 		return
@@ -65,6 +66,7 @@ func (T *TaskPoolWebApi) TaskPoolGetTask(c *gin.Context) {
 
 // R任务池_任务处理返回 返回任务处理结果
 func (T *TaskPoolWebApi) TaskPoolSetTask(c *gin.Context) {
+	db := *global.GVA_DB
 	var AppInfo dbm.DB_AppInfo
 	var 局_在线信息 dbm.DB_LinksToken
 	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
@@ -75,9 +77,9 @@ func (T *TaskPoolWebApi) TaskPoolSetTask(c *gin.Context) {
 		response.FailWithMessage("UUid错误", c)
 		return
 	}
-	局_Tid := service.NewTaskPoolData(c, global.GVA_DB).Task数据读取Tid(局_uuid)
+	局_Tid := service.NewTaskPoolData(c, &db).Task数据读取Tid(局_uuid)
 
-	局_任务类型, err := service.NewTaskPoolType(c, global.GVA_DB).Task类型读取(局_Tid)
+	局_任务类型, err := service.NewTaskPoolType(c, &db).Task类型读取(局_Tid)
 	if err != nil {
 		response.FailWithMessage("该UUID的任务类型Id不存在", c)
 		return
@@ -98,7 +100,7 @@ func (T *TaskPoolWebApi) TaskPoolSetTask(c *gin.Context) {
 		}
 	}
 
-	err = service.NewTaskPoolData(c, global.GVA_DB).Task数据修改(局_uuid, 局_任务状态, 局_任务数据)
+	err = service.NewTaskPoolData(c, &db).Task数据修改(局_uuid, 局_任务状态, 局_任务数据)
 	if err != nil {
 		response.FailWithMessage("任务数据写入数据库失败", c)
 		return
@@ -133,7 +135,8 @@ func (T *TaskPoolWebApi) TaskPoolNewData(c *gin.Context) {
 	var 局_在线信息 dbm.DB_LinksToken
 	T.Y用户数据信息还原(c, &AppInfo, &局_在线信息)
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
-	局_任务类型, err := service.NewTaskPoolType(c, global.GVA_DB).Task类型读取(请求json.GetInt("TaskTypeId"))
+	db := *global.GVA_DB
+	局_任务类型, err := service.NewTaskPoolType(c, &db).Task类型读取(请求json.GetInt("TaskTypeId"))
 	if err != nil {
 		response.FailWithMessage("任务类型Id不存在", c)
 		return
@@ -174,13 +177,14 @@ func (T *TaskPoolWebApi) TaskPoolNewData(c *gin.Context) {
 
 // R任务池_任务查询 查询任务数据
 func (T *TaskPoolWebApi) TaskPoolGetData(c *gin.Context) {
+	db := *global.GVA_DB
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
 	局_uuid := string(请求json.GetStringBytes("TaskUuid"))
 	if len(局_uuid) != 36 {
 		response.FailWithMessage("任务Uuid错误", c)
 		return
 	}
-	局_任务数据, err := service.NewTaskPoolData(c, global.GVA_DB).Task数据读取_单条(局_uuid)
+	局_任务数据, err := service.NewTaskPoolData(c, &db).Task数据读取_单条(局_uuid)
 	if err != nil {
 		response.FailWithMessage("任务Uuid错误", c)
 		return

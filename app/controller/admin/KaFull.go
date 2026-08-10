@@ -141,9 +141,10 @@ func (C *KaFull) GetList(c *gin.Context) {
 		return
 	}
 
-	var AppType int = service.NewAppInfo(c, global.GVA_DB).App取AppType(请求.AppId)
-	UserClass := service.NewUserClass(c, global.GVA_DB).UserClass取map列表Int(请求.AppId)
-	KaClass := service.NewKaClass(c, global.GVA_DB).KaClass取map列表Int(请求.AppId)
+	db := *global.GVA_DB
+	var AppType int = service.NewAppInfo(c, &db).App取AppType(请求.AppId)
+	UserClass := service.NewUserClass(c, &db).UserClass取map列表Int(请求.AppId)
+	KaClass := service.NewKaClass(c, &db).KaClass取map列表Int(请求.AppId)
 
 	response.OkWithDetailed(struct {
 		List      interface{}    `json:"list"`
@@ -166,7 +167,8 @@ func (C *KaFull) New(c *gin.Context) {
 		return
 	}
 
-	局_卡类信息, err := service.NewKaClass(c, global.GVA_DB).KaClass取详细信息(请求.Id)
+	db := *global.GVA_DB
+	局_卡类信息, err := service.NewKaClass(c, &db).KaClass取详细信息(请求.Id)
 	if err != nil {
 		response.FailWithMessage("卡类id不存在", c)
 		return
@@ -181,7 +183,7 @@ func (C *KaFull) New(c *gin.Context) {
 	}
 
 	数组_卡 := make([]dbm.DB_Ka, 请求.Number)
-	用户名 := service.NewLinksToken(c, global.GVA_DB).Token取Name(c.Request.Header.Get("Token"))
+	用户名 := service.NewLinksToken(c, &db).Token取Name(c.Request.Header.Get("Token"))
 	err = ka.L_ka.Ka批量创建(c, 数组_卡[:], 请求.Id, -c.GetInt("Uid"), 用户名, 请求.AdminNote, "", 0)
 	if err != nil {
 		response.FailWithMessage("制卡失败:"+err.Error(), c)
@@ -189,7 +191,7 @@ func (C *KaFull) New(c *gin.Context) {
 	}
 
 	局_用户类型名称 := ""
-	局_用户类型, ok := service.NewUserClass(c, global.GVA_DB).Id取详情(局_卡类信息.AppId, 局_卡类信息.UserClassId)
+	局_用户类型, ok := service.NewUserClass(c, &db).Id取详情(局_卡类信息.AppId, 局_卡类信息.UserClassId)
 	if ok {
 		局_用户类型名称 = 局_用户类型.Name
 	}
@@ -211,7 +213,7 @@ func (C *KaFull) New(c *gin.Context) {
 	}
 
 	response.OkWithDetailed(数组_卡_精简, "制卡成功", c)
-	局_文本 := fmt.Sprintf("新制卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", service.NewAppInfo(c, global.GVA_DB).App取AppName(数组_卡[0].AppId), service.NewKaClass(c, global.GVA_DB).Id取Name(数组_卡[0].KaClassId), 请求.Number)
+	局_文本 := fmt.Sprintf("新制卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", service.NewAppInfo(c, &db).App取AppName(数组_卡[0].AppId), service.NewKaClass(c, &db).Id取Name(数组_卡[0].KaClassId), 请求.Number)
 	go log.L_log.Log_写卡号操作日志(用户名, c.ClientIP(), 局_文本, 数组_卡号, 1, 4)
 }
 
@@ -227,7 +229,8 @@ func (C *KaFull) BatchKaNameNew(c *gin.Context) {
 		return
 	}
 
-	局_卡类信息, err := service.NewKaClass(c, global.GVA_DB).KaClass取详细信息(请求.Id)
+	db := *global.GVA_DB
+	局_卡类信息, err := service.NewKaClass(c, &db).KaClass取详细信息(请求.Id)
 	if err != nil {
 		response.FailWithMessage("卡类id不存在", c)
 		return
@@ -245,7 +248,7 @@ func (C *KaFull) BatchKaNameNew(c *gin.Context) {
 	for 索引 := range 数组_卡 {
 		数组_卡[索引].Name = 请求.KaName[索引]
 	}
-	用户名 := service.NewLinksToken(c, global.GVA_DB).Token取Name(c.Request.Header.Get("Token"))
+	用户名 := service.NewLinksToken(c, &db).Token取Name(c.Request.Header.Get("Token"))
 	err = ka.L_ka.Ka批量创建(c, 数组_卡[:], 局_卡类信息.Id, -c.GetInt("Uid"), 用户名, 请求.AdminNote, "", 0)
 	if err != nil {
 		response.FailWithMessage("导入失败:"+err.Error(), c)
@@ -253,7 +256,7 @@ func (C *KaFull) BatchKaNameNew(c *gin.Context) {
 	}
 
 	局_用户类型名称 := ""
-	局_用户类型, ok := service.NewUserClass(c, global.GVA_DB).Id取详情(局_卡类信息.AppId, 局_卡类信息.UserClassId)
+	局_用户类型, ok := service.NewUserClass(c, &db).Id取详情(局_卡类信息.AppId, 局_卡类信息.UserClassId)
 	if ok {
 		局_用户类型名称 = 局_用户类型.Name
 	}
@@ -275,7 +278,7 @@ func (C *KaFull) BatchKaNameNew(c *gin.Context) {
 	}
 
 	response.OkWithDetailed(数组_卡_精简, "导入成功", c)
-	局_文本 := fmt.Sprintf("导入卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", service.NewAppInfo(c, global.GVA_DB).App取AppName(数组_卡[0].AppId), service.NewKaClass(c, global.GVA_DB).Id取Name(数组_卡[0].KaClassId), len(数组_卡号))
+	局_文本 := fmt.Sprintf("导入卡号应用:%s,卡类:%s,批次id:{{批次id}}({{卡号索引}}/%d)", service.NewAppInfo(c, &db).App取AppName(数组_卡[0].AppId), service.NewKaClass(c, &db).Id取Name(数组_卡[0].KaClassId), len(数组_卡号))
 	go log.L_log.Log_写卡号操作日志(用户名, c.ClientIP(), 局_文本, 数组_卡号, 1, 4)
 }
 
@@ -292,7 +295,8 @@ func (C *KaFull) SaveInfo(c *gin.Context) {
 	}
 
 	if 请求.Status == 2 {
-		_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid数组([]int{局_旧卡号信息.Id}, 请求.AppId, constant.Z注销_管理员手动注销)
+		db := *global.GVA_DB
+		_ = service.NewLinksToken(c, &db).Set批量注销Uid数组([]int{局_旧卡号信息.Id}, 请求.AppId, constant.Z注销_管理员手动注销)
 	}
 	response.OkWithMessage("保存成功", c)
 }
@@ -336,7 +340,8 @@ func (C *KaFull) SetAdminNote(c *gin.Context) {
 		response.FailWithMessage("Id数组为空", c)
 		return
 	}
-	err := service.NewKa(c, global.GVA_DB).Ka修改管理员备注(请求.Id, 请求.AdminNote)
+	db := *global.GVA_DB
+	err := service.NewKa(c, &db).Ka修改管理员备注(请求.Id, 请求.AdminNote)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return
@@ -352,10 +357,11 @@ func (C *KaFull) GetKaTemplate(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	模板 := service.NewUserConfig(c, global.GVA_DB).Q取值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId))
+	db := *global.GVA_DB
+	模板 := service.NewUserConfig(c, &db).Q取值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId))
 	if 模板 == "" {
 		模板 = "卡号:{Name} "
-		if service.NewAppInfo(c, global.GVA_DB).App是否为计点(请求.AppId) {
+		if service.NewAppInfo(c, &db).App是否为计点(请求.AppId) {
 			模板 += "点数"
 		} else {
 			模板 += "时间"
@@ -374,7 +380,8 @@ func (C *KaFull) SetKaTemplate(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	err := service.NewUserConfig(c, global.GVA_DB).Z置值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId), 请求.KaTemplate)
+	db := *global.GVA_DB
+	err := service.NewUserConfig(c, &db).Z置值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId), 请求.KaTemplate)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return
@@ -438,7 +445,8 @@ func (C *KaFull) DeleteBatch(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	if !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
+	db := *global.GVA_DB
+	if !service.NewAppInfo(c, &db).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId错误", c)
 		return
 	}

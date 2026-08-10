@@ -171,7 +171,8 @@ func (k *KuaiYan) GetUserInfo(c *gin.Context) {
 
 	局_在线计数 := 0
 	if global.X系统信息.D到期时间 < time.Now().Unix() {
-		局_在线计数 = int(service.NewLinksToken(nil, global.GVA_DB).Get取在线总数(true, true))
+		db := *global.GVA_DB
+		局_在线计数 = int(service.NewLinksToken(nil, &db).Get取在线总数(true, true))
 		global.H缓存.Set("在线数量", 局_在线计数, time.Minute*10)
 	}
 

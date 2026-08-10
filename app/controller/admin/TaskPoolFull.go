@@ -93,7 +93,8 @@ func (C *TaskPoolFull) Info(c *gin.Context) {
 		return
 	}
 
-	TaskPool_类型, err := service.NewTaskPoolType(c, global.GVA_DB).Task类型读取(请求.Id)
+	db := *global.GVA_DB
+	TaskPool_类型, err := service.NewTaskPoolType(c, &db).Task类型读取(请求.Id)
 	if err != nil {
 		response.FailWithMessage("读取失败,可能数据不存在Id:"+strconv.Itoa(请求.Id), c)
 		return
@@ -221,7 +222,8 @@ func (C *TaskPoolFull) New(c *gin.Context) {
 		return
 	}
 
-	_, err := service.NewTaskPoolType(c, global.GVA_DB).Create(dbm.TaskPool_类型{Name: 请求.Name, HookSubmitDataStart: 请求.HookSubmitDataStart, HookSubmitDataEnd: 请求.HookSubmitDataEnd, HookReturnDataStart: 请求.HookReturnDataStart, HookReturnDataEnd: 请求.HookReturnDataEnd})
+	db := *global.GVA_DB
+	_, err := service.NewTaskPoolType(c, &db).Create(dbm.TaskPool_类型{Name: 请求.Name, HookSubmitDataStart: 请求.HookSubmitDataStart, HookSubmitDataEnd: 请求.HookSubmitDataEnd, HookReturnDataStart: 请求.HookReturnDataStart, HookReturnDataEnd: 请求.HookReturnDataEnd})
 	if err != nil {
 		response.FailWithMessage("添加失败:"+err.Error(), c)
 		return
@@ -381,9 +383,10 @@ func (C *TaskPoolFull) BatchUuidAddQueue(c *gin.Context) {
 }
 
 func 创建不存在的Hook函数(请求 dbm.TaskPool_类型) {
+	db := *global.GVA_DB
 	var 局数组_函数名 = []string{请求.HookSubmitDataStart, 请求.HookSubmitDataEnd, 请求.HookReturnDataStart, 请求.HookReturnDataEnd}
 	for 索引 := range 局数组_函数名 {
-		if 局数组_函数名[索引] != "" && !service.NewPublicJs(&gin.Context{}, global.GVA_DB).Name是否存在(2, 局数组_函数名[索引]) {
+		if 局数组_函数名[索引] != "" && !service.NewPublicJs(&gin.Context{}, &db).Name是否存在(2, 局数组_函数名[索引]) {
 			var 局_hook函数 = dbm.DB_PublicJs{
 				AppId: 2,
 				Type:  1,

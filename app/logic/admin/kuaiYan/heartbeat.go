@@ -36,15 +36,16 @@ func K快验_心跳() {
 	if 局_错误 != nil {
 		return
 	}
+	db := *global.GVA_DB
 	局_动态标记 := fmt.Sprintf("%s %dH%.2fG %dG %d协程,用户数:%d,卡总数:%d,在线数:%d",
 		utils.S三元(global.Q快验.J集_连接方式 == 0, "直连", "网关"),
 		runtime.NumCPU(),
 		utils.Float64除int64(utils.Int64到Float64(int64(局_设备信息.Ram.TotalMB)), 1024, 2),
 		局_设备信息.Disk.TotalGB,
 		runtime.NumGoroutine(),
-		service.NewUser(nil, global.GVA_DB).Q取总数(),
-		service.NewKa(nil, global.GVA_DB).Q取总数(),
-		service.NewLinksToken(nil, global.GVA_DB).Get取在线总数(true, true),
+		service.NewUser(nil, &db).Q取总数(),
+		service.NewKa(nil, &db).Q取总数(),
+		service.NewLinksToken(nil, &db).Get取在线总数(true, true),
 	)
 	if 局_设备信息.Os.GOOS != "linux" {
 		局_动态标记 += " " + 局_设备信息.Os.GOOS

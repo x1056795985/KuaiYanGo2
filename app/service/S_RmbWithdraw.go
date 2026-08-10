@@ -212,7 +212,8 @@ func (s *S_RmbWithdraw) GetAgentConfig(tx *gorm.DB, uid int) (gin.H, error) {
 }
 
 func (s *S_RmbWithdraw) UploadPayeeQr(uid int, file *multipart.FileHeader) (string, error) {
-	cfg := s.GetConfig(global.GVA_DB)
+	db := *global.GVA_DB
+	cfg := s.GetConfig(&db)
 	return savePayeeQrImage(file, payeeQrPath(uid), cfg.PayeeQrMaxSizeMb)
 }
 
@@ -581,9 +582,10 @@ func (s *S_RmbWithdraw) Delete(tx *gorm.DB, req WithdrawDeleteRequest) (int64, e
 }
 
 func (s *S_RmbWithdraw) CreateVoucherToken(id int, adminId int, adminUser string) (WithdrawVoucherToken, error) {
-	cfg := s.GetConfig(global.GVA_DB)
+	db := *global.GVA_DB
+	cfg := s.GetConfig(&db)
 	var withdraw dbm.DB_RmbWithdraw
-	if err := global.GVA_DB.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", id, WithdrawStatusPaying).First(&withdraw).Error; err != nil {
+	if err := db.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", id, WithdrawStatusPaying).First(&withdraw).Error; err != nil {
 		return WithdrawVoucherToken{}, errors.New("提现单不存在或状态不允许上传凭证")
 	}
 	token := randomToken()

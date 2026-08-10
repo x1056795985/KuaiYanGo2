@@ -215,6 +215,17 @@ import (
     utils2 "server/utils"
 )
 ```
+#  全局变量global.GVA_DB 使用约定
+
+先 db := *global.GVA_DB  然后使用&db 而不是直接使用global.GVA_DB
+```go
+// ✅ 正确
+db := *global.GVA_DB
+局_info, err2 := service.NewUserClass(c, &db).Info(请求.Id)
+
+// ❌ 错误
+service.NewUserClass(c, global.GVA_DB) 
+```
 
 
 

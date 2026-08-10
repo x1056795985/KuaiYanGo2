@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 	"server/app/global"
 	"server/app/logic/common/publicData"
-	"server/app/models/db"
 	dbm "server/app/models/db"
 	"server/app/service"
 	utils2 "server/app/utils"
@@ -43,8 +42,9 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
 		return errors.New("应用类型错误")
 	}
 	var count int64
-	service.NewAppInfo(c, global.GVA_DB)
-	err = global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
+	db := *global.GVA_DB
+	service.NewAppInfo(c, &db)
+	err = db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
 	// 没查到数据
 	if count != 0 {
 		return errors.New("AppId已存在")
@@ -139,8 +139,8 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
 
 		// 创建唯一积分记录表
 		if err = tx.Set("gorm:table_options", "ENGINE=InnoDB").
-			Table(db.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(NewApp.AppId)).
-			AutoMigrate(&db.DB_UniqueNumLog{}); err != nil {
+			Table(dbm.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(NewApp.AppId)).
+			AutoMigrate(&dbm.DB_UniqueNumLog{}); err != nil {
 			return fmt.Errorf("积分记录表创建失败: %w", err)
 		}
 

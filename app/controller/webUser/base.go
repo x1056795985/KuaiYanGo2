@@ -143,11 +143,11 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 		case 3:
 			//卡号模式,制卡人就是归属代理 如果是管理员制造的卡, 就使用代理标志为归属uid
 			err = appUser.L_appUser.New用户信息(c, info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), time.Now().Unix()+info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote)
-			_ = service.NewKa(c, global.GVA_DB).Ka修改已用次数加一([]int{info.Uid})
+			_ = service.NewKa(c, &tx).Ka修改已用次数加一([]int{info.Uid})
 		case 4:
 			//卡号模式,制卡人就是归属代理
 			err = appUser.L_appUser.New用户信息(c, info.appInfo.AppId, info.Uid, "", S三元(info.kaInfo.MaxOnline == 0, 1, info.kaInfo.MaxOnline), info.kaInfo.VipTime, info.kaInfo.VipNumber, info.kaInfo.UserClassId, info.kaInfo.AdminNote)
-			_ = service.NewKa(c, global.GVA_DB).Ka修改已用次数加一([]int{info.Uid})
+			_ = service.NewKa(c, &tx).Ka修改已用次数加一([]int{info.Uid})
 		default:
 			//???应该不会到这里
 			response.FailWithMessage(c, "AppInfo.AppType错误")
@@ -197,7 +197,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	}
 
 	var 局_用户类型 dbm.DB_UserClass
-	局_用户类型, ok = service.NewUserClass(c, global.GVA_DB).Id取详情(请求.AppId, info.appUser.UserClassId)
+	局_用户类型, ok = service.NewUserClass(c, &tx).Id取详情(请求.AppId, info.appUser.UserClassId)
 	if !ok {
 		局_用户类型.Name = "已删待改"
 		局_用户类型.Mark = 0

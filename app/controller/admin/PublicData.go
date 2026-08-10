@@ -118,7 +118,8 @@ func (C *PublicDataCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	var AppName = service.NewAppInfo(c, global.GVA_DB).App取map列表String(false)
+	db := *global.GVA_DB
+	var AppName = service.NewAppInfo(c, &db).App取map列表String(false)
 	AppName["1"] = "全局"
 
 	for 索引 := range DB_PublicData {

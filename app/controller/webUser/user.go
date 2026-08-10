@@ -198,7 +198,7 @@ func (C *User) SmsCodeSetPassWord(c *gin.Context) {
 	if err != nil {
 		response.FailWithMessage(c, "修改失败")
 	} else {
-		_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid(info.user.Id, constant.Z注销_用户改密注销)
+		_ = service.NewLinksToken(c, &tx).Set批量注销Uid(info.user.Id, constant.Z注销_用户改密注销)
 		response.OkWithMessage(c, "修改成功")
 	}
 	return
@@ -212,7 +212,8 @@ func (C *User) Logout(c *gin.Context) {
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 
-	err = service.NewLinksToken(c, global.GVA_DB).Set批量注销([]int{info.likeInfo.Id}, constant.Z注销_用户操作注销)
+	db := *global.GVA_DB
+	err = service.NewLinksToken(c, &db).Set批量注销([]int{info.likeInfo.Id}, constant.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage(c, "注销失败")
 		return

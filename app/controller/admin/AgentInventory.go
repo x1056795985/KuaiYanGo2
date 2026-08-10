@@ -105,6 +105,7 @@ func (C *AgentInventoryCtrl) GetList(c *gin.Context) {
 	}
 
 	var 总数 int64
+	db := *global.GVA_DB
 	局_DB := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{})
 	局_DB2 := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{})
 
@@ -133,7 +134,7 @@ func (C *AgentInventoryCtrl) GetList(c *gin.Context) {
 			局_DB.Where("Id = ?", 请求.Keywords)
 			局_DB2.Where("Id = ?", 请求.Keywords)
 		case 2:
-			局_id := service.NewUser(c, global.GVA_DB).User用户名取id(请求.Keywords)
+			局_id := service.NewUser(c, &db).User用户名取id(请求.Keywords)
 			局_DB.Where("Uid= ? ", 局_id)
 			局_DB2.Where("Uid= ? ", 局_id)
 		case 3:
@@ -161,7 +162,7 @@ func (C *AgentInventoryCtrl) GetList(c *gin.Context) {
 		Offset((请求.Page - 1) * 请求.Size).
 		Find(&数组_库存卡包)
 
-	局_map := service.NewAppInfo(c, global.GVA_DB).AppInfo取map列表Int(true)
+	局_map := service.NewAppInfo(c, &db).AppInfo取map列表Int(true)
 	for 索引 := range 数组_库存卡包 {
 		数组_库存卡包[索引].AppName = 局_map[数组_库存卡包[索引].AppId]
 	}

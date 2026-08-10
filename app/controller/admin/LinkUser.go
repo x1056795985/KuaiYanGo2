@@ -110,11 +110,12 @@ func (C *LinkUserCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	var AppName = service.NewAppInfo(c, global.GVA_DB).AppInfo取map列表Int(true)
+	db := *global.GVA_DB
+	var AppName = service.NewAppInfo(c, &db).AppInfo取map列表Int(true)
 	for 索引 := range DB_LinksToken {
 		DB_LinksToken[索引].AppName = AppName[DB_LinksToken[索引].LoginAppid]
 		if DB_LinksToken[索引].Uid > 0 {
-			DB_LinksToken[索引].Note = service.NewAppUser(c, global.GVA_DB, DB_LinksToken[索引].LoginAppid).Uid取备注(DB_LinksToken[索引].LoginAppid, DB_LinksToken[索引].Uid)
+			DB_LinksToken[索引].Note = service.NewAppUser(c, &db, DB_LinksToken[索引].LoginAppid).Uid取备注(DB_LinksToken[索引].LoginAppid, DB_LinksToken[索引].Uid)
 		}
 	}
 
@@ -132,7 +133,8 @@ func (C *LinkUserCtrl) NewWebApiToken(c *gin.Context) {
 		return
 	}
 
-	在线信息, err := service.NewLinksToken(c, global.GVA_DB).NewWebApiToken(请求.OutTime, 请求.Key, 请求.Tab)
+	db := *global.GVA_DB
+	在线信息, err := service.NewLinksToken(c, &db).NewWebApiToken(请求.OutTime, 请求.Key, 请求.Tab)
 	if err != nil {
 		response.FailWithMessage("创建失败:"+err.Error(), c)
 		return
@@ -150,7 +152,8 @@ func (C *LinkUserCtrl) SetTokenOutTime(c *gin.Context) {
 		response.FailWithMessage("id数量不能为0", c)
 		return
 	}
-	err := service.NewLinksToken(c, global.GVA_DB).Set自动注销超时时间(请求.OutTime, 请求.Id)
+	db := *global.GVA_DB
+	err := service.NewLinksToken(c, &db).Set自动注销超时时间(请求.OutTime, 请求.Id)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -169,7 +172,8 @@ func (C *LinkUserCtrl) Logout(c *gin.Context) {
 		return
 	}
 
-	err := service.NewLinksToken(c, global.GVA_DB).Set批量注销(请求.Id, constant.Z注销_管理员手动注销)
+	db := *global.GVA_DB
+	err := service.NewLinksToken(c, &db).Set批量注销(请求.Id, constant.Z注销_管理员手动注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		global.GVA_LOG.Println("Logout:" + err.Error())

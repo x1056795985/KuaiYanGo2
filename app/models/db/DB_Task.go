@@ -15,7 +15,7 @@ func (TaskPool_队列) TableName() string {
 type DB_TaskPoolData struct {
 	Uuid        string `json:"uuid" gorm:"column:uuid;size:36;primarykey;"`
 	Tid         int    `json:"Tid" gorm:"column:Tid;index:idx_tid_time_status;comment:对应的任务类型Id"`
-	TimeStart   int    `json:"TimeStart" gorm:"column:TimeStart;index:idx_tid_time_status;index;comment:任务创建时间戳"` //时间增加索引,提高统计效率;复合索引(Tid,TimeStart,Status)覆盖索引,统计查询不回表
+	TimeStart   int    `json:"TimeStart" gorm:"column:TimeStart;index:idx_tid_time_status;comment:任务创建时间戳"` //时间增加索引,提高统计效率;复合索引(Tid,TimeStart,Status)覆盖索引,统计查询不回表
 	TimeEnd     int    `json:"TimeEnd" gorm:"column:TimeEnd;comment:任务结束时间戳"`
 	SubmitData  string `json:"SubmitData" gorm:"column:SubmitData;size:16777215; comment:生产提交数据"`
 	ReturnData  string `json:"ReturnData" gorm:"column:ReturnData;size:16777215;comment:消费返回数据"`

@@ -125,7 +125,8 @@ func (a *App) GetInfo(c *gin.Context) {
 	}
 
 	var DB_AppInfo dbm.DB_AppInfo
-	err = global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId = ?", 请求.Id).Find(&DB_AppInfo).Error
+	db := *global.GVA_DB
+	err = db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", 请求.Id).Find(&DB_AppInfo).Error
 
 	if err != nil {
 		response.FailWithMessage("查询APPID:"+strconv.Itoa(请求.Id)+"详细信息失败", c)
@@ -134,7 +135,7 @@ func (a *App) GetInfo(c *gin.Context) {
 
 	response.OkWithDetailed(结构响应_GetAppInfo{
 		AppInfo:   DB_AppInfo,
-		KaClass:   service.NewKaClass(c, global.GVA_DB).KaName取map列表Int(请求.Id),
+		KaClass:   service.NewKaClass(c, &db).KaName取map列表Int(请求.Id),
 		ServerUrl: setting.Q系统设置().X系统地址,
 		Port:      global.GVA_CONFIG.Port,
 	}, "获取成功", c)
@@ -191,8 +192,9 @@ func (a *App) SaveInfo(c *gin.Context) {
 		response.FailWithMessage("AppId错误"+strconv.Itoa(请求.AppData.AppId), c)
 		return
 	}
+	db := *global.GVA_DB
 
-	if service.NewAppInfo(c, global.GVA_DB).App存在数量(请求.AppData.AppId) == 0 {
+	if service.NewAppInfo(c, &db).App存在数量(请求.AppData.AppId) == 0 {
 		response.FailWithMessage("应用不存在", c)
 		return
 	}
@@ -211,7 +213,7 @@ func (a *App) SaveInfo(c *gin.Context) {
 		return
 	}
 
-	局_旧AppInfo := service.NewAppInfo(c, global.GVA_DB).App取App详情(请求.AppData.AppId)
+	局_旧AppInfo := service.NewAppInfo(c, &db).App取App详情(请求.AppData.AppId)
 	err = appInfo.L_appInfo.App修改信息(c, 请求.AppData)
 
 	if err != nil {
@@ -219,7 +221,7 @@ func (a *App) SaveInfo(c *gin.Context) {
 		return
 	}
 	if 局_旧AppInfo.CryptoKeyPrivate != 请求.AppData.CryptoKeyPrivate {
-		log.L_log.Log_写用户消息(log.Log用户消息类型_其他, constant.APPID_管理平台, service.NewAdmin(c, global.GVA_DB).Id取User(1), 请求.AppData.AppName, "", "防误操作应用"+strconv.Itoa(局_旧AppInfo.AppId)+"更换私钥旧私钥:"+局_旧AppInfo.CryptoKeyPrivate, c.ClientIP())
+		log.L_log.Log_写用户消息(log.Log用户消息类型_其他, constant.APPID_管理平台, service.NewAdmin(c, &db).Id取User(1), 请求.AppData.AppName, "", "防误操作应用"+strconv.Itoa(局_旧AppInfo.AppId)+"更换私钥旧私钥:"+局_旧AppInfo.CryptoKeyPrivate, c.ClientIP())
 	}
 
 	tx := *global.GVA_DB
@@ -269,7 +271,7 @@ func (a *App) SaveInfo(c *gin.Context) {
 		if object, err2 := JSON.Object(); err2 == nil {
 			object.Visit(func(key []byte, v *fastjson.Value) {
 				局_hook函数名 := strings.TrimSpace(string(v.GetStringBytes("Before")))
-				if len(局_hook函数名) > 0 && !service.NewPublicJs(c, global.GVA_DB).Name是否存在(service.Js类型_ApiHook函数, 局_hook函数名) {
+				if len(局_hook函数名) > 0 && !service.NewPublicJs(c, &db).Name是否存在(service.Js类型_ApiHook函数, 局_hook函数名) {
 					publicJs.L_publicJs.C创建(c, dbm.DB_PublicJs{
 						AppId: 3, Name: 局_hook函数名,
 						Value: "function " + 局_hook函数名 + Api之前Hook函数模板,
@@ -278,7 +280,7 @@ func (a *App) SaveInfo(c *gin.Context) {
 					})
 				}
 				局_hook函数名 = strings.TrimSpace(string(v.GetStringBytes("After")))
-				if len(局_hook函数名) > 0 && !service.NewPublicJs(c, global.GVA_DB).Name是否存在(service.Js类型_ApiHook函数, 局_hook函数名) {
+				if len(局_hook函数名) > 0 && !service.NewPublicJs(c, &db).Name是否存在(service.Js类型_ApiHook函数, 局_hook函数名) {
 					publicJs.L_publicJs.C创建(c, dbm.DB_PublicJs{
 						AppId: 3, Name: 局_hook函数名,
 						Value: "function " + 局_hook函数名 + Api之后Hook函数模板,
@@ -363,7 +365,8 @@ func (a *App) GetAppIdMax(c *gin.Context) {
 
 // GetAppIdNameList 取AppId和名称列表
 func (a *App) GetAppIdNameList(c *gin.Context) {
-	AppIdName := service.NewAppInfo(c, global.GVA_DB).App取map列表String(false)
+	db_2 := *global.GVA_DB
+	AppIdName := service.NewAppInfo(c, &db_2).App取map列表String(false)
 	var 临时Int int
 	var Name []键值对
 	for Key := range AppIdName {
@@ -413,7 +416,8 @@ func (a *App) GetAllWebApi(c *gin.Context) {
 	for 键名, 键值 := range webApi2.J集_UserAPi路由2 {
 		局_path数组 = append(局_path数组, []string{键名, 键值.Z中文名})
 	}
-	局_PublicJsName := service.NewPublicJs(c, global.GVA_DB).P取全部公共函数名称(1)
+	db_3 := *global.GVA_DB
+	局_PublicJsName := service.NewPublicJs(c, &db_3).P取全部公共函数名称(1)
 	response.OkWithDetailed(gin.H{"api": 局_path数组, "publicJs": 局_PublicJsName}, "获取成功", c)
 	return
 }

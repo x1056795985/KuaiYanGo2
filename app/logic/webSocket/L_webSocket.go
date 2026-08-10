@@ -256,8 +256,9 @@ func (j *webSocket) ProcessTextMessage(ws *websocket.Conn, linkId int, message *
 
 	var 局_PublicJs dbm.DB_PublicJs
 	var c = gin.Context{}
+	db := *global.GVA_DB
 	if W文本_是否为数字(局_json.Api) {
-		局_PublicJs, err = service.NewPublicJs(&c, global.GVA_DB).Q取值2(D到整数(局_json.Api))
+		局_PublicJs, err = service.NewPublicJs(&c, &db).Q取值2(D到整数(局_json.Api))
 	} else {
 		局_PublicJs, err = publicJs.L_publicJs.P取值2(&c, constant.APPID_WebSocket, 局_json.Api)
 	}
@@ -273,7 +274,6 @@ func (j *webSocket) ProcessTextMessage(ws *websocket.Conn, linkId int, message *
 	response.Code = constant.Status_操作失败
 
 	// 检查是否需要登录
-	db := *global.GVA_DB
 	局_在线信息, err = service.NewLinksToken(&c, &db).Info(linkId)
 	if err != nil {
 		return

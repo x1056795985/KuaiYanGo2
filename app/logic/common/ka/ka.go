@@ -87,7 +87,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 		if info.卡类详情.VipNumber != 0 {
 			//日志仅写到上下文内,由实际业务处理是否写入日志和修改备注信息
 			c.Set("logVipNumber", dbm.DB_LogVipNumber{
-				User:  service.NewAppUser(c, global.GVA_DB, info.卡类详情.AppId).Uid取User(info.卡类详情.AppId, info.app用户详情.Uid),
+				User:  service.NewAppUser(c, &db, info.卡类详情.AppId).Uid取User(info.卡类详情.AppId, info.app用户详情.Uid),
 				AppId: info.卡类详情.AppId,
 				Ip:    c.ClientIP(),
 				Type:  1,
@@ -104,7 +104,7 @@ func (j *ka) K卡类直冲_事务(c *gin.Context, 卡类ID, 软件用户Uid int)
 		if info.卡类详情.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
 			if info.app用户详情.UserClassId == info.卡类详情.UserClassId {
 				//分类相同,正常处理时间或点数
-				if service.NewAppInfo(c, global.GVA_DB).App是否为计点(info.卡类详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
+				if service.NewAppInfo(c, &db).App是否为计点(info.卡类详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
 					//如果为计点 或 时间大于现在时间直接加就行了
 					客户expr["VipTime"] = gorm.Expr("VipTime + ?", info.卡类详情.VipTime)
 				} else {
@@ -440,7 +440,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		if info.卡号详情.VipTime != 0 { //只有时间增减不为0的时候设置的用户分类才有效
 			if info.app用户详情.UserClassId == info.卡号详情.UserClassId {
 				//分类相同,正常处理时间或点数
-				if service.NewAppInfo(c, global.GVA_DB).App是否为计点(info.卡号详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
+				if service.NewAppInfo(c, &db).App是否为计点(info.卡号详情.AppId) || info.app用户详情.VipTime > 局_现行时间戳 {
 					//如果为计点 或 时间大于现在时间直接加就行了
 					客户expr["VipTime"] = gorm.Expr("VipTime + ?", info.卡号详情.VipTime)
 				} else {

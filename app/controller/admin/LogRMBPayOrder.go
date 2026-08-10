@@ -226,7 +226,8 @@ func (C *LogRMBPayOrderCtrl) New(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	局_Uid := service.NewUser(c, global.GVA_DB).User用户名取id(请求.User)
+	db := *global.GVA_DB
+	局_Uid := service.NewUser(c, &db).User用户名取id(请求.User)
 	if 请求.User == "" || 局_Uid == 0 {
 		response.FailWithMessage("用户不存在", c)
 		return
@@ -245,7 +246,7 @@ func (C *LogRMBPayOrderCtrl) New(c *gin.Context) {
 	新订单.Type = "管理员手动充值"
 	新订单.Rmb = 请求.RMB
 	新订单.Note = 请求.Note
-	新订单.PayOrder = service.NewRmbPayService(global.GVA_DB).Get获取新订单号()
+	新订单.PayOrder = service.NewRmbPayService(&db).Get获取新订单号()
 	新订单.UidType = 1
 
 	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单).Error
@@ -260,7 +261,7 @@ func (C *LogRMBPayOrderCtrl) New(c *gin.Context) {
 	}
 	log.L_log.Log_写余额日志(新订单.User, c.ClientIP(), fmt.Sprintf("管理员手动创建支付订单:%s|新余额≈%.2f", 新订单.PayOrder, 新余额), 新订单.Rmb)
 
-	if !service.NewRmbPayService(global.GVA_DB).Order更新订单状态(新订单.PayOrder, constant.D订单状态_成功) {
+	if !service.NewRmbPayService(&db).Order更新订单状态(新订单.PayOrder, constant.D订单状态_成功) {
 		response.FailWithMessage("用户充值成功订单状态更新失败", c)
 		return
 	}
@@ -293,7 +294,8 @@ func (C *LogRMBPayOrderCtrl) SetNote(c *gin.Context) {
 		response.FailWithMessage("订单数组为空", c)
 		return
 	}
-	err := service.NewRmbPayService(global.GVA_DB).Order更新订单备注_批量(请求.PayOrder, 请求.Note)
+	db := *global.GVA_DB
+	err := service.NewRmbPayService(&db).Order更新订单备注_批量(请求.PayOrder, 请求.Note)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		global.GVA_LOG.Println("修改失败:" + err.Error())

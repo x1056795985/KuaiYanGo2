@@ -73,7 +73,8 @@ func (C *AgentUserFull) Info(c *gin.Context) {
 	}
 	DB_AgentUser.Role = agentLevel.L_agentLevel.Q取Id代理级别(c, DB_AgentUser.Id)
 	DB_AgentUser.UPAgentUser = agent.L_agent.ID取用户名(c, DB_AgentUser.UPAgentId)
-	DB_AgentUser.LoginAppName = service.NewAppInfo(c, global.GVA_DB).AppId取应用名称(DB_AgentUser.LoginAppid)
+	db := *global.GVA_DB
+	DB_AgentUser.LoginAppName = service.NewAppInfo(c, &db).AppId取应用名称(DB_AgentUser.LoginAppid)
 	response.OkWithDetailed(DB_AgentUser, "获取成功", c)
 }
 
@@ -159,7 +160,8 @@ func (C *AgentUserFull) New(c *gin.Context) {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
 	}
-	局_下级代理分成 := service.NewUser(c, global.GVA_DB).Id取下级代理分成最高(请求.Id)
+	db := *global.GVA_DB
+	局_下级代理分成 := service.NewUser(c, &db).Id取下级代理分成最高(请求.Id)
 	if 局_下级代理分成 > int(请求.AgentDiscount) {
 		response.FailWithMessage("该代理的下级代理已设置分成百分比为"+strconv.Itoa(局_下级代理分成)+"%,故不能设置低于该值,请联系协商", c)
 		return
@@ -203,7 +205,8 @@ func (C *AgentUserFull) Save(c *gin.Context) {
 		response.FailWithMessage("超级密码"+msg, c)
 		return
 	}
-	用户详情, ok := service.NewUser(c, global.GVA_DB).Id取详情(请求.Id)
+	db_2 := *global.GVA_DB
+	用户详情, ok := service.NewUser(c, &db_2).Id取详情(请求.Id)
 	if !ok {
 		response.FailWithMessage("用户不存在", c)
 		return
@@ -225,7 +228,7 @@ func (C *AgentUserFull) Save(c *gin.Context) {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
 	}
-	局_下级代理分成 := service.NewUser(c, global.GVA_DB).Id取下级代理分成最高(请求.Id)
+	局_下级代理分成 := service.NewUser(c, &db_2).Id取下级代理分成最高(请求.Id)
 	if 局_下级代理分成 > int(请求.AgentDiscount) {
 		response.FailWithMessage("该代理的下级代理已设置分成百分比为"+strconv.Itoa(局_下级代理分成)+"%,故不能设置低于该值,请联系协商", c)
 		return
@@ -326,7 +329,8 @@ func (C *AgentUserFull) GetAgentKaClassAuthority(c *gin.Context) {
 		return
 	}
 	var 局_返回 代理可制卡类授权
-	局_上级代理ID := service.NewUser(c, global.GVA_DB).Id取上级代理ID(请求.Id)
+	db_3 := *global.GVA_DB
+	局_上级代理ID := service.NewUser(c, &db_3).Id取上级代理ID(请求.Id)
 	局_返回.KaList = ka.L_ka.Q取全部可制卡类树形框列表(c, 局_上级代理ID)
 	局_返回.FunctionList = agent.L_agent.Q取全部代理功能名称_MAP(c)
 	var 局_可用代理功能ID数组 []int
@@ -359,7 +363,8 @@ func (C *AgentUserFull) SetAgentKaClassAuthority(c *gin.Context) {
 	}
 	var 局_已有卡类 []int
 	global.GVA_DB.Model(dbm.DB_KaClass{}).Select("Id").Where("Id IN ?", 请求.KId).Find(&局_已有卡类)
-	局_上级代理ID := service.NewUser(c, global.GVA_DB).Id取上级代理ID(请求.Id)
+	db_4 := *global.GVA_DB
+	局_上级代理ID := service.NewUser(c, &db_4).Id取上级代理ID(请求.Id)
 	var 局_可用功能列表 []int
 	if 局_上级代理ID < 0 {
 		局_可用功能列表 = agent.L_agent.Q取全部代理功能ID_int数组(c)

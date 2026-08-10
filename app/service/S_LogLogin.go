@@ -107,7 +107,8 @@ func (s *S_LogLogin) GetAppNameMap(dataList []db.DB_LogLogin) map[string]string 
 		Name string
 	}
 	var apps []AppName
-	global.GVA_DB.Table("db_App_Info").Select("Id, Name").Find(&apps)
+	db := *global.GVA_DB
+	db.Table("db_App_Info").Select("Id, Name").Find(&apps)
 	for 索引 := range dataList {
 		for _, app := range apps {
 			if dataList[索引].LoginType == app.Id {

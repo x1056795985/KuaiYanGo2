@@ -177,7 +177,8 @@ func (j *ka) Ka修改状态_同步卡号模式软件用户(c *gin.Context, id []
 				}
 			}
 			if status == 2 {
-				_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid数组(局_map[AppId], AppId, constant.Z注销_管理员手动注销)
+				db := *global.GVA_DB
+				_ = service.NewLinksToken(c, &db).Set批量注销Uid数组(局_map[AppId], AppId, constant.Z注销_管理员手动注销)
 			}
 		}
 		return nil

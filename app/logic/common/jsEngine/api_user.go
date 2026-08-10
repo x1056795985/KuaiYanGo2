@@ -19,7 +19,8 @@ import (
 
 func 脚本引擎_用户Id取详情(online dbm.DB_LinksToken) dbm.DB_User {
 	局_上下文 := 脚本引擎_后台上下文()
-	局_用户服务 := service.NewUser(局_上下文, global.GVA_DB)
+	db := *global.GVA_DB
+	局_用户服务 := service.NewUser(局_上下文, &db)
 	if online.Uid == 0 {
 		online.Uid = 局_用户服务.User用户名取id(online.User)
 	}
@@ -29,7 +30,8 @@ func 脚本引擎_用户Id取详情(online dbm.DB_LinksToken) dbm.DB_User {
 
 func 脚本引擎_卡号Id取详情(online dbm.DB_LinksToken) dbm.DB_Ka {
 	局_上下文 := 脚本引擎_后台上下文()
-	局_卡号服务 := service.NewKa(局_上下文, global.GVA_DB)
+	db := *global.GVA_DB
+	局_卡号服务 := service.NewKa(局_上下文, &db)
 	if online.Uid == 0 {
 		online.Uid = 局_卡号服务.Ka卡号取id(online.LoginAppid, online.User)
 	}
@@ -39,7 +41,8 @@ func 脚本引擎_卡号Id取详情(online dbm.DB_LinksToken) dbm.DB_Ka {
 
 func 脚本引擎_取软件用户详情(online dbm.DB_LinksToken) dbm.DB_AppUser {
 	局_上下文 := 脚本引擎_后台上下文()
-	局_软件用户服务 := service.NewAppUser(局_上下文, global.GVA_DB, online.LoginAppid)
+	db := *global.GVA_DB
+	局_软件用户服务 := service.NewAppUser(局_上下文, &db, online.LoginAppid)
 	if online.Uid == 0 {
 		局_Id := 局_软件用户服务.User或卡号取Id(online.LoginAppid, online.User)
 		局_软件用户信息, _ := 局_软件用户服务.Id取详情(online.LoginAppid, 局_Id)
@@ -51,7 +54,8 @@ func 脚本引擎_取软件用户详情(online dbm.DB_LinksToken) dbm.DB_AppUser
 
 func 脚本引擎_在线注销(online dbm.DB_LinksToken) 脚本引擎_Api结果 {
 	局_上下文 := 脚本引擎_后台上下文()
-	局_在线服务 := service.NewLinksToken(局_上下文, global.GVA_DB)
+	db := *global.GVA_DB
+	局_在线服务 := service.NewLinksToken(局_上下文, &db)
 	局_条件 := make(map[string]any, 1)
 	switch {
 	case online.Id != 0:
@@ -84,8 +88,9 @@ func 脚本引擎_在线注销(online dbm.DB_LinksToken) 脚本引擎_Api结果 
 
 func 脚本引擎_用户Id增减余额(online dbm.DB_LinksToken, amount float64, reason string) 脚本引擎_Api结果 {
 	局_上下文 := 脚本引擎_后台上下文()
+	db := *global.GVA_DB
 	if online.Uid == 0 {
-		online.Uid = service.NewUser(局_上下文, global.GVA_DB).User用户名取id(online.User)
+		online.Uid = service.NewUser(局_上下文, &db).User用户名取id(online.User)
 	}
 	局_新余额, 局_错误 := user.L_user.Id余额增减(局_上下文, online.Uid, math.Abs(amount), amount >= 0)
 	if 局_错误 != nil {
@@ -97,7 +102,8 @@ func 脚本引擎_用户Id增减余额(online dbm.DB_LinksToken, amount float64,
 
 func 脚本引擎_用户Id增减积分(online dbm.DB_LinksToken, amount float64, reason string) 脚本引擎_Api结果 {
 	局_上下文 := 脚本引擎_后台上下文()
-	局_软件用户服务 := service.NewAppUser(局_上下文, global.GVA_DB, online.LoginAppid)
+	db := *global.GVA_DB
+	局_软件用户服务 := service.NewAppUser(局_上下文, &db, online.LoginAppid)
 	局_Id := 局_软件用户服务.Uid取Id(online.LoginAppid, online.Uid)
 	if online.Uid == 0 {
 		局_Id = 局_软件用户服务.User或卡号取Id(online.LoginAppid, online.User)
@@ -111,7 +117,8 @@ func 脚本引擎_用户Id增减积分(online dbm.DB_LinksToken, amount float64,
 
 func 脚本引擎_用户Id增减时间点数(appID int, online dbm.DB_LinksToken, amount int, reason string) 脚本引擎_Api结果 {
 	局_上下文 := 脚本引擎_后台上下文()
-	局_软件用户服务 := service.NewAppUser(局_上下文, global.GVA_DB, appID)
+	db := *global.GVA_DB
+	局_软件用户服务 := service.NewAppUser(局_上下文, &db, appID)
 	局_Id := 局_软件用户服务.User或卡号取Id(appID, online.User)
 	if 局_Id == 0 {
 		局_Id = 局_软件用户服务.Uid取Id(appID, online.Uid)
@@ -124,7 +131,7 @@ func 脚本引擎_用户Id增减时间点数(appID int, online dbm.DB_LinksToken
 		return 脚本引擎_失败(局_错误)
 	}
 	局_日志类型 := 3
-	if service.NewAppInfo(局_上下文, global.GVA_DB).App是否为计点(appID) {
+	if service.NewAppInfo(局_上下文, &db).App是否为计点(appID) {
 		局_日志类型 = 2
 	}
 	go log.L_log.Log_写积分点数时间日志(online.User, online.Ip, reason, float64(amount), appID, 局_日志类型)
@@ -149,19 +156,22 @@ func 脚本引擎_置公共变量(name, value string) bool {
 }
 
 func 脚本引擎_置动态标记(online dbm.DB_LinksToken, tag string) bool {
-	return service.NewLinksToken(脚本引擎_后台上下文(), global.GVA_DB).Set动态标签(online.Id, tag) == nil
+	db := *global.GVA_DB
+	return service.NewLinksToken(脚本引擎_后台上下文(), &db).Set动态标签(online.Id, tag) == nil
 }
 
 func 脚本引擎_用户名或卡号取Uid(appID int, username string) int {
 	局_上下文 := 脚本引擎_后台上下文()
-	if service.NewAppInfo(局_上下文, global.GVA_DB).App是否为卡号(appID) {
-		return service.NewKa(局_上下文, global.GVA_DB).Ka卡号取id(appID, username)
+	db := *global.GVA_DB
+	if service.NewAppInfo(局_上下文, &db).App是否为卡号(appID) {
+		return service.NewKa(局_上下文, &db).Ka卡号取id(appID, username)
 	}
-	return service.NewUser(局_上下文, global.GVA_DB).User用户名取id(username)
+	return service.NewUser(局_上下文, &db).User用户名取id(username)
 }
 
 func 脚本引擎_置黑名单(appID int, item, note string) 脚本引擎_Api结果 {
-	局_错误 := (&service.S_Blacklist{}).Create(global.GVA_DB, dbm.DB_Blacklist{AppId: appID, ItemKey: item, Note: note})
+	db := *global.GVA_DB
+	局_错误 := (&service.S_Blacklist{}).Create(&db, dbm.DB_Blacklist{AppId: appID, ItemKey: item, Note: note})
 	if 局_错误 != nil {
 		return 脚本引擎_失败(局_错误)
 	}
@@ -176,7 +186,8 @@ func 脚本引擎_置用户云配置(online dbm.DB_LinksToken, name, value strin
 		return 脚本引擎_失败消息("登录信息和Uid必须大于0")
 	}
 	局_上下文 := 脚本引擎_后台上下文()
-	局_应用信息, 局_错误 := service.NewAppInfo(局_上下文, global.GVA_DB).Info(online.LoginAppid)
+	db := *global.GVA_DB
+	局_应用信息, 局_错误 := service.NewAppInfo(局_上下文, &db).Info(online.LoginAppid)
 	if 局_错误 != nil {
 		return 脚本引擎_失败(局_错误)
 	}
@@ -205,7 +216,8 @@ func 脚本引擎_置软件用户状态(online dbm.DB_LinksToken, status int) �
 		return 脚本引擎_失败消息("修改失败:Status状态代码错误")
 	}
 	局_上下文 := 脚本引擎_后台上下文()
-	局_软件用户服务 := service.NewAppUser(局_上下文, global.GVA_DB, online.LoginAppid)
+	db := *global.GVA_DB
+	局_软件用户服务 := service.NewAppUser(局_上下文, &db, online.LoginAppid)
 	if online.Uid == 0 {
 		online.Uid = 局_软件用户服务.User或卡号取Uid(online.LoginAppid, online.User)
 	}
@@ -220,7 +232,7 @@ func 脚本引擎_置软件用户状态(online dbm.DB_LinksToken, status int) �
 		return 脚本引擎_失败(局_错误)
 	}
 	if status == 2 {
-		_ = service.NewLinksToken(局_上下文, global.GVA_DB).Set批量注销Uid数组([]int{online.Uid}, online.LoginAppid, constant.Z注销_管理员手动注销)
+		_ = service.NewLinksToken(局_上下文, &db).Set批量注销Uid数组([]int{online.Uid}, online.LoginAppid, constant.Z注销_管理员手动注销)
 	}
 	return 脚本引擎_成功("成功", nil)
 }

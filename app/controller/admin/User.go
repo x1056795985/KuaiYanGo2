@@ -88,7 +88,8 @@ func (C *UserCtrl) GetAdminInfo(c *gin.Context) {
 
 // OutLogin 管理员退出登录
 func (C *UserCtrl) OutLogin(c *gin.Context) {
-	err := service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
+	db := *global.GVA_DB
+	err := service.NewLinksToken(c, &db).Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		return
@@ -206,7 +207,8 @@ func (C *UserCtrl) GetUserList(c *gin.Context) {
 		return
 	}
 
-	var AppName = service.NewAppInfo(c, global.GVA_DB).App取map列表String(true)
+	db := *global.GVA_DB
+	var AppName = service.NewAppInfo(c, &db).App取map列表String(true)
 	for 索引 := range DB_User_简化实例 {
 		DB_User_简化实例[索引].LoginAppName = AppName[DB_User_简化实例[索引].LoginAppid]
 	}
@@ -266,7 +268,8 @@ func (C *UserCtrl) SaveUser(c *gin.Context) {
 		return
 	}
 
-	用户详情, ok := service.NewUser(c, global.GVA_DB).Id取详情(请求.Id)
+	局_db := *global.GVA_DB
+	用户详情, ok := service.NewUser(c, &局_db).Id取详情(请求.Id)
 	if !ok {
 		response.FailWithMessage("用户不存在", c)
 		return
@@ -293,16 +296,16 @@ func (C *UserCtrl) SaveUser(c *gin.Context) {
 		m["SuperPassWord"] = utils2.BcryptHash(请求.SuperPassWord)
 	}
 
-	var db = global.GVA_DB.Model(db.DB_User{}).Where("Id= ?", 请求.Id).Updates(&m)
-	if db.Error != nil {
-		fmt.Printf(db.Error.Error())
+	var 局_DB = global.GVA_DB.Model(db.DB_User{}).Where("Id= ?", 请求.Id).Updates(&m)
+	if 局_DB.Error != nil {
+		fmt.Printf(局_DB.Error.Error())
 		response.FailWithMessage("保存失败", c)
 		return
 	}
 	if 用户详情.Rmb != 请求.Rmb {
 		go log.L_log.Log_写余额日志(用户详情.User, c.ClientIP(), "管理员ID:"+strconv.Itoa(c.GetInt("Uid"))+"编辑用户信息余额变化:"+utils.Float64到文本(用户详情.Rmb, 2)+"=>"+utils.Float64到文本(请求.Rmb, 2), 请求.Rmb-用户详情.Rmb)
 	}
-	response.OkWithMessage("保存成功"+strconv.Itoa(int(db.RowsAffected)), c)
+	response.OkWithMessage("保存成功"+strconv.Itoa(int(局_DB.RowsAffected)), c)
 }
 
 // SetUserStatus 批量修改用户状态
@@ -323,11 +326,12 @@ func (C *UserCtrl) SetUserStatus(c *gin.Context) {
 	var err error
 	if 请求.Status == 2 {
 		err = global.GVA_DB.Model(db.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 2).Error
+		db_局 := *global.GVA_DB
 		局_user数组 := make([]string, 0, len(请求.Id))
 		for _, 值 := range 请求.Id {
-			局_user数组 = append(局_user数组, service.NewUser(c, global.GVA_DB).Id取User(值))
+			局_user数组 = append(局_user数组, service.NewUser(c, &db_局).Id取User(值))
 		}
-		_ = service.NewLinksToken(c, global.GVA_DB).Set批量注销User数组(局_user数组, constant.Z注销_管理员手动注销)
+		_ = service.NewLinksToken(c, &db_局).Set批量注销User数组(局_user数组, constant.Z注销_管理员手动注销)
 	} else {
 		err = global.GVA_DB.Model(db.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 1).Error
 	}
@@ -393,8 +397,9 @@ func (C *UserCtrl) BatchAddRMB(c *gin.Context) {
 	if 请求.RMB < 0 {
 		局_前缀 = "管理员批量减少余额,原因:"
 	}
+	db := *global.GVA_DB
 	for _, 局_id := range 请求.Id {
-		log.L_log.Log_写余额日志(service.NewUser(c, global.GVA_DB).Id取User(局_id), c.ClientIP(), 局_前缀+请求.Note, 请求.RMB)
+		log.L_log.Log_写余额日志(service.NewUser(c, &db).Id取User(局_id), c.ClientIP(), 局_前缀+请求.Note, 请求.RMB)
 	}
 	response.OkWithMessage("修改成功", c)
 }

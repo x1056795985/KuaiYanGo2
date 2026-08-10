@@ -58,7 +58,8 @@ func (C *UserClass) Info(c *gin.Context) {
 		return
 	}
 
-	S := service.NewUserClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewUserClass(c, &db)
 	info, err := S.Info(请求.Id)
 	if err != nil {
 		response.FailWithMessage("查询用户类型信息失败.id可能不存在", c)
@@ -79,7 +80,8 @@ func (C *UserClass) GetList(c *gin.Context) {
 		return
 	}
 
-	S := service.NewUserClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewUserClass(c, &db)
 
 	listReq := request.List{
 		Page:     请求.Page,
@@ -116,7 +118,8 @@ func (C *UserClass) Delete(c *gin.Context) {
 		return
 	}
 
-	S := service.NewUserClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewUserClass(c, &db)
 
 	影响行数, err := S.DeleteByAppIdAndIds(请求.AppId, 请求.Id)
 	if err != nil {
@@ -145,15 +148,15 @@ func (C *UserClass) SaveInfo(c *gin.Context) {
 		response.FailWithMessage("权重最小为1", c)
 		return
 	}
+	db := *global.GVA_DB
+	局_info, err2 := service.NewUserClass(c, &db).Info(请求.Id)
 
-	S := service.NewUserClass(c, global.GVA_DB)
-
-	if !S.IsIdExists(请求.Id) {
+	if err2 != nil || 局_info.Id <= 0 {
 		response.FailWithMessage("用户类型不存在", c)
 		return
 	}
 
-	if S.IsMarkExistsCount(请求.AppId, 请求.Mark, []int{请求.Id}) >= 1 {
+	if service.NewUserClass(c, &db).IsMarkExistsCount(请求.AppId, 请求.Mark, []int{请求.Id}) >= 1 {
 		response.FailWithMessage("整数代号已存在", c)
 		return
 	}
@@ -163,7 +166,7 @@ func (C *UserClass) SaveInfo(c *gin.Context) {
 		"Mark":   请求.Mark,
 		"Weight": 请求.Weight,
 	}
-	_, err := S.Update(请求.Id, data)
+	_, err := service.NewUserClass(c, &db).Update(请求.Id, data)
 	if err != nil {
 		response.FailWithMessage("保存失败", c)
 		return
@@ -191,7 +194,8 @@ func (C *UserClass) New(c *gin.Context) {
 		return
 	}
 
-	S := service.NewUserClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewUserClass(c, &db)
 
 	if S.IsNameExists(请求.AppId, 请求.Name) {
 		response.FailWithMessage("用户类型名称已存在", c)
@@ -221,7 +225,8 @@ func (C *UserClass) GetIdNameList(c *gin.Context) {
 		return
 	}
 
-	S := service.NewUserClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewUserClass(c, &db)
 
 	IdName, err := S.GetIdNameList(请求.AppId)
 	if err != nil {

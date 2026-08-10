@@ -59,7 +59,8 @@ func (C *KaClass) Info(c *gin.Context) {
 		return
 	}
 
-	S := service.NewKaClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewKaClass(c, &db)
 	info, err := S.Info(请求.Id)
 	if err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
@@ -80,7 +81,8 @@ func (C *KaClass) GetList(c *gin.Context) {
 		return
 	}
 
-	S := service.NewKaClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewKaClass(c, &db)
 
 	listReq := request.List{
 		Page:     请求.Page,
@@ -96,8 +98,8 @@ func (C *KaClass) GetList(c *gin.Context) {
 		return
 	}
 
-	AppType := service.NewAppInfo(c, global.GVA_DB).App取AppType(请求.AppId)
-	UserClass := service.NewUserClass(c, global.GVA_DB).UserClass取map列表Int(请求.AppId)
+	AppType := service.NewAppInfo(c, &db).App取AppType(请求.AppId)
+	UserClass := service.NewUserClass(c, &db).UserClass取map列表Int(请求.AppId)
 
 	response.OkWithDetailed(响应_KaClassGetList{dataList, 总数, UserClass, AppType}, "获取成功", c)
 }
@@ -114,7 +116,8 @@ func (C *KaClass) Delete(c *gin.Context) {
 		return
 	}
 
-	S := service.NewKaClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewKaClass(c, &db)
 	影响行数, err := S.Delete(请求.Id)
 	if err != nil {
 		response.FailWithMessage("删除失败", c)
@@ -155,7 +158,8 @@ func (C *KaClass) SaveInfo(c *gin.Context) {
 		return
 	}
 
-	S := service.NewKaClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewKaClass(c, &db)
 	if !S.IsIdExists(请求.Id) {
 		response.FailWithMessage("卡类不存在", c)
 		return
@@ -180,7 +184,7 @@ func (C *KaClass) SaveInfo(c *gin.Context) {
 		"InviteCount":  请求.InviteCount,
 	}
 
-	if service.NewAppInfo(c, global.GVA_DB).App是否为卡号(请求.AppId) {
+	if service.NewAppInfo(c, &db).App是否为卡号(请求.AppId) {
 		data["Num"] = 1 //卡号类型卡只能用一次
 	}
 
@@ -208,7 +212,8 @@ func (C *KaClass) New(c *gin.Context) {
 		response.FailWithMessage("添加用户不能有id值", c)
 		return
 	}
-	if 请求.AppId < 10000 || !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
+	db := *global.GVA_DB
+	if 请求.AppId < 10000 || !service.NewAppInfo(c, &db).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId错误", c)
 		return
 	}
@@ -223,7 +228,7 @@ func (C *KaClass) New(c *gin.Context) {
 		return
 	}
 
-	if !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
+	if !service.NewAppInfo(c, &db).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("AppId不存在,请先去[ 应用管理 => 应用列表 ],添加该应用信息", c)
 		return
 	}
@@ -243,11 +248,11 @@ func (C *KaClass) New(c *gin.Context) {
 		return
 	}
 
-	if service.NewAppInfo(c, global.GVA_DB).App是否为卡号(请求.AppId) {
+	if service.NewAppInfo(c, &db).App是否为卡号(请求.AppId) {
 		请求.Num = 1 //卡号类型卡只能用一次
 	}
 
-	S := service.NewKaClass(c, global.GVA_DB)
+	S := service.NewKaClass(c, &db)
 	_, err := S.Create(&请求)
 	if err != nil {
 		response.FailWithMessage("添加失败", c)
@@ -268,7 +273,8 @@ func (C *KaClass) GetListAll(c *gin.Context) {
 		return
 	}
 
-	S := service.NewKaClass(c, global.GVA_DB)
+	db := *global.GVA_DB
+	S := service.NewKaClass(c, &db)
 	dataList, err := S.GetListAll(请求.AppId)
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)

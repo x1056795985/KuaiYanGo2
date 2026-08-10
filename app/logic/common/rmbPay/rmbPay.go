@@ -111,7 +111,7 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 	tx := *global.GVA_DB
 	var 局_通道数据 m.Request
 
-	参数.S商品名称 = service.NewAppInfo(c, global.GVA_DB).AppId取应用名称(参数.E额外信息.Get("AppId").Int()) + j.Q取提示信息(&参数)
+	参数.S商品名称 = service.NewAppInfo(c, &tx).AppId取应用名称(参数.E额外信息.Get("AppId").Int()) + j.Q取提示信息(&参数)
 
 	if 参数.ReceivedUid > 0 && agent.L_agent.Id功能权限检测(c, 参数.ReceivedUid, dbm.D代理功能_代收款) {
 		var 局代理Info dbm.DB_User
@@ -286,7 +286,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 				return err
 			}
 			if info.卡类详情.VipTime != 0 {
-				局_is计点 := service.NewAppInfo(c, global.GVA_DB).App是否为计点(参数.E额外信息.Get("AppId").Int())
+				局_is计点 := service.NewAppInfo(c, &db).App是否为计点(参数.E额外信息.Get("AppId").Int())
 				info.LogVipNumber = append(info.LogVipNumber, dbm.DB_LogVipNumber{
 					User:  参数.User,
 					AppId: 参数.E额外信息.Get("AppId").Int(),

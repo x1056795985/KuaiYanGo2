@@ -46,7 +46,8 @@ func IsTokenAgent() gin.HandlerFunc {
 		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
 			global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("LastTime", time.Now().Unix())
 		}
-		go service.NewUser(c, global.GVA_DB).Id置最后登录AppId(DB_LinksToken.Uid, 2, c.ClientIP())
+		db := *global.GVA_DB
+		go service.NewUser(c, &db).Id置最后登录AppId(DB_LinksToken.Uid, 2, c.ClientIP())
 		//把 userID 保存到上下文,这样逻辑层就不用再查询了
 		c.Set("Uid", DB_LinksToken.Uid)
 		c.Set("User", DB_LinksToken.User)

@@ -89,7 +89,8 @@ func (C *PublicJsCtrl) GetPublicAppList(c *gin.Context) {
 	var 局_appid []int
 	_ = global.GVA_DB.Model(dbm.DB_PublicJs{}).Select("AppId").Group("AppId").Find(&局_appid).Error
 
-	var AppName = service.NewAppInfo(c, global.GVA_DB).AppInfo取map列表Int(false)
+	db := *global.GVA_DB
+	var AppName = service.NewAppInfo(c, &db).AppInfo取map列表Int(false)
 
 	type name struct {
 		AppId   int    `json:"appId"`
@@ -142,7 +143,8 @@ func (C *PublicJsCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	var AppName = service.NewAppInfo(c, global.GVA_DB).App取map列表String(false)
+	db := *global.GVA_DB
+	var AppName = service.NewAppInfo(c, &db).App取map列表String(false)
 	AppName["1"] = "全局"
 	AppName["2"] = "任务池Hook"
 	AppName["3"] = "ApiHook"
@@ -205,12 +207,13 @@ func (C *PublicJsCtrl) SaveInfo(c *gin.Context) {
 		return
 	}
 
-	var 局_临时Id = service.NewPublicJs(c, global.GVA_DB).Name取Id([]int{service.Js类型_公共函数, service.Js类型_任务池Hook函数}, 请求.Name)
+	db := *global.GVA_DB
+	var 局_临时Id = service.NewPublicJs(c, &db).Name取Id([]int{service.Js类型_公共函数, service.Js类型_任务池Hook函数}, 请求.Name)
 	if 局_临时Id != 0 && 局_临时Id != 请求.Id {
 		response.FailWithMessage("变量名已存在", c)
 		return
 	}
-	if !service.NewPublicJs(c, global.GVA_DB).Id是否存在(请求.Id) {
+	if !service.NewPublicJs(c, &db).Id是否存在(请求.Id) {
 		response.FailWithMessage("变量不存在", c)
 		return
 	}
@@ -246,7 +249,8 @@ func (C *PublicJsCtrl) New(c *gin.Context) {
 		return
 	}
 
-	var 局_临时Id = service.NewPublicJs(c, global.GVA_DB).Name取Id([]int{service.Js类型_公共函数, service.Js类型_任务池Hook函数, service.Js类型_ApiHook函数}, 请求.Name)
+	db := *global.GVA_DB
+	var 局_临时Id = service.NewPublicJs(c, &db).Name取Id([]int{service.Js类型_公共函数, service.Js类型_任务池Hook函数, service.Js类型_ApiHook函数}, 请求.Name)
 	if 局_临时Id != 0 && 局_临时Id != 请求.Id {
 		response.FailWithMessage("公共函数名已存在", c)
 		return
@@ -281,7 +285,8 @@ func (C *PublicJsCtrl) SetVipLimit(c *gin.Context) {
 		return
 	}
 
-	err := service.NewPublicJs(c, global.GVA_DB).P批量修改IsVip(请求.Id, 请求.IsVip)
+	db := *global.GVA_DB
+	err := service.NewPublicJs(c, &db).P批量修改IsVip(请求.Id, 请求.IsVip)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		global.GVA_LOG.Println("修改失败:" + err.Error())
@@ -299,6 +304,8 @@ func (C *PublicJsCtrl) TestExec(c *gin.Context) {
 		return
 	}
 
+	db := *global.GVA_DB
+
 	defer func() {
 		if err2 := recover(); err2 != nil {
 			局_GoJa错误, ok := err2.(*goja.Exception)
@@ -311,7 +318,7 @@ func (C *PublicJsCtrl) TestExec(c *gin.Context) {
 		}
 	}()
 
-	if !service.NewPublicJs(c, global.GVA_DB).Id是否存在(请求.Id) {
+	if !service.NewPublicJs(c, &db).Id是否存在(请求.Id) {
 		response.FailWithMessage("JS公共函数不存在", c)
 		return
 	}
@@ -319,7 +326,7 @@ func (C *PublicJsCtrl) TestExec(c *gin.Context) {
 
 	var 局_PublicJs dbm.DB_PublicJs
 	var err error
-	局_PublicJs, err = service.NewPublicJs(c, global.GVA_DB).Q取值2(请求.Id)
+	局_PublicJs, err = service.NewPublicJs(c, &db).Q取值2(请求.Id)
 	if err != nil {
 		response.FailWithMessage("JS公共函数不存在", c)
 		return

@@ -46,8 +46,8 @@ func S刷新数据库定时任务(主动 bool) error {
 	_, 局_是否存在 := global.H缓存.Get("map集群任务Hash") //如果不存在也刷新
 	if 局_is刷新 || 主动 || !局_是否存在 {
 
-		var S = service.NewCronService(global.GVA_DB)
 		tx := *global.GVA_DB
+		var S = service.NewCronService(&tx)
 		infoArr, err := S.GetAllInfo(&tx, 1)
 		if err != nil {
 			global.GVA_LOG.Println("刷新数据库定时任务失败:" + err.Error())
@@ -60,13 +60,13 @@ func S刷新数据库定时任务(主动 bool) error {
 			c.Cron.Remove(c.Map集群任务列表[键名].EntryID)
 		}
 		//系统自带的
-		infoArr = append(infoArr, db.DB_Cron{Id: -1, Status: 1, IsLog: 2, Type: -1, Name: "在线列表定时注销已过期", Cron: "0 */1 * * * *"})   //每分钟执行一次
-		infoArr = append(infoArr, db.DB_Cron{Id: -2, Status: 1, IsLog: 2, Type: -2, Name: "在线列表定时删除已过期", Cron: "0 */1 * * * *"})   //每分钟执行一次
-		infoArr = append(infoArr, db.DB_Cron{Id: -3, Status: 1, IsLog: 2, Type: -3, Name: "任务池Task数据删除过期", Cron: "0 */1 * * * *"}) //每分钟执行一次
-		infoArr = append(infoArr, db.DB_Cron{Id: -4, Status: 1, IsLog: 2, Type: -4, Name: "定时关闭待支付订单", Cron: "0 */1 * * * *"})     //每分钟执行一次
-		infoArr = append(infoArr, db.DB_Cron{Id: -5, Status: 1, IsLog: 2, Type: -5, Name: "删除已过期唯一积分记录", Cron: "0 0 0 * * ?"})     //每天0点执行一次
-		infoArr = append(infoArr, db.DB_Cron{Id: -6, Status: 1, IsLog: 2, Type: -6, Name: "统计在线应用用户总量", Cron: "0 0 * * * ?"})      //每小时执行一次
-		infoArr = append(infoArr, db.DB_Cron{Id: -7, Status: 1, IsLog: 2, Type: -7, Name: "统计日活月活", Cron: "0 0 0 * * ?"})          //每天0点执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -1, Status: 1, IsLog: 2, Type: -1, Name: "在线列表定时注销已过期", Cron: "10 */5 * * * *"})   //每5分钟执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -2, Status: 1, IsLog: 2, Type: -2, Name: "在线列表定时删除已过期", Cron: "40 */10 * * * *"})  //每10分钟执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -3, Status: 1, IsLog: 2, Type: -3, Name: "任务池Task数据删除过期", Cron: "0 */30 * * * *"}) //每30分钟执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -4, Status: 1, IsLog: 2, Type: -4, Name: "定时关闭待支付订单", Cron: "0 */3 * * * *"})      //每3分钟执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -5, Status: 1, IsLog: 2, Type: -5, Name: "删除已过期唯一积分记录", Cron: "0 0 0 * * ?"})      //每天0点执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -6, Status: 1, IsLog: 2, Type: -6, Name: "统计在线应用用户总量", Cron: "0 0 * * * ?"})       //每小时执行一次
+		infoArr = append(infoArr, db.DB_Cron{Id: -7, Status: 1, IsLog: 2, Type: -7, Name: "统计日活月活", Cron: "0 0 0 * * ?"})           //每天0点执行一次
 
 		hashStr := ""
 		for 索引, _ := range infoArr {
@@ -116,7 +116,8 @@ func T通用任务执行函数2(时间戳 int64, R任务数据 db.DB_Cron) (stri
 		D定时任务_删除已过期的Token(&c)
 		return "", nil
 	case -3: //任务池Task数据删除过期
-		service.NewTaskPoolData(&c, global.GVA_DB).Task数据删除过期()
+		db := *global.GVA_DB
+		service.NewTaskPoolData(&c, &db).Task数据删除过期()
 		return "", nil
 	case -4: //关闭超时订单
 		err = L_pay.G关闭超时订单()

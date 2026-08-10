@@ -69,6 +69,7 @@ func (C *ApkTools) CreateApkAddFNKYTask(c *gin.Context) {
 
 	var 响应任务Uuid string
 	var aaa = make(gin.H, 6)
+	db := *global.GVA_DB
 
 	aaa["Path"] = 请求.Path
 	aaa["FileName"] = 请求.FileName
@@ -76,7 +77,7 @@ func (C *ApkTools) CreateApkAddFNKYTask(c *gin.Context) {
 	aaa["签名方式"] = 请求.Q签名方式
 	aaa["Activity"] = 请求.Activity
 
-	局_Appinfo := service.NewAppInfo(c, global.GVA_DB).App取App详情(请求.AppId)
+	局_Appinfo := service.NewAppInfo(c, &db).App取App详情(请求.AppId)
 	局_系统地址 := setting.Q系统设置().X系统地址
 
 	var appInfo = make(gin.H, 3)
@@ -109,6 +110,7 @@ func (C *ApkTools) GetList(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
+	db := *global.GVA_DB
 	var 局_返回 string
 	var 局_map struct {
 		List  []list_item `json:"list"`  // 列表
@@ -133,7 +135,7 @@ func (C *ApkTools) GetList(c *gin.Context) {
 			Path:        局_任务提交.Get("Path").String(),
 			Q签名方式:       局_任务提交.Get("签名方式").Int(),
 			AppId:       局_任务提交.Get("AppId").Int(),
-			AppName:     service.NewAppInfo(c, global.GVA_DB).AppId取应用名称(局_任务提交.Get("AppId").Int()),
+			AppName:     service.NewAppInfo(c, &db).AppId取应用名称(局_任务提交.Get("AppId").Int()),
 			DownloadUrl: 局_任务结果.Get("Url").String(),
 			Err:         局_任务结果.Get("msg").String(),
 		})

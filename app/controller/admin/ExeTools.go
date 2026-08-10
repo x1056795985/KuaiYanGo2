@@ -98,7 +98,8 @@ func (C *ExeTools) CreateExeAddFNKYTask(c *gin.Context) {
 	aaa["移除重定位信息"] = 请求.J移除重定位信息
 	aaa["移除调试信息"] = 请求.J移除调试信息
 
-	局_Appinfo := service.NewAppInfo(c, global.GVA_DB).App取App详情(请求.AppId)
+	db := *global.GVA_DB
+	局_Appinfo := service.NewAppInfo(c, &db).App取App详情(请求.AppId)
 	局_系统地址 := setting.Q系统设置().X系统地址
 	局_可用版本 := W文本_分割文本(局_Appinfo.AppVer, "\n")
 	var appInfo = make(gin.H, 4)
@@ -151,7 +152,7 @@ func (C *ExeTools) GetList(c *gin.Context) {
 	}
 	局_json := gjson.New(局_返回)
 	局_map.Count = 局_json.Get("Count").Int64()
-
+	db := *global.GVA_DB
 	for i := range 局_json.Len("List") {
 		局_任务提交 := gjson.New(局_json.Get("List." + strconv.Itoa(i) + ".SubmitData").String())
 		局_任务结果 := gjson.New(局_json.Get("List." + strconv.Itoa(i) + ".ReturnData").String())
@@ -164,7 +165,7 @@ func (C *ExeTools) GetList(c *gin.Context) {
 			Path:        局_任务提交.Get("Path").String(),
 			Ui:          局_任务提交.Get("Ui").Int(),
 			AppId:       局_任务提交.Get("AppId").Int(),
-			AppName:     service.NewAppInfo(c, global.GVA_DB).AppId取应用名称(局_任务提交.Get("AppId").Int()),
+			AppName:     service.NewAppInfo(c, &db).AppId取应用名称(局_任务提交.Get("AppId").Int()),
 			DownloadUrl: 局_任务结果.Get("Url").String(),
 			ExeMd5:      局_任务结果.Get("ExeMd5").String(),
 			Err:         局_任务结果.Get("msg").String(),

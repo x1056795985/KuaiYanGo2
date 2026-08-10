@@ -20,6 +20,7 @@ func NewPayWebApiController() *PayWebApi {
 
 // Q取支付订单状态 取支付订单状态
 func (P *PayWebApi) GetPayOrderStatus(c *gin.Context) {
+	db := *global.GVA_DB
 	请求json, _ := fastjson.Parse(c.GetString("局_json明文"))
 	局_订单信息 := string(请求json.GetStringBytes("OrderId"))
 	if 局_订单信息 == "" {
@@ -31,9 +32,9 @@ func (P *PayWebApi) GetPayOrderStatus(c *gin.Context) {
 		return
 	}
 	var 局_订单详细信息 dbm.DB_LogRMBPayOrder
-	局_订单详细信息, ok := service.NewRmbPayService(global.GVA_DB).Order取订单详细(局_订单信息)
+	局_订单详细信息, ok := service.NewRmbPayService(&db).Order取订单详细(局_订单信息)
 	if !ok {
-		局_订单详细信息, ok = service.NewRmbPayService(global.GVA_DB).Order取订单详细_第三方订单(局_订单信息)
+		局_订单详细信息, ok = service.NewRmbPayService(&db).Order取订单详细_第三方订单(局_订单信息)
 	}
 	if 局_订单详细信息.Id == 0 {
 		response.OkWithDetailed([]gin.H{}, "获取成功", c)

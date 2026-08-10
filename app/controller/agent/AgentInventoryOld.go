@@ -70,7 +70,8 @@ func (A *AgentInventoryOld) GetAgentInventoryInfo(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-	if service.NewAgentInventory(c, global.GVA_DB).Id取归属Uid(请求.Id) != c.GetInt("Uid") {
+	db := *global.GVA_DB
+	if service.NewAgentInventory(c, &db).Id取归属Uid(请求.Id) != c.GetInt("Uid") {
 		response.FailWithMessage("只能查看自己的库存详细信息", c)
 		return
 	}
@@ -120,7 +121,8 @@ func (A *AgentInventoryOld) GetAgentInventoryList(c *gin.Context) {
 			局_DB.Where("Id = ?", 请求.Keywords)
 			局_DB2.Where("Id = ?", 请求.Keywords)
 		case 2:
-			局_Id := service.NewUser(c, global.GVA_DB).User用户名取id(请求.Keywords)
+			db := *global.GVA_DB
+			局_Id := service.NewUser(c, &db).User用户名取id(请求.Keywords)
 			局_DB.Where("Uid= ? ", 局_Id)
 			局_DB2.Where("Uid= ? ", 局_Id)
 		case 3:
@@ -153,7 +155,8 @@ func (A *AgentInventoryOld) GetAgentInventoryList(c *gin.Context) {
 		return
 	}
 
-	局_AppMap := service.NewAppInfo(c, global.GVA_DB).AppInfo取map列表Int(true)
+	db := *global.GVA_DB
+	局_AppMap := service.NewAppInfo(c, &db).AppInfo取map列表Int(true)
 	for 局_索引 := range 局_列表 {
 		局_列表[局_索引].AppName = 局_AppMap[局_列表[局_索引].AppId]
 	}
@@ -182,7 +185,8 @@ func (A *AgentInventoryOld) New库存购买(c *gin.Context) {
 	}
 	局_创建用户名 := ""
 	if 请求.Uid < 0 {
-		局_创建用户名 = service.NewAdmin(c, global.GVA_DB).Id取User(请求.Uid)
+		db := *global.GVA_DB
+		局_创建用户名 = service.NewAdmin(c, &db).Id取User(请求.Uid)
 	} else {
 		局_创建用户名 = agent.L_agent.ID取用户名(c, 请求.Uid)
 	}
@@ -208,7 +212,8 @@ func (A *AgentInventoryOld) K库存发送(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
-	if service.NewAgentInventory(c, global.GVA_DB).Id取归属Uid(请求.SourceID) != c.GetInt("Uid") {
+	db := *global.GVA_DB
+	if service.NewAgentInventory(c, &db).Id取归属Uid(请求.SourceID) != c.GetInt("Uid") {
 		response.FailWithMessage("只能将归属自己的库存,发送给别人.", c)
 		return
 	}
@@ -248,7 +253,8 @@ func (A *AgentInventoryOld) K库存修改备注(c *gin.Context) {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
 		return
 	}
-	if err := service.NewAgentInventory(c, global.GVA_DB).K库存修改备注(请求.Id, c.GetInt("Uid"), 请求.Note); err != nil {
+	db := *global.GVA_DB
+	if err := service.NewAgentInventory(c, &db).K库存修改备注(请求.Id, c.GetInt("Uid"), 请求.Note); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
@@ -261,7 +267,8 @@ func (A *AgentInventoryOld) Q可发送库存下级代理(c *gin.Context) {
 		response.FailWithMessage("无直属下级代理", c)
 		return
 	}
-	局_下级代理详情, err := service.NewUser(c, global.GVA_DB).Id取详情_数组(局_下级代理ID数组)
+	db := *global.GVA_DB
+	局_下级代理详情, err := service.NewUser(c, &db).Id取详情_数组(局_下级代理ID数组)
 	if err != nil {
 		response.FailWithMessage("读取失败:"+err.Error(), c)
 		return

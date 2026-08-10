@@ -32,7 +32,8 @@ func (A *AgentOtherFunc) SetAppUserKey(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-	if !service.NewAppInfo(c, global.GVA_DB).AppId是否存在(请求.AppId) {
+	局_DB := *global.GVA_DB
+	if !service.NewAppInfo(c, &局_DB).AppId是否存在(请求.AppId) {
 		response.FailWithMessage("应用不存在", c)
 		return
 	}
@@ -43,13 +44,13 @@ func (A *AgentOtherFunc) SetAppUserKey(c *gin.Context) {
 		return
 	}
 
-	局_AppUserId := service.NewAppUser(c, global.GVA_DB, 请求.AppId).User或卡号取Id(请求.AppId, 请求.User)
+	局_AppUserId := service.NewAppUser(c, &局_DB, 请求.AppId).User或卡号取Id(请求.AppId, 请求.User)
 	if 局_AppUserId == 0 {
 		response.FailWithMessage("用户不存在", c)
 		return
 	}
 
-	局_用户详情, err := service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id取详情(请求.AppId, 局_AppUserId)
+	局_用户详情, err := service.NewAppUser(c, &局_DB, 请求.AppId).Id取详情(请求.AppId, 局_AppUserId)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -59,13 +60,12 @@ func (A *AgentOtherFunc) SetAppUserKey(c *gin.Context) {
 		return
 	}
 
-	if err = service.NewAppUser(c, global.GVA_DB, 请求.AppId).Set绑定信息(请求.AppId, 局_用户详情.Uid, 请求.Key); err != nil {
+	if err = service.NewAppUser(c, &局_DB, 请求.AppId).Set绑定信息(请求.AppId, 局_用户详情.Uid, 请求.Key); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
-	局_用户名 := service.NewAppUser(c, global.GVA_DB, 请求.AppId).Id取User(请求.AppId, 局_AppUserId)
-	局_DB := *global.GVA_DB
+	局_用户名 := service.NewAppUser(c, &局_DB, 请求.AppId).Id取User(请求.AppId, 局_AppUserId)
 	_, err = service.NewLogKey(c, &局_DB).Create(&dbm.DB_LogKey{
 		Type:   constant.LogKey_换绑,
 		User:   局_用户名,

@@ -70,7 +70,8 @@ func (A *AgentMenu) NewPassword(c *gin.Context) {
 	}
 
 	Uid := c.GetInt("Uid")
-	err = service.NewUser(c, global.GVA_DB).Id置新密码(Uid, 请求.NewPassword)
+	db := *global.GVA_DB
+	err = service.NewUser(c, &db).Id置新密码(Uid, 请求.NewPassword)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return
@@ -81,7 +82,8 @@ func (A *AgentMenu) NewPassword(c *gin.Context) {
 
 // OutLogin 退出登录
 func (A *AgentMenu) OutLogin(c *gin.Context) {
-	err := service.NewLinksToken(c, global.GVA_DB).Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
+	db := *global.GVA_DB
+	err := service.NewLinksToken(c, &db).Set批量注销Uid(c.GetInt("Uid"), constant.Z注销_用户操作注销)
 	if err != nil {
 		response.FailWithMessage("注销失败", c)
 		return
@@ -120,8 +122,9 @@ func (A *AgentMenu) Y余额充值(c *gin.Context) {
 	}
 
 	//========订单状态查询=======================
+	db := *global.GVA_DB
 	if 请求.D订单ID != "" {
-		局_订单信息, ok := service.NewRmbPayService(global.GVA_DB).Order取订单详细(请求.D订单ID)
+		局_订单信息, ok := service.NewRmbPayService(&db).Order取订单详细(请求.D订单ID)
 		if !ok {
 			response.FailWithMessage("订单不存在", c)
 		} else {
@@ -161,10 +164,10 @@ func (A *AgentMenu) Q取余额充值订单状态(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-
-	局_订单详细信息, ok := service.NewRmbPayService(global.GVA_DB).Order取订单详细(请求.D订单ID)
+	db := *global.GVA_DB
+	局_订单详细信息, ok := service.NewRmbPayService(&db).Order取订单详细(请求.D订单ID)
 	if !ok {
-		局_订单详细信息, ok = service.NewRmbPayService(global.GVA_DB).Order取订单详细_第三方订单(请求.D订单ID)
+		局_订单详细信息, ok = service.NewRmbPayService(&db).Order取订单详细_第三方订单(请求.D订单ID)
 	}
 
 	if !ok || 局_订单详细信息.Uid != c.GetInt("Uid") {
