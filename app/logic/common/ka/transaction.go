@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 )
 

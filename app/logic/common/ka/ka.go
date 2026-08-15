@@ -11,7 +11,7 @@ import (
 	"server/app/logic/common/log"
 	"server/app/logic/common/userClass"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"strconv"
 	"time"

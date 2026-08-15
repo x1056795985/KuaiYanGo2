@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/app/controller/Common"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/models/request"
 	. "server/app/models/response"
@@ -40,7 +40,7 @@ func (C *Blacklist) Create(c *gin.Context) {
 	}
 	var S = service.S_Blacklist{}
 	tx := *global.GVA_DB
-	err := S.Create(&tx, db.DB_Blacklist{AppId: 请求.AppId, ItemKey: 请求.ItemKey, Note: 请求.Note})
+	err := S.Create(&tx, dbm.DB_Blacklist{AppId: 请求.AppId, ItemKey: 请求.ItemKey, Note: 请求.Note})
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 	}
@@ -73,7 +73,7 @@ func (C *Blacklist) Delete(c *gin.Context) {
 // @action 更新
 // @show  2
 func (C *Blacklist) Update(c *gin.Context) {
-	var 请求 db.DB_Blacklist
+	var 请求 dbm.DB_Blacklist
 	//解析失败
 	if !C.ToJSON(c, &请求) {
 		return
@@ -105,7 +105,7 @@ func (C *Blacklist) Info(c *gin.Context) {
 
 	var S = service.S_Blacklist{}
 	tx := *global.GVA_DB
-	var info db.DB_Blacklist
+	var info dbm.DB_Blacklist
 	info, err := S.Info(&tx, 请求.Id)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -130,7 +130,7 @@ func (C *Blacklist) GetList(c *gin.Context) {
 
 	var S = service.S_Blacklist{}
 	tx := *global.GVA_DB
-	var dataList []db.DB_Blacklist
+	var dataList []dbm.DB_Blacklist
 	var 总数 int64
 	var err error
 	总数, dataList, err = S.GetList(&tx, 请求.List, 请求.AppId)

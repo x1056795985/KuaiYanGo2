@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"strconv"
 	"sync"
 	"time"
@@ -32,7 +32,7 @@ func (j *taskPool) Task队列弹出任务(c *gin.Context, 任务类型id []int, 
 	if 最大获取数量 == 0 || len(任务类型id) == 0 { //防SB 空信息 还获取  浪费数据库性能
 		return 任务Uuid
 	}
-	db := global.GVA_DB
+	db := *global.GVA_DB
 	_ = db.Model(dbm.TaskPool_队列{}).Select("Uuid").Where("Tid in ?", 任务类型id).Limit(最大获取数量).Find(&任务Uuid).Error
 	if len(任务类型id) > 0 {
 		_ = db.Model(dbm.TaskPool_队列{}).Where("Uuid in ?", 任务Uuid).Delete("").Error
@@ -54,8 +54,8 @@ func (j *taskPool) Task_取队列数量(c *gin.Context) (map[int]string, error) 
 		Tid   int
 		Count int
 	}
-
-	err := global.GVA_DB.Model(dbm.TaskPool_队列{}).
+	db := *global.GVA_DB
+	err := db.Model(dbm.TaskPool_队列{}).
 		Select("Tid, COUNT(*) AS Count").
 		Group("Tid").
 		Scan(&results).Error
@@ -85,8 +85,8 @@ func (j *taskPool) Task队列清除指定Tid(c *gin.Context, Tid []int) (int, er
 	局_UpData := make(map[string]interface{}, 3)
 	局_UpData["TimeEnd"] = time.Now().Unix()
 	局_UpData["Status"] = 4
-
-	err := global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Where("Uuid IN ?", 局_uuid).Updates(局_UpData).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_TaskPoolData{}).Where("Uuid IN ?", 局_uuid).Updates(局_UpData).Error
 	if err != nil {
 		return 0, err
 	}
@@ -107,8 +107,8 @@ func (j *taskPool) Task数据创建加入队列(c *gin.Context, 任务类型Id i
 		SubmitAppId: SubmitAppId,
 		SubmitUid:   SubmitUid,
 	}
-
-	err := global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Create(&DB_TaskPool_类型).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_TaskPoolData{}).Create(&DB_TaskPool_类型).Error
 	if err != nil {
 		return "", err
 	}
@@ -117,10 +117,11 @@ func (j *taskPool) Task数据创建加入队列(c *gin.Context, 任务类型Id i
 		Uuid: DB_TaskPool_类型.Uuid,
 		Tid:  DB_TaskPool_类型.Tid,
 	}
-	err = global.GVA_DB.Model(dbm.TaskPool_队列{}).Create(&TaskPool_队列).Error
+
+	err = db.Model(dbm.TaskPool_队列{}).Create(&TaskPool_队列).Error
 	if err != nil {
 		//如果失败任务删除丢弃,除非雪崩,不然概率不大,大量出就人工介入
-		_ = global.GVA_DB.Model(dbm.DB_TaskPoolData{}).Delete(&DB_TaskPool_类型)
+		_ = db.Model(dbm.DB_TaskPoolData{}).Delete(&DB_TaskPool_类型)
 		return "", err
 	}
 

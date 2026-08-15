@@ -8,7 +8,7 @@ import (
 	"server/app/controller/Common/response"
 	"server/app/global"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"time"
 )
@@ -47,7 +47,8 @@ func IsTokenWebUser() gin.HandlerFunc {
 
 		var DB_LinksToken dbm.DB_LinksToken
 		//这里如果报错  invalid memory address or nil pointer dereference   可能是配置文件数据库配置北山,global.GVA_DB 值为空
-		err := global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
+		db := *global.GVA_DB
+		err := db.Model(dbm.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
 		// 没查到数据 或状态不正常
 		if err != nil || DB_LinksToken.Status != 1 {
 			response.FailTokenErr(c, gin.H{}, "令牌已失效")
@@ -60,7 +61,7 @@ func IsTokenWebUser() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		db := *global.GVA_DB
+
 		var 局_网页用户中心配置 dbm.DB_AppInfoWebUser
 		局_网页用户中心配置, err = service.NewAppInfoWebUser(c, &db).Info(D到整数(DB_LinksToken.AppIdEx))
 		if err != nil || 局_网页用户中心配置.Status != 1 {

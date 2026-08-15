@@ -11,7 +11,7 @@ import (
 	"server/app/logic/common/ka"
 	"server/app/logic/common/log"
 	"server/app/logic/common/user"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	utils2 "server/app/utils"
@@ -51,9 +51,9 @@ type DB_AgentUser_简化 struct {
 
 type 代理可制卡类授权 struct {
 	KaList          []ka.K可制卡类授权树形框结构 `json:"kaList"`
-	IdListAuthority []int             `json:"idListAuthority"`
-	FunctionList    map[string]int    `json:"functionList"`
-	FunctionId      []int             `json:"functionId"`
+	IdListAuthority []int                        `json:"idListAuthority"`
+	FunctionList    map[string]int               `json:"functionList"`
+	FunctionId      []int                        `json:"functionId"`
 }
 
 // Info 获取代理详情
@@ -66,14 +66,15 @@ func (C *AgentUserFull) Info(c *gin.Context) {
 	}
 
 	var DB_AgentUser DB_AgentUser2
-	err := global.GVA_DB.Model(dbm.DB_User{}).Omit("PassWord", "SuperPassWord").Where("id = ?", 请求.Id).Find(&DB_AgentUser).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_User{}).Omit("PassWord", "SuperPassWord").Where("id = ?", 请求.Id).Find(&DB_AgentUser).Error
 	if err != nil {
 		response.FailWithMessage("查询用户详细信息失败", c)
 		return
 	}
 	DB_AgentUser.Role = agentLevel.L_agentLevel.Q取Id代理级别(c, DB_AgentUser.Id)
 	DB_AgentUser.UPAgentUser = agent.L_agent.ID取用户名(c, DB_AgentUser.UPAgentId)
-	db := *global.GVA_DB
+
 	DB_AgentUser.LoginAppName = service.NewAppInfo(c, &db).AppId取应用名称(DB_AgentUser.LoginAppid)
 	response.OkWithDetailed(DB_AgentUser, "获取成功", c)
 }
@@ -93,7 +94,8 @@ func (C *AgentUserFull) GetList(c *gin.Context) {
 	}
 
 	var 总数 int64
-	局_DB := global.GVA_DB.Model(dbm.DB_User{}).Where("UPAgentId != 0")
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.DB_User{}).Where("UPAgentId != 0")
 	if 请求.Order == 1 {
 		局_DB.Order("Sort DESC,Id ASC")
 	} else {
@@ -250,8 +252,8 @@ func (C *AgentUserFull) Save(c *gin.Context) {
 	if 请求.SuperPassWord != "" {
 		m["SuperPassWord"] = utils2.BcryptHash(请求.SuperPassWord)
 	}
-
-	var db = global.GVA_DB.Model(dbm.DB_User{}).Where("Id= ?", 请求.Id).Updates(&m)
+	db := *global.GVA_DB
+	db.Model(dbm.DB_User{}).Where("Id= ?", 请求.Id).Updates(&m)
 	if db.Error != nil {
 		fmt.Printf(db.Error.Error())
 		response.FailWithMessage("保存失败", c)
@@ -283,9 +285,11 @@ func (C *AgentUserFull) SetStatus(c *gin.Context) {
 
 	var err error
 	if 请求.Status == 2 {
-		err = global.GVA_DB.Model(dbm.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 2).Error
+		db := *global.GVA_DB
+		err = db.Model(dbm.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 2).Error
 	} else {
-		err = global.GVA_DB.Model(dbm.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 1).Error
+		db := *global.GVA_DB
+		err = db.Model(dbm.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 1).Error
 	}
 	if err != nil {
 		response.FailWithMessage("修改失败", c)

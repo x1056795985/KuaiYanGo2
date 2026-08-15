@@ -6,7 +6,7 @@ import (
 	"server/app/global"
 	"server/app/logic/webUser/user"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"time"
 )
@@ -37,7 +37,7 @@ func (j *luckyWheelInvite) T邀请注册成功后处理(c *gin.Context, AppId, �
 	// 查询该App下进行中的大转盘活动
 	info.AppPromotionConfigs, err = service.NewAppPromotionConfig(c, &db).Infos(
 		map[string]interface{}{
-			"appId":          AppId,
+			"appId":         AppId,
 			"promotionType": constant.H活动类型_大转盘,
 		})
 	if err != nil && err.Error() != "record not found" {
@@ -89,9 +89,9 @@ func (j *luckyWheelInvite) T邀请注册成功后处理(c *gin.Context, AppId, �
 
 		// 增加抽奖次数
 		_, e := service.NewLuckyWheelUser(c, tx).UpdateMap([]int{info.luckyWheelUser.Id}, map[string]interface{}{
-			"remainCount":       info.luckyWheelUser.RemainCount + info.LuckyWheelInfo.InviteGiveCount,
-			"totalInviteCount":  info.luckyWheelUser.TotalInviteCount + info.LuckyWheelInfo.InviteGiveCount,
-			"updateTime":        局_当前时间戳,
+			"remainCount":      info.luckyWheelUser.RemainCount + info.LuckyWheelInfo.InviteGiveCount,
+			"totalInviteCount": info.luckyWheelUser.TotalInviteCount + info.LuckyWheelInfo.InviteGiveCount,
+			"updateTime":       局_当前时间戳,
 		})
 		return e
 	})

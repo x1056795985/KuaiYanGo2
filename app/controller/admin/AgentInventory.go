@@ -9,7 +9,7 @@ import (
 	"server/app/logic/common/agentLevel"
 	"server/app/logic/common/ka"
 	"server/app/logic/common/log"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
@@ -89,7 +89,8 @@ func (C *AgentInventoryCtrl) Info(c *gin.Context) {
 	}
 
 	var 卡号库存卡包 dbm.Db_Agent_库存卡包
-	err := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("id = ?", 请求.Id).First(&卡号库存卡包).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.Db_Agent_库存卡包{}).Where("id = ?", 请求.Id).First(&卡号库存卡包).Error
 	if err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return
@@ -106,8 +107,9 @@ func (C *AgentInventoryCtrl) GetList(c *gin.Context) {
 
 	var 总数 int64
 	db := *global.GVA_DB
-	局_DB := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{})
-	局_DB2 := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{})
+	局_DB := db.Model(dbm.Db_Agent_库存卡包{})
+	db2 := *global.GVA_DB
+	局_DB2 := db2.Model(dbm.Db_Agent_库存卡包{})
 
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
@@ -210,7 +212,7 @@ func (C *AgentInventoryCtrl) Delete(c *gin.Context) {
 		return
 	}
 
-	var db = global.GVA_DB
+	var db = *global.GVA_DB
 	影响行数 := db.Model(dbm.Db_Agent_库存卡包{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
@@ -252,7 +254,8 @@ func (C *AgentInventoryCtrl) GetAgentTreeAndKaClassTree(c *gin.Context) {
 	}
 
 	var 局_用户数组 []dbm.DB_User
-	_ = global.GVA_DB.Model(dbm.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Where("Id In ?", 数组_Uid).Find(&局_用户数组).Error
+	db := *global.GVA_DB
+	_ = db.Model(dbm.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Where("Id In ?", 数组_Uid).Find(&局_用户数组).Error
 
 	nodes := make([]*Node, 0, len(局_用户数组))
 	for 索引 := range 局_用户数组 {

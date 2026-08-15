@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"sync"
 	"time"
 )

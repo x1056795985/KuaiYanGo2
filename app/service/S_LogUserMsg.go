@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	"server/app/utils"
 	"strconv"
@@ -13,14 +13,14 @@ import (
 
 type S_LogUserMsg struct{}
 
-func (s *S_LogUserMsg) Info(tx *gorm.DB, Id int) (db.DB_LogUserMsg, error) {
-	var value db.DB_LogUserMsg
-	err := tx.Model(db.DB_LogUserMsg{}).Where("Id = ?", Id).First(&value).Error
+func (s *S_LogUserMsg) Info(tx *gorm.DB, Id int) (dbm.DB_LogUserMsg, error) {
+	var value dbm.DB_LogUserMsg
+	err := tx.Model(dbm.DB_LogUserMsg{}).Where("Id = ?", Id).First(&value).Error
 	return value, err
 }
 
-func (s *S_LogUserMsg) GetList(tx *gorm.DB, 请求 request.ListLog) (int64, []db.DB_LogUserMsg, error) {
-	局_DB := tx.Model(db.DB_LogUserMsg{})
+func (s *S_LogUserMsg) GetList(tx *gorm.DB, 请求 request.ListLog) (int64, []dbm.DB_LogUserMsg, error) {
+	局_DB := tx.Model(dbm.DB_LogUserMsg{})
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
 	} else {
@@ -53,7 +53,7 @@ func (s *S_LogUserMsg) GetList(tx *gorm.DB, 请求 request.ListLog) (int64, []db
 	} else {
 		局_DB.Count(&总数)
 	}
-	var dataList []db.DB_LogUserMsg
+	var dataList []dbm.DB_LogUserMsg
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
 	if err != nil {
 		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
@@ -65,7 +65,7 @@ func (s *S_LogUserMsg) GetList(tx *gorm.DB, 请求 request.ListLog) (int64, []db
 // Type: 1删除ID数组 2删除指定用户 3清空 4删除7天前 5删除30天前 6删除90天前 7删除关键字
 func (s *S_LogUserMsg) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords string) (int64, error) {
 	var 影响行数 int64
-	var d = tx.Model(db.DB_LogUserMsg{})
+	var d = tx.Model(dbm.DB_LogUserMsg{})
 
 	if Type <= 0 || Type > 7 {
 		return 0, errors.New("Type错误")
@@ -76,22 +76,22 @@ func (s *S_LogUserMsg) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords str
 		if len(Id) == 0 {
 			return 0, errors.New("Id数组没有要删除的ID")
 		}
-		影响行数 = d.Where("Id IN ?", Id).Delete(db.DB_LogUserMsg{}).RowsAffected
+		影响行数 = d.Where("Id IN ?", Id).Delete(dbm.DB_LogUserMsg{}).RowsAffected
 	case 2:
-		影响行数 = d.Where("User = ?", Keywords).Delete(db.DB_LogUserMsg{}).RowsAffected
+		影响行数 = d.Where("User = ?", Keywords).Delete(dbm.DB_LogUserMsg{}).RowsAffected
 	case 3:
-		影响行数 = d.Where("1=1").Delete(db.DB_LogUserMsg{}).RowsAffected
+		影响行数 = d.Where("1=1").Delete(dbm.DB_LogUserMsg{}).RowsAffected
 	case 4:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(db.DB_LogUserMsg{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(dbm.DB_LogUserMsg{}).RowsAffected
 	case 5:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(db.DB_LogUserMsg{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(dbm.DB_LogUserMsg{}).RowsAffected
 	case 6:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(db.DB_LogUserMsg{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(dbm.DB_LogUserMsg{}).RowsAffected
 	case 7:
 		if len(Keywords) == 0 {
 			return 0, errors.New("关键字不能为空")
 		}
-		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(db.DB_LogUserMsg{}).RowsAffected
+		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(dbm.DB_LogUserMsg{}).RowsAffected
 	}
 
 	if d.Error != nil {
@@ -106,9 +106,9 @@ func (s *S_LogUserMsg) SetIsRead(tx *gorm.DB, Id []int, Type int, IsRead bool) e
 		return errors.New("Id数组为空")
 	}
 	if Type == 1 {
-		return tx.Model(db.DB_LogUserMsg{}).Where("Id IN ?", Id).Update("IsRead", IsRead).Error
+		return tx.Model(dbm.DB_LogUserMsg{}).Where("Id IN ?", Id).Update("IsRead", IsRead).Error
 	} else if Type == 2 {
-		return tx.Model(db.DB_LogUserMsg{}).Where("1=1").Update("IsRead", IsRead).Error
+		return tx.Model(dbm.DB_LogUserMsg{}).Where("1=1").Update("IsRead", IsRead).Error
 	}
 	return errors.New("操作失败:Type代码错误")
 }
@@ -120,6 +120,6 @@ func (s *S_LogUserMsg) S删除重复消息(tx *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	err = tx.Debug().Model(db.DB_LogUserMsg{}).Where("id not IN ?", ids).Delete("").Error
+	err = tx.Debug().Model(dbm.DB_LogUserMsg{}).Where("id not IN ?", ids).Delete("").Error
 	return err
 }

@@ -9,7 +9,7 @@ import (
 	"server/app/global"
 	"server/app/logic/webUser/appInfoWebUser"
 	shortUr "server/app/logic/webUser/shortUrl"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"time"
 )

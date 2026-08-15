@@ -7,7 +7,7 @@ import (
 	"server/app/controller/userSafetyApi/response"
 	"server/app/global"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils"
 	"server/app/utils/Qqwry"
@@ -32,9 +32,9 @@ func UserApi_GetToken(c *gin.Context) {
 	DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	DB_links_user.LoginAppid = ctx.AppInfo.AppId       //管理员后台代号1
 	DB_links_user.CryptoKeyAes = utils2.W文本_取随机字符串(24) //通讯key
-	db := global.GVA_DB
+	db := *global.GVA_DB
 
-	_, err = service.NewLinksToken(c, db).Create(DB_links_user)
+	_, err = service.NewLinksToken(c, &db).Create(DB_links_user)
 	if err != nil {
 		response.Fail(c, constant.Status_SQl错误)
 		return

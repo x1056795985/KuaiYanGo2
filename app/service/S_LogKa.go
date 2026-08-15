@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	"server/app/utils"
 	"strconv"
@@ -13,14 +13,14 @@ import (
 
 type S_LogKa struct{}
 
-func (s *S_LogKa) Info(tx *gorm.DB, Id int) (db.DB_LogKa, error) {
-	var value db.DB_LogKa
-	err := tx.Model(db.DB_LogKa{}).Where("Id = ?", Id).First(&value).Error
+func (s *S_LogKa) Info(tx *gorm.DB, Id int) (dbm.DB_LogKa, error) {
+	var value dbm.DB_LogKa
+	err := tx.Model(dbm.DB_LogKa{}).Where("Id = ?", Id).First(&value).Error
 	return value, err
 }
 
-func (s *S_LogKa) GetList(tx *gorm.DB, 请求 request.List) (int64, []db.DB_LogKa, error) {
-	局_DB := tx.Model(db.DB_LogKa{})
+func (s *S_LogKa) GetList(tx *gorm.DB, 请求 request.List) (int64, []dbm.DB_LogKa, error) {
+	局_DB := tx.Model(dbm.DB_LogKa{})
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
 	} else {
@@ -45,7 +45,7 @@ func (s *S_LogKa) GetList(tx *gorm.DB, 请求 request.List) (int64, []db.DB_LogK
 	} else {
 		局_DB.Count(&总数)
 	}
-	var dataList []db.DB_LogKa
+	var dataList []dbm.DB_LogKa
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
 	if err != nil {
 		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
@@ -56,7 +56,7 @@ func (s *S_LogKa) GetList(tx *gorm.DB, 请求 request.List) (int64, []db.DB_LogK
 // BatchDelete 批量删除日志
 func (s *S_LogKa) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords string) (int64, error) {
 	var 影响行数 int64
-	var d = tx.Model(db.DB_LogKa{})
+	var d = tx.Model(dbm.DB_LogKa{})
 
 	if Type <= 0 || Type > 7 {
 		return 0, errors.New("Type错误")
@@ -67,22 +67,22 @@ func (s *S_LogKa) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords string) 
 		if len(Id) == 0 {
 			return 0, errors.New("Id数组没有要删除的ID")
 		}
-		影响行数 = d.Where("Id IN ?", Id).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("Id IN ?", Id).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 2:
-		影响行数 = d.Where("User = ?", Keywords).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("User = ?", Keywords).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 3:
-		影响行数 = d.Where("1=1").Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("1=1").Delete(dbm.DB_LogKa{}).RowsAffected
 	case 4:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 5:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 6:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 7:
 		if len(Keywords) == 0 {
 			return 0, errors.New("关键字不能为空")
 		}
-		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(dbm.DB_LogKa{}).RowsAffected
 	}
 
 	if d.Error != nil {
@@ -92,8 +92,8 @@ func (s *S_LogKa) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords string) 
 }
 
 // GetListByUser Agent端按用户过滤的列表查询（带时间范围）
-func (s *S_LogKa) GetListByUser(tx *gorm.DB, 请求 request.ListLog, User string) (int64, []db.DB_LogKa, error) {
-	局_DB := tx.Model(db.DB_LogKa{}).Where("User = ?", User)
+func (s *S_LogKa) GetListByUser(tx *gorm.DB, 请求 request.ListLog, User string) (int64, []dbm.DB_LogKa, error) {
+	局_DB := tx.Model(dbm.DB_LogKa{}).Where("User = ?", User)
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
 	} else {
@@ -122,7 +122,7 @@ func (s *S_LogKa) GetListByUser(tx *gorm.DB, 请求 request.ListLog, User string
 	} else {
 		局_DB.Count(&总数)
 	}
-	var dataList []db.DB_LogKa
+	var dataList []dbm.DB_LogKa
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
 	if err != nil {
 		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
@@ -133,7 +133,7 @@ func (s *S_LogKa) GetListByUser(tx *gorm.DB, 请求 request.ListLog, User string
 // BatchDeleteByUser Agent端按用户过滤的批量删除
 func (s *S_LogKa) BatchDeleteByUser(tx *gorm.DB, Id []int, Type int, Keywords string, User string) (int64, error) {
 	var 影响行数 int64
-	var d = tx.Model(db.DB_LogKa{}).Where("User = ?", User)
+	var d = tx.Model(dbm.DB_LogKa{}).Where("User = ?", User)
 
 	if Type <= 0 || Type > 7 {
 		return 0, errors.New("Type错误")
@@ -144,22 +144,22 @@ func (s *S_LogKa) BatchDeleteByUser(tx *gorm.DB, Id []int, Type int, Keywords st
 		if len(Id) == 0 {
 			return 0, errors.New("Id数组没有要删除的ID")
 		}
-		影响行数 = d.Where("Id IN ?", Id).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("Id IN ?", Id).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 2:
-		影响行数 = d.Where("User = ?", Keywords).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("User = ?", Keywords).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 3:
-		影响行数 = d.Where("1=1").Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("1=1").Delete(dbm.DB_LogKa{}).RowsAffected
 	case 4:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 5:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 6:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 7:
 		if len(Keywords) == 0 {
 			return 0, errors.New("关键字不能为空")
 		}
-		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(db.DB_LogKa{}).RowsAffected
+		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(dbm.DB_LogKa{}).RowsAffected
 	}
 
 	if d.Error != nil {

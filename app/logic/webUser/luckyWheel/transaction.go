@@ -11,15 +11,15 @@ import (
 	"gorm.io/gorm/clause"
 
 	"server/app/logic/common/ka"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 )
 
 // PrizeItem 奖品项
 type PrizeItem struct {
-	KaClassId    int    `json:"kaClassId"`
-	Probability  int    `json:"probability"`
-	Name         string `json:"name"`
+	KaClassId   int    `json:"kaClassId"`
+	Probability int    `json:"probability"`
+	Name        string `json:"name"`
 }
 
 // L抽奖_执行 核心抽奖逻辑
@@ -97,10 +97,10 @@ func L抽奖_执行(c *gin.Context, 数据库 *gorm.DB, appInfo dbm.DB_AppInfo, 
 		// 扣减次数
 		info.luckyWheelUser.RemainCount -= 1
 		if _, e := service.NewLuckyWheelUser(c, tx).UpdateMap([]int{info.luckyWheelUser.Id}, map[string]interface{}{
-			"remainCount":    info.luckyWheelUser.RemainCount,
-			"dailyFreeDate":  info.luckyWheelUser.DailyFreeDate,
-			"dailyFreeUsed":  info.luckyWheelUser.DailyFreeUsed,
-			"updateTime":     time.Now().Unix(),
+			"remainCount":   info.luckyWheelUser.RemainCount,
+			"dailyFreeDate": info.luckyWheelUser.DailyFreeDate,
+			"dailyFreeUsed": info.luckyWheelUser.DailyFreeUsed,
+			"updateTime":    time.Now().Unix(),
 		}); e != nil {
 			return e
 		}
@@ -173,9 +173,9 @@ func L领取每日免费(c *gin.Context, 数据库 *gorm.DB, appInfo dbm.DB_AppI
 		info.luckyWheelUser.DailyFreeUsed = info.luckyWheelInfo.DailyFreeCount
 		_, err = service.NewLuckyWheelUser(c, 数据库).UpdateMap([]int{info.luckyWheelUser.Id}, map[string]interface{}{
 			"remainCount":   info.luckyWheelUser.RemainCount,
-			"dailyFreeDate":  info.luckyWheelUser.DailyFreeDate,
-			"dailyFreeUsed":  info.luckyWheelUser.DailyFreeUsed,
-			"updateTime":     time.Now().Unix(),
+			"dailyFreeDate": info.luckyWheelUser.DailyFreeDate,
+			"dailyFreeUsed": info.luckyWheelUser.DailyFreeUsed,
+			"updateTime":    time.Now().Unix(),
 		})
 	}
 	return

@@ -2,7 +2,7 @@ package common
 
 import (
 	"github.com/gogf/gf/v2/encoding/gjson"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 )
 
 type Z在线支付 struct {

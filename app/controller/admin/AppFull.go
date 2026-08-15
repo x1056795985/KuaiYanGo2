@@ -13,7 +13,7 @@ import (
 	"server/app/logic/common/publicJs"
 	"server/app/logic/common/setting"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/router/userSafetyApi"
 	"server/app/router/webApi2"
@@ -83,7 +83,8 @@ func (a *App) GetList(c *gin.Context) {
 
 	var DB_AppInfo_简化1 []DB_AppInfo_简化
 	var 总数 int64
-	局_DB := global.GVA_DB.Model(dbm.DB_AppInfo{})
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.DB_AppInfo{})
 
 	if 请求.Order == 1 {
 		局_DB.Order("Sort DESC, AppId ASC")
@@ -326,7 +327,7 @@ func (a *App) Delete(c *gin.Context) {
 	}
 
 	var 影响行数 int64
-	var db = global.GVA_DB
+	db := *global.GVA_DB
 	db.Model(dbm.DB_AppInfo{}).Count(&影响行数)
 
 	if int(影响行数)-len(请求.Id) <= 0 {
@@ -354,7 +355,8 @@ func (a *App) Delete(c *gin.Context) {
 // GetAppIdMax 取最大AppId
 func (a *App) GetAppIdMax(c *gin.Context) {
 	var AppIdMax int64
-	err := global.GVA_DB.Model(dbm.DB_AppInfo{}).Select("Max(AppId)").Find(&AppIdMax).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_AppInfo{}).Select("Max(AppId)").Find(&AppIdMax).Error
 	if err != nil {
 		response.OkWithDetailed(gin.H{"appIdMax": 10000}, "获取成功", c)
 		return

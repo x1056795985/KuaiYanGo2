@@ -211,7 +211,7 @@ import (
     . "EFunc/utils"
     . "server/app/models/request"
     . "server/app/models/response"
-    dbm "server/app/models/db"
+    "server/app/models/dbm"
     utils2 "server/utils"
 )
 ```
@@ -223,7 +223,10 @@ import (
 db := *global.GVA_DB
 局_info, err2 := service.NewUserClass(c, &db).Info(请求.Id)
 
+db := *global.GVA_DB
+db.Model(dbm.DB_LogRMBPayOrder{}).Count(&局_数量)
 // ❌ 错误
+db := *global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{})    //错误 GVA_DB后面不可以跟任何代码
 service.NewUserClass(c, global.GVA_DB) 
 ```
 

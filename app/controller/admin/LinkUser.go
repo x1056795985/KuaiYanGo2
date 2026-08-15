@@ -7,7 +7,7 @@ import (
 	"server/app/global"
 	"server/app/logic/webSocket"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 )
@@ -64,7 +64,8 @@ func (C *LinkUserCtrl) GetList(c *gin.Context) {
 
 	var DB_LinksToken []DB_LinksToken2
 	var 总数 int64
-	局_DB := global.GVA_DB.Model(dbm.DB_LinksToken{})
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.DB_LinksToken{})
 
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
@@ -110,7 +111,7 @@ func (C *LinkUserCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	db := *global.GVA_DB
+	db = *global.GVA_DB
 	var AppName = service.NewAppInfo(c, &db).AppInfo取map列表Int(true)
 	for 索引 := range DB_LinksToken {
 		DB_LinksToken[索引].AppName = AppName[DB_LinksToken[索引].LoginAppid]
@@ -197,10 +198,11 @@ func (C *LinkUserCtrl) DeleteLogout(c *gin.Context) {
 	}
 
 	var err error
+	db := *global.GVA_DB
 	if 请求.Id[0] == -1 {
-		err = global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Status = 2").Delete("").Error
+		err = db.Model(dbm.DB_LinksToken{}).Where("Status = 2").Delete("").Error
 	} else {
-		err = global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id IN ? ", 请求.Id).Where("Status = 2").Delete("").Error
+		err = db.Model(dbm.DB_LinksToken{}).Where("Id IN ? ", 请求.Id).Where("Status = 2").Delete("").Error
 	}
 	if err != nil {
 		response.FailWithMessage("已注销删除失败", c)

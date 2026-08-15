@@ -2,7 +2,7 @@ package cron
 
 import (
 	"github.com/robfig/cron/v3"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"sync"
 )
 
@@ -42,7 +42,7 @@ func (c *D定时任务) T添加本机任务(任务名称, 表达式 string, cmd 
 	return nil
 }
 
-func (c *D定时任务) T添加集群任务(任务数据 db.DB_Cron, 函数 func(执行时间戳 int64, 任务数据 db.DB_Cron)) error {
+func (c *D定时任务) T添加集群任务(任务数据 dbm.DB_Cron, 函数 func(执行时间戳 int64, 任务数据 dbm.DB_Cron)) error {
 	Job1 := Job{
 		R任务数据: 任务数据,
 		H函数:   函数,

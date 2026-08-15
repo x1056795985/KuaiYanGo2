@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"strconv"
 )
@@ -24,7 +24,7 @@ func (j *appUser) Z置状态_同步卡号修改(c *gin.Context, AppId int, id []
 
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(AppId)
 	var info struct {
-		AppInfo db.DB_AppInfo
+		AppInfo dbm.DB_AppInfo
 	}
 	var tx *gorm.DB
 	if tempObj, ok := c.Get("tx"); ok {
@@ -45,7 +45,7 @@ func (j *appUser) Z置状态_同步卡号修改(c *gin.Context, AppId int, id []
 
 		if info.AppInfo.AppType == 3 || info.AppInfo.AppType == 4 && len(id) > 0 {
 			// 子查询获取所有软件用户的Uid 在修改卡号 子查询内限制 代理uid
-			err = tx2.Model(&db.DB_Ka{}).Where("Id IN (?)", tx.Table(表名_AppUser).Select("Uid").Where("AgentUid=?", c.GetInt("Uid")).Where("Id IN (?)", id)).Update("Status", Status).Error
+			err = tx2.Model(&dbm.DB_Ka{}).Where("Id IN (?)", tx.Table(表名_AppUser).Select("Uid").Where("AgentUid=?", c.GetInt("Uid")).Where("Id IN (?)", id)).Update("Status", Status).Error
 		}
 		return err
 	})

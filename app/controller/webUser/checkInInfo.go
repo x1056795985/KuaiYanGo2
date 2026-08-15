@@ -8,7 +8,7 @@ import (
 	"server/app/global"
 	"server/app/logic/common/log"
 	checkInLogic "server/app/logic/webUser/checkIn"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 )
 

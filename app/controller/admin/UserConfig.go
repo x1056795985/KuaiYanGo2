@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/app/controller/Common"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
@@ -69,7 +69,8 @@ func (C *UserConfig) Info(c *gin.Context) {
 	var DB_UserConfig dbm.DB_UserConfig
 	db := *global.GVA_DB
 	service.NewUserConfig(c, &db).Q取值(请求.AppId, 请求.Uid, 请求.Name)
-	err := global.GVA_DB.Model(dbm.DB_UserConfig{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_UserConfig).Error
+
+	err := db.Model(dbm.DB_UserConfig{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_UserConfig).Error
 	if err != nil {
 		response.FailWithMessage("获取公共变量失败,可能联合主键不存在", c)
 		return
@@ -83,8 +84,8 @@ func (C *UserConfig) GetList(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-
-	局_DB := global.GVA_DB.Model(&dbm.DB_UserConfig{})
+	db := *global.GVA_DB
+	局_DB := db.Model(&dbm.DB_UserConfig{})
 	局_DB = 局_DB.Where("Uid>?", 0)
 	if 请求.AppId > 0 {
 		局_DB = 局_DB.Where("AppId=?", 请求.AppId)
@@ -116,7 +117,6 @@ func (C *UserConfig) GetList(c *gin.Context) {
 		return
 	}
 
-	db := *global.GVA_DB
 	var AppName = service.NewAppInfo(c, &db).App取map列表String(true)
 	AppName["50"] = "代理云配置"
 
@@ -147,7 +147,7 @@ func (C *UserConfig) Delete(c *gin.Context) {
 		return
 	}
 
-	var db = global.GVA_DB
+	var db = *global.GVA_DB
 	影响行数 := db.Model(dbm.DB_UserConfig{}).Delete(请求.Data).RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)

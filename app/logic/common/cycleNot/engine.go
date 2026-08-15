@@ -5,7 +5,7 @@ import (
 	"github.com/dop251/goja"
 	"github.com/gin-gonic/gin"
 
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 )
 
 // J脚本引擎_初始化函数 定义脚本运行时初始化函数签名。

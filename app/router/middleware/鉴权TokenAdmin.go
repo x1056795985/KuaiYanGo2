@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/app/global"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"strings"
 	"time"
@@ -29,7 +29,8 @@ func IsTokenAdmin() gin.HandlerFunc {
 
 		var DB_LinksToken dbm.DB_LinksToken
 		//这里如果报错  invalid memory address or nil pointer dereference   可能是配置文件数据库配置北山,global.GVA_DB 值为空
-		err := global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
+		db := *global.GVA_DB
+		err := db.Model(dbm.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
 		// 没查到数据 或状态不正常
 		if err != nil || DB_LinksToken.Status != 1 {
 			response.FailTokenErr(gin.H{"reload": true}, "令牌已失效", c)

@@ -5,7 +5,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"math/rand"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"strconv"
 	"testing"
 	"time"
@@ -58,7 +58,7 @@ func 连接旧数据库() *gorm.DB {
 func 插入测试用户() {
 	旧数据库 := 连接旧数据库()
 	var 局_bsphp_user []bsphp_user
-	var Ty_user db.DB_User
+	var Ty_user dbm.DB_User
 	var 总数 int64
 	_ = 旧数据库.Table("bsphp_user").Count(&总数).Find(&局_bsphp_user).Error
 	新数据库 := 连接新数据库()
@@ -143,7 +143,7 @@ type BsphpLog struct {
 func 插入用户登录日志() {
 	旧数据库 := 连接旧数据库()
 	var 局_BsphpLog []BsphpLog
-	var Ty_user db.DB_LogLogin
+	var Ty_user dbm.DB_LogLogin
 	var 总数 int64
 	_ = 旧数据库.Table("bsphp_log").Where("leixing=?", "user_login_log").Count(&总数).Find(&局_BsphpLog).Error
 	新数据库 := 连接新数据库()
@@ -224,7 +224,7 @@ type BsphpRmbPayLog struct {
 func 插入余额充值日志() {
 	旧数据库 := 连接旧数据库()
 	var 局_BsphpRmbPayLog []BsphpRmbPayLog
-	var Ty_user db.DB_LogRMBPayOrder
+	var Ty_user dbm.DB_LogRMBPayOrder
 	var 总数 int64
 	_ = 旧数据库.Table("bsphp_rmb_pay_log").Count(&总数).Find(&局_BsphpRmbPayLog).Error
 	新数据库 := 连接新数据库()

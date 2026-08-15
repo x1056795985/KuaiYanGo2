@@ -3,7 +3,7 @@ package userConfig
 import (
 	"github.com/gin-gonic/gin"
 	"server/app/global"
-	db2 "server/app/models/db"
+	db2 "server/app/models/dbm"
 	"server/app/service"
 	"time"
 )

@@ -6,7 +6,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/controller/Common/response"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"strconv"
 )
@@ -22,10 +22,10 @@ func NewAppUserController() *AppUser {
 func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 	var err error
 	var info = struct {
-		appInfo   db.DB_AppInfo
-		likeInfo  db.DB_LinksToken
-		appUser   db.DB_AppUser
-		userClass db.DB_UserClass
+		appInfo   dbm.DB_AppInfo
+		likeInfo  dbm.DB_LinksToken
+		appUser   dbm.DB_AppUser
+		userClass dbm.DB_UserClass
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 
@@ -47,7 +47,7 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 		}
 	}
 
-	var 局_userInfo db.DB_User
+	var 局_userInfo dbm.DB_User
 	if info.appInfo.AppType <= 2 {
 		局_userInfo, err = service.NewUser(c, &tx).Info(info.likeInfo.Uid)
 	}

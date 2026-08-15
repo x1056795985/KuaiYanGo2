@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 )
 
 var L_publicJs publicJs
@@ -37,7 +37,8 @@ func (j *publicJs) Z置值2(c *gin.Context, PublicJs dbm.DB_PublicJs) error {
 	m["Value"] = PublicJs.Value
 	m["IsVip"] = PublicJs.IsVip
 	m["Note"] = PublicJs.Note
-	err = global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("Id=?", PublicJs.Id).Updates(&m).Error
+	db := *global.GVA_DB
+	err = db.Model(dbm.DB_PublicJs{}).Where("Id=?", PublicJs.Id).Updates(&m).Error
 	if err == nil && global.H缓存 != nil { //删除缓存
 		global.H缓存.Delete(公共JS_脚本文件路径(PublicJs.Value))
 	}
@@ -52,14 +53,16 @@ func (j *publicJs) C创建(c *gin.Context, PublicJs dbm.DB_PublicJs) error {
 		return errors.New("Js写入文件失败:" + err.Error())
 	}
 	PublicJs.Value = "/云函数/" + PublicJs.Name + ".js"
-	err = global.GVA_DB.Model(dbm.DB_PublicJs{}).Create(&PublicJs).Error
+	db := *global.GVA_DB
+	err = db.Model(dbm.DB_PublicJs{}).Create(&PublicJs).Error
 	return err
 }
 
 // P取值2 按Appid和Name取公共JS函数(涉及文件IO+缓存)
 func (j *publicJs) P取值2(c *gin.Context, Appid int, Name string) (dbm.DB_PublicJs, error) {
 	var 局_PublicJs dbm.DB_PublicJs
-	err := global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("AppId=?", Appid).Where("Name=?", Name).First(&局_PublicJs).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_PublicJs{}).Where("AppId=?", Appid).Where("Name=?", Name).First(&局_PublicJs).Error
 
 	if err != nil {
 		return 局_PublicJs, errors.New("[" + Name + "],Hook函数不存在")

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	controller "server/app/controller/agent"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	mid2 "server/app/router/middleware"
 	"server/app/web/VueAgent"
 	"strings"

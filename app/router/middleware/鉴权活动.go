@@ -6,7 +6,7 @@ import (
 	controller "server/app/controller/webUser"
 	"server/app/global"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"time"
 )
@@ -42,15 +42,15 @@ func isPromotionActive(promotionType int) gin.HandlerFunc {
 			}
 		}
 		if info.AppPromotionConfig.Id == 0 {
-		局_活动类型 := ""
-		switch promotionType {
-		case constant.H活动类型_cps:
-			局_活动类型 = "CPS"
-		case constant.H活动类型_签到:
-			局_活动类型 = "签到"
-		case constant.H活动类型_大转盘:
-			局_活动类型 = "大转盘"
-		}
+			局_活动类型 := ""
+			switch promotionType {
+			case constant.H活动类型_cps:
+				局_活动类型 = "CPS"
+			case constant.H活动类型_签到:
+				局_活动类型 = "签到"
+			case constant.H活动类型_大转盘:
+				局_活动类型 = "大转盘"
+			}
 			response.FailWithMessage(c, "未开启"+局_活动类型+"活动")
 			c.Abort()
 			return

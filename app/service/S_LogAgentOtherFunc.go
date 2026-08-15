@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	"server/app/utils"
 	"time"
@@ -12,9 +12,9 @@ import (
 
 type S_LogAgentOtherFunc struct{}
 
-func (s *S_LogAgentOtherFunc) Info(tx *gorm.DB, Id int) (db.DB_LogAgentOtherFunc, error) {
-	var value db.DB_LogAgentOtherFunc
-	err := tx.Model(db.DB_LogAgentOtherFunc{}).Where("Id = ?", Id).First(&value).Error
+func (s *S_LogAgentOtherFunc) Info(tx *gorm.DB, Id int) (dbm.DB_LogAgentOtherFunc, error) {
+	var value dbm.DB_LogAgentOtherFunc
+	err := tx.Model(dbm.DB_LogAgentOtherFunc{}).Where("Id = ?", Id).First(&value).Error
 	return value, err
 }
 
@@ -23,8 +23,8 @@ type LogAgentOtherFuncListRequest struct {
 	Func int64 `json:"Func"` // 操作功能id
 }
 
-func (s *S_LogAgentOtherFunc) GetList(tx *gorm.DB, 请求 LogAgentOtherFuncListRequest) (int64, []db.DB_LogAgentOtherFunc, error) {
-	局_DB := tx.Model(db.DB_LogAgentOtherFunc{})
+func (s *S_LogAgentOtherFunc) GetList(tx *gorm.DB, 请求 LogAgentOtherFuncListRequest) (int64, []dbm.DB_LogAgentOtherFunc, error) {
+	局_DB := tx.Model(dbm.DB_LogAgentOtherFunc{})
 
 	if 请求.Func < 0 {
 		局_DB.Where("Func = ?", 请求.Func)
@@ -61,7 +61,7 @@ func (s *S_LogAgentOtherFunc) GetList(tx *gorm.DB, 请求 LogAgentOtherFuncListR
 	} else {
 		局_DB.Count(&总数)
 	}
-	var dataList []db.DB_LogAgentOtherFunc
+	var dataList []dbm.DB_LogAgentOtherFunc
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
 	if err != nil {
 		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
@@ -72,7 +72,7 @@ func (s *S_LogAgentOtherFunc) GetList(tx *gorm.DB, 请求 LogAgentOtherFuncListR
 // BatchDelete 批量删除日志
 func (s *S_LogAgentOtherFunc) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords string) (int64, error) {
 	var 影响行数 int64
-	var d = tx.Model(db.DB_LogAgentOtherFunc{})
+	var d = tx.Model(dbm.DB_LogAgentOtherFunc{})
 
 	if Type <= 0 || Type > 7 {
 		return 0, errors.New("Type错误")
@@ -83,22 +83,22 @@ func (s *S_LogAgentOtherFunc) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywo
 		if len(Id) == 0 {
 			return 0, errors.New("Id数组没有要删除的ID")
 		}
-		影响行数 = d.Where("Id IN ?", Id).Delete(db.DB_LogAgentOtherFunc{}).RowsAffected
+		影响行数 = d.Where("Id IN ?", Id).Delete(dbm.DB_LogAgentOtherFunc{}).RowsAffected
 	case 2:
-		影响行数 = d.Where("AppUser = ?", Keywords).Delete(db.DB_LogAgentOtherFunc{}).RowsAffected
+		影响行数 = d.Where("AppUser = ?", Keywords).Delete(dbm.DB_LogAgentOtherFunc{}).RowsAffected
 	case 3:
-		影响行数 = d.Where("1=1").Delete(db.DB_LogAgentOtherFunc{}).RowsAffected
+		影响行数 = d.Where("1=1").Delete(dbm.DB_LogAgentOtherFunc{}).RowsAffected
 	case 4:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(db.DB_LogAgentOtherFunc{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(dbm.DB_LogAgentOtherFunc{}).RowsAffected
 	case 5:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(db.DB_LogAgentOtherFunc{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(dbm.DB_LogAgentOtherFunc{}).RowsAffected
 	case 6:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(db.DB_LogAgentOtherFunc{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(dbm.DB_LogAgentOtherFunc{}).RowsAffected
 	case 7:
 		if len(Keywords) == 0 {
 			return 0, errors.New("关键字不能为空")
 		}
-		影响行数 = d.Where("Note LIKE ?", "%"+Keywords+"%").Delete(db.DB_LogAgentOtherFunc{}).RowsAffected
+		影响行数 = d.Where("Note LIKE ?", "%"+Keywords+"%").Delete(dbm.DB_LogAgentOtherFunc{}).RowsAffected
 	}
 
 	if d.Error != nil {

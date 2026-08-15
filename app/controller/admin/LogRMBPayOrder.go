@@ -11,7 +11,7 @@ import (
 	"server/app/logic/common/user"
 	"server/app/models/common"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
@@ -88,7 +88,8 @@ func (C *LogRMBPayOrderCtrl) Info(c *gin.Context) {
 	}
 
 	var DB_LogRMBPayOrder dbm.DB_LogRMBPayOrder
-	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("Id= ?", 请求.Id).First(&DB_LogRMBPayOrder).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_LogRMBPayOrder{}).Where("Id= ?", 请求.Id).First(&DB_LogRMBPayOrder).Error
 	if err != nil {
 		response.FailWithMessage("获取失败,可能不存在", c)
 		return
@@ -102,8 +103,8 @@ func (C *LogRMBPayOrderCtrl) GetList(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-
-	局_DB := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{})
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.DB_LogRMBPayOrder{})
 	if 请求.Order == 1 {
 		局_DB.Order("db_Log_RMBPayOrder.Id ASC")
 	} else {
@@ -174,7 +175,8 @@ func (C *LogRMBPayOrderCtrl) Delete(c *gin.Context) {
 		return
 	}
 	var 影响行数 int64
-	var db = global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{})
+	db := *global.GVA_DB
+	db.Model(dbm.DB_LogRMBPayOrder{})
 
 	switch 请求.Type {
 	default:
@@ -249,7 +251,7 @@ func (C *LogRMBPayOrderCtrl) New(c *gin.Context) {
 	新订单.PayOrder = service.NewRmbPayService(&db).Get获取新订单号()
 	新订单.UidType = 1
 
-	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单).Error
+	err := db.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单).Error
 	if err != nil {
 		response.FailWithMessage("订单创建失败", c)
 		return
@@ -317,7 +319,8 @@ func (C *LogRMBPayOrderCtrl) MakeUp(c *gin.Context) {
 
 	// 查询订单
 	var 订单 dbm.DB_LogRMBPayOrder
-	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 请求.PayOrder).First(&订单).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 请求.PayOrder).First(&订单).Error
 	if err != nil {
 		response.FailWithMessage("订单不存在", c)
 		return

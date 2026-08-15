@@ -7,7 +7,7 @@ import (
 	"server/app/global"
 	"server/app/logic/common/captcha"
 	"server/app/logic/common/log"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/utils"
 	"server/app/utils/Qqwry"
@@ -33,9 +33,9 @@ type 结构_登录请求 struct {
 
 // 登录响应结构体
 type 结构_登录响应 struct {
-	UserInfo db.DB_Admin `json:"userInfo"`
-	Token    string      `json:"token"`
-	KuaiYan  bool        `json:"kuaiYan"`
+	UserInfo dbm.DB_Admin `json:"userInfo"`
+	Token    string       `json:"token"`
+	KuaiYan  bool         `json:"kuaiYan"`
 }
 
 // Login 管理员登录
@@ -76,8 +76,9 @@ func (l *LoginCtrl) Login(c *gin.Context) {
 		return
 	}
 
-	var DB_user db.DB_Admin
-	err = global.GVA_DB.Where("User = ?", Request.Username).First(&DB_user).Error
+	var DB_user dbm.DB_Admin
+	db := *global.GVA_DB
+	err = db.Where("User = ?", Request.Username).First(&DB_user).Error
 
 	if err != nil || !utils.BcryptCheck(Request.Password, DB_user.PassWord) {
 		if global.GVA_Viper.GetInt("系统模式") == 1 {
@@ -95,7 +96,7 @@ func (l *LoginCtrl) Login(c *gin.Context) {
 		return
 	}
 	global.H缓存.Delete(客户端ip)
-	var DB_links_user db.DB_LinksToken
+	var DB_links_user dbm.DB_LinksToken
 	DB_links_user.Uid = DB_user.Id
 	DB_links_user.User = DB_user.User
 	DB_links_user.Tab = ""
@@ -112,7 +113,7 @@ func (l *LoginCtrl) Login(c *gin.Context) {
 	DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	DB_links_user.LoginAppid = 1 //管理员后台代号1
 
-	err = global.GVA_DB.Create(&DB_links_user).Error
+	err = db.Create(&DB_links_user).Error
 	go log.L_log.Log_写登录日志(Request.Username, c.ClientIP(), "管理平台登录", 4)
 	快验 := global.Q快验.Q取登录状态()
 

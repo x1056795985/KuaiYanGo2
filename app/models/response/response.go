@@ -1,6 +1,6 @@
 package response
 
-import dbm "server/app/models/db"
+import "server/app/models/dbm"
 
 type GetList struct {
 	List  interface{} `json:"List"`  // 列表

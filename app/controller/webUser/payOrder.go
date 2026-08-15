@@ -7,7 +7,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/controller/Common/response"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	. "server/app/models/response"
 	"server/app/service"
@@ -31,9 +31,9 @@ func (C *PayOrder) List(c *gin.Context) {
 	}
 
 	var info = struct {
-		appInfo  db.DB_AppInfo
-		likeInfo db.DB_LinksToken
-		数组订单     []db.DB_LogRMBPayOrder
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
+		数组订单 []dbm.DB_LogRMBPayOrder
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	tx := *global.GVA_DB

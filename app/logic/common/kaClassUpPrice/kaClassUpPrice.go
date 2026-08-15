@@ -6,7 +6,7 @@ import (
 	"server/app/global"
 	"server/app/logic/common/agent"
 	"server/app/logic/common/agentLevel"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 )
 

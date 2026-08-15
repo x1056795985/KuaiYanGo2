@@ -5,7 +5,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/global"
 	"server/app/logic/common/agent"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/models/request"
 	. "server/app/models/response"
@@ -67,7 +67,7 @@ func (C *LogAgentOtherFunc) GetList(c *gin.Context) {
 		局_AgentIds = append(局_AgentIds, dataList[索引].AgentUid)
 	}
 	type DB_LogAgentOtherFunc扩展 struct {
-		db.DB_LogAgentOtherFunc
+		dbm.DB_LogAgentOtherFunc
 		AgentUser string `json:"AgentUser"` // 总数
 		FuncTxt   string `json:"FuncTxt"`   // 中文名称
 	}

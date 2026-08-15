@@ -7,7 +7,7 @@ import (
 	"server/app/controller/Common/response"
 	"server/app/global"
 	appUserLogic "server/app/logic/common/appUser"
-	db2 "server/app/models/db"
+	db2 "server/app/models/dbm"
 
 	"server/app/service"
 	utils2 "server/app/utils"

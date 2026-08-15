@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 )
 
 func Test脚本引擎_运行时注册全部绑定(t *testing.T) {

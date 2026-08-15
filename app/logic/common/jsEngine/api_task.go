@@ -9,7 +9,7 @@ import (
 	"server/app/logic/common/taskPool"
 	"server/app/logic/webSocket"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 )
 
@@ -99,7 +99,8 @@ func WebSocketSendMessageBatch(ids []int, message string) 脚本引擎_Api结果
 }
 
 func 脚本引擎_WebSocket筛选Id(appIDEx, uid int, tag string) 脚本引擎_Api结果 {
-	局_查询 := global.GVA_DB.Model(dbm.DB_LinksToken{}).
+	db := *global.GVA_DB
+	局_查询 := db.Model(dbm.DB_LinksToken{}).
 		Select("Id").
 		Where("LoginAppid = ?", constant.APPID_WebSocket).
 		Where("Status = ?", 1)

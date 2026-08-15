@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 	"server/app/global"
 	m "server/app/models/common"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils/Qqwry"
 	"time"
@@ -185,13 +185,15 @@ func (j *agent) Id取代理可操作应用AppId列表(c *gin.Context, 代理ID i
 func (j *agent) Z置Id代理可制卡类或功能授权列表(c *gin.Context, 代理ID int, 授权卡类ID []int) error {
 	// 查询数据库中代理用户的所有授权卡类ID
 	var 已有卡类ID []int
-	if err := global.GVA_DB.Model(&dbm.Db_Agent_卡类授权{}).Where("Uid = ?", 代理ID).Pluck("KId", &已有卡类ID).Error; err != nil {
+	db := *global.GVA_DB
+
+	if err := db.Model(&dbm.Db_Agent_卡类授权{}).Where("Uid = ?", 代理ID).Pluck("KId", &已有卡类ID).Error; err != nil {
 		return err
 	}
 	// 删除数据库中授权卡类ID数组中没有的Kid
 	删除卡类ID := S数组_取差集(已有卡类ID, 授权卡类ID)
 	if len(删除卡类ID) > 0 {
-		if err := global.GVA_DB.Where("Uid = ? AND KId IN ?", 代理ID, 删除卡类ID).Delete(&dbm.Db_Agent_卡类授权{}).Error; err != nil {
+		if err := db.Model(&dbm.Db_Agent_卡类授权{}).Where("Uid = ? AND KId IN ?", 代理ID, 删除卡类ID).Delete(&dbm.Db_Agent_卡类授权{}).Error; err != nil {
 			return err
 		}
 	}
@@ -206,8 +208,7 @@ func (j *agent) Z置Id代理可制卡类或功能授权列表(c *gin.Context, �
 				KId: 卡类ID,
 			})
 		}
-		db := *global.GVA_DB
-		if err := db.Create(&新授权记录).Error; err != nil {
+		if err := db.Model(&dbm.Db_Agent_卡类授权{}).Create(&新授权记录).Error; err != nil {
 			return err
 		}
 	}

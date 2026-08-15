@@ -10,7 +10,7 @@ import (
 	"server/app/logic/common/log"
 	"server/app/logic/common/user"
 	"server/app/models/constant"
-	db2 "server/app/models/db"
+	db2 "server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils/Qqwry"
 	"time"

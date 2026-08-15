@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	"time"
 )
@@ -24,8 +24,8 @@ func NewTaskPoolData(c *gin.Context, db *gorm.DB) *TaskPoolData {
 }
 
 // 增
-func (s *TaskPoolData) Create(info db.DB_TaskPoolData) (row int64, err error) {
-	tx := s.db.Model(db.DB_TaskPoolData{}).Create(&info)
+func (s *TaskPoolData) Create(info dbm.DB_TaskPoolData) (row int64, err error) {
+	tx := s.db.Model(dbm.DB_TaskPoolData{}).Create(&info)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -34,9 +34,9 @@ func (s *TaskPoolData) Delete(Uuid interface{}) (影响行数 int64, error error
 	var tx2 *gorm.DB
 	switch k := Uuid.(type) {
 	case string:
-		tx2 = s.db.Model(db.DB_TaskPoolData{}).Where("Uuid = ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", k).Delete("")
 	case []string:
-		tx2 = s.db.Model(db.DB_TaskPoolData{}).Where("Uuid IN ?", k).Delete("")
+		tx2 = s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -44,8 +44,8 @@ func (s *TaskPoolData) Delete(Uuid interface{}) (影响行数 int64, error error
 }
 
 // 获取列表
-func (s *TaskPoolData) GetList(请求 request.List, Tid, SubmitAppId, SubmitUid int) (int64, []db.DB_TaskPoolData, error) {
-	tx := s.db.Model(db.DB_TaskPoolData{})
+func (s *TaskPoolData) GetList(请求 request.List, Tid, SubmitAppId, SubmitUid int) (int64, []dbm.DB_TaskPoolData, error) {
+	tx := s.db.Model(dbm.DB_TaskPoolData{})
 	if Tid > 0 {
 		tx = tx.Where("Tid = ?", Tid)
 	}
@@ -82,15 +82,15 @@ func (s *TaskPoolData) GetList(请求 request.List, Tid, SubmitAppId, SubmitUid 
 	case 2:
 		tx = tx.Order("TimeStart DESC")
 	}
-	var 局_数组 []db.DB_TaskPoolData
+	var 局_数组 []dbm.DB_TaskPoolData
 	tx = tx.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组)
 
 	return 总数, 局_数组, tx.Error
 }
 
 // 查
-func (s *TaskPoolData) Info(Uuid string) (info db.DB_TaskPoolData, err error) {
-	tx := s.db.Model(db.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&info)
+func (s *TaskPoolData) Info(Uuid string) (info dbm.DB_TaskPoolData, err error) {
+	tx := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -98,8 +98,8 @@ func (s *TaskPoolData) Info(Uuid string) (info db.DB_TaskPoolData, err error) {
 }
 
 // 查
-func (s *TaskPoolData) Info2(where map[string]interface{}) (info db.DB_TaskPoolData, err error) {
-	tx := s.db.Model(db.DB_TaskPoolData{}).Where(where).First(&info)
+func (s *TaskPoolData) Info2(where map[string]interface{}) (info dbm.DB_TaskPoolData, err error) {
+	tx := s.db.Model(dbm.DB_TaskPoolData{}).Where(where).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -109,37 +109,37 @@ func (s *TaskPoolData) Info2(where map[string]interface{}) (info db.DB_TaskPoolD
 // 改
 func (s *TaskPoolData) Update(Uuid string, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(db.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).Updates(&数据)
+	tx := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
 
 // 保存
-func (s *TaskPoolData) Save(info db.DB_TaskPoolData) (row int64, err error) {
-	tx := s.db.Model(db.DB_TaskPoolData{}).Where("Uuid = ?", info.Uuid).Save(&info)
+func (s *TaskPoolData) Save(info dbm.DB_TaskPoolData) (row int64, err error) {
+	tx := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", info.Uuid).Save(&info)
 	return tx.RowsAffected, tx.Error
 }
 
 // Task数据读取_数组 按Uuid数组取任务数据(精简)
-func (s *TaskPoolData) Task数据读取_数组(Uuid []string) []db.TaskPool_数据_精简 {
-	var TaskPool_数据 []db.TaskPool_数据_精简
+func (s *TaskPoolData) Task数据读取_数组(Uuid []string) []dbm.TaskPool_数据_精简 {
+	var TaskPool_数据 []dbm.TaskPool_数据_精简
 	if len(Uuid) == 0 {
 		return TaskPool_数据
 	}
-	_ = s.db.Model(db.DB_TaskPoolData{}).Where("Uuid in ?", Uuid).Find(&TaskPool_数据).Error
+	_ = s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid in ?", Uuid).Find(&TaskPool_数据).Error
 	return TaskPool_数据
 }
 
 // Task数据读取_单条 按Uuid取单条任务数据
-func (s *TaskPoolData) Task数据读取_单条(Uuid string) (db.DB_TaskPoolData, error) {
-	var TaskPool_数据 db.DB_TaskPoolData
-	err := s.db.Model(db.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&TaskPool_数据).Error
+func (s *TaskPoolData) Task数据读取_单条(Uuid string) (dbm.DB_TaskPoolData, error) {
+	var TaskPool_数据 dbm.DB_TaskPoolData
+	err := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&TaskPool_数据).Error
 	return TaskPool_数据, err
 }
 
 // Task数据读取Tid 按Uuid取Tid
 func (s *TaskPoolData) Task数据读取Tid(Uuid string) int {
 	var Tid int
-	_ = s.db.Model(db.DB_TaskPoolData{}).Select("Tid").Where("Uuid = ?", Uuid).First(&Tid).Error
+	_ = s.db.Model(dbm.DB_TaskPoolData{}).Select("Tid").Where("Uuid = ?", Uuid).First(&Tid).Error
 	return Tid
 }
 
@@ -155,7 +155,7 @@ func (s *TaskPoolData) Task数据修改(Uuid string, Status int, ReturnData stri
 		局_UpData["ReturnData"] = ReturnData
 	}
 
-	err := s.db.Model(db.DB_TaskPoolData{}).Where("Uuid=?", Uuid).Updates(局_UpData).Error
+	err := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid=?", Uuid).Updates(局_UpData).Error
 	return err
 }
 
@@ -164,7 +164,7 @@ func (s *TaskPoolData) Task数据删除过期() {
 
 	if s.db != nil {
 		//删除超过30天的任务
-		_ = s.db.Model(db.DB_TaskPoolData{}).Where("TimeStart<?", time.Now().Unix()-(86400*30)).Delete("").RowsAffected
+		_ = s.db.Model(dbm.DB_TaskPoolData{}).Where("TimeStart<?", time.Now().Unix()-(86400*30)).Delete("").RowsAffected
 		//fmt.Printf("定时删除已过期24H任务:%v\n", 局_数量)
 	}
 	//24小时

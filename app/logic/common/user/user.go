@@ -9,7 +9,7 @@ import (
 	"server/app/global"
 	"server/app/logic/common/log"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils"
 	"strconv"

@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/app/controller/Common"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/models/request"
 	. "server/app/models/response"

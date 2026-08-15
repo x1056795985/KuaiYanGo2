@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	"server/app/utils"
 	"strconv"
@@ -13,14 +13,14 @@ import (
 
 type S_LogAgentInventory struct{}
 
-func (s *S_LogAgentInventory) Info(tx *gorm.DB, Id int) (db.Db_Agent_库存日志, error) {
-	var value db.Db_Agent_库存日志
-	err := tx.Model(db.Db_Agent_库存日志{}).Where("Id = ?", Id).First(&value).Error
+func (s *S_LogAgentInventory) Info(tx *gorm.DB, Id int) (dbm.Db_Agent_库存日志, error) {
+	var value dbm.Db_Agent_库存日志
+	err := tx.Model(dbm.Db_Agent_库存日志{}).Where("Id = ?", Id).First(&value).Error
 	return value, err
 }
 
-func (s *S_LogAgentInventory) GetList(tx *gorm.DB, 请求 request.List) (int64, []db.Db_Agent_库存日志, error) {
-	局_DB := tx.Model(db.Db_Agent_库存日志{})
+func (s *S_LogAgentInventory) GetList(tx *gorm.DB, 请求 request.List) (int64, []dbm.Db_Agent_库存日志, error) {
+	局_DB := tx.Model(dbm.Db_Agent_库存日志{})
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
 	} else {
@@ -45,7 +45,7 @@ func (s *S_LogAgentInventory) GetList(tx *gorm.DB, 请求 request.List) (int64, 
 	} else {
 		局_DB.Count(&总数)
 	}
-	var dataList []db.Db_Agent_库存日志
+	var dataList []dbm.Db_Agent_库存日志
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
 	if err != nil {
 		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
@@ -56,7 +56,7 @@ func (s *S_LogAgentInventory) GetList(tx *gorm.DB, 请求 request.List) (int64, 
 // BatchDelete 批量删除日志
 func (s *S_LogAgentInventory) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords string) (int64, error) {
 	var 影响行数 int64
-	var d = tx.Model(db.Db_Agent_库存日志{})
+	var d = tx.Model(dbm.Db_Agent_库存日志{})
 
 	if Type <= 0 || Type > 7 {
 		return 0, errors.New("Type错误")
@@ -67,22 +67,22 @@ func (s *S_LogAgentInventory) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywo
 		if len(Id) == 0 {
 			return 0, errors.New("Id数组没有要删除的ID")
 		}
-		影响行数 = d.Where("Id IN ?", Id).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("Id IN ?", Id).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 2:
-		影响行数 = d.Where("User1 = ? OR User2 = ?", Keywords, Keywords).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("User1 = ? OR User2 = ?", Keywords, Keywords).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 3:
-		影响行数 = d.Where("1=1").Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("1=1").Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 4:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 5:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 6:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 7:
 		if len(Keywords) == 0 {
 			return 0, errors.New("关键字不能为空")
 		}
-		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	}
 
 	if d.Error != nil {
@@ -92,8 +92,8 @@ func (s *S_LogAgentInventory) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywo
 }
 
 // GetListByUser Agent端按用户过滤的列表查询（带时间范围，User1 OR User2）
-func (s *S_LogAgentInventory) GetListByUser(tx *gorm.DB, 请求 request.ListLog, User string) (int64, []db.Db_Agent_库存日志, error) {
-	局_DB := tx.Model(db.Db_Agent_库存日志{}).Where("(User1 = ? OR User2 = ?)", User, User)
+func (s *S_LogAgentInventory) GetListByUser(tx *gorm.DB, 请求 request.ListLog, User string) (int64, []dbm.Db_Agent_库存日志, error) {
+	局_DB := tx.Model(dbm.Db_Agent_库存日志{}).Where("(User1 = ? OR User2 = ?)", User, User)
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
 	} else {
@@ -122,7 +122,7 @@ func (s *S_LogAgentInventory) GetListByUser(tx *gorm.DB, 请求 request.ListLog,
 	} else {
 		局_DB.Count(&总数)
 	}
-	var dataList []db.Db_Agent_库存日志
+	var dataList []dbm.Db_Agent_库存日志
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&dataList).Error
 	if err != nil {
 		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
@@ -133,7 +133,7 @@ func (s *S_LogAgentInventory) GetListByUser(tx *gorm.DB, 请求 request.ListLog,
 // BatchDeleteByUser Agent端按用户过滤的批量删除
 func (s *S_LogAgentInventory) BatchDeleteByUser(tx *gorm.DB, Id []int, Type int, Keywords string, User string) (int64, error) {
 	var 影响行数 int64
-	var d = tx.Model(db.Db_Agent_库存日志{}).Where("(User1 = ? OR User2 = ?)", User, User)
+	var d = tx.Model(dbm.Db_Agent_库存日志{}).Where("(User1 = ? OR User2 = ?)", User, User)
 
 	if Type <= 0 || Type > 7 {
 		return 0, errors.New("Type错误")
@@ -144,22 +144,22 @@ func (s *S_LogAgentInventory) BatchDeleteByUser(tx *gorm.DB, Id []int, Type int,
 		if len(Id) == 0 {
 			return 0, errors.New("Id数组没有要删除的ID")
 		}
-		影响行数 = d.Where("Id IN ?", Id).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("Id IN ?", Id).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 2:
-		影响行数 = d.Where("User1 = ? OR User2 = ?", Keywords, Keywords).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("User1 = ? OR User2 = ?", Keywords, Keywords).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 3:
-		影响行数 = d.Where("1=1").Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("1=1").Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 4:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 5:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 6:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	case 7:
 		if len(Keywords) == 0 {
 			return 0, errors.New("关键字不能为空")
 		}
-		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(db.Db_Agent_库存日志{}).RowsAffected
+		影响行数 = d.Where("LOCATE(?, Note)>0", Keywords).Delete(dbm.Db_Agent_库存日志{}).RowsAffected
 	}
 
 	if d.Error != nil {

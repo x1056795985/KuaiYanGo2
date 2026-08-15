@@ -8,7 +8,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/global"
 	"server/app/logic/common/setting"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/utils"
 	"strings"

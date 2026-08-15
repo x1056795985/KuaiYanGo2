@@ -12,7 +12,7 @@ import (
 	"server/app/logic/common/user"
 	m "server/app/models/common"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils"
 )

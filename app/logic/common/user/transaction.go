@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 )
 
 // S用户_删除非代理 在事务中删除账号及所有账号模式应用用户。

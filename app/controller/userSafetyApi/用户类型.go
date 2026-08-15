@@ -5,7 +5,7 @@ import (
 	"server/app/controller/userSafetyApi/response"
 	"server/app/global"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"time"
 )

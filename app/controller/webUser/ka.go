@@ -5,7 +5,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/controller/Common/response"
 	"server/app/logic/common/ka"
-	"server/app/models/db"
+	"server/app/models/dbm"
 )
 
 type Ka struct {
@@ -19,9 +19,9 @@ func NewKaController() *Ka {
 // 卡号充值
 func (C *Ka) UseKa(c *gin.Context) {
 	var info = struct {
-		ka       db.DB_Ka
-		likeInfo db.DB_LinksToken
-		appInfo  db.DB_AppInfo
+		ka       dbm.DB_Ka
+		likeInfo dbm.DB_LinksToken
+		appInfo  dbm.DB_AppInfo
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	var 请求 struct {

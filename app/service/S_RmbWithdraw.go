@@ -25,7 +25,7 @@ import (
 	"github.com/makiuchi-d/gozxing/qrcode"
 	"gorm.io/gorm"
 
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 )
 
 const (

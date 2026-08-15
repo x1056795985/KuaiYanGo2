@@ -7,7 +7,7 @@ import (
 	"server/app/controller/Common/response"
 	"server/app/global"
 	luckyWheelLogic "server/app/logic/webUser/luckyWheel"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"time"
 )
@@ -21,9 +21,9 @@ func NewLuckyWheelController() *LuckyWheel {
 }
 
 type prizeListItem struct {
-	KaClassId    int    `json:"kaClassId"`
+	KaClassId   int    `json:"kaClassId"`
 	Probability int    `json:"probability"`
-	Name         string `json:"name"`
+	Name        string `json:"name"`
 }
 
 // Info 获取大转盘活动信息
@@ -128,7 +128,7 @@ func (C *LuckyWheel) Draw(c *gin.Context) {
 	}
 
 	response.OkWithData(c, gin.H{
-		"winIndex": 中奖索引,
+		"winIndex":  中奖索引,
 		"kaClassId": 中奖奖品.KaClassId,
 		"name":      中奖奖品.Name,
 	})

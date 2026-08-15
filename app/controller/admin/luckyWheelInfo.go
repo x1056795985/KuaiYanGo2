@@ -6,7 +6,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/controller/Common/response"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	. "server/app/models/response"
 	"server/app/service"
@@ -56,10 +56,10 @@ func (C *LuckyWheelInfo) GetList(c *gin.Context) {
 func (C *LuckyWheelInfo) Update(c *gin.Context) {
 	var 请求 struct {
 		request.Id2
-		DailyFreeCount  int              `json:"dailyFreeCount" binding:"min=0" zh:"每日免费次数"`
-		InviteGiveCount int              `json:"inviteGiveCount" binding:"min=0" zh:"拉新奖励次数"`
-		PrizeList       []prizeListItem  `json:"prizeList" binding:"" zh:"奖品列表"`
-		ThemeColor      string           `json:"themeColor"`
+		DailyFreeCount  int             `json:"dailyFreeCount" binding:"min=0" zh:"每日免费次数"`
+		InviteGiveCount int             `json:"inviteGiveCount" binding:"min=0" zh:"拉新奖励次数"`
+		PrizeList       []prizeListItem `json:"prizeList" binding:"" zh:"奖品列表"`
+		ThemeColor      string          `json:"themeColor"`
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -101,13 +101,13 @@ func (C *LuckyWheelInfo) Info(c *gin.Context) {
 		response.FailWithMessage(c, err.Error())
 	} else {
 		var 响应 struct {
-			Id              int              `json:"id"`
-			CreateTime      int64            `json:"createTime"`
-			UpdateTime      int64            `json:"updateTime"`
-			DailyFreeCount  int              `json:"dailyFreeCount"`
-			InviteGiveCount int              `json:"inviteGiveCount"`
-			PrizeList       []prizeListItem  `json:"prizeList"`
-			ThemeColor      string           `json:"themeColor"`
+			Id              int             `json:"id"`
+			CreateTime      int64           `json:"createTime"`
+			UpdateTime      int64           `json:"updateTime"`
+			DailyFreeCount  int             `json:"dailyFreeCount"`
+			InviteGiveCount int             `json:"inviteGiveCount"`
+			PrizeList       []prizeListItem `json:"prizeList"`
+			ThemeColor      string          `json:"themeColor"`
 		}
 		响应.Id = info.Id
 		响应.CreateTime = info.CreateTime

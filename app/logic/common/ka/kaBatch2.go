@@ -10,7 +10,7 @@ import (
 	"server/app/logic/common/agentLevel"
 	"server/app/logic/common/kaClassUpPrice"
 	"server/app/logic/common/log"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"strconv"
 	"strings"
@@ -65,7 +65,8 @@ func (j *ka) Ka代理批量库存购买(c *gin.Context, 卡信息切片 []dbm.DB
 		nameSet[rec.Name] = struct{}{}
 	}
 
-	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+	db := *global.GVA_DB
+	err = db.Transaction(func(tx *gorm.DB) error {
 		err = tx.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 局_库存详情.Id).Update("Num", gorm.Expr("Num + ?", 制卡数量)).Error
 		if err != nil {
 			return err
@@ -231,7 +232,8 @@ func (j *ka) Ka代理批量购买(c *gin.Context, 卡信息切片 []dbm.DB_Ka, �
 		nameSet[rec.Name] = struct{}{}
 	}
 
-	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+	db := *global.GVA_DB
+	err = db.Transaction(func(tx *gorm.DB) error {
 		err = tx.Exec("UPDATE db_User SET RMB = RMB - ? WHERE Id = ?", 局_价格组成.总付款金额, 局_购卡人信息.Id).Error
 		if err != nil {
 			global.GVA_LOG.Println(strconv.Itoa(局_购卡人信息.Id) + "Id余额减少失败:" + err.Error())
@@ -382,7 +384,8 @@ func (j *ka) Ka更换卡号(c *gin.Context, id, 代理Id int, ip string) error {
 		}
 	}
 
-	err = global.GVA_DB.Model(dbm.DB_Ka{}).Where("Id = ? ", id).Update("Name", 局_新卡号).Error
+	db := *global.GVA_DB
+	err = db.Model(dbm.DB_Ka{}).Where("Id = ? ", id).Update("Name", 局_新卡号).Error
 	if err == nil {
 		局_log := fmt.Sprintf("操作更换卡号:  %s  ->  %s", 局_卡号详情.Name, 局_新卡号)
 		log.L_log.Log_写卡号操作日志(代理User, ip, 局_log, []string{局_卡号详情.Name}, 3, agentLevel.L_agentLevel.Q取Id代理级别(c, 代理Id))
@@ -393,6 +396,7 @@ func (j *ka) Ka更换卡号(c *gin.Context, id, 代理Id int, ip string) error {
 // Ka卡号是否存在 卡号是否存在
 func (j *ka) Ka卡号是否存在(卡号 string) bool {
 	var Count int64
-	_ = global.GVA_DB.Select("1").Model(dbm.DB_Ka{}).Where("Name=?", 卡号).First(&Count)
+	db := *global.GVA_DB
+	_ = db.Select("1").Model(dbm.DB_Ka{}).Where("Name=?", 卡号).First(&Count)
 	return Count != 0
 }

@@ -7,7 +7,7 @@ import (
 	"server/app/global"
 	appPromotionConfigLogic "server/app/logic/admin/appPromotionConfig"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/models/request"
 	. "server/app/models/response"

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	"server/app/utils"
 	"strings"
@@ -16,30 +16,30 @@ type S_Blacklist struct {
 
 const 黑名单_ = "黑名单_"
 
-func (s *S_Blacklist) Info(tx *gorm.DB, Id int) (db.DB_Blacklist, error) {
-	var value db.DB_Blacklist
-	err := tx.Model(db.DB_Blacklist{}).Where("Id =?", Id).First(&value).Error
+func (s *S_Blacklist) Info(tx *gorm.DB, Id int) (dbm.DB_Blacklist, error) {
+	var value dbm.DB_Blacklist
+	err := tx.Model(dbm.DB_Blacklist{}).Where("Id =?", Id).First(&value).Error
 	return value, err
 }
-func (s *S_Blacklist) CountAdd1(tx *gorm.DB, Id int) (db.DB_Blacklist, error) {
-	var value db.DB_Blacklist
-	err := tx.Model(db.DB_Blacklist{}).Where("Id =?", Id).Update("Count", gorm.Expr("Count + 1")).Error
+func (s *S_Blacklist) CountAdd1(tx *gorm.DB, Id int) (dbm.DB_Blacklist, error) {
+	var value dbm.DB_Blacklist
+	err := tx.Model(dbm.DB_Blacklist{}).Where("Id =?", Id).Update("Count", gorm.Expr("Count + 1")).Error
 	return value, err
 }
 
 // 读取黑名单key 高频访问,其他接口都为这个让路
-func (s *S_Blacklist) InfoItemKey(tx *gorm.DB, ItemKey string) ([]db.DB_Blacklist, error) {
+func (s *S_Blacklist) InfoItemKey(tx *gorm.DB, ItemKey string) ([]dbm.DB_Blacklist, error) {
 	if 局_临时, ok := global.H缓存.Get(黑名单_ + ItemKey); ok { //高频
-		return 局_临时.([]db.DB_Blacklist), nil
+		return 局_临时.([]dbm.DB_Blacklist), nil
 	}
 
-	var value = []db.DB_Blacklist{}
-	err := tx.Model(db.DB_Blacklist{}).Where("ItemKey = ?", ItemKey).Find(&value).Error
+	var value = []dbm.DB_Blacklist{}
+	err := tx.Model(dbm.DB_Blacklist{}).Where("ItemKey = ?", ItemKey).Find(&value).Error
 	global.H缓存.Set(黑名单_+ItemKey, value, time.Hour*720) //保存一个月
 	return value, err
 }
-func (s *S_Blacklist) Update(tx *gorm.DB, value db.DB_Blacklist) error {
-	err := tx.Model(db.DB_Blacklist{}).Where("ItemKey = ?", value.ItemKey).Updates(&value).Error
+func (s *S_Blacklist) Update(tx *gorm.DB, value dbm.DB_Blacklist) error {
+	err := tx.Model(dbm.DB_Blacklist{}).Where("ItemKey = ?", value.ItemKey).Updates(&value).Error
 	if err != nil && strings.Contains(err.Error(), "Error 1062") {
 		return errors.New("该记录已存在")
 	}
@@ -48,11 +48,11 @@ func (s *S_Blacklist) Update(tx *gorm.DB, value db.DB_Blacklist) error {
 	}
 	return err
 }
-func (s *S_Blacklist) Create(tx *gorm.DB, value db.DB_Blacklist) error {
+func (s *S_Blacklist) Create(tx *gorm.DB, value dbm.DB_Blacklist) error {
 	if value.Time == 0 {
 		value.Time = time.Now().Unix()
 	}
-	err := tx.Model(db.DB_Blacklist{}).Create(&value).Error
+	err := tx.Model(dbm.DB_Blacklist{}).Create(&value).Error
 	if err != nil && strings.Contains(err.Error(), "Error 1062") {
 		return errors.New("该记录已存在")
 	}
@@ -66,11 +66,11 @@ func (s *S_Blacklist) Delete(tx *gorm.DB, Id interface{}) (影响行数 int64, e
 	var tx2 *gorm.DB
 	switch k := Id.(type) {
 	case int:
-		tx.Model(db.DB_Blacklist{}).Select("ItemKey").Where("Id = ?", k).Find(&ItemKey)
-		tx2 = tx.Model(db.DB_Blacklist{}).Where("Id = ?", k).Delete("")
+		tx.Model(dbm.DB_Blacklist{}).Select("ItemKey").Where("Id = ?", k).Find(&ItemKey)
+		tx2 = tx.Model(dbm.DB_Blacklist{}).Where("Id = ?", k).Delete("")
 	case []int:
-		tx.Model(db.DB_Blacklist{}).Select("ItemKey").Where("Id IN ?", k).Find(&ItemKey)
-		tx2 = tx.Model(db.DB_Blacklist{}).Where("Id IN ?", k).Delete("")
+		tx.Model(dbm.DB_Blacklist{}).Select("ItemKey").Where("Id IN ?", k).Find(&ItemKey)
+		tx2 = tx.Model(dbm.DB_Blacklist{}).Where("Id IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -83,9 +83,9 @@ func (s *S_Blacklist) Delete(tx *gorm.DB, Id interface{}) (影响行数 int64, e
 }
 
 // 获取列表
-func (s *S_Blacklist) GetList(tx *gorm.DB, 请求 request.List, AppId int) (int64, []db.DB_Blacklist, error) {
+func (s *S_Blacklist) GetList(tx *gorm.DB, 请求 request.List, AppId int) (int64, []dbm.DB_Blacklist, error) {
 
-	局_DB := tx.Model(db.DB_Blacklist{})
+	局_DB := tx.Model(dbm.DB_Blacklist{})
 
 	if AppId > 0 {
 		局_DB.Where("AppId = ?", AppId)
@@ -113,7 +113,7 @@ func (s *S_Blacklist) GetList(tx *gorm.DB, 请求 request.List, AppId int) (int6
 	case 2:
 		局_DB.Order("Id DESC")
 	}
-	var 局_数组 []db.DB_Blacklist
+	var 局_数组 []dbm.DB_Blacklist
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组).Error
 	if err != nil {
 		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
@@ -126,8 +126,8 @@ func (s *S_Blacklist) DeleteType(tx *gorm.DB, Type int) (影响行数 int64, err
 	var tx2 *gorm.DB
 	switch Type {
 	case 1: //删除全部
-		tx.Model(db.DB_Blacklist{}).Select("ItemKey").Where("Id > 0").Find(&ItemKey)
-		tx2 = tx.Model(db.DB_Blacklist{}).Where("Id > 0").Delete("")
+		tx.Model(dbm.DB_Blacklist{}).Select("ItemKey").Where("Id > 0").Find(&ItemKey)
+		tx2 = tx.Model(dbm.DB_Blacklist{}).Where("Id > 0").Delete("")
 	default:
 		return 0, errors.New("类型错误")
 	}

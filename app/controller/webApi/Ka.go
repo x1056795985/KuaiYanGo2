@@ -7,7 +7,7 @@ import (
 	"server/app/global"
 	"server/app/logic/common/ka"
 	"server/app/logic/common/log"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 )
@@ -42,7 +42,8 @@ func (K *KaWebApi) GetKaInfo(c *gin.Context) {
 	}
 
 	var DB_Ka dbm.DB_Ka
-	err = global.GVA_DB.Model(dbm.DB_Ka{}).Where("Name = ?", 请求.Name).First(&DB_Ka).Error
+	db := *global.GVA_DB
+	err = db.Model(dbm.DB_Ka{}).Where("Name = ?", 请求.Name).First(&DB_Ka).Error
 	if err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return

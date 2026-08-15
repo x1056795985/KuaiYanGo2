@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	"server/app/utils"
 )
@@ -17,21 +17,21 @@ func NewCronService(db *gorm.DB) *S_Cron {
 	return &S_Cron{}
 }
 
-func (s *S_Cron) Info(tx *gorm.DB, Id int) (db.DB_Cron, error) {
-	var value db.DB_Cron
-	err := tx.Model(db.DB_Cron{}).Where("Id =?", Id).First(&value).Error
+func (s *S_Cron) Info(tx *gorm.DB, Id int) (dbm.DB_Cron, error) {
+	var value dbm.DB_Cron
+	err := tx.Model(dbm.DB_Cron{}).Where("Id =?", Id).First(&value).Error
 	return value, err
 }
 
-func (s *S_Cron) Update(tx *gorm.DB, value db.DB_Cron) error {
-	err := tx.Model(db.DB_Cron{}).Where("Id = ?", value.Id).Updates(&value).Error
+func (s *S_Cron) Update(tx *gorm.DB, value dbm.DB_Cron) error {
+	err := tx.Model(dbm.DB_Cron{}).Where("Id = ?", value.Id).Updates(&value).Error
 	if err != nil {
 
 	}
 	return err
 }
-func (s *S_Cron) Create(tx *gorm.DB, value db.DB_Cron) error {
-	err := tx.Model(db.DB_Cron{}).Create(&value).Error
+func (s *S_Cron) Create(tx *gorm.DB, value dbm.DB_Cron) error {
+	err := tx.Model(dbm.DB_Cron{}).Create(&value).Error
 	return err
 }
 
@@ -40,9 +40,9 @@ func (s *S_Cron) Delete(tx *gorm.DB, Id interface{}) (影响行数 int64, error 
 	var tx2 *gorm.DB
 	switch k := Id.(type) {
 	case int:
-		tx2 = tx.Model(db.DB_Cron{}).Where("Id = ?", k).Delete("")
+		tx2 = tx.Model(dbm.DB_Cron{}).Where("Id = ?", k).Delete("")
 	case []int:
-		tx2 = tx.Model(db.DB_Cron{}).Where("Id IN ?", k).Delete("")
+		tx2 = tx.Model(dbm.DB_Cron{}).Where("Id IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -50,9 +50,9 @@ func (s *S_Cron) Delete(tx *gorm.DB, Id interface{}) (影响行数 int64, error 
 }
 
 // 获取列表
-func (s *S_Cron) GetList(tx *gorm.DB, 请求 request.List, Status int) (int64, []db.DB_Cron, error) {
+func (s *S_Cron) GetList(tx *gorm.DB, 请求 request.List, Status int) (int64, []dbm.DB_Cron, error) {
 
-	局_DB := tx.Model(db.DB_Cron{})
+	局_DB := tx.Model(dbm.DB_Cron{})
 
 	if Status > 0 {
 		局_DB.Where("Status = ?", Status)
@@ -80,7 +80,7 @@ func (s *S_Cron) GetList(tx *gorm.DB, 请求 request.List, Status int) (int64, [
 	case 2:
 		局_DB.Order("Id DESC")
 	}
-	var 局_数组 []db.DB_Cron
+	var 局_数组 []dbm.DB_Cron
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组).Error
 	if err != nil {
 		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
@@ -93,7 +93,7 @@ func (s *S_Cron) DeleteType(tx *gorm.DB, Type int) (影响行数 int64, error er
 	var tx2 *gorm.DB
 	switch Type {
 	case 1: //删除全部
-		tx2 = tx.Model(db.DB_Cron{}).Where("Id > 0").Delete("")
+		tx2 = tx.Model(dbm.DB_Cron{}).Where("Id > 0").Delete("")
 	default:
 		return 0, errors.New("类型错误")
 	}
@@ -101,10 +101,10 @@ func (s *S_Cron) DeleteType(tx *gorm.DB, Type int) (影响行数 int64, error er
 }
 
 // GetAllInfo 获取全部任务信息
-func (s *S_Cron) GetAllInfo(tx *gorm.DB, status int) ([]db.DB_Cron, error) {
-	var value = []db.DB_Cron{}
+func (s *S_Cron) GetAllInfo(tx *gorm.DB, status int) ([]dbm.DB_Cron, error) {
+	var value = []dbm.DB_Cron{}
 	var tx2 *gorm.DB
-	tx2 = tx.Model(db.DB_Cron{})
+	tx2 = tx.Model(dbm.DB_Cron{})
 	if status > 0 {
 		tx2 = tx2.Where("Status = ?", status)
 	}

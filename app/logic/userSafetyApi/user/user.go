@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/app/global"
-	db2 "server/app/models/db"
+	db2 "server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils"
 	"strconv"

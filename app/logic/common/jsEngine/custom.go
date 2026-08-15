@@ -10,7 +10,7 @@ import (
 	"server/app/logic/common/appUser"
 	"server/app/logic/common/ka"
 	"server/app/logic/common/user"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils"
 )

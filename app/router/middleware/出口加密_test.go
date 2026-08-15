@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"server/app/controller/userSafetyApi/response"
 	"server/app/models/common"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	appUtils "server/app/utils"
 	serverUtils "server/app/utils"
 	"testing"

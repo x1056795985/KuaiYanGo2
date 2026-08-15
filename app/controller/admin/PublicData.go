@@ -6,7 +6,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/global"
 	"server/app/logic/common/publicData"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
@@ -72,7 +72,8 @@ func (C *PublicDataCtrl) Info(c *gin.Context) {
 	}
 
 	var DB_PublicData dbm.DB_PublicData
-	err := global.GVA_DB.Model(dbm.DB_PublicData{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_PublicData).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_PublicData{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_PublicData).Error
 	if err != nil {
 		response.FailWithMessage("获取公共变量失败,可能联合主键不存在", c)
 		return
@@ -86,8 +87,8 @@ func (C *PublicDataCtrl) GetList(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-
-	局_DB := global.GVA_DB.Model(dbm.DB_PublicData{})
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.DB_PublicData{})
 	if 请求.AppId > 0 {
 		局_DB.Where("AppId=?", 请求.AppId)
 	}
@@ -118,7 +119,7 @@ func (C *PublicDataCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	db := *global.GVA_DB
+	db = *global.GVA_DB
 	var AppName = service.NewAppInfo(c, &db).App取map列表String(false)
 	AppName["1"] = "全局"
 
@@ -143,7 +144,7 @@ func (C *PublicDataCtrl) Delete(c *gin.Context) {
 		return
 	}
 
-	var db = global.GVA_DB
+	var db = *global.GVA_DB
 	影响行数 := db.Model(dbm.DB_PublicData{}).Delete(请求.Data).RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)

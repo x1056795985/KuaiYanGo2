@@ -7,7 +7,7 @@ import (
 	"server/app/logic/common/log"
 	"server/app/logic/webSocket"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils/Qqwry"
 	"strconv"
@@ -93,9 +93,10 @@ func WebSocketHandler(c *gin.Context) {
 	局_在线信息_新.LastTime = 局_在线信息_新.LoginTime
 	局_在线信息_新.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	局_在线信息_新.LoginAppid = constant.APPID_WebSocket
-	err = global.GVA_DB.Create(&局_在线信息_新).Error
+
+	err = db.Create(&局_在线信息_新).Error
 	if err != nil {
-		返回 := `{"code":200,"msg":"Token创建失败"}`
+		返回 = `{"code":200,"msg":"Token创建失败"}`
 		_ = ws.WriteMessage(websocket.TextMessage, []byte(返回))
 		return
 	}

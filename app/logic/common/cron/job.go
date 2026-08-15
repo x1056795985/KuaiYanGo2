@@ -1,13 +1,13 @@
 package cron
 
 import (
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"time"
 )
 
 type Job struct {
-	R任务数据 db.DB_Cron
-	H函数   func(int64, db.DB_Cron)
+	R任务数据 dbm.DB_Cron
+	H函数     func(int64, dbm.DB_Cron)
 }
 
 // 携带参数执行

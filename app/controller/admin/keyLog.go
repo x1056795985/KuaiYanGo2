@@ -6,7 +6,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/controller/Common/response"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	response2 "server/app/models/response"
 	"server/app/service"

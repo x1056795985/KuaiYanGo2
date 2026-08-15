@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 	"reflect"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/utils/Qqwry"
 	"strconv"
 	"strings"
@@ -365,6 +365,7 @@ func (j *log) Log_写代理操作日志(AgentUid, AgentType, AppId, AppUserid in
 // Y用户消息_取未读数量 取用户未读消息数量
 func (j *log) Y用户消息_取未读数量(User string) int64 {
 	var Count int64
-	_ = global.GVA_DB.Model(dbm.DB_LogUserMsg{}).Where("IsRead = ?", false).Count(&Count)
+	db := *global.GVA_DB
+	_ = db.Model(dbm.DB_LogUserMsg{}).Where("IsRead = ?", false).Count(&Count)
 	return Count
 }

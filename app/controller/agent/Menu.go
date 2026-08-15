@@ -9,7 +9,7 @@ import (
 	rmbPay "server/app/logic/common/rmbPay"
 	"server/app/models/common"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"server/app/utils"
@@ -34,7 +34,8 @@ type 结构响应_GetAdminInfo struct {
 func (A *AgentMenu) GetAgentInfo(c *gin.Context) {
 	Uid := c.GetInt("Uid")
 	var DB_user dbm.DB_User
-	err := global.GVA_DB.Model(dbm.DB_User{}).Omit("Note", "PassWord", "SuperPassWord").Where("id = ?", Uid).First(&DB_user).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_User{}).Omit("Note", "PassWord", "SuperPassWord").Where("id = ?", Uid).First(&DB_user).Error
 
 	if err != nil {
 		response.FailWithMessage("查询失败", c)

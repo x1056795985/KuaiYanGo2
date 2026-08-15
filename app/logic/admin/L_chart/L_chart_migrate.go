@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"sort"
 	"strconv"
@@ -97,7 +97,8 @@ func Get在线用户Ip地图分布统计(c *gin.Context) []gin.H {
 
 	局_耗时 := time.Now().Unix()
 	// 执行SQL查询
-	rows, err := global.GVA_DB.Raw(`SELECT COUNT(*) AS count, province
+	db := *global.GVA_DB
+	rows, err := db.Raw(`SELECT COUNT(*) AS count, province
 FROM (
     SELECT IPCity, 
            CASE 
@@ -184,7 +185,8 @@ func Get在线用户统计(c *gin.Context) []gin.H {
 	sAppInfo := service.NewAppInfo(c, &db)
 	var 局_appId列表 []int
 	var 局_appId名称 = sAppInfo.AppInfo取map列表Int(true)
-	_ = global.GVA_DB.Model(dbm.DB_LinksToken{}).Distinct("LoginAppid").Find(&局_appId列表).Error
+
+	_ = db.Model(dbm.DB_LinksToken{}).Distinct("LoginAppid").Find(&局_appId列表).Error
 	var Data = make([]gin.H, 0, len(局_appId列表))
 	var 局_数量 int64
 	for 索引, _ := range 局_appId列表 {
@@ -348,7 +350,8 @@ func Get应用用户类型统计(c *gin.Context) []gin.H {
 	sUserClass := service.NewUserClass(c, &db)
 	var 局_名称 = sUserClass.UserClass取map列表Int(局_Appid)
 	局_名称[0] = "未分类"
-	_ = global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(局_Appid)).Distinct("UserClassId").Find(&局_ClassId列表).Error
+
+	_ = db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(局_Appid)).Distinct("UserClassId").Find(&局_ClassId列表).Error
 	var Data = make([]gin.H, len(局_ClassId列表))
 	var 局_数量 int64
 	for 索引, _ := range 局_ClassId列表 {
@@ -719,7 +722,8 @@ func Get卡号列表统计制卡(c *gin.Context) []gin.H {
 		Cnt    int64 `gorm:"column:Cnt"`
 	}
 	var 局_日统计 []日统计
-	局_db := global.GVA_DB.Model(dbm.DB_Ka{}).
+	db := *global.GVA_DB
+	局_db := db.Model(dbm.DB_Ka{}).
 		Select("FLOOR(RegisterTime / 86400) AS DayIdx, COUNT(*) AS Cnt").
 		Where("RegisterTime >= ? AND RegisterTime < ?", 上上月1日.Unix(), 下月1日.Unix()).
 		Group("DayIdx").
@@ -867,16 +871,19 @@ func Get卡号月度汇总(c *gin.Context) gin.H {
 	本月结束 := 取相对时间0点时间戳月(1)
 	上月开始 := 取相对时间0点时间戳月(-1)
 
-	局_db := global.GVA_DB.Model(dbm.DB_Ka{})
-	if 局_type.AppId > 0 {
-		局_db = 局_db.Where("AppId = ?", 局_type.AppId)
-	}
-
+	局_db := *global.GVA_DB
 	var 局_本月制卡, 局_上月制卡, 局_本月使用, 局_上月使用 int64
-	局_db.Select("COUNT(*)").Where("RegisterTime >= ? AND RegisterTime < ?", 本月开始, 本月结束).Count(&局_本月制卡)
-	局_db.Select("COUNT(*)").Where("RegisterTime >= ? AND RegisterTime < ?", 上月开始, 本月开始).Count(&局_上月制卡)
-	局_db.Select("COUNT(*)").Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 本月开始, 本月结束).Count(&局_本月使用)
-	局_db.Select("COUNT(*)").Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 上月开始, 本月开始).Count(&局_上月使用)
+	if 局_type.AppId > 0 {
+		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("AppId = ?", 局_type.AppId).Where("RegisterTime >= ? AND RegisterTime < ?", 本月开始, 本月结束).Count(&局_本月制卡)
+		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("AppId = ?", 局_type.AppId).Where("RegisterTime >= ? AND RegisterTime < ?", 上月开始, 本月开始).Count(&局_上月制卡)
+		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("AppId = ?", 局_type.AppId).Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 本月开始, 本月结束).Count(&局_本月使用)
+		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("AppId = ?", 局_type.AppId).Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 上月开始, 本月开始).Count(&局_上月使用)
+	} else {
+		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("RegisterTime >= ? AND RegisterTime < ?", 本月开始, 本月结束).Count(&局_本月制卡)
+		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("RegisterTime >= ? AND RegisterTime < ?", 上月开始, 本月开始).Count(&局_上月制卡)
+		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 本月开始, 本月结束).Count(&局_本月使用)
+		局_db.Model(dbm.DB_Ka{}).Debug().Select("COUNT(*)").Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 上月开始, 本月开始).Count(&局_上月使用)
+	}
 
 	Data := gin.H{
 		"本月制卡": 局_本月制卡,
@@ -968,7 +975,8 @@ func Get卡号列表统计制卡_代理(c *gin.Context) []gin.H {
 		Cnt    int64 `gorm:"column:Cnt"`
 	}
 	var 局_日统计 []日统计
-	局_db := global.GVA_DB.Model(dbm.DB_Ka{}).
+	db := *global.GVA_DB
+	局_db := db.Model(dbm.DB_Ka{}).
 		Select("FLOOR(RegisterTime / 86400) AS DayIdx, COUNT(*) AS Cnt").
 		Where("RegisterTime >= ? AND RegisterTime < ?", 上上月1日.Unix(), 下月1日.Unix()).
 		Where("RegisterUser = ?", c.GetString("User")).
@@ -1184,8 +1192,8 @@ func Get用户账号登录注册统计(c *gin.Context) []gin.H {
 // Get代理组织架构图 代理组织架构图
 func Get代理组织架构图(c *gin.Context, 根代理ID int) []*Node {
 	var 局_用户数组 []dbm.DB_User
-
-	_ = global.GVA_DB.Model(dbm.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Where("UPAgentId !=0").Find(&局_用户数组).Error
+	db := *global.GVA_DB
+	_ = db.Model(dbm.DB_User{}).Select("Id", "User", "UPAgentId", "AgentDiscount").Where("UPAgentId !=0").Find(&局_用户数组).Error
 	if len(局_用户数组) == 0 { //防止无代理会报错
 		return []*Node{}
 	}
@@ -1248,7 +1256,8 @@ func Get任务池任务Id分析(c *gin.Context) [][]string {
 		Fail    int `json:"Fail"`
 	}
 	var 局_统计结果 []局_日统计
-	err := global.GVA_DB.Model(dbm.DB_TaskPoolData{}).
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_TaskPoolData{}).
 		Select("TimeStart DIV 86400 AS DayNum, "+
 			"SUM(CASE WHEN Status = 3 THEN 1 ELSE 0 END) AS Success, "+
 			"SUM(CASE WHEN Status = 4 THEN 1 ELSE 0 END) AS Fail").

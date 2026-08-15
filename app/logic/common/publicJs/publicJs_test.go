@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 )
 
 type 公共JS_测试缓存 struct {

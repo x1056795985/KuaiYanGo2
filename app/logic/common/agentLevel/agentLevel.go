@@ -3,7 +3,7 @@ package agentLevel
 import (
 	"github.com/gin-gonic/gin"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 )
 
 var L_agentLevel = new(agentLevel)

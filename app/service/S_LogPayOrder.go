@@ -3,7 +3,7 @@ package service
 import (
 	"gorm.io/gorm"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 )
 
 type S_pay struct {

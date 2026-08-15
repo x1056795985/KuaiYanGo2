@@ -18,7 +18,7 @@ import (
 	"server/app/logic/webUser/cpsPayOrder"
 	m "server/app/models/common"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils/Qqwry"
 	"strconv"
@@ -969,7 +969,8 @@ func (j *rmbPay) Order订单创建(c *gin.Context, Uid, Uid类型 int, Rmb float
 	新订单.Rmb = Rmb
 	新订单.Note = 订单备注
 	新订单.PayOrder = service.NewRmbPayService(&db).Get获取新订单号()
-	err := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单).Error
+
+	err := db.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单).Error
 	if err != nil {
 		return dbm.DB_LogRMBPayOrder{}, err
 	}

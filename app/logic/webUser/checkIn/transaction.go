@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"server/app/logic/common/ka"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 )
 

@@ -10,7 +10,7 @@ import (
 	"server/app/logic/common/blacklist"
 	"server/app/logic/common/log"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	utils2 "server/app/utils"
 	"time"

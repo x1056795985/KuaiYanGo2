@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	"server/app/utils"
 	"strconv"
@@ -19,21 +19,21 @@ func NewCronLogService(db *gorm.DB) *S_CronLog {
 	return &S_CronLog{}
 }
 
-func (s *S_CronLog) Info(tx *gorm.DB, Id int) (db.DB_Cron_log, error) {
-	var value db.DB_Cron_log
-	err := tx.Model(db.DB_Cron_log{}).Where("Id =?", Id).First(&value).Error
+func (s *S_CronLog) Info(tx *gorm.DB, Id int) (dbm.DB_Cron_log, error) {
+	var value dbm.DB_Cron_log
+	err := tx.Model(dbm.DB_Cron_log{}).Where("Id =?", Id).First(&value).Error
 	return value, err
 }
 
-func (s *S_CronLog) Update(tx *gorm.DB, value db.DB_Cron_log) error {
-	err := tx.Model(db.DB_Cron_log{}).Where("Id = ?", value.Id).Updates(&value).Error
+func (s *S_CronLog) Update(tx *gorm.DB, value dbm.DB_Cron_log) error {
+	err := tx.Model(dbm.DB_Cron_log{}).Where("Id = ?", value.Id).Updates(&value).Error
 	if err != nil {
 
 	}
 	return err
 }
-func (s *S_CronLog) Create(tx *gorm.DB, value db.DB_Cron_log) error {
-	err := tx.Model(db.DB_Cron_log{}).Create(&value).Error
+func (s *S_CronLog) Create(tx *gorm.DB, value dbm.DB_Cron_log) error {
+	err := tx.Model(dbm.DB_Cron_log{}).Create(&value).Error
 	return err
 }
 
@@ -42,9 +42,9 @@ func (s *S_CronLog) Delete(tx *gorm.DB, Id interface{}) (影响行数 int64, err
 	var tx2 *gorm.DB
 	switch k := Id.(type) {
 	case int:
-		tx2 = tx.Model(db.DB_Cron_log{}).Where("Id = ?", k).Delete("")
+		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("Id = ?", k).Delete("")
 	case []int:
-		tx2 = tx.Model(db.DB_Cron_log{}).Where("Id IN ?", k).Delete("")
+		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("Id IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -52,8 +52,8 @@ func (s *S_CronLog) Delete(tx *gorm.DB, Id interface{}) (影响行数 int64, err
 }
 
 // 获取列表
-func (s *S_CronLog) GetList(tx *gorm.DB, 请求 request.List, 结果 int8, Type int, RegisterTime []string) (int64, []db.DB_Cron_log, error) {
-	局_DB := tx.Model(db.DB_Cron_log{})
+func (s *S_CronLog) GetList(tx *gorm.DB, 请求 request.List, 结果 int8, Type int, RegisterTime []string) (int64, []dbm.DB_Cron_log, error) {
+	局_DB := tx.Model(dbm.DB_Cron_log{})
 
 	if 请求.Keywords != "" {
 		switch 请求.Type {
@@ -89,7 +89,7 @@ func (s *S_CronLog) GetList(tx *gorm.DB, 请求 request.List, 结果 int8, Type 
 	case 2:
 		局_DB.Order("Id DESC")
 	}
-	var 局_数组 []db.DB_Cron_log
+	var 局_数组 []dbm.DB_Cron_log
 	err := 局_DB.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组).Error
 	if err != nil {
 		global.GVA_LOG.Println(utils.Q取包名结构体方法(s) + ":" + err.Error())
@@ -104,27 +104,27 @@ func (s *S_CronLog) DeleteType(tx *gorm.DB, Type int, KeyWord string) (影响行
 	default:
 		return 0, errors.New("类型错误")
 	case 1: //删除全部
-		tx2 = tx.Model(db.DB_Cron_log{}).Where("1=1").Delete("")
+		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("1=1").Delete("")
 	case 2: //删7天前
-		tx2 = tx.Model(db.DB_Cron_log{}).Where("RunTime <  ?", time.Now().Unix()-604800).Delete("")
+		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("RunTime <  ?", time.Now().Unix()-604800).Delete("")
 	case 3: //删除30天前
-		tx2 = tx.Model(db.DB_Cron_log{}).Where("RunTime <  ?", time.Now().Unix()-2592000).Delete("")
+		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("RunTime <  ?", time.Now().Unix()-2592000).Delete("")
 	case 4: //删除90天前
-		tx2 = tx.Model(db.DB_Cron_log{}).Where("RunTime <  ?", time.Now().Unix()-7776000).Delete("")
+		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("RunTime <  ?", time.Now().Unix()-7776000).Delete("")
 	case 5: //删除关键字
 		if len(KeyWord) == 0 {
 			return 0, errors.New("关键字不能为空")
 		}
-		tx2 = tx.Model(db.DB_Cron_log{}).Where("ReturnText like ?", "%"+KeyWord+"%").Delete("")
+		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("ReturnText like ?", "%"+KeyWord+"%").Delete("")
 	}
 	return tx2.RowsAffected, tx2.Error
 }
 
 // GetAllInfo 获取全部任务信息
-func (s *S_CronLog) GetAllInfo(tx *gorm.DB, status int) ([]db.DB_Cron_log, error) {
-	var value = []db.DB_Cron_log{}
+func (s *S_CronLog) GetAllInfo(tx *gorm.DB, status int) ([]dbm.DB_Cron_log, error) {
+	var value = []dbm.DB_Cron_log{}
 	var tx2 *gorm.DB
-	tx2 = tx.Model(db.DB_Cron_log{})
+	tx2 = tx.Model(dbm.DB_Cron_log{})
 	if status > 0 {
 		tx2 = tx2.Where("Status = ?", status)
 	}

@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/app/controller/Common"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
@@ -37,9 +37,9 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 		return
 	}
 	var info = struct {
-		appInfo   db.DB_AppInfo
-		DB_Ka     []db.DB_Ka
-		总数        int64
+		appInfo dbm.DB_AppInfo
+		DB_Ka   []dbm.DB_Ka
+		总数    int64
 		局_制卡人     []string
 		卡类id名称map map[int]string
 	}{
@@ -63,15 +63,15 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 
 		if 请求.AgentLv != 0 {
 			var 下级代理Uid = []int{}
-			global.GVA_DB.Model(db.Db_Agent_Level{}).Select("Uid").Where("UPAgentId = ?", 局_代理info.Id).Where("Level<=?", 请求.AgentLv).Find(&下级代理Uid)
+			global.GVA_DB.Model(dbm.Db_Agent_Level{}).Select("Uid").Where("UPAgentId = ?", 局_代理info.Id).Where("Level<=?", 请求.AgentLv).Find(&下级代理Uid)
 			if len(下级代理Uid) > 0 {
-				global.GVA_DB.Model(db.DB_User{}).Select("User").Where("Id in ?", 下级代理Uid).Find(&info.局_制卡人)
+				global.GVA_DB.Model(dbm.DB_User{}).Select("User").Where("Id in ?", 下级代理Uid).Find(&info.局_制卡人)
 			}
 		}
 		info.局_制卡人 = append(info.局_制卡人, 请求.AgentName)
 	}
 
-	局_DB := tx.Model(db.DB_Ka{})
+	局_DB := tx.Model(dbm.DB_Ka{})
 	if 请求.AppId != 0 {
 		局_DB.Where("AppId = ?", 请求.AppId)
 	}

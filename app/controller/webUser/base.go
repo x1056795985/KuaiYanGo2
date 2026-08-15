@@ -15,7 +15,7 @@ import (
 	"server/app/logic/webUser/appInfoWebUser"
 	"server/app/models/common"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils"
 	"server/app/utils/Qqwry"
@@ -183,7 +183,8 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 	info.DB_links_user.LastTime = info.DB_links_user.LoginTime
 	info.DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	info.DB_links_user.LoginAppid = constant.APPID_Web用户中心
-	err = global.GVA_DB.Create(&info.DB_links_user).Error
+	db := *global.GVA_DB
+	err = db.Create(&info.DB_links_user).Error
 	go log.L_log.Log_写登录日志(请求.UserOrKa, c.ClientIP(), "["+strconv.Itoa(请求.AppId)+"]登录", constant.APPID_Web用户中心)
 
 	//账号模式登录成功把登录信息写到账号表
@@ -245,6 +246,7 @@ func (C *Base) LoginKey(c *gin.Context) {
 	}{}
 	var err error
 	tx := *global.GVA_DB
+	db := *global.GVA_DB
 	局_key = constant.H缓存前缀_LoginURLPrefix + 局_key
 
 	if Data缓存, ok := global.H缓存.Get(局_key); ok {
@@ -282,7 +284,8 @@ func (C *Base) LoginKey(c *gin.Context) {
 	info.DB_links_user.LastTime = info.DB_links_user.LoginTime
 	info.DB_links_user.Token = strings.ToUpper(rand_string.RandomLetter(32))
 	info.DB_links_user.LoginAppid = constant.APPID_Web用户中心
-	err = global.GVA_DB.Create(&info.DB_links_user).Error
+
+	err = db.Create(&info.DB_links_user).Error
 	if err != nil {
 		goto 结束开始跳转
 	}

@@ -10,7 +10,7 @@ import (
 	"server/app/logic/common/jsEngine"
 	"server/app/logic/userSafetyApi/taskPool"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 	response2 "server/app/models/response"
 	"server/app/service"
@@ -263,7 +263,8 @@ func UserApi_任务池_取类型状态(c *gin.Context) {
 
 	//{"Api":"TaskPoolGetTypeStatus","Time":1684769068}
 	var DB_TaskPool_类型 []dbm.TaskPool_类型
-	_ = global.GVA_DB.Model(dbm.TaskPool_类型{}).Select("Id,Status").Find(&DB_TaskPool_类型).Error
+	db := *global.GVA_DB
+	_ = db.Model(dbm.TaskPool_类型{}).Select("Id,Status").Find(&DB_TaskPool_类型).Error
 	var 局_map = make(map[string]int, len(DB_TaskPool_类型))
 	for _, v := range DB_TaskPool_类型 {
 		局_map["id"+strconv.Itoa(v.Id)] = v.Status

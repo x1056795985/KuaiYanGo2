@@ -12,7 +12,7 @@ import (
 	"server/app/logic/common/appUser"
 	"server/app/logic/common/log"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
@@ -93,7 +93,7 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 	var 总数 int64
 	var 表名_AppUser = "db_AppUser_" + strconv.Itoa(请求.AppId)
 	db := *global.GVA_DB
-	局_DB := global.GVA_DB.Table(表名_AppUser)
+	局_DB := db.Table(表名_AppUser)
 	if service.NewAppInfo(c, &db).App是否为卡号(请求.AppId) {
 		局_DB = 局_DB.Select(表名_AppUser+".*", "db_Ka.Name", "(select count(db_links_Token.id)  FROM db_links_Token WHERE  "+表名_AppUser+".Uid=db_links_Token.Uid AND db_links_Token.Status=1 AND LoginAppid="+strconv.Itoa(请求.AppId)+" )as LinksCount").Joins("left join db_Ka on " + 表名_AppUser + ".Uid=db_Ka.Id")
 	} else {
@@ -295,7 +295,8 @@ func (C *AppUserFull) New(c *gin.Context) {
 	}
 
 	var count int64
-	err := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Uid  = ?", 请求.Uid).Count(&count).Error
+
+	err := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Uid  = ?", 请求.Uid).Count(&count).Error
 	if count != 0 {
 		response.FailWithMessage("用户已存在", c)
 		return
@@ -312,7 +313,8 @@ func (C *AppUserFull) New(c *gin.Context) {
 		UserClassId:  请求.UserClassId,
 		RegisterTime: time.Now().Unix(),
 	}
-	err = global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(请求.AppId)).Create(&局_信息).Error
+
+	err = db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(请求.AppId)).Create(&局_信息).Error
 	if err != nil {
 		response.FailWithMessage("添加失败", c)
 		return

@@ -8,7 +8,7 @@ import (
 	"server/app/controller/Common/response"
 	"server/app/global"
 	checkInLogic "server/app/logic/webUser/checkIn"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"strconv"
 	"time"

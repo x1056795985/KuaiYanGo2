@@ -13,7 +13,7 @@ import (
 	appUserLogic "server/app/logic/common/appUser"
 	"server/app/logic/common/log"
 	"server/app/models/constant"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/models/request"
 	. "server/app/models/response"
@@ -42,18 +42,18 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 	}
 	var err error
 	var DB_AppUser struct {
-		db.DB_AppUser
+		dbm.DB_AppUser
 		AppType int `json:"AppType"` //登录平台App名字
 	}
 	tx := *global.GVA_DB
-	err = tx.Model(db.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Where("AgentUid = ?", c.GetInt("Uid")).Find(&DB_AppUser).Error
+	err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Where("AgentUid = ?", c.GetInt("Uid")).Find(&DB_AppUser).Error
 	// 没查到数据
 
 	if err != nil {
 		response.FailWithMessage("查询软件用户详细信息失败", c)
 		return
 	}
-	var app信息 db.DB_AppInfo
+	var app信息 dbm.DB_AppInfo
 	app信息, _ = service.NewAppInfo(c, &tx).Info(请求.AppId)
 	DB_AppUser.AppType = app信息.AppType
 
@@ -80,8 +80,8 @@ func (C *AppUser) GetList(c *gin.Context) {
 	}
 	var err error
 	var info struct {
-		AppInfo   db.DB_AppInfo
-		AgentInfo db.DB_User
+		AppInfo   dbm.DB_AppInfo
+		AgentInfo dbm.DB_User
 	}
 
 	tx := *global.GVA_DB
@@ -251,7 +251,7 @@ type 结构响应_GetAppUserList struct {
 }
 
 type DB_AppUser带User信息 struct {
-	db.DB_AppUser
+	dbm.DB_AppUser
 	User       string `json:"User" gorm:"column:User;index;comment:用户登录名"`                 // 用户登录名
 	Name       string `json:"Name" gorm:"column:Name;index;comment:卡号"`                    // 用户登录名
 	Status     int    `json:"Status" gorm:"column:Status;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
@@ -275,12 +275,12 @@ func (C *AppUser) Del批量删除软件用户(c *gin.Context) {
 
 	tx := *global.GVA_DB
 	var 软件用户Uid = service.NewUser(c, &tx).Id取Uid_批量(请求.AppId, 请求.Id)
-	局_结果 := tx.Model(db.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id IN ? ", 请求.Id).Delete("")
+	局_结果 := tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id IN ? ", 请求.Id).Delete("")
 	if 局_结果.Error != nil {
 		response.FailWithMessage("删除失败", c)
 		return
 	}
-	_ = tx.Model(db.DB_UserConfig{}).Where("AppId = ? ", 请求.AppId).Where("Uid IN ? ", 软件用户Uid).Delete("").RowsAffected
+	_ = tx.Model(dbm.DB_UserConfig{}).Where("AppId = ? ", 请求.AppId).Where("Uid IN ? ", 软件用户Uid).Delete("").RowsAffected
 
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(局_结果.RowsAffected, 10), c)
 	return
@@ -306,8 +306,8 @@ func (C *AppUser) Save用户信息(c *gin.Context) {
 	}()
 	tx := *global.GVA_DB
 	var info struct {
-		局_旧用户信息 db.DB_AppUser
-		AppInfo db.DB_AppInfo
+		局_旧用户信息 dbm.DB_AppUser
+		AppInfo       dbm.DB_AppInfo
 	}
 	info.局_旧用户信息, err = service.NewAppUser(c, &tx, 请求.AppId).Info(请求.Id)
 	if err != nil {
@@ -326,19 +326,19 @@ func (C *AppUser) Save用户信息(c *gin.Context) {
 	}
 
 	if info.局_旧用户信息.Status != 请求.Status {
-		if 请求.Status == 1 && !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), db.D代理功能_解冻软件用户) {
+		if 请求.Status == 1 && !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), dbm.D代理功能_解冻软件用户) {
 			err = errors.New("权限不足,请联系上级授权解冻软件用户")
 			return
 		}
 
-		if 请求.Status == 2 && !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), db.D代理功能_冻结软件用户) {
+		if 请求.Status == 2 && !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), dbm.D代理功能_冻结软件用户) {
 			err = errors.New("权限不足,请联系上级授权冻结软件用户")
 			return
 		}
 	}
 
 	if info.局_旧用户信息.Key != 请求.Key {
-		if !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), db.D代理功能_修改用户绑定) {
+		if !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), dbm.D代理功能_修改用户绑定) {
 			response.FailWithMessage("权限不足,请联系上级授权修改用户绑定", c)
 			return
 		}
@@ -364,7 +364,7 @@ func (C *AppUser) Save用户信息(c *gin.Context) {
 func (C *AppUser) New用户信息(c *gin.Context) {
 	var 请求 struct {
 		AppId int `json:"AppId" binding:"required,min=10000"` // Appid 必填
-		db.DB_AppUser
+		dbm.DB_AppUser
 	}
 	if !C.ToJSON(c, &请求) {
 		return
@@ -381,9 +381,9 @@ func (C *AppUser) New用户信息(c *gin.Context) {
 	}()
 	var tx = *global.GVA_DB
 	var info struct {
-		AppInfo  db.DB_AppInfo
-		KaInfo   db.DB_Ka
-		UserInfo db.DB_User
+		AppInfo  dbm.DB_AppInfo
+		KaInfo   dbm.DB_Ka
+		UserInfo dbm.DB_User
 	}
 	info.AppInfo, err = service.NewAppInfo(c, &tx).Info(请求.AppId)
 	if err != nil {
@@ -416,7 +416,7 @@ func (C *AppUser) New用户信息(c *gin.Context) {
 	}
 	请求.RegisterTime = time.Now().Unix()
 	//app_id 没有这个字段排除掉
-	局_信息 := db.DB_AppUser{
+	局_信息 := dbm.DB_AppUser{
 		Uid:          请求.Uid,
 		Status:       请求.Status,
 		Key:          请求.Key,
@@ -451,7 +451,7 @@ func (C *AppUser) Set修改状态(c *gin.Context) {
 		return
 	}
 
-	if !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), S三元(请求.Status == 1, db.D代理功能_解冻软件用户, db.D代理功能_冻结软件用户)) {
+	if !agent.L_agent.Id功能权限检测(c, c.GetInt("Uid"), S三元(请求.Status == 1, dbm.D代理功能_解冻软件用户, dbm.D代理功能_冻结软件用户)) {
 		response.FailWithMessage("权限不足,请联系上级授权", c)
 		return
 	}
@@ -547,8 +547,8 @@ func (C *AppUser) Set用户密码(c *gin.Context) {
 	}()
 	tx := *global.GVA_DB
 	var info struct {
-		局_旧用户信息 db.DB_AppUser
-		AppInfo db.DB_AppInfo
+		局_旧用户信息 dbm.DB_AppUser
+		AppInfo       dbm.DB_AppInfo
 	}
 	info.局_旧用户信息, err = service.NewAppUser(c, &tx, 请求.AppId).Info(请求.Id)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 	"server/app/logic/common/appInfo"
 	"server/app/logic/common/publicData"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 )
 
@@ -140,9 +140,9 @@ func UserApi_取应用主页Url(c *gin.Context) {
 // UserApi_取应用基础信息 1.0.42+版本添加可用
 func UserApi_取应用基础信息(c *gin.Context) {
 	局_ctx := 取上下文(c)
-	db := global.GVA_DB
+	db := *global.GVA_DB
 	var AppInfoWebUser dbm.DB_AppInfoWebUser
-	AppInfoWebUser, _ = service.NewAppInfoWebUser(c, db).Info(局_ctx.AppInfo.AppId)
+	AppInfoWebUser, _ = service.NewAppInfoWebUser(c, &db).Info(局_ctx.AppInfo.AppId)
 
 	response.OkData(c, gin.H{
 		"AppId":            局_ctx.AppInfo.AppId,

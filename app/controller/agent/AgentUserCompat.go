@@ -12,7 +12,7 @@ import (
 	"server/app/logic/common/log"
 	"server/app/logic/common/user"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	utils2 "server/app/utils"
@@ -85,7 +85,8 @@ func (C *AgentUser) GetAgentUserInfo(c *gin.Context) {
 	}
 
 	var 局_用户详情 Agent用户详情
-	if err := global.GVA_DB.Model(dbm.DB_User{}).
+	db := *global.GVA_DB
+	if err := db.Model(dbm.DB_User{}).
 		Omit("Note", "PassWord", "SuperPassWord").
 		Where("id = ?", 请求.Id).
 		Find(&局_用户详情).Error; err != nil {
@@ -104,7 +105,8 @@ func (C *AgentUser) GetAgentUserList(c *gin.Context) {
 	}
 
 	局_所有子级代理ID := agent.L_agent.Q取下级代理数组含子级(c, []int{c.GetInt("Uid")})
-	局_DB := global.GVA_DB.Model(dbm.DB_User{}).Where("UPAgentId != 0").Where("Id IN ?", 局_所有子级代理ID)
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.DB_User{}).Where("UPAgentId != 0").Where("Id IN ?", 局_所有子级代理ID)
 
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
@@ -263,7 +265,7 @@ func (C *AgentUser) Save代理信息(c *gin.Context) {
 		局_更新字段["SuperPassWord"] = utils2.BcryptHash(请求.SuperPassWord)
 	}
 
-	局_DB := global.GVA_DB.Model(dbm.DB_User{}).Where("Id= ?", 请求.Id).Updates(&局_更新字段)
+	局_DB := db.Model(dbm.DB_User{}).Where("Id= ?", 请求.Id).Updates(&局_更新字段)
 	if 局_DB.Error != nil {
 		response.FailWithMessage("保存失败", c)
 		return
@@ -288,8 +290,8 @@ func (C *AgentUser) Set修改状态(c *gin.Context) {
 		response.FailWithMessage("修改失败:Status状态代码错误", c)
 		return
 	}
-
-	if err := global.GVA_DB.Model(dbm.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 请求.Status).Error; err != nil {
+	db := *global.GVA_DB
+	if err := db.Model(dbm.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 请求.Status).Error; err != nil {
 		response.FailWithMessage("修改失败", c)
 		global.GVA_LOG.Println("修改失败:" + err.Error())
 		return

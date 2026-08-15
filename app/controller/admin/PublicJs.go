@@ -11,7 +11,7 @@ import (
 	"server/app/logic/common/jsEngine"
 	"server/app/logic/common/publicJs"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
@@ -69,7 +69,8 @@ func (C *PublicJsCtrl) Info(c *gin.Context) {
 	}
 
 	var DB_PublicJs dbm.DB_PublicJs
-	err := global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("Name= ?", 请求.Name).First(&DB_PublicJs).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_PublicJs{}).Where("Name= ?", 请求.Name).First(&DB_PublicJs).Error
 	if err != nil {
 		response.FailWithMessage("获取公共变量失败,可能联合主键不存在", c)
 		return
@@ -87,9 +88,9 @@ func (C *PublicJsCtrl) Info(c *gin.Context) {
 // GetPublicAppList 获取公共函数应用列表
 func (C *PublicJsCtrl) GetPublicAppList(c *gin.Context) {
 	var 局_appid []int
-	_ = global.GVA_DB.Model(dbm.DB_PublicJs{}).Select("AppId").Group("AppId").Find(&局_appid).Error
-
 	db := *global.GVA_DB
+	_ = db.Model(dbm.DB_PublicJs{}).Select("AppId").Group("AppId").Find(&局_appid).Error
+
 	var AppName = service.NewAppInfo(c, &db).AppInfo取map列表Int(false)
 
 	type name struct {
@@ -117,8 +118,8 @@ func (C *PublicJsCtrl) GetList(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-
-	局_DB := global.GVA_DB.Model(dbm.DB_PublicJs{})
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.DB_PublicJs{})
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
 	} else if 请求.Order == 2 {
@@ -143,7 +144,7 @@ func (C *PublicJsCtrl) GetList(c *gin.Context) {
 		return
 	}
 
-	db := *global.GVA_DB
+	db = *global.GVA_DB
 	var AppName = service.NewAppInfo(c, &db).App取map列表String(false)
 	AppName["1"] = "全局"
 	AppName["2"] = "任务池Hook"
@@ -170,7 +171,8 @@ func (C *PublicJsCtrl) Delete(c *gin.Context) {
 
 	for _, 值 := range 请求.Id {
 		var DB_PublicJs dbm.DB_PublicJs
-		err := global.GVA_DB.Model(dbm.DB_PublicJs{}).Where("Id = ? ", 值).First(&DB_PublicJs).Error
+		db := *global.GVA_DB
+		err := db.Model(dbm.DB_PublicJs{}).Where("Id = ? ", 值).First(&DB_PublicJs).Error
 		if W文件_是否存在(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value) {
 			_ = W文件_删除(global.GVA_CONFIG.Q取运行目录 + DB_PublicJs.Value)
 			if err != nil {
@@ -180,7 +182,7 @@ func (C *PublicJsCtrl) Delete(c *gin.Context) {
 	}
 
 	var 影响行数 int64
-	var db = global.GVA_DB
+	var db = *global.GVA_DB
 	switch 请求.Type {
 	case 1:
 		if 请求.Type == 1 && len(请求.Id) == 0 {

@@ -7,7 +7,7 @@ import (
 	"server/app/controller/Common/response"
 	"server/app/global"
 	"server/app/logic/webUser/cpsInvitingRelation"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 )
 

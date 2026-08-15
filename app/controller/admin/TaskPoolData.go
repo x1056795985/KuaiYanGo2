@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/app/controller/Common"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/models/request"
 	. "server/app/models/response"
@@ -35,7 +35,7 @@ func (C *TaskPoolData) GetList(c *gin.Context) {
 
 	tx := *global.GVA_DB
 	var S = service.NewTaskPoolData(c, &tx)
-	var dataList []db.DB_TaskPoolData
+	var dataList []dbm.DB_TaskPoolData
 	var 总数 int64
 	var err error
 	总数, dataList, err = S.GetList(请求.List, 请求.Tid, 0, 请求.SubmitUid)

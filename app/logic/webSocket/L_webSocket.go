@@ -15,7 +15,7 @@ import (
 	"server/app/logic/common/publicJs"
 	"server/app/models/common"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"sync"
 	"sync/atomic"
@@ -29,14 +29,14 @@ type WSConnection struct {
 	ws              *websocket.Conn //ws连接
 	wsMu            sync.Mutex      //写锁,防止并发写websocket连接
 	closeOnce       sync.Once
-	linkId          int             //在线id,数据库对应在线记录id
-	lastTime        int64           //最后心跳时间  //可以降低数据库的读取次数,不用每次扫描都读库
-	lastWriteDbTime int64           //最后更新在线信息时间
+	linkId          int   //在线id,数据库对应在线记录id
+	lastTime        int64 //最后心跳时间  //可以降低数据库的读取次数,不用每次扫描都读库
+	lastWriteDbTime int64 //最后更新在线信息时间
 }
 
 const (
-	readTimeout = 190 * time.Second
-	writeTimeout = 10 * time.Second
+	readTimeout       = 190 * time.Second
+	writeTimeout      = 10 * time.Second
 	heartbeatInterval = 25 * time.Second
 )
 
@@ -200,6 +200,7 @@ func (j *webSocket) runHeartbeat() {
 		time.Sleep(heartbeatInterval)
 	}
 }
+
 // HandleConnection 处理单个WebSocket连接的消息循环
 func (j *webSocket) HandleConnection(ws *websocket.Conn, linkId int) {
 	defer func() {

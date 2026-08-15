@@ -5,7 +5,7 @@ import (
 	"github.com/valyala/fastjson"
 	"server/app/controller/Common"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 )

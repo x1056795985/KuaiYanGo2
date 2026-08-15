@@ -7,7 +7,7 @@ import (
 	"server/app/logic/common/agentLevel"
 	"server/app/logic/common/ka"
 	"server/app/logic/common/log"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
@@ -77,7 +77,7 @@ func (A *AgentInventoryOld) GetAgentInventoryInfo(c *gin.Context) {
 	}
 
 	var 局_卡包 dbm.Db_Agent_库存卡包
-	if err := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("id = ?", 请求.Id).First(&局_卡包).Error; err != nil {
+	if err := db.Model(dbm.Db_Agent_库存卡包{}).Where("id = ?", 请求.Id).First(&局_卡包).Error; err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return
 	}
@@ -90,10 +90,10 @@ func (A *AgentInventoryOld) GetAgentInventoryList(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
-
-	局_DB := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.Db_Agent_库存卡包{}).
 		Where("(Uid = ? OR RegisterUserId = ? OR SourceUid=? )", c.GetInt("Uid"), c.GetInt("Uid"), c.GetInt("Uid"))
-	局_DB2 := global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).
+	局_DB2 := db.Model(dbm.Db_Agent_库存卡包{}).
 		Where("(Uid = ? OR RegisterUserId = ? OR SourceUid=? )", c.GetInt("Uid"), c.GetInt("Uid"), c.GetInt("Uid"))
 
 	if 请求.Order == 1 {
@@ -155,7 +155,6 @@ func (A *AgentInventoryOld) GetAgentInventoryList(c *gin.Context) {
 		return
 	}
 
-	db := *global.GVA_DB
 	局_AppMap := service.NewAppInfo(c, &db).AppInfo取map列表Int(true)
 	for 局_索引 := range 局_列表 {
 		局_列表[局_索引].AppName = 局_AppMap[局_列表[局_索引].AppId]

@@ -9,7 +9,7 @@ import (
 	"server/app/logic/common/ka"
 	"server/app/logic/common/log"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
@@ -45,7 +45,8 @@ func (C *KaFull) Info(c *gin.Context) {
 		return
 	}
 	var DB_Ka dbm.DB_Ka
-	err := global.GVA_DB.Model(dbm.DB_Ka{}).Where("Id = ?", 请求.Id).First(&DB_Ka).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_Ka{}).Where("Id = ?", 请求.Id).First(&DB_Ka).Error
 	if err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return
@@ -78,7 +79,8 @@ func (C *KaFull) GetList(c *gin.Context) {
 
 	var DB_Ka []dbm.DB_Ka
 	var 总数 int64
-	局_DB := global.GVA_DB.Model(dbm.DB_Ka{})
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.DB_Ka{})
 	if 请求.AppId != 0 {
 		局_DB.Where("AppId = ?", 请求.AppId)
 	}
@@ -141,10 +143,10 @@ func (C *KaFull) GetList(c *gin.Context) {
 		return
 	}
 
-	db := *global.GVA_DB
-	var AppType int = service.NewAppInfo(c, &db).App取AppType(请求.AppId)
-	UserClass := service.NewUserClass(c, &db).UserClass取map列表Int(请求.AppId)
-	KaClass := service.NewKaClass(c, &db).KaClass取map列表Int(请求.AppId)
+	db = *global.GVA_DB
+	var AppType = service.NewAppInfo(c, &db).App取AppType(请求.AppId)
+	局_UserClass := service.NewUserClass(c, &db).UserClass取map列表Int(请求.AppId)
+	局_KaClass := service.NewKaClass(c, &db).KaClass取map列表Int(请求.AppId)
 
 	response.OkWithDetailed(struct {
 		List      interface{}    `json:"list"`
@@ -152,7 +154,7 @@ func (C *KaFull) GetList(c *gin.Context) {
 		AppType   int            `json:"appType"`
 		UserClass map[int]string `json:"userClass"`
 		KaClass   map[int]string `json:"kaClass"`
-	}{DB_Ka, 总数, AppType, UserClass, KaClass}, "获取成功", c)
+	}{DB_Ka, 总数, AppType, 局_UserClass, 局_KaClass}, "获取成功", c)
 }
 
 // New 制新卡
@@ -427,7 +429,7 @@ func (C *KaFull) Delete(c *gin.Context) {
 		return
 	}
 
-	var db = global.GVA_DB
+	db := *global.GVA_DB
 	影响行数 := db.Model(dbm.DB_Ka{}).Where("Id IN ? ", 请求.Id).Delete("").RowsAffected
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)

@@ -9,7 +9,7 @@ import (
 	"server/app/logic/common/log"
 	"server/app/logic/webUser/cps"
 	"server/app/logic/webUser/user"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"strconv"
 	"time"

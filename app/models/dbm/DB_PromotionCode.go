@@ -1,0 +1,10 @@
+package dbm
+
+type DB_PromotionCode struct {
+	Id            int    `json:"Id" gorm:"column:Id;primarykey;comment:用户id"`
+	PromotionCode string `json:"PromotionCode" gorm:"column:PromotionCode;uniqueIndex:idx_db_promotion_code_promotion_code;comment:推广代码"`
+}
+
+func (DB_PromotionCode) TableName() string {
+	return "db_promotion_code" //(推广代码)
+}

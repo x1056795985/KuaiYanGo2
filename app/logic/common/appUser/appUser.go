@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm/clause"
 	"server/app/global"
 	"server/app/logic/common/log"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"strconv"
 	"time"
@@ -27,7 +27,8 @@ func (j *appUser) Id点数增减(c *gin.Context, AppId, Id int, 增减值 int64,
 		//增减0 直接成功
 		return nil
 	}
-	db := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
+	db := *global.GVA_DB
+	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
 	if is增加 {
 		//增加直接处理就可以了,不用事务
 		err := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime + ?", 增减值)).Error
@@ -44,7 +45,7 @@ func (j *appUser) Id点数增减(c *gin.Context, AppId, Id int, 增减值 int64,
 	tx.Raw(fmt.Sprintf(`SELECT VipTime FROM db_AppUser_%d WHERE Id = %d  LIMIT 1`, AppId, Id)).Scan(&局_点数)
 	//读取旧的数值
 
-	局_AppInfo, _ := service.NewAppInfo(c, db).Info(AppId)
+	局_AppInfo, _ := service.NewAppInfo(c, &db).Info(AppId)
 	局_计点 := 局_AppInfo.AppType == 2 || 局_AppInfo.AppType == 4
 	if !局_计点 {
 		// 如果不是计点方式 减去当前时间戳 为真实剩余时间
@@ -99,7 +100,7 @@ func (j *appUser) Uid积分减少(c *gin.Context, AppId, Uid int, 减少值 floa
 		}
 	}
 
-	db := global.GVA_DB
+	db := *global.GVA_DB
 	//这里就是减少,需要开启事务保证
 	err := db.Transaction(func(tx *gorm.DB) error {
 		var err error
@@ -173,8 +174,9 @@ func (j *appUser) Z置状态_同步卡号修改(c *gin.Context, AppId int, id []
 	if tempObj, ok := c.Get("tx"); ok {
 		tx = tempObj.(*gorm.DB)
 	} else {
-		db := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
-		tx = db
+		db := *global.GVA_DB
+		db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
+		tx = &db
 	}
 
 	info.AppInfo, err = service.NewAppInfo(c, tx).Info(AppId)
@@ -211,8 +213,8 @@ func (j *appUser) Id积分增减(c *gin.Context, AppId, Id int, 增减值 float6
 		//增减0 直接成功
 		return nil
 	}
-
-	db := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
+	db := *global.GVA_DB
+	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
 	if is增加 {
 		//增加直接处理就可以了,不用事务
 		err := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipNumber", gorm.Expr("VipNumber + ?", 增减值)).Error
@@ -262,22 +264,24 @@ func (j *appUser) New用户信息(c *gin.Context, AppId int, Uid int, 绑定信�
 	局_AppUser.RegisterTime = time.Now().Unix()
 	局_AppUser.AgentUid = 0 //不在这里赋值,单独处理
 
-	db := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
-	_, err := service.NewAppUser(c, db, AppId).Create(&局_AppUser)
+	db := *global.GVA_DB
+	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
+	_, err := service.NewAppUser(c, &db, AppId).Create(&局_AppUser)
 	return err
 }
 
 // S删除VipTime小于等于X 删除VipTime<=X的软件用户
 func (j *appUser) S删除VipTime小于等于X(c *gin.Context, AppId int, VipTime int64) (影响行数 int64, err error) {
-	db := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
+	db := *global.GVA_DB
 	影响行数 = db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("VipTime <= ? ", VipTime).Delete("").RowsAffected
 	return 影响行数, err
 }
 
 // S删除VipTime小于等于X且删除卡号 删除VipTime<=X的软件用户及其卡号(多表事务操作)
 func (j *appUser) S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTime int64, Ip string) (id int64, err error) {
-	db := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
-	sAppInfo := service.NewAppInfo(c, db)
+	db := *global.GVA_DB
+	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
+	sAppInfo := service.NewAppInfo(c, &db)
 	if !sAppInfo.App是否为卡号(AppId) {
 		return 0, errors.New("仅限卡号类型应用使用")
 	}
@@ -346,11 +350,9 @@ func (j *appUser) S删除卡号不存在的软件用户(c *gin.Context, AppId in
 	if !sAppInfo.App是否为卡号(AppId) {
 		return 0, errors.New("仅限卡号类型应用使用")
 	}
-
-	局_DB := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
 	var ids []int
 	//获取全部uid 就是卡号id
-	err = 局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Select("Uid").Find(&ids).Error
+	err = db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId)).Select("Uid").Find(&ids).Error
 	if err != nil {
 		return 0, err
 	}
@@ -358,7 +360,7 @@ func (j *appUser) S删除卡号不存在的软件用户(c *gin.Context, AppId in
 		return 0, nil
 	}
 	var KaId []int
-	err = 局_DB.Model(dbm.DB_Ka{}).Select("Id").Where("AppId = ? ", AppId).Scan(&KaId).Error
+	err = db.Model(dbm.DB_Ka{}).Select("Id").Where("AppId = ? ", AppId).Scan(&KaId).Error
 	if err != nil {
 		return 0, err
 	}
@@ -374,7 +376,7 @@ func (j *appUser) S删除卡号不存在的软件用户(c *gin.Context, AppId in
 		if end > len(Uids) {
 			end = len(Uids)
 		}
-		tx := 局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids[i:end]).Delete("")
+		tx := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Uid IN ? ", Uids[i:end]).Delete("")
 		if tx.Error != nil {
 			return total, tx.Error
 		}
@@ -391,16 +393,15 @@ func (j *appUser) P批量_全部用户增减时间或点数(c *gin.Context, AppI
 		return 0, errors.New("AppId不存在")
 	}
 
-	局_DB := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
-	局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
 
 	局_is计点 := sAppInfo.App是否为计点(AppId)
 	局_is卡号 := sAppInfo.App是否为卡号(AppId)
 	if 用户或卡号前缀 != "" {
 		if 局_is卡号 {
-			局_DB = 局_DB.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
+			db.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
 		} else {
-			局_DB = 局_DB.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
+			db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
 		}
 	}
 
@@ -411,36 +412,36 @@ func (j *appUser) P批量_全部用户增减时间或点数(c *gin.Context, AppI
 
 	case 2: //已过期 点数为0
 		if 局_is计点 {
-			局_DB = 局_DB.Where("ai.VipTime = 0 ")
+			db.Where("ai.VipTime = 0 ")
 		} else {
-			局_DB = 局_DB.Where("ai.VipTime < ? ", time.Now().Unix())
+			db.Where("ai.VipTime < ? ", time.Now().Unix())
 		}
 
 	case 3: //未过期
 		if 局_is计点 {
-			局_DB = 局_DB.Where("ai.VipTime >0 ")
+			db.Where("ai.VipTime >0 ")
 		} else {
-			局_DB = 局_DB.Where("ai.VipTime > ? ", time.Now().Unix())
+			db.Where("ai.VipTime > ? ", time.Now().Unix())
 		}
 	}
 	if 注册时间开始 > 0 {
-		局_DB = 局_DB.Where("ai.RegisterTime > ?", 注册时间开始)
+		db.Where("ai.RegisterTime > ?", 注册时间开始)
 	}
 	if 注册时间结束 > 0 {
-		局_DB = 局_DB.Where("ai.RegisterTime < ?", 注册时间结束)
+		db.Where("ai.RegisterTime < ?", 注册时间结束)
 	}
 	if len(UserClassId) > 0 {
-		局_DB = 局_DB.Where("ai.UserClassId IN ?", UserClassId)
+		db.Where("ai.UserClassId IN ?", UserClassId)
 	}
 
 	var 局_id数组 []int
-	局_DB.Find(&局_id数组)
+	db.Find(&局_id数组)
 	if len(局_id数组) > 0 {
 		//如果是增加时间 Number 先给过期的修改为当前时间戳
 		if Number > 0 {
-			局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Where("VipTime < ?", time.Now().Unix()).Update("VipTime", time.Now().Unix())
+			db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Where("VipTime < ?", time.Now().Unix()).Update("VipTime", time.Now().Unix())
 		}
-		影响行数 = 局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", gorm.Expr("VipTime + ?", Number)).RowsAffected
+		影响行数 = db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", gorm.Expr("VipTime + ?", Number)).RowsAffected
 		var 局_id数组文本 string
 		for _, num := range 局_id数组 {
 			局_id数组文本 += strconv.Itoa(num) + ","
@@ -460,16 +461,17 @@ func (j *appUser) P批量_全部用户修改为指定时间或点数(c *gin.Cont
 		return 0, errors.New("AppId不存在")
 	}
 
-	局_DB := global.GVA_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
-	局_DB = 局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+	局_DB := *global.GVA_DB
+
+	局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
 
 	局_is计点 := sAppInfo.App是否为计点(AppId)
 	局_is卡号 := sAppInfo.App是否为卡号(AppId)
 	if 用户或卡号前缀 != "" {
 		if 局_is卡号 {
-			局_DB = 局_DB.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
+			局_DB.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
 		} else {
-			局_DB = 局_DB.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
+			局_DB.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
 		}
 	}
 
@@ -480,28 +482,29 @@ func (j *appUser) P批量_全部用户修改为指定时间或点数(c *gin.Cont
 
 	case 2: //已过期 点数为0
 		if 局_is计点 {
-			局_DB = 局_DB.Where("ai.VipTime = 0 ")
+			局_DB.Where("ai.VipTime = 0 ")
 		} else {
-			局_DB = 局_DB.Where("ai.VipTime < ? ", time.Now().Unix())
+			局_DB.Where("ai.VipTime < ? ", time.Now().Unix())
 		}
 
 	case 3: //未过期
 		if 局_is计点 {
-			局_DB = 局_DB.Where("ai.VipTime >0 ")
+			局_DB.Where("ai.VipTime >0 ")
 		} else {
-			局_DB = 局_DB.Where("ai.VipTime > ? ", time.Now().Unix())
+			局_DB.Where("ai.VipTime > ? ", time.Now().Unix())
 		}
 	}
 	if 注册时间开始 > 0 {
-		局_DB = 局_DB.Where("ai.RegisterTime > ?", 注册时间开始)
+		局_DB.Where("ai.RegisterTime > ?", 注册时间开始)
 	}
 	if 注册时间结束 > 0 {
-		局_DB = 局_DB.Where("ai.RegisterTime < ?", 注册时间结束)
+		局_DB.Where("ai.RegisterTime < ?", 注册时间结束)
 	}
 
 	var 局_id数组 []int
 	局_DB.Find(&局_id数组)
 	if len(局_id数组) > 0 {
+		局_DB = *global.GVA_DB
 		影响行数 = 局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", Number).RowsAffected
 		var 局_id数组文本 string
 		for _, num := range 局_id数组 {

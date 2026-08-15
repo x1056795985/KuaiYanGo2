@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"server/app/controller/Common"
 	"server/app/global"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/models/request"
 	. "server/app/models/response"
@@ -57,7 +57,7 @@ func (C *CronLog) Info(c *gin.Context) {
 
 	var S = service.S_CronLog{}
 	tx := *global.GVA_DB
-	var info db.DB_Cron_log
+	var info dbm.DB_Cron_log
 	info, err := S.Info(&tx, 请求.Id)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -82,7 +82,7 @@ func (C *CronLog) GetList(c *gin.Context) {
 
 	var S = service.S_CronLog{}
 	tx := *global.GVA_DB
-	var dataList []db.DB_Cron_log
+	var dataList []dbm.DB_Cron_log
 	var 总数 int64
 	var err error
 	总数, dataList, err = S.GetList(&tx, 请求.List, 请求.Result, 请求.TaskType, 请求.RegisterTime)

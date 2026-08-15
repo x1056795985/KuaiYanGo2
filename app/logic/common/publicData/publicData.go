@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"strings"
 )
 

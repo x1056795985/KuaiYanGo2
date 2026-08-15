@@ -47,8 +47,8 @@ func C初始化上下文() gin.HandlerFunc {
 			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), constant.Status_App不存在, "App不存在"})
 			c.Abort()
 		}
-		db := global.GVA_DB
-		ctx.AppInfo, err = service.NewAppInfo(c, db).Info(ctx.AppInfo.AppId)
+		db := *global.GVA_DB
+		ctx.AppInfo, err = service.NewAppInfo(c, &db).Info(ctx.AppInfo.AppId)
 		if err != nil {
 			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), constant.Status_App不存在, "App不存在"})
 			c.Abort()

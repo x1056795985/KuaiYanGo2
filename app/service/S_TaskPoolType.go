@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/request"
 )
 
@@ -22,8 +22,8 @@ func NewTaskPoolType(c *gin.Context, db *gorm.DB) *TaskPoolType {
 }
 
 // 增
-func (s *TaskPoolType) Create(info db.TaskPool_类型) (row int64, err error) {
-	tx := s.db.Model(db.TaskPool_类型{}).Create(&info)
+func (s *TaskPoolType) Create(info dbm.TaskPool_类型) (row int64, err error) {
+	tx := s.db.Model(dbm.TaskPool_类型{}).Create(&info)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -32,9 +32,9 @@ func (s *TaskPoolType) Delete(id interface{}) (影响行数 int64, error error) 
 	var tx2 *gorm.DB
 	switch k := id.(type) {
 	case string:
-		tx2 = s.db.Model(db.TaskPool_类型{}).Where("id = ?", k).Delete("")
+		tx2 = s.db.Model(dbm.TaskPool_类型{}).Where("id = ?", k).Delete("")
 	case []string:
-		tx2 = s.db.Model(db.TaskPool_类型{}).Where("id IN ?", k).Delete("")
+		tx2 = s.db.Model(dbm.TaskPool_类型{}).Where("id IN ?", k).Delete("")
 	default:
 		return 0, errors.New("错误的数据")
 	}
@@ -42,8 +42,8 @@ func (s *TaskPoolType) Delete(id interface{}) (影响行数 int64, error error) 
 }
 
 // 获取列表
-func (s *TaskPoolType) GetList(请求 request.List) (int64, []db.TaskPool_类型, error) {
-	tx := s.db.Model(db.TaskPool_类型{})
+func (s *TaskPoolType) GetList(请求 request.List) (int64, []dbm.TaskPool_类型, error) {
+	tx := s.db.Model(dbm.TaskPool_类型{})
 
 	if 请求.Keywords != "" {
 		switch 请求.Type {
@@ -67,15 +67,15 @@ func (s *TaskPoolType) GetList(请求 request.List) (int64, []db.TaskPool_类型
 	case 2:
 		tx = tx.Order("Id DESC")
 	}
-	var 局_数组 []db.TaskPool_类型
+	var 局_数组 []dbm.TaskPool_类型
 	tx = tx.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_数组)
 
 	return 总数, 局_数组, tx.Error
 }
 
 // 查
-func (s *TaskPoolType) Info(Id string) (info db.TaskPool_类型, err error) {
-	tx := s.db.Model(db.TaskPool_类型{}).Where("Id = ?", Id).First(&info)
+func (s *TaskPoolType) Info(Id string) (info dbm.TaskPool_类型, err error) {
+	tx := s.db.Model(dbm.TaskPool_类型{}).Where("Id = ?", Id).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -83,8 +83,8 @@ func (s *TaskPoolType) Info(Id string) (info db.TaskPool_类型, err error) {
 }
 
 // 查
-func (s *TaskPoolType) Info2(where map[string]interface{}) (info db.TaskPool_类型, err error) {
-	tx := s.db.Model(db.TaskPool_类型{}).Where(where).First(&info)
+func (s *TaskPoolType) Info2(where map[string]interface{}) (info dbm.TaskPool_类型, err error) {
+	tx := s.db.Model(dbm.TaskPool_类型{}).Where(where).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
 	}
@@ -94,19 +94,19 @@ func (s *TaskPoolType) Info2(where map[string]interface{}) (info db.TaskPool_类
 // 改
 func (s *TaskPoolType) Update(Id int, 数据 map[string]interface{}) (row int64, err error) {
 
-	tx := s.db.Model(db.TaskPool_类型{}).Where("Id = ?", Id).Updates(&数据)
+	tx := s.db.Model(dbm.TaskPool_类型{}).Where("Id = ?", Id).Updates(&数据)
 	return tx.RowsAffected, tx.Error
 }
 
 // 保存
-func (s *TaskPoolType) Save(info db.TaskPool_类型) (row int64, err error) {
-	tx := s.db.Model(db.TaskPool_类型{}).Where("Id = ?", info.Id).Save(&info)
+func (s *TaskPoolType) Save(info dbm.TaskPool_类型) (row int64, err error) {
+	tx := s.db.Model(dbm.TaskPool_类型{}).Where("Id = ?", info.Id).Save(&info)
 	return tx.RowsAffected, tx.Error
 }
 
 // Task类型读取 按id取任务类型
-func (s *TaskPoolType) Task类型读取(id int) (db.TaskPool_类型, error) {
-	var DB_TaskPool_类型 db.TaskPool_类型
-	err := s.db.Model(db.TaskPool_类型{}).Where("Id=?", id).First(&DB_TaskPool_类型).Error
+func (s *TaskPoolType) Task类型读取(id int) (dbm.TaskPool_类型, error) {
+	var DB_TaskPool_类型 dbm.TaskPool_类型
+	err := s.db.Model(dbm.TaskPool_类型{}).Where("Id=?", id).First(&DB_TaskPool_类型).Error
 	return DB_TaskPool_类型, err
 }

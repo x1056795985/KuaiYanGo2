@@ -5,7 +5,7 @@ import (
 	"server/app/global"
 	"server/app/logic/common/setting"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"time"
@@ -29,7 +29,8 @@ func IsTokenAgent() gin.HandlerFunc {
 		}
 		var DB_LinksToken dbm.DB_LinksToken
 		//这里如果报错  invalid memory address or nil pointer dereference   可能是配置文件数据库配置北山,global.GVA_DB 值为空
-		err := global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
+		db := *global.GVA_DB
+		err := db.Model(dbm.DB_LinksToken{}).Where("Token = ?", Token).First(&DB_LinksToken).Error
 		// 没查到数据 或状态不正常
 		if err != nil || DB_LinksToken.Status != 1 {
 			response.FailTokenErr(gin.H{"reload": true}, "令牌已失效", c)
@@ -44,9 +45,10 @@ func IsTokenAgent() gin.HandlerFunc {
 		}
 		//更新最后活动时间
 		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
-			global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("LastTime", time.Now().Unix())
+			db2 := *global.GVA_DB
+			db2.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("LastTime", time.Now().Unix())
 		}
-		db := *global.GVA_DB
+
 		go service.NewUser(c, &db).Id置最后登录AppId(DB_LinksToken.Uid, 2, c.ClientIP())
 		//把 userID 保存到上下文,这样逻辑层就不用再查询了
 		c.Set("Uid", DB_LinksToken.Uid)

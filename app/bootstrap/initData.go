@@ -15,7 +15,7 @@ import (
 	"server/app/logic/common/user"
 	"server/app/models/common"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 
 	"server/app/service"
 	utils2 "server/app/utils"
@@ -28,7 +28,7 @@ import (
 
 // InitDbTables 初始化数据库表
 func InitDbTables(c *gin.Context) {
-	db := global.GVA_DB
+	db := *global.GVA_DB
 
 	tables := []interface{}{
 		// 系统模块表
@@ -111,13 +111,11 @@ func InitDbTables(c *gin.Context) {
 
 // InitDbTableData 初始化示例数据
 func InitDbTableData(c *gin.Context) {
-	db := global.GVA_DB
-	局_例子记录 := setting.Q例子写出记录()
-
-	if db == nil {
+	if global.GVA_DB == nil {
 		return
 	}
-
+	db := *global.GVA_DB
+	局_例子记录 := setting.Q例子写出记录()
 	// 检查 admin表是否有账号
 	var 局_数量 int64
 	db.Model(dbm.DB_Admin{}).Count(&局_数量)
@@ -134,7 +132,7 @@ func InitDbTableData(c *gin.Context) {
 			Authority:     "All",
 			AgentDiscount: 100,
 		}}
-		global.GVA_DB.Create(&entities)
+		db.Create(&entities)
 	}
 
 	// 检查 用户表
@@ -156,8 +154,8 @@ func InitDbTableData(c *gin.Context) {
 			appUser.L_appUser.New用户信息(c, 10001, 1, "测试绑定", 1, time.Now().Unix(), 11.02, 0, "")
 			卡类ID, _ := ka.L_ka.KaClass创建New(c, 10001, "天卡", "Y30", 2592000, 2592000, 0.01, 1.01, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
 			卡类ID, _ = ka.L_ka.KaClass创建New(c, 10001, "月卡", "Y30", 2592000, 2592000, 0.01, 1.01, 100, 100, 0, 1, 25, 1, 1, 1, 1)
-			卡信息, _ := ka.L_ka.Ka单卡创建(c, 卡类ID, -1, service.NewAdmin(c, db).Id取User(1), "演示创建", "", 0)
-			卡信息, _ = ka.L_ka.Ka单卡创建(c, 卡类ID, -1, service.NewAdmin(c, db).Id取User(1), "演示创建可追回卡号", "", 0)
+			卡信息, _ := ka.L_ka.Ka单卡创建(c, 卡类ID, -1, service.NewAdmin(c, &db).Id取User(1), "演示创建", "", 0)
+			卡信息, _ = ka.L_ka.Ka单卡创建(c, 卡类ID, -1, service.NewAdmin(c, &db).Id取User(1), "演示创建可追回卡号", "", 0)
 			ka.L_ka.K卡号充值_事务(c, 10001, 卡信息.Name, "test0001", "")
 			_ = appInfo.L_appInfo.NewApp信息(c, 10002, 3, "演示对接卡号限时RSA通讯")
 			卡类ID, _ = ka.L_ka.KaClass创建New(c, 10002, "天卡", "Y01", 86400, 0, 0, 0, 0.02, 0.02, 0, 1, 25, 1, 1, 1, 1)
@@ -172,23 +170,23 @@ func InitDbTableData(c *gin.Context) {
 		global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			订单创建, _ := rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "支付宝PC", "演示数据", "127.0.0.1", 0, "")
-			service.NewRmbPayService(db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_成功)
+			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_成功)
 
 			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
-			service.NewRmbPayService(db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_成功)
+			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_成功)
 
 			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "管理员手动充值", "演示数据", "127.0.0.1", 0, "")
-			service.NewRmbPayService(db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_成功)
+			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_成功)
 			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
-			service.NewRmbPayService(db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_等待支付)
+			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_等待支付)
 			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "支付宝PC", "演示数据", "127.0.0.1", 0, "")
-			service.NewRmbPayService(db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_退款成功)
+			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_退款成功)
 			go log.L_log.Log_写余额日志("test0001", "127.0.0.1", "管理员操作退款,余额充值订单:"+订单创建.PayOrder+",扣除用户已充值余额"+"|新余额≈"+utils.Float64到文本(0.01, 2), utils.Float64取负值(订单创建.Rmb))
 
 			log.L_log.Log_写余额日志("test0001", "127.0.0.1", "看你长得帅,收费", -0.05)
 
 			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
-			service.NewRmbPayService(db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_退款失败)
+			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_退款失败)
 		}
 		局_例子记录.DbLogrmbpayorder = 局_例子版本
 	}
@@ -246,7 +244,7 @@ func InitDbTableData(c *gin.Context) {
 	if 局_例子记录.Taskpool < 局_例子版本 {
 		global.GVA_DB.Model(dbm.TaskPool_类型{}).Count(&局_数量)
 		if 局_数量 == 0 {
-			_, _ = service.NewTaskPoolType(c, db).Create(dbm.TaskPool_类型{Name: "测试任务1", HookSubmitDataStart: "hook模板_任务创建入库前"})
+			_, _ = service.NewTaskPoolType(c, &db).Create(dbm.TaskPool_类型{Name: "测试任务1", HookSubmitDataStart: "hook模板_任务创建入库前"})
 		}
 		局_例子记录.Taskpool = 局_例子版本
 	}
@@ -269,18 +267,18 @@ func InitDbTableData(c *gin.Context) {
 		global.GVA_DB.Model(dbm.Db_Agent_Level{}).Count(&局_数量)
 		if 局_数量 == 0 {
 			user.L_user.New用户信息(c, "刘备", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", -1, 50, 0, "")
-			局_Uid := service.NewUser(c, db).User用户名取id("刘备")
+			局_Uid := service.NewUser(c, &db).User用户名取id("刘备")
 			if 局_Uid > 0 {
 				user.L_user.New用户信息(c, "关羽", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", 局_Uid, 30, 0, "")
 				user.L_user.New用户信息(c, "张飞", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", 局_Uid, 30, 0, "")
 				user.L_user.New用户信息(c, "诸葛亮", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", 局_Uid, 30, 0, "")
 			}
 
-			局_Uid = service.NewUser(c, db).User用户名取id("关羽")
+			局_Uid = service.NewUser(c, &db).User用户名取id("关羽")
 			if 局_Uid > 0 {
 				user.L_user.New用户信息(c, "关平", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", 局_Uid, 10, 0, "")
 			}
-			局_Uid = service.NewUser(c, db).User用户名取id("张飞")
+			局_Uid = service.NewUser(c, &db).User用户名取id("张飞")
 			if 局_Uid > 0 {
 				user.L_user.New用户信息(c, "张苞", "a"+strconv.FormatInt(time.Now().Unix(), 10), "a"+strconv.FormatInt(time.Now().Unix(), 10), "", "", "", "127.0.0.1", "代理数量=0,系统创建演示", 局_Uid, 10, 0, "")
 			}

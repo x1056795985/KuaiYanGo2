@@ -13,7 +13,7 @@ import (
 	logicUser "server/app/logic/userSafetyApi/user"
 	"server/app/models/common"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils"
 	"strings"

@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 )
 

@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm/clause"
 	"server/app/global"
 	"server/app/models/constant"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"time"
 )

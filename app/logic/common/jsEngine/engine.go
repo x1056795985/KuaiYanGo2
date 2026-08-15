@@ -16,7 +16,7 @@ import (
 	"server/app/global"
 	"server/app/logic/common/cycleNot"
 	"server/app/logic/common/rmbPay"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/utils/Qqwry"
 )
 

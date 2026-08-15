@@ -10,7 +10,7 @@ import (
 	"server/app/logic/common/ka"
 	"server/app/logic/common/kaClassUpPrice"
 	"server/app/logic/common/log"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
 	"sort"
@@ -116,7 +116,8 @@ func (A *AgentKa) GetInfo(c *gin.Context) {
 	}
 
 	var 局_卡号 dbm.DB_Ka
-	if err := global.GVA_DB.Model(dbm.DB_Ka{}).Omit("AdminNote").Where("Id = ?", 请求.Id).First(&局_卡号).Error; err != nil {
+	db := *global.GVA_DB
+	if err := db.Model(dbm.DB_Ka{}).Omit("AdminNote").Where("Id = ?", 请求.Id).First(&局_卡号).Error; err != nil {
 		response.FailWithMessage("查询详细信息失败", c)
 		return
 	}
@@ -150,8 +151,8 @@ func (A *AgentKa) GetKaList(c *gin.Context) {
 	if 请求.Child == 1 {
 		局_制卡人数组 = append(agent.L_agent.Q取下级代理数组_user(c, []int{c.GetInt("Uid")}), 局_在线信息.User)
 	}
-
-	局_DB := global.GVA_DB.Model(dbm.DB_Ka{}).Where("RegisterUser IN ?", 局_制卡人数组)
+	db := *global.GVA_DB
+	局_DB := db.Model(dbm.DB_Ka{}).Where("RegisterUser IN ?", 局_制卡人数组)
 	if 请求.AppId != 0 {
 		局_DB.Where("AppId = ?", 请求.AppId)
 	}

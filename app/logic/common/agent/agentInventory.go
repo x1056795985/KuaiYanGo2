@@ -9,7 +9,7 @@ import (
 	"server/app/global"
 	"server/app/logic/common/agentLevel"
 	"server/app/logic/common/log"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	"strconv"
 	"time"
@@ -50,7 +50,8 @@ func (j *agent) New库存(c *gin.Context, 归属Uid, KaClassId, NumMax, 库存�
 	if 有效期 == 0 {
 		库存卡包.EndTime = 9999999999
 	}
-	err := global.GVA_DB.Create(&库存卡包).Error
+	db := *global.GVA_DB
+	err := db.Create(&库存卡包).Error
 	return 库存卡包, err
 }
 
@@ -136,7 +137,8 @@ func (j *agent) New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int
 	局_价格组成.付款金额 = Float64加float64(局_价格组成.卡类金额, 局_价格组成.总调价, 2)
 
 	var 局_新余额 float64
-	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+	db := *global.GVA_DB
+	err = db.Transaction(func(tx *gorm.DB) error {
 		err = tx.Model(dbm.DB_User{}).Where("Id = ?", 归属Uid).Update("RMB", gorm.Expr("RMB - ?", 局_价格组成.付款金额)).Error
 		if err != nil {
 			return err
@@ -208,8 +210,8 @@ func (j *agent) K库存发送(c *gin.Context, 原库存ID, 新代理Uid, 转出�
 	if service.NewUser(c, &局_db).Id取状态(新代理Uid) == 2 {
 		return errors.New("接收库存用户已冻结,不可发送")
 	}
-
-	err返回 := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+	db := *global.GVA_DB
+	err返回 := db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 原库存ID).Update("Num", gorm.Expr("Num + ?", 转出数量)).Error
 		if err != nil {
 			return err
@@ -360,9 +362,11 @@ func (j *agent) K库存延期(c *gin.Context, 库存ID, 代理Uid, 延期秒数 
 	}
 	var err error
 	if 延期秒数 > 9999999999 {
-		err = global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("EndTime", 9999999999).Error
+		db := *global.GVA_DB
+		err = db.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("EndTime", 9999999999).Error
 	} else {
-		err = global.GVA_DB.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("EndTime", gorm.Expr("EndTime + ?", 延期秒数)).Error
+		db := *global.GVA_DB
+		err = db.Model(dbm.Db_Agent_库存卡包{}).Where("Id = ?", 库存ID).Update("EndTime", gorm.Expr("EndTime + ?", 延期秒数)).Error
 	}
 
 	return err

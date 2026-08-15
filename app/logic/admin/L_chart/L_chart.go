@@ -3,7 +3,7 @@ package L_chart
 import (
 	. "EFunc/utils"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"time"
 )
 

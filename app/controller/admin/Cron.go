@@ -5,7 +5,7 @@ import (
 	"server/app/controller/Common"
 	"server/app/global"
 	"server/app/logic/common/cron/functions"
-	"server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/models/request"
 	. "server/app/models/response"
@@ -52,7 +52,7 @@ func (C *Cron) Create(c *gin.Context) {
 	}
 	var S = service.S_Cron{}
 	tx := *global.GVA_DB
-	err := S.Create(&tx, db.DB_Cron{Name: 请求.Name, Status: 请求.Status, IsLog: 请求.IsLog, Type: 请求.Type, Cron: 请求.Cron, RunText: 请求.RunText, Note: 请求.Note})
+	err := S.Create(&tx, dbm.DB_Cron{Name: 请求.Name, Status: 请求.Status, IsLog: 请求.IsLog, Type: 请求.Type, Cron: 请求.Cron, RunText: 请求.RunText, Note: 请求.Note})
 
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -91,7 +91,7 @@ func (C *Cron) Delete(c *gin.Context) {
 // @action 更新
 // @show  2
 func (C *Cron) Update(c *gin.Context) {
-	var 请求 db.DB_Cron
+	var 请求 dbm.DB_Cron
 	//解析失败
 	if !C.ToJSON(c, &请求) {
 		return
@@ -127,7 +127,7 @@ func (C *Cron) Info(c *gin.Context) {
 
 	var S = service.S_Cron{}
 	tx := *global.GVA_DB
-	var info db.DB_Cron
+	var info dbm.DB_Cron
 	info, err := S.Info(&tx, 请求.Id)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -150,7 +150,7 @@ func (C *Cron) GetList(c *gin.Context) {
 
 	var S = service.S_Cron{}
 	tx := *global.GVA_DB
-	var dataList []db.DB_Cron
+	var dataList []dbm.DB_Cron
 	var 总数 int64
 	var err error
 	总数, dataList, err = S.GetList(&tx, 请求.List, 请求.AppId)

@@ -120,7 +120,8 @@ func 脚本引擎_合并Cookie(existing string, received []*http.Cookie) string 
 
 func 脚本引擎_执行SQL查询(query string, parameters []any) 脚本引擎_Api结果 {
 	局_结果数组 := make([]map[string]any, 0)
-	if 局_错误 := global.GVA_DB.Raw(query, parameters...).Scan(&局_结果数组).Error; 局_错误 != nil {
+	db := *global.GVA_DB
+	if 局_错误 := db.Raw(query, parameters...).Scan(&局_结果数组).Error; 局_错误 != nil {
 		return 脚本引擎_失败(局_错误)
 	}
 	局_编码结果, 局_错误 := json.Marshal(局_结果数组)
@@ -131,7 +132,8 @@ func 脚本引擎_执行SQL查询(query string, parameters []any) 脚本引擎_A
 }
 
 func 脚本引擎_执行SQL功能(query string, parameters []any) 脚本引擎_Api结果 {
-	局_结果 := global.GVA_DB.Exec(query, parameters...)
+	db := *global.GVA_DB
+	局_结果 := db.Exec(query, parameters...)
 	if 局_结果.Error != nil {
 		return 脚本引擎_失败(局_结果.Error)
 	}

@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 	"server/app/global"
 	"server/app/logic/common/publicData"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"server/app/service"
 	utils2 "server/app/utils"
 	"strconv"
@@ -105,7 +105,8 @@ func (j *appInfo) NewApp信息(c *gin.Context, AppId, AppType int, AppName strin
 	NewApp.ExceedMaxOnlineOut = 1 //超过在线最大数量处理方式 1踢掉最先登录的账号  2 提示登录数量超过限制
 
 	// 使用事务处理数据库操作
-	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+
+	err = db.Transaction(func(tx *gorm.DB) error {
 		// 创建卡类（使用事务的tx）
 		局_注册送卡类 := dbm.DB_KaClass{
 			AppId:        NewApp.AppId,
@@ -156,7 +157,8 @@ func (j *appInfo) App修改信息(c *gin.Context, AppInfo dbm.DB_AppInfo) error 
 	//高频率读取数据 写入缓存
 
 	//直接排除AppType  AppWeb 禁止修改
-	var db = global.GVA_DB.Model(dbm.DB_AppInfo{}).Select(
+	db := *global.GVA_DB
+	db.Model(dbm.DB_AppInfo{}).Select(
 		"AppName",
 		"Status",
 		"AppStatusMessage",
@@ -209,7 +211,8 @@ func (j *appInfo) CopyApp信息(c *gin.Context, AppId, AppType int, AppName stri
 	}
 
 	var count int64
-	err := global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
+	db := *global.GVA_DB
+	err := db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", AppId).Count(&count).Error
 	// 没查到数据
 	if count != 0 {
 		return errors.New("AppId已存在")
@@ -222,7 +225,8 @@ func (j *appInfo) CopyApp信息(c *gin.Context, AppId, AppType int, AppName stri
 	var NewApp dbm.DB_AppInfo
 	var 数组_卡类列表 []dbm.DB_KaClass
 	var 数组_用户类型列表 []dbm.DB_UserClass
-	err = global.GVA_DB.Model(dbm.DB_AppInfo{}).Where("AppId = ?", CopyAppId).First(&NewApp).Error
+
+	err = db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", CopyAppId).First(&NewApp).Error
 	if err != nil {
 		return errors.New("复制应用不存在")
 	}
@@ -238,10 +242,10 @@ func (j *appInfo) CopyApp信息(c *gin.Context, AppId, AppType int, AppName stri
 	NewApp.CryptoKeyPublic = 公钥base64
 	NewApp.CryptoKeyPrivate = 私钥base64
 
-	err = global.GVA_DB.Model(dbm.DB_KaClass{}).Where("AppId = ?", CopyAppId).Find(&数组_卡类列表).Error
-	err = global.GVA_DB.Model(dbm.DB_UserClass{}).Where("AppId = ?", CopyAppId).Find(&数组_用户类型列表).Error
+	err = db.Model(dbm.DB_KaClass{}).Where("AppId = ?", CopyAppId).Find(&数组_卡类列表).Error
+	err = db.Model(dbm.DB_UserClass{}).Where("AppId = ?", CopyAppId).Find(&数组_用户类型列表).Error
 	//数据准备完毕,开启事务进行复制应用
-	db := *global.GVA_DB
+
 	err = db.Transaction(func(tx *gorm.DB) (err error) {
 		for i1, v := range 数组_用户类型列表 {
 			v.Id = 0

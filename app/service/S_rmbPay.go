@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"server/app/global"
-	dbm "server/app/models/db"
+	"server/app/models/dbm"
 	"strconv"
 	"sync"
 	"time"
