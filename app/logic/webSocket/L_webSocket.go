@@ -28,150 +28,178 @@ var L_webSocket webSocket
 type WSConnection struct {
 	ws              *websocket.Conn //ws连接
 	wsMu            sync.Mutex      //写锁,防止并发写websocket连接
+	closeOnce       sync.Once
 	linkId          int             //在线id,数据库对应在线记录id
 	lastTime        int64           //最后心跳时间  //可以降低数据库的读取次数,不用每次扫描都读库
 	lastWriteDbTime int64           //最后更新在线信息时间
 }
 
+const (
+	readTimeout = 190 * time.Second
+	writeTimeout = 10 * time.Second
+	heartbeatInterval = 25 * time.Second
+)
+
 func init() {
 	L_webSocket = webSocket{}
-	L_webSocket.wsObj = sync.Map{} // 使用全局变量或更好的方式存储活跃连接
+	L_webSocket.wsObj = sync.Map{}
 }
 
 type webSocket struct {
-	wsObj            sync.Map // 并发安全的map
-	heartbeatRunning uint32   // 使用原子操作标志位替代互斥锁
+	wsObj            sync.Map
+	heartbeatRunning uint32
 }
 
-// safeWrite 安全地写入WebSocket消息，防止并发写
+// safeWrite 安全地写入 websocket 消息，防止并发写
 func (c *WSConnection) safeWrite(messageType int, data []byte) error {
 	c.wsMu.Lock()
 	defer c.wsMu.Unlock()
+	if c.ws == nil {
+		return errors.New("websocket已关闭")
+	}
+	if err := c.ws.SetWriteDeadline(time.Now().Add(writeTimeout)); err != nil {
+		return err
+	}
 	return c.ws.WriteMessage(messageType, data)
 }
 
-func (j *webSocket) F发送消息给所有连接用户(c *gin.Context, message []byte) {
+func (c *WSConnection) close() {
+	c.closeOnce.Do(func() {
+		if c.ws != nil {
+			_ = c.ws.Close()
+		}
+	})
+}
+
+func (c *WSConnection) refreshReadDeadline() {
+	if c == nil || c.ws == nil {
+		return
+	}
+	_ = c.ws.SetReadDeadline(time.Now().Add(readTimeout))
+}
+
+func (j *webSocket) SendMessageToAllUsers(c *gin.Context, message []byte) {
 	j.wsObj.Range(func(key, value interface{}) bool {
 		conn, ok2 := value.(*WSConnection)
 		if !ok2 {
 			return true
 		}
 		if err := conn.safeWrite(websocket.TextMessage, message); err != nil {
-			// 处理发送失败的情况，可能需要清理无效连接
-			j.wsObj.Delete(key)
+			j.RemoveConnection(conn.linkId)
 		}
 		return true
 	})
 }
 
-func (j *webSocket) F发送消息(linkId int, message []byte) error {
+func (j *webSocket) SendMessage(linkId int, message []byte) error {
 	if value, ok := j.wsObj.Load(linkId); ok {
 		conn, ok2 := value.(*WSConnection)
 		if !ok2 {
-			return errors.New("id链接异常")
+			return errors.New("id链路异常")
 		}
-		return conn.safeWrite(websocket.TextMessage, message)
-
+		if err := conn.safeWrite(websocket.TextMessage, message); err != nil {
+			j.RemoveConnection(linkId)
+			return err
+		}
+		return nil
 	}
-	return errors.New("id链接不存在")
+	return errors.New("id链路不存在")
 }
-func (j *webSocket) F发送消息_批量(linkIds []int, message []byte) []error {
-	局_结果 := make([]error, len(linkIds))
+
+func (j *webSocket) SendMessageBatch(linkIds []int, message []byte) []error {
+	result := make([]error, len(linkIds))
 	for i, linkId := range linkIds {
 		if value, ok := j.wsObj.Load(linkId); ok {
 			conn, ok2 := value.(*WSConnection)
 			if !ok2 {
-				局_结果[i] = errors.New("id链接异常")
+				result[i] = errors.New("id链路异常")
 				continue
 			}
 
-			局_结果[i] = conn.safeWrite(websocket.TextMessage, message)
+			if err := conn.safeWrite(websocket.TextMessage, message); err != nil {
+				j.RemoveConnection(linkId)
+				result[i] = err
+				continue
+			}
+			result[i] = nil
 		} else {
-			局_结果[i] = errors.New("id链接不存在")
+			result[i] = errors.New("id链路不存在")
 		}
-
 	}
-	return 局_结果
-
+	return result
 }
-func (j *webSocket) F发送ping消息给所有连接用户() (剩余数量 int) {
-	局_time := time.Now().Unix()
-	局_ids := make([]int, 0, 100)
-	局_临时计数 := 0
+
+func (j *webSocket) SendPingMessageToAllUsers() (remaining int) {
+	now := time.Now().Unix()
+	ids := make([]int, 0, 100)
+	activeCount := 0
 	j.wsObj.Range(func(key, value interface{}) bool {
 		conn, ok2 := value.(*WSConnection)
 		if !ok2 {
 			return true
 		}
-		局_临时计数 += 1
-		if 局_time-conn.lastTime > 180 { //超过180秒无响应,直接断开连接
+		activeCount++
+		if now-conn.lastTime > 180 {
 			j.RemoveConnection(conn.linkId)
 			return true
 		}
-		// 超过30秒发送ping
-		if 局_time-conn.lastTime > 30 {
+		if now-conn.lastTime > 30 {
 			if err := conn.safeWrite(websocket.PingMessage, []byte("ping")); err != nil {
-				// 处理发送失败的情况，可能需要清理无效连接
 				j.RemoveConnection(conn.linkId)
 			}
 		}
-
-		if 局_time-conn.lastWriteDbTime > 60 { //如果距离上次更新入库超过了 60 秒,则更新入库
-			局_ids = append(局_ids, conn.linkId)
-			conn.lastWriteDbTime = 局_time //指针,直接改就行 降低写库频率
+		if now-conn.lastWriteDbTime > 60 {
+			ids = append(ids, conn.linkId)
+			conn.lastWriteDbTime = now
 		}
-
 		return true
 	})
 
-	if len(局_ids) > 0 {
-		// 批量更新数据库
+	if len(ids) > 0 {
 		db := *global.GVA_DB
-		_, err := service.NewLinksToken(&gin.Context{}, &db).Updates(局_ids, map[string]interface{}{"lastTime": time.Now().Unix()})
+		_, err := service.NewLinksToken(&gin.Context{}, &db).Updates(ids, map[string]interface{}{"lastTime": time.Now().Unix()})
 		if err != nil {
 			log.Println("更新在线信息失败:", err)
 		}
 	}
-	//fmt.Println("F发送ping消息给所有连接用户耗时:", time.Now().Unix()-局_time, "\n")
 
-	return 局_临时计数
+	return activeCount
 }
 
-// 添加
 func (j *webSocket) Add(c *gin.Context, linkId int, ws *websocket.Conn) {
-	j.wsObj.Store(linkId, &WSConnection{
+	conn := &WSConnection{
 		linkId:   linkId,
 		ws:       ws,
 		lastTime: time.Now().Unix(),
+	}
+	j.wsObj.Store(linkId, conn)
+	conn.refreshReadDeadline()
+	ws.SetPongHandler(func(string) error {
+		conn.refreshReadDeadline()
+		return nil
 	})
-	// 原子操作确保只启动一个心跳协程
 	if atomic.CompareAndSwapUint32(&j.heartbeatRunning, 0, 1) {
 		go j.runHeartbeat()
 	}
-
 }
 
 func (j *webSocket) runHeartbeat() {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("心跳协程异常恢复: %v", err)
-			// 确保标志位被重置，允许下次重启
+			log.Printf("heartbeat panic recovered: %v", err)
 			atomic.StoreUint32(&j.heartbeatRunning, 0)
 		}
 	}()
 	defer atomic.StoreUint32(&j.heartbeatRunning, 0)
 
 	for {
-		局_数量 := j.F发送ping消息给所有连接用户()
-		//fmt.Print("心跳协程已发送:", 局_数量)
-		if 局_数量 == 0 {
-			break // 没有连接时跳出
+		remaining := j.SendPingMessageToAllUsers()
+		if remaining == 0 {
+			break
 		}
-		time.Sleep(25 * time.Second)
+		time.Sleep(heartbeatInterval)
 	}
-	//fmt.Print("心跳协程已停止")
 }
-
 // HandleConnection 处理单个WebSocket连接的消息循环
 func (j *webSocket) HandleConnection(ws *websocket.Conn, linkId int) {
 	defer func() {
@@ -328,25 +356,24 @@ func (j *webSocket) ProcessTextMessage(ws *websocket.Conn, linkId int, message *
 
 // 提取公共的响应发送逻辑
 func (j *webSocket) sendResponse(ws *websocket.Conn, response *common.WsMsgResponse) {
-	返回, err := json2.Marshal(response)
+	data, err := json2.Marshal(response)
 	if err != nil {
 		return
 	}
-	// 从wsObj中查找对应的WSConnection以使用安全写入
 	j.wsObj.Range(func(key, value interface{}) bool {
 		conn, ok2 := value.(*WSConnection)
 		if !ok2 {
 			return true
 		}
 		if conn.ws == ws {
-			_ = conn.safeWrite(websocket.TextMessage, 返回)
+			if err := conn.safeWrite(websocket.TextMessage, data); err != nil {
+				j.RemoveConnection(conn.linkId)
+			}
 			return false
 		}
 		return true
 	})
 }
-
-// GetConnection 获取连接信息
 func (j *webSocket) GetConnection(linkId int) (*WSConnection, bool) {
 	if value, ok := j.wsObj.Load(linkId); ok {
 		conn, ok2 := value.(*WSConnection)
@@ -365,27 +392,22 @@ func (j *webSocket) UpdateConnection(linkId int, conn *WSConnection) {
 
 // RemoveConnection 移除连接
 func (j *webSocket) RemoveConnection(linkId int) {
-	if value, ok := j.wsObj.Load(linkId); ok {
+	if value, ok := j.wsObj.LoadAndDelete(linkId); ok {
 		conn, ok2 := value.(*WSConnection)
 		if !ok2 {
 			return
 		}
-		// 安全关闭WebSocket连接
-		if conn.ws != nil {
-			conn.ws.Close()
-		}
-		// 从map中删除
-		j.wsObj.Delete(linkId)
+		conn.close()
 		count := 0
 		j.wsObj.Range(func(key, value interface{}) bool {
 			count++
 			return true
 		})
-		//fmt.Print("剩余连接数:", count, "\n")
+		//fmt.Print("鍓╀綑杩炴帴鏁?", count, "\n")
 		db := *global.GVA_DB
 		_, err := service.NewLinksToken(&gin.Context{}, &db).Update(linkId, map[string]interface{}{"Status": 2})
 		if err != nil {
-			//fmt.Println("更新在线状态失败:", err.Error())
+			//fmt.Println("鏇存柊鍦ㄧ嚎鐘舵€佸け璐?", err.Error())
 			return
 		}
 	}

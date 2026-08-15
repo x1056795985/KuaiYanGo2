@@ -591,6 +591,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 			adminRouter.POST("kuaiYan/getPayPC", 局_KuaiYan.GetPayPC)
 			adminRouter.POST("kuaiYan/payMoneyToKa", 局_KuaiYan.PayMoneyToKa)
 			adminRouter.POST("kuaiYan/useKa", 局_KuaiYan.UseKa)
+			adminRouter.POST("kuaiYan/payKaUsa", 局_KuaiYan.PayKaUsa)
 		}
 	}
 }

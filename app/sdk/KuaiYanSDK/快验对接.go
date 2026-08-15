@@ -21,14 +21,14 @@ const 强制Rsa加密接口 = `	"GetToken":            1,
 
 type Api快验_类 struct {
 	集_AppWeb, J_Token, 集_错误信息, 集_验证码ID, 集_验证码值 string
-	J_CryptoKeyAes                             []byte //通讯Aes密匙
-	集_CryptoType                               int    //1 明文 2 MD5签名AES加密  3 Rsa签名交换AES密匙
-	集_错误代码                                     int
-	集_公钥指针                                     *rsa.PublicKey
-	集_验证码类型                                    int
-	集_Api网关ApiAppKey                           string
-	集_Api网关ApiAppSecret                        []byte
-	J集_连接方式                                    int
+	J_CryptoKeyAes                                            []byte //通讯Aes密匙
+	集_CryptoType                                             int    //1 明文 2 MD5签名AES加密  3 Rsa签名交换AES密匙
+	集_错误代码                                               int
+	集_公钥指针                                               *rsa.PublicKey
+	集_验证码类型                                             int
+	集_Api网关ApiAppKey                                       string
+	集_Api网关ApiAppSecret                                    []byte
+	J集_连接方式                                              int
 }
 
 func (k *Api快验_类) SetAppWeb(域名 string) bool {
@@ -972,6 +972,22 @@ func (k *Api快验_类) D订单_购买余额(响应信息 *string, 支付通道,
 	请求json["Api"] = "PayUserMoney"
 	请求json["User"] = 充值账号
 	请求json["Money"] = 充值金额
+	请求json["PayType"] = 支付通道
+
+	响应json, ok := k.通讯(请求json)
+	if !ok { // 直接返回即可,错误原因 在 发包并返回解密 已经有了
+		return false
+	}
+	*响应信息 = 响应json.GetObject("Data").String()
+	*订单id = string(响应json.GetStringBytes("Data", "OrderId"))
+	return true
+}
+
+func (k *Api快验_类) D订单_购卡直冲(响应信息 *string, 支付通道, 充值账号 string, 卡类id int, 订单id *string) bool {
+	请求json := make(map[string]interface{}, 10)
+	请求json["Api"] = "PayKaUsa"
+	请求json["User"] = 充值账号
+	请求json["KaClassId"] = 卡类id
 	请求json["PayType"] = 支付通道
 
 	响应json, ok := k.通讯(请求json)

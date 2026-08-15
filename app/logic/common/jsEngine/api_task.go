@@ -78,24 +78,24 @@ func 脚本引擎_任务池取队列长度() 脚本引擎_Api结果 {
 	return 脚本引擎_成功("成功", 局_数据)
 }
 
-func 脚本引擎_WebSocket发送消息(id int, message string) 脚本引擎_Api结果 {
-	if 局_错误 := webSocket.L_webSocket.F发送消息(id, []byte(message)); 局_错误 != nil {
-		return 脚本引擎_失败(局_错误)
+func WebSocketSendMessage(id int, message string) 脚本引擎_Api结果 {
+	if err := webSocket.L_webSocket.SendMessage(id, []byte(message)); err != nil {
+		return 脚本引擎_失败(err)
 	}
 	return 脚本引擎_成功("ok", []string{})
 }
 
-func 脚本引擎_WebSocket批量发送消息(ids []int, message string) 脚本引擎_Api结果 {
-	局_错误数组 := webSocket.L_webSocket.F发送消息_批量(ids, []byte(message))
-	局_结果数组 := make([]string, len(局_错误数组))
-	for 局_索引, 局_错误 := range 局_错误数组 {
-		if 局_错误 == nil {
-			局_结果数组[局_索引] = "成功"
+func WebSocketSendMessageBatch(ids []int, message string) 脚本引擎_Api结果 {
+	errList := webSocket.L_webSocket.SendMessageBatch(ids, []byte(message))
+	resultList := make([]string, len(errList))
+	for index, err := range errList {
+		if err == nil {
+			resultList[index] = "成功"
 		} else {
-			局_结果数组[局_索引] = 局_错误.Error()
+			resultList[index] = err.Error()
 		}
 	}
-	return 脚本引擎_成功("ok", 局_结果数组)
+	return 脚本引擎_成功("ok", resultList)
 }
 
 func 脚本引擎_WebSocket筛选Id(appIDEx, uid int, tag string) 脚本引擎_Api结果 {

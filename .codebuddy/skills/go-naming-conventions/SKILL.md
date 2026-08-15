@@ -1,6 +1,6 @@
 ---
 name: go-naming-conventions
-description: 飞鸟快验Go项目中文命名规范指南。此技能应在编写或修改本项目Go代码时始终激活，确保AI严格遵守项目独特的中文命名规范
+description: 飞鸟快验Go项目中文命名规范指南。此技能应在编写或修改本项目Go代码时始终激活，确保AI严格遵守项目独特的中文命名规范,中文代码优先使用 apply_patch修改防止乱码.
 ---
 
 # 项目分层设计

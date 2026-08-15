@@ -430,6 +430,41 @@ func (k *KuaiYan) GetPayPC(c *gin.Context) {
 	return
 }
 
+// PayKaUsa 购卡直冲
+func (k *KuaiYan) PayKaUsa(c *gin.Context) {
+	var 请求 struct {
+		Type    string `json:"type"`
+		C充值卡类id int    `json:"kaClassId"`
+		D订单ID   string `json:"orderId"`
+	}
+	err := c.ShouldBindJSON(&请求)
+	if err != nil {
+		response.FailWithMessage("提交参数错误:"+err.Error(), c)
+		return
+	}
+	var 响应信息 string
+	var 订单ID = 请求.D订单ID
+	if 订单ID != "" {
+		if !global.Q快验.D订单_取状态(&响应信息, 订单ID) {
+			局_错误代号 := 0
+			response.FailWithMessage(global.Q快验.Q取错误信息(&局_错误代号), c)
+		} else {
+			parse, _ := fastjson.Parse(响应信息)
+			response.OkWithData(gin.H{"status": parse.GetInt("Status")}, c)
+		}
+		return
+	}
+	if !global.Q快验.D订单_购卡直冲(&响应信息, 请求.Type, global.X系统信息.H会员帐号, 请求.C充值卡类id, &订单ID) {
+		response.FailWithMessage(global.Q快验.Q取错误信息(nil), c)
+		return
+	}
+	var 局_MAP gin.H
+	_ = json.Unmarshal([]byte(响应信息), &局_MAP)
+	局_MAP["status"] = 1
+	response.OkWithData(局_MAP, c)
+	return
+}
+
 // Updater 更新程序
 func (k *KuaiYan) Updater(c *gin.Context) {
 	if KuaiYanUpdater.J_系统更新状态 > 0 {
