@@ -32,7 +32,7 @@ func KyApiSendSms(c *gin.Context) {
 			response.FailMsg(c, response.Status_操作失败, 局_错误信息)
 			return
 	}*/
-	局_参数验证码 := 局_ctx.Q请求明文.Get("Code", "0").String()
+	局_参数验证码 := 局_ctx.Q请求明文.Get("Code.0").String()
 	if len(局_参数验证码) < 1 || len(局_参数验证码) > 6 {
 		response.FailMsg(c, constant.Status_操作失败, "验证码长度为1-6")
 		return
