@@ -221,7 +221,7 @@ func UserApi_用户登录(c *gin.Context) {
 			局_新AppUser.UserClassId = 局_卡.UserClassId
 			局_新AppUser.Note = 局_卡.AdminNote
 			// 卡号已用次数+1
-			go service.NewKa(c, &db).Update(局_Uid, map[string]interface{}{"UsedCount": 1})
+			go service.NewKa(c, &db).Update(局_Uid, map[string]interface{}{"Num": 1})
 		case 4:
 			//卡号模式,制卡人就是归属代理
 			局_新AppUser.MaxOnline = S三元(局_卡.MaxOnline == 0, 1, 局_卡.MaxOnline)
@@ -230,7 +230,7 @@ func UserApi_用户登录(c *gin.Context) {
 			局_新AppUser.UserClassId = 局_卡.UserClassId
 			局_新AppUser.Note = 局_卡.AdminNote
 			// 卡号已用次数+1
-			go service.NewKa(c, &db).Update(局_Uid, map[string]interface{}{"UsedCount": 1})
+			go service.NewKa(c, &db).Update(局_Uid, map[string]interface{}{"Num": 1})
 		default:
 			//???应该不会到这里
 			response.FailMsg(c, constant.Status_SQl错误, "AppInfo.AppType错误")

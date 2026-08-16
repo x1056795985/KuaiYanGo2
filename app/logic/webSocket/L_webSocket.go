@@ -35,9 +35,9 @@ type WSConnection struct {
 }
 
 const (
-	readTimeout       = 190 * time.Second
-	writeTimeout      = 10 * time.Second
-	heartbeatInterval = 25 * time.Second
+	读超时  = 190 * time.Second
+	写超时  = 10 * time.Second
+	心跳间隔 = 25 * time.Second
 )
 
 func init() {
@@ -57,7 +57,7 @@ func (c *WSConnection) safeWrite(messageType int, data []byte) error {
 	if c.ws == nil {
 		return errors.New("websocket已关闭")
 	}
-	if err := c.ws.SetWriteDeadline(time.Now().Add(writeTimeout)); err != nil {
+	if err := c.ws.SetWriteDeadline(time.Now().Add(写超时)); err != nil {
 		return err
 	}
 	return c.ws.WriteMessage(messageType, data)
@@ -71,13 +71,14 @@ func (c *WSConnection) close() {
 	})
 }
 
-func (c *WSConnection) refreshReadDeadline() {
+func (c *WSConnection) 刷新读取截止时间() {
 	if c == nil || c.ws == nil {
 		return
 	}
-	_ = c.ws.SetReadDeadline(time.Now().Add(readTimeout))
+	_ = c.ws.SetReadDeadline(time.Now().Add(读超时))
 }
 
+// 发送消息给所有用户
 func (j *webSocket) SendMessageToAllUsers(c *gin.Context, message []byte) {
 	j.wsObj.Range(func(key, value interface{}) bool {
 		conn, ok2 := value.(*WSConnection)
@@ -91,6 +92,7 @@ func (j *webSocket) SendMessageToAllUsers(c *gin.Context, message []byte) {
 	})
 }
 
+// 发送消息给指定用户id
 func (j *webSocket) SendMessage(linkId int, message []byte) error {
 	if value, ok := j.wsObj.Load(linkId); ok {
 		conn, ok2 := value.(*WSConnection)
@@ -106,6 +108,7 @@ func (j *webSocket) SendMessage(linkId int, message []byte) error {
 	return errors.New("id链路不存在")
 }
 
+// 发送消息给批量用户id
 func (j *webSocket) SendMessageBatch(linkIds []int, message []byte) []error {
 	result := make([]error, len(linkIds))
 	for i, linkId := range linkIds {
@@ -157,7 +160,7 @@ func (j *webSocket) SendPingMessageToAllUsers() (remaining int) {
 
 	if len(ids) > 0 {
 		db := *global.GVA_DB
-		_, err := service.NewLinksToken(&gin.Context{}, &db).Updates(ids, map[string]interface{}{"lastTime": time.Now().Unix()})
+		_, err := service.NewLinksToken(&gin.Context{}, &db).Updates(ids, map[string]interface{}{"LastTime": time.Now().Unix()})
 		if err != nil {
 			log.Println("更新在线信息失败:", err)
 		}
@@ -173,9 +176,10 @@ func (j *webSocket) Add(c *gin.Context, linkId int, ws *websocket.Conn) {
 		lastTime: time.Now().Unix(),
 	}
 	j.wsObj.Store(linkId, conn)
-	conn.refreshReadDeadline()
+	conn.刷新读取截止时间()
 	ws.SetPongHandler(func(string) error {
-		conn.refreshReadDeadline()
+		conn.lastTime = time.Now().Unix()
+		conn.刷新读取截止时间()
 		return nil
 	})
 	if atomic.CompareAndSwapUint32(&j.heartbeatRunning, 0, 1) {
@@ -197,7 +201,7 @@ func (j *webSocket) runHeartbeat() {
 		if remaining == 0 {
 			break
 		}
-		time.Sleep(heartbeatInterval)
+		time.Sleep(心跳间隔)
 	}
 }
 
@@ -229,7 +233,9 @@ func (j *webSocket) HandleConnection(ws *websocket.Conn, linkId int) {
 
 		// 更新最后心跳时间
 		if conn, ok := j.GetConnection(linkId); ok {
-			conn.lastTime = time.Now().Unix() //是指针,直接改就行
+			now := time.Now().Unix()
+			conn.lastTime = now
+			conn.刷新读取截止时间()
 		}
 
 		switch messageType {

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/app/global"
+	"server/app/logic/common/agent"
 	"server/app/logic/common/agentLevel"
 	"server/app/logic/common/kaClassUpPrice"
 	"server/app/logic/common/log"
@@ -343,7 +344,28 @@ func (j *ka) Ka代理批量购买(c *gin.Context, 卡信息切片 []dbm.DB_Ka, �
 	log.L_log.Log_写余额日志(局_购卡人信息.User, ip, 局_文本, Float64取负值(局_价格组成.总付款金额))
 	局_文本 = fmt.Sprintf("新制卡号:[%s -> %s],批次id:{{批次id}}({{卡号索引}}/%d)", service.NewAppInfo(c, &局_db).App取AppName(卡信息切片[0].AppId), service.NewKaClass(c, &局_db).Id取Name(卡信息切片[0].KaClassId), len(卡信息切片))
 	log.L_log.Log_写卡号操作日志(局_购卡人信息.User, ip, 局_文本, 数组_卡号, 1, agentLevel.L_agentLevel.Q取Id代理级别(c, 局_购卡人信息.Id))
+	//这里继续给代理分成,即使是代理自己购买的,也需要按照分成比例进行分成
+	//先分成 代理调价信息的价格
+	if 局_价格组成.总调价 > 0 {
+		局_日志前缀 := fmt.Sprintf("代理:%s,购买卡号ID{%s}", 局_购卡人信息.User, 局_ID列表)
+		err = agent.L_agent.Z执行调价信息分成(c, 局_价格组成.调价详情, 局_价格组成.购买数量, 局_日志前缀)
+		if err != nil {
+			global.GVA_LOG.Println(fmt.Sprintf("Z执行调价信息分成失败:%v", err.Error()))
+		}
+	}
+	if 局_价格组成.总卡类价格 > 0 {
+		//然后再计算百分比的价格
+		代理分成数据, err3 := agent.L_agent.D代理分成计算(c, 局_购卡人信息.Id, 局_价格组成.总卡类价格)
+		if err3 == nil {
+			局_日志前缀 := fmt.Sprintf("代理:%s,购买卡号ID{%s}", 局_购卡人信息.User, 局_ID列表)
+			err = agent.L_agent.Z执行百分比代理分成(c, 代理分成数据, 局_价格组成.总卡类价格, 局_日志前缀, 局_价格组成.总调价 == 0)
+			if err != nil {
+				global.GVA_LOG.Println(fmt.Sprintf("Z执行百分比代理分成:%s", err.Error()))
+			}
+		}
+	}
 
+	// 分成结束==============
 	return nil
 }
 

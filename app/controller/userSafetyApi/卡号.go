@@ -94,7 +94,7 @@ func UserApi_取注册送卡(c *gin.Context) {
 		response.FailMsg(c, constant.Status_SQl错误, "New用户信息内部错误")
 		return
 	}
-	service.NewKa(c, &db).Update(局_卡.Id, map[string]interface{}{"UsedCount": 1}) //更新使用次数
+	service.NewKa(c, &db).Update(局_卡.Id, map[string]interface{}{"Num": 1}) //更新使用次数
 
 	ka.L_ka.Z置归属代理(c, 局_ctx.AppInfo.AppId, 局_卡.Id, 局_ctx.Z在线信息.AgentUid) //失败也不影响
 	//这里吧成功的状态
