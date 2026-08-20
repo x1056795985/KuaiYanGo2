@@ -12,6 +12,7 @@ import (
 	cronLogic "server/app/logic/common/cron"
 	"server/app/logic/common/jsEngine"
 	"server/app/logic/common/publicJs"
+	webUserCouponLogic "server/app/logic/common/webUserCoupon"
 	"server/app/models/dbm"
 	"server/app/service"
 	utils2 "server/app/utils"
@@ -66,6 +67,7 @@ func S刷新数据库定时任务(主动 bool) error {
 		infoArr = append(infoArr, dbm.DB_Cron{Id: -5, Status: 1, IsLog: 2, Type: -5, Name: "删除已过期唯一积分记录", Cron: "0 0 0 * * ?"})      //每天0点执行一次
 		infoArr = append(infoArr, dbm.DB_Cron{Id: -6, Status: 1, IsLog: 2, Type: -6, Name: "统计在线应用用户总量", Cron: "0 0 * * * ?"})       //每小时执行一次
 		infoArr = append(infoArr, dbm.DB_Cron{Id: -7, Status: 1, IsLog: 2, Type: -7, Name: "统计日活月活", Cron: "0 0 0 * * ?"})           //每天0点执行一次
+		infoArr = append(infoArr, dbm.DB_Cron{Id: -8, Status: 1, IsLog: 2, Type: -8, Name: "优惠券锁定释放与过期处理", Cron: "0 */5 * * * *"})
 
 		hashStr := ""
 		for 索引, _ := range infoArr {
@@ -129,6 +131,9 @@ func T通用任务执行函数2(时间戳 int64, R任务数据 dbm.DB_Cron) (str
 		return "", err
 	case -7:
 		D定时任务_统计初始化日活月活(&c)
+		return "", err
+	case -8:
+		err = webUserCouponLogic.L_webUserCoupon.G过期处理(&c)
 		return "", err
 	case 1: //1,http请求,2公共js函数,3 SQL 4 shell"`
 		返回, err = D定时任务_http请求(时间戳, R任务数据)

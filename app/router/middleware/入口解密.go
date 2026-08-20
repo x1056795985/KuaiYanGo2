@@ -11,6 +11,7 @@ import (
 	"server/app/controller/userSafetyApi/response"
 	"server/app/global"
 	"server/app/logic/common/jsEngine"
+	"server/app/logic/common/lastTimeBuffer"
 	"server/app/logic/common/log"
 	"server/app/models/common"
 	"server/app/models/constant"
@@ -53,7 +54,8 @@ func UserApi解密() gin.HandlerFunc {
 		局_map := make(map[string]interface{}, 2)
 
 		if time.Now().Unix()-局_ctx.Z在线信息.LastTime > 60 {
-			局_map["LastTime"] = time.Now().Unix()
+			// LastTime 走本地缓冲,由定时任务批量回写DB,避免每请求UPDATE热表
+			lastTimeBuffer.X心跳_记录(局_ctx.Z在线信息.Id)
 			局_ctx.Z在线信息.LastTime = time.Now().Unix()
 		}
 		if 局_ctx.Z在线信息.Ip != c.ClientIP() {

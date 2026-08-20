@@ -157,40 +157,38 @@ func (j *appInfo) App修改信息(c *gin.Context, AppInfo dbm.DB_AppInfo) error 
 	//高频率读取数据 写入缓存
 
 	//直接排除AppType  AppWeb 禁止修改
+	//使用map更新,避免结构体零值字段(如公告为空)不被更新
 	db := *global.GVA_DB
-	db.Model(dbm.DB_AppInfo{}).Select(
-		"AppName",
-		"Status",
-		"AppStatusMessage",
-		"AppVer",
-		"RegisterGiveKaClassId",
-		"VerifyKey",
-		"IsUserKeySame",
-		"UpKeyData",
-		"PackTimeOut",
-		"OutTime",
-		"UrlHome",
-		"UrlDownload",
-		"AppGongGao",
-		"VipData",
-		"CryptoType",
-		"CryptoKeyAes",
-		"CryptoKeyPrivate",
-		"CryptoKeyPublic",
-		"MaxOnline",
-		"ExceedMaxOnlineOut",
-		"Captcha",
-		"RegisterGiveKa",
-		"ApiHook",
-		"FreeUpKeyTime",
-		"FreeUpKeyInterval",
-		"UpKeyTime",
-		"UpKeyInterval",
-		"AgentGiftKaClassId",
-		"AgentKaUseModel",
-	).Omit("AppType", "AppWeb", "Sort")
+	局_更新map := map[string]interface{}{
+		"AppName":               AppInfo.AppName,
+		"Status":                AppInfo.Status,
+		"AppStatusMessage":      AppInfo.AppStatusMessage,
+		"AppVer":                AppInfo.AppVer,
+		"RegisterGiveKaClassId": AppInfo.RegisterGiveKaClassId,
+		"VerifyKey":             AppInfo.VerifyKey,
+		"IsUserKeySame":         AppInfo.IsUserKeySame,
+		"UpKeyData":             AppInfo.UpKeyData,
+		"PackTimeOut":           AppInfo.PackTimeOut,
+		"OutTime":               AppInfo.OutTime,
+		"UrlHome":               AppInfo.UrlHome,
+		"UrlDownload":           AppInfo.UrlDownload,
+		"AppGongGao":            AppInfo.AppGongGao,
+		"VipData":               AppInfo.VipData,
+		"CryptoType":            AppInfo.CryptoType,
+		"CryptoKeyAes":          AppInfo.CryptoKeyAes,
+		"CryptoKeyPrivate":      AppInfo.CryptoKeyPrivate,
+		"ExceedMaxOnlineOut":    AppInfo.ExceedMaxOnlineOut,
+		"Captcha":               AppInfo.Captcha,
+		"ApiHook":               AppInfo.ApiHook,
+		"FreeUpKeyTime":         AppInfo.FreeUpKeyTime,
+		"FreeUpKeyInterval":     AppInfo.FreeUpKeyInterval,
+		"UpKeyTime":             AppInfo.UpKeyTime,
+		"UpKeyInterval":         AppInfo.UpKeyInterval,
+		"AgentGiftKaClassId":    AppInfo.AgentGiftKaClassId,
+		"AgentKaUseModel":       AppInfo.AgentKaUseModel,
+	}
 
-	err := db.Where("AppId= ?", AppInfo.AppId).Updates(AppInfo).Error
+	err := db.Model(dbm.DB_AppInfo{}).Where("AppId= ?", AppInfo.AppId).Updates(局_更新map).Error
 	if err == nil { //如果修改成功删除缓存
 		global.H缓存.Delete("DB_AppInfo_" + strconv.Itoa(AppInfo.AppId)) //10分钟有效
 	}

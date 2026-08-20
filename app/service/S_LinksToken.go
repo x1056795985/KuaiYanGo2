@@ -29,18 +29,89 @@ func NewLinksToken(c *gin.Context, db *gorm.DB) *LinksToken {
 	}
 }
 
-// DeleteExpiredTokens 删除已过期的 token
+// S删除已过期的Token 删除已注销并 6 小时没活动的 token
+// 采用按 Id 分批删除：先一致性非锁定读取出一批待删 Id，再按 Id IN 批量删除，
+// 将锁范围从全表 gap 缩小到每批主键记录，避免阻塞登录 INSERT
+// 事故当表超5w的时候,旧的方式会导致在线表死锁,超时,特改成现在这种,20260821线上事故备注,
 func (s *LinksToken) S删除已过期的Token() error {
-	// 删除已注销并 6 小时没活动的 token
-	tx := s.db.Model(dbm.DB_LinksToken{}).Where("Status = 2").Where("LastTime < ?", time.Now().Unix()-21600).Delete("")
-	return tx.Error
+	截止时间 := time.Now().Unix() - 21600
+	批次上限 := 500
+	最大批数 := 200 // 安全阀，防止异常情况下无限循环
+	for 批次 := 0; 批次 < 最大批数; 批次++ {
+		var 局_id数组 []int
+		// 普通查询为一致性非锁定读（REPEATABLE READ 下不取锁），不会阻塞登录 INSERT
+		// 复合索引 idx_status_lasttime 支撑 (Status=2 AND LastTime<?) 的范围定位
+		err := s.db.Model(dbm.DB_LinksToken{}).
+			Where("Status = 2").
+			Where("LastTime < ?", 截止时间).
+			Limit(批次上限).
+			Pluck("Id", &局_id数组).Error
+		if err != nil {
+			return err
+		}
+		if len(局_id数组) == 0 {
+			return nil // 没有更多待删数据
+		}
+		// 按 Id 批量删除，锁仅限本批主键记录，避免大范围 gap 锁
+		err = s.db.Model(dbm.DB_LinksToken{}).Where("Id IN ?", 局_id数组).Delete("").Error
+		if err != nil {
+			if isDeadlockError(err) {
+				// 死锁时自动查询 MySQL 死锁信息并打印到日志
+				deadlockInfo := queryDeadlockInfo(s.db)
+				if global.GVA_LOG != nil {
+					global.GVA_LOG.Println("S删除已过期的Token 死锁重试[" + intToStr(批次+1) + "]: " + err.Error() + "\n" + deadlockInfo)
+				}
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+			return err
+		}
+	}
+	return nil
 }
 
-// RevokeExpiredTokens 定时注销已过期的 token
+// Z注销已过期的Token 定时注销已过期的 token
+// 采用按 Id 分批更新：先一致性非锁定读取出一批待注销 Id，再按 Id IN 批量更新，
+// 将锁范围从全表 gap 缩小到每批主键记录，避免阻塞登录 INSERT
+// 事故当表超5w的时候,旧的方式会导致在线表死锁,超时,特改成现在这种,20260821线上事故备注,
 func (s *LinksToken) Z注销已过期的Token() error {
-	// 注销超时的 token
-	tx := s.db.Model(dbm.DB_LinksToken{}).Where("Status = 1").Where("LastTime + OutTime < ?", time.Now().Unix()).Updates(map[string]interface{}{"Status": 2, "LogoutCode": constant.Z注销_心跳超时自动注销})
-	return tx.Error
+	当前时间 := time.Now().Unix()
+	批次上限 := 500
+	最大批数 := 200 // 安全阀，防止异常情况下无限循环
+	for 批次 := 0; 批次 < 最大批数; 批次++ {
+		var 局_id数组 []int
+		// 普通查询为一致性非锁定读，不会阻塞登录 INSERT
+		// LastTime+OutTime 为表达式无法直接走索引，但复合索引 idx_status_lasttime
+		// 可先按 Status=1 定位区间，避免全表扫描
+		err := s.db.Model(dbm.DB_LinksToken{}).
+			Where("Status = 1").
+			Where("LastTime + OutTime < ?", 当前时间).
+			Limit(批次上限).
+			Pluck("Id", &局_id数组).Error
+		if err != nil {
+			return err
+		}
+		if len(局_id数组) == 0 {
+			return nil // 没有更多待注销数据
+		}
+		// 按 Id 批量更新，锁仅限本批主键记录，避免大范围 gap 锁
+		err = s.db.Model(dbm.DB_LinksToken{}).
+			Where("Id IN ?", 局_id数组).
+			Updates(map[string]interface{}{"Status": 2, "LogoutCode": constant.Z注销_心跳超时自动注销}).Error
+		if err != nil {
+			if isDeadlockError(err) {
+				// 死锁时自动查询 MySQL 死锁信息并打印到日志
+				deadlockInfo := queryDeadlockInfo(s.db)
+				if global.GVA_LOG != nil {
+					global.GVA_LOG.Println("Z注销已过期的Token 死锁重试[" + intToStr(批次+1) + "]: " + err.Error() + "\n" + deadlockInfo)
+				}
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+			return err
+		}
+	}
+	return nil
 }
 
 // 增
@@ -227,13 +298,33 @@ func (s *LinksToken) Set自动注销超时时间(OutTIme int, id []int) error {
 	return err
 }
 
-// Token更新最后活动时间 按Token更新最后活动时间
+// 按Token更新最后活动时间
 func (s *LinksToken) Token更新最后活动时间(Token string) {
 	err := s.db.Model(dbm.DB_LinksToken{}).Where("Token = ?", Token).Update("LastTime", int(time.Now().Unix())).Error
 	if err != nil {
 		global.GVA_LOG.Println(fmt.Sprintf("Token更新最后活动时间失败:%v,%v", err.Error(), Token))
 	}
 	return
+}
+
+// id更新最后活动时间 按id更新最后活动时间
+func (s *LinksToken) G更新最后活动时间(ids []int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	局_时间 := int(time.Now().Unix())
+	批大小 := 500
+	for 起 := 0; 起 < len(ids); 起 += 批大小 {
+		终 := 起 + 批大小
+		if 终 > len(ids) {
+			终 = len(ids)
+		}
+		err := s.db.Model(dbm.DB_LinksToken{}).Where("id in ?", ids[起:终]).Update("LastTime", 局_时间).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Token更新在线ip 按Token更新在线ip
@@ -344,4 +435,163 @@ func (s *LinksToken) Set动态标签(Id int, 新动态标签 string) error {
 func (s *LinksToken) Set代理标志(Id int, 代理Uid int) error {
 	err := s.db.Model(dbm.DB_LinksToken{}).Where("Id = ? ", Id).Updates(map[string]interface{}{"AgentUid": 代理Uid}).Error
 	return err
+}
+
+// isDeadlockError 判断是否为死锁错误 (Error 1213)
+func isDeadlockError(err error) bool {
+	if err == nil {
+		return false
+	}
+	// MySQL Error 1213 (40001): Deadlock found when trying to get lock
+	return strings.Contains(err.Error(), "1213") || strings.Contains(err.Error(), "Deadlock")
+}
+
+// queryDeadlockInfo 查询 MySQL 死锁相关信息，返回详细信息字符串
+func queryDeadlockInfo(db *gorm.DB) string {
+	var info strings.Builder
+
+	// 1. 查询最近一次死锁详情
+	var innodbStatus string
+	rows, err := db.Raw("SHOW ENGINE INNODB STATUS").Rows()
+	if err == nil {
+		for rows.Next() {
+			var t, n string
+			var v interface{}
+			if scanErr := rows.Scan(&t, &n, &v); scanErr == nil {
+				if s, ok := v.([]byte); ok {
+					innodbStatus = string(s)
+				} else if s, ok := v.(string); ok {
+					innodbStatus = s
+				}
+			}
+		}
+		rows.Close()
+	}
+	if innodbStatus != "" {
+		// 提取死锁关键部分，避免日志过长
+		info.WriteString("\n=== INNODB STATUS (死锁详情) ===\n")
+		info.WriteString(extractDeadlockSection(innodbStatus))
+	}
+
+	// 2. 查询当前锁等待
+	var lockWaits []struct {
+		RequestId   string `gorm:"column:REQUEST_ID"`
+		Key         string `gorm:"column:KEY"`
+		LockMode    string `gorm:"column:LOCK_MODE"`
+		LockType    string `gorm:"column:LOCK_TYPE"`
+		LockTable   string `gorm:"column:LOCK_TABLE"`
+		LockStatus  string `gorm:"column:LOCK_STATUS"`
+		OwnerThread string `gorm:"column:OWNER_THREAD_ID"`
+		OwnerEvent  string `gorm:"column:OWNER_EVENT_ID"`
+	}
+	rows2, err2 := db.Raw(`
+		SELECT REQUEST_ID, ` + "`KEY`" + `, LOCK_MODE, LOCK_TYPE, LOCK_TABLE, LOCK_STATUS, OWNER_THREAD_ID, OWNER_EVENT_ID
+		FROM performance_schema.data_lock_waits
+	`).Rows()
+	if err2 == nil {
+		for rows2.Next() {
+			var w struct {
+				RequestId   string `gorm:"column:REQUEST_ID"`
+				Key         string `gorm:"column:KEY"`
+				LockMode    string `gorm:"column:LOCK_MODE"`
+				LockType    string `gorm:"column:LOCK_TYPE"`
+				LockTable   string `gorm:"column:LOCK_TABLE"`
+				LockStatus  string `gorm:"column:LOCK_STATUS"`
+				OwnerThread string `gorm:"column:OWNER_THREAD_ID"`
+				OwnerEvent  string `gorm:"column:OWNER_EVENT_ID"`
+			}
+			db.ScanRows(rows2, &w)
+			lockWaits = append(lockWaits, w)
+		}
+		rows2.Close()
+		if len(lockWaits) > 0 {
+			info.WriteString("\n=== 当前锁等待 ===\n")
+			for _, w := range lockWaits {
+				info.WriteString("LockWait: Table=" + w.LockTable + " Type=" + w.LockType + " Mode=" + w.LockMode + " Status=" + w.LockStatus + "\n")
+			}
+		}
+	}
+
+	// 3. 查询当前活跃事务
+	var activeTrx []struct {
+		TrxId      string `gorm:"column:trx_id"`
+		TrxState   string `gorm:"column:trx_state"`
+		TrxStarted string `gorm:"column:trx_started"`
+		TrxQuery   string `gorm:"column:trx_query"`
+		TrxRowsLk  string `gorm:"column:trx_rows_locked"`
+	}
+	rows3, err3 := db.Raw(`
+		SELECT trx_id, trx_state, trx_started, trx_query, trx_rows_locked
+		FROM information_schema.INNODB_TRX
+	`).Rows()
+	if err3 == nil {
+		for rows3.Next() {
+			var t struct {
+				TrxId      string `gorm:"column:trx_id"`
+				TrxState   string `gorm:"column:trx_state"`
+				TrxStarted string `gorm:"column:trx_started"`
+				TrxQuery   string `gorm:"column:trx_query"`
+				TrxRowsLk  string `gorm:"column:trx_rows_locked"`
+			}
+			db.ScanRows(rows3, &t)
+			activeTrx = append(activeTrx, t)
+		}
+		rows3.Close()
+		if len(activeTrx) > 0 {
+			info.WriteString("\n=== 当前活跃事务 ===\n")
+			for _, t := range activeTrx {
+				info.WriteString("Trx: Id=" + t.TrxId + " State=" + t.TrxState + " Started=" + t.TrxStarted + " RowsLocked=" + t.TrxRowsLk)
+				if t.TrxQuery != "" {
+					info.WriteString(" Query=" + t.TrxQuery)
+				}
+				info.WriteString("\n")
+			}
+		}
+	}
+
+	if info.Len() == 0 {
+		return "（无法获取死锁详情，可能MySQL版本不支持或权限不足）"
+	}
+	return info.String()
+}
+
+// extractDeadlockSection 从 INNODB STATUS 输出中提取死锁相关段落
+func extractDeadlockSection(status string) string {
+	var result strings.Builder
+	lines := strings.Split(status, "\n")
+	capture := false
+	for _, line := range lines {
+		// 死锁段落标记
+		if strings.Contains(line, "LATEST DETECTED DEADLOCK") || strings.Contains(line, "TRANSACTION") || strings.Contains(line, "WAITING FOR") || strings.Contains(line, "HOLDS THE LOCK") || strings.Contains(line, "WE ROLL BACK") || strings.Contains(line, "LOCK WAIT") || strings.Contains(line, "RECORD LOCKS") {
+			capture = true
+		}
+		if capture {
+			result.WriteString(line + "\n")
+			// 死锁段落结束标记
+			if strings.Contains(line, "WE ROLL BACK") || strings.Contains(line, "TRANSACTIONS DETECTED") {
+				capture = false
+			}
+		}
+	}
+	out := result.String()
+	if out == "" {
+		// 没匹配到关键词，返回全部（截取前2000字符避免日志过长）
+		if len(status) > 2000 {
+			return status[:2000] + "\n... (已截断)"
+		}
+		return status
+	}
+	return out
+}
+
+func intToStr(i int) string {
+	if i == 0 {
+		return "0"
+	}
+	var buf []byte
+	for i > 0 {
+		buf = append([]byte{byte('0' + i%10)}, buf...)
+		i /= 10
+	}
+	return string(buf)
 }

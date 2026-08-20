@@ -52,6 +52,9 @@ func InitDbTables(c *gin.Context) {
 
 		dbm.DB_LogUserMsg{},
 		dbm.DB_LogRMBPayOrder{},
+		dbm.DB_WebUserCoupon{},
+		dbm.DB_WebUserCouponUser{},
+		dbm.DB_WebUserCouponLog{},
 		dbm.DB_LogKa{},
 		dbm.DB_LogRiskControl{},
 		dbm.DB_LogVipNumber{},

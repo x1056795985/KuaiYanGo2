@@ -73,6 +73,13 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 		根路由.POST("pay/getPayKaList", 局_pay.GetPayKaList)
 		根路由.POST("pay/payKaUsa", 局_pay.PayKaUsa)
 	}
+	局_WebUserCoupon := controller.NewWebUserCouponUserControllerApi()
+	{
+		根路由.POST("webUserCoupon/getReceiveList", 局_WebUserCoupon.GetReceiveList)
+		根路由.POST("webUserCoupon/receive", 局_WebUserCoupon.Receive)
+		根路由.POST("webUserCoupon/getMyList", 局_WebUserCoupon.GetMyList)
+		根路由.POST("webUserCoupon/getPayKaCouponList", 局_WebUserCoupon.GetPayKaCouponList)
+	}
 
 	局_AppPromotionConfig := controller.NewAppPromotionConfigController()
 	{

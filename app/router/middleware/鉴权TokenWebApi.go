@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"server/app/global"
+	"server/app/logic/common/lastTimeBuffer"
 	"server/app/logic/common/setting"
 	"server/app/models/dbm"
 	"server/app/models/old/response"
@@ -114,7 +115,9 @@ func IsTokenWebApi() gin.HandlerFunc {
 		c.Set("局_在线信息", DB_LinksToken)
 		c.Set("局_json明文", string(data))
 		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
-			global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
+			// LastTime 走本地缓冲,由定时任务批量回写DB;Ip 变化频率低仍直接落库保持原逻辑
+			lastTimeBuffer.X心跳_记录(DB_LinksToken.Id)
+			global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("Ip", c.ClientIP())
 		}
 
 		// 继续处理请求

@@ -10,6 +10,7 @@ import (
 	"server/app/global"
 	"server/app/logic/common/kaClassUpPrice"
 	"server/app/logic/common/rmbPay"
+	webUserCouponLogic "server/app/logic/common/webUserCoupon"
 	"server/app/models/common"
 	"server/app/models/constant"
 	"server/app/models/dbm"
@@ -127,8 +128,9 @@ func (C *Pay) PayKaUsa(c *gin.Context) {
 	}{}
 	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
 	var 请求 struct {
-		KaClassId int    `json:"kaClassId" binding:"required" zh:"卡类id"`
-		PayType   string `json:"payType" binding:"required" zh:"支付类型"`
+		KaClassId    int    `json:"kaClassId" binding:"required" zh:"卡类id"`
+		PayType      string `json:"payType" binding:"required" zh:"支付类型"`
+		CouponUserId int    `json:"couponUserId"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
@@ -196,6 +198,25 @@ func (C *Pay) PayKaUsa(c *gin.Context) {
 	err = 参数.E额外信息.Set("调价详情", 调价信息列表)
 	err = 参数.E额外信息.Set("总调价", 总调价)
 	参数.Rmb = Float64加float64(info.KaClass.Money, 总调价, 2)
+	原支付金额 := 参数.Rmb
+	if 请求.CouponUserId > 0 {
+		用户券, 优惠金额, err2 := webUserCouponLogic.L_webUserCoupon.S锁定(c, info.appInfo.AppId, info.appUser.Uid, 请求.CouponUserId, info.KaClass.Id, 原支付金额, "")
+		if err2 != nil {
+			response.FailWithMessage(c, err2.Error())
+			return
+		}
+		参数.CouponUserId = 用户券.Id
+		参数.CouponDiscount = 优惠金额
+		参数.Rmb = Float64减float64(原支付金额, 优惠金额, 2)
+		err = 参数.E额外信息.Set("CouponId", 用户券.CouponId)
+		err = 参数.E额外信息.Set("CouponUserId", 用户券.Id)
+		err = 参数.E额外信息.Set("CouponName", 用户券.CouponName)
+		err = 参数.E额外信息.Set("CouponType", 用户券.CouponType)
+		err = 参数.E额外信息.Set("CouponValue", 用户券.CouponValue)
+		err = 参数.E额外信息.Set("CouponDiscount", 优惠金额)
+		err = 参数.E额外信息.Set("原支付金额", 原支付金额)
+		err = 参数.E额外信息.Set("实付金额", 参数.Rmb)
+	}
 
 	var 响应数据 common.Request
 	响应数据, err = rmbPay.L_rmbPay.D订单创建(c, 参数)
@@ -203,6 +224,13 @@ func (C *Pay) PayKaUsa(c *gin.Context) {
 		response.FailWithMessage(c, err.Error())
 		return
 	}
+	if 响应数据.Other == nil {
+		响应数据.Other = map[string]interface{}{}
+	}
+	响应数据.Other["originalAmount"] = 原支付金额
+	响应数据.Other["couponDiscount"] = 参数.CouponDiscount
+	响应数据.Other["finalAmount"] = 参数.Rmb
+	响应数据.Other["couponUserId"] = 参数.CouponUserId
 	response.OkWithData(c, 响应数据)
 	return
 

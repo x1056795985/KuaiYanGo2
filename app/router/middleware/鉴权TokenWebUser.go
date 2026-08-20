@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"server/app/controller/Common/response"
 	"server/app/global"
+	"server/app/logic/common/lastTimeBuffer"
 	"server/app/models/constant"
 	"server/app/models/dbm"
 	"server/app/service"
@@ -82,7 +83,9 @@ func IsTokenWebUser() gin.HandlerFunc {
 		c.Set("网页用户中心配置", 局_网页用户中心配置)
 		//更新最后活动时间
 		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
-			global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Updates(map[string]interface{}{"LastTime": int(time.Now().Unix()), "Ip": c.ClientIP()})
+			// LastTime 走本地缓冲,由定时任务批量回写DB;Ip 变化频率低仍直接落库保持原逻辑
+			lastTimeBuffer.X心跳_记录(DB_LinksToken.Id)
+			global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("Ip", c.ClientIP())
 		}
 		// 继续处理请求
 		c.Next()

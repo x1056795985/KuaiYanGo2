@@ -530,6 +530,25 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("appPromotionConfig/setSort", 局_AppPromotionConfig.Sort)
 		adminRouter.POST("appPromotionConfig/reset", 局_AppPromotionConfig.Reset)
 	}
+	局_WebUserCoupon := controller.NewWebUserCouponController()
+	{
+		adminRouter.POST("webUserCoupon/getList", 局_WebUserCoupon.GetList)
+		adminRouter.POST("webUserCoupon/info", 局_WebUserCoupon.Info)
+		adminRouter.POST("webUserCoupon/create", 局_WebUserCoupon.Create)
+		adminRouter.POST("webUserCoupon/update", 局_WebUserCoupon.Update)
+		adminRouter.POST("webUserCoupon/setStatus", 局_WebUserCoupon.SetStatus)
+		adminRouter.POST("webUserCoupon/delete", 局_WebUserCoupon.Delete)
+		adminRouter.POST("webUserCoupon/batchGrant", 局_WebUserCoupon.BatchGrant)
+	}
+	局_WebUserCouponUser := controller.NewWebUserCouponUserController()
+	{
+		adminRouter.POST("webUserCouponUser/getList", 局_WebUserCouponUser.GetList)
+		adminRouter.POST("webUserCouponUser/void", 局_WebUserCouponUser.Void)
+	}
+	局_WebUserCouponLog := controller.NewWebUserCouponLogController()
+	{
+		adminRouter.POST("webUserCouponLog/getList", 局_WebUserCouponLog.GetList)
+	}
 
 	// ========== CPS管理 ==========
 	局_CpsInfo := controller.NewCpsInfoController()

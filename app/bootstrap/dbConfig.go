@@ -27,6 +27,8 @@ func (g *DbConfig) Config(表前缀 string) *gorm.Config {
 			SingularTable: true,
 		},
 		DisableForeignKeyConstraintWhenMigrating: true,
+		SkipDefaultTransaction:                   true, // 禁用默认事务（提高性能） 未设置 `SkipDefaultTransaction: true`。GORM 默认给**每一个** `Create/Update/Delete` 包裹隐式事务（BEGIN…COMMIT）。项目里所有写操作（每次更新 `LastTime`、每次任务回写、每次登录插 token）都变成独立事务——这正是 `SHOW PROCESSLIST` 中大量 `COMMIT/starting` 的来源。
+
 	}
 
 	局_默认日志器 := logger.New(NewDbWriter(log.New(os.Stdout, "\r\n", log.LstdFlags)), logger.Config{

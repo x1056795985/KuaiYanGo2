@@ -3,6 +3,7 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"server/app/global"
+	"server/app/logic/common/lastTimeBuffer"
 	"server/app/models/constant"
 	"server/app/models/dbm"
 	"server/app/models/old/response"
@@ -46,7 +47,8 @@ func IsTokenAdmin() gin.HandlerFunc {
 		//fmt.Println(DB_LinksToken)
 		//更新最后活动时间
 		if time.Now().Unix()-DB_LinksToken.LastTime > 60 { //超过1分钟,更新最后活动时间
-			global.GVA_DB.Model(dbm.DB_LinksToken{}).Where("Id = ?", DB_LinksToken.Id).Update("LastTime", int(time.Now().Unix()))
+			// LastTime 走本地缓冲,由定时任务批量回写DB,避免每请求UPDATE热表
+			lastTimeBuffer.X心跳_记录(DB_LinksToken.Id)
 		}
 		//把 userID 保存到上下文,这样逻辑层就不用再查询了
 		c.Set("Uid", DB_LinksToken.Uid)

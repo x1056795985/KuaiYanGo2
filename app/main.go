@@ -15,6 +15,7 @@ import (
 	kuaiYanLogic "server/app/logic/admin/kuaiYan"
 	"server/app/logic/common/cron"
 	"server/app/logic/common/cron/functions"
+	"server/app/logic/common/lastTimeBuffer"
 	"server/app/logic/common/setting"
 	"server/app/logic/webSocket"
 	"server/app/router"
@@ -88,6 +89,12 @@ func 主程序_初始化定时任务() {
 	局_错误 = cron.Q全_定时任务.T添加本机任务("刷新数据库定时任务", "0 */1 * * * *", functions.S刷新数据库定时任务2)
 	if 局_错误 != nil {
 		global.GVA_LOG.Println("添加刷新数据库定时任务失败:" + 局_错误.Error())
+	}
+	// 在线心跳LastTime批量回写:每30秒把缓冲中有心跳的id批量UPDATE到db_links_Token
+	// 用本机任务(非集群任务),因为缓冲是本机内存,各节点独立回写各自缓冲
+	局_错误 = cron.Q全_定时任务.T添加本机任务("在线心跳LastTime批量回写", "*/30 * * * * *", lastTimeBuffer.X心跳_回写)
+	if 局_错误 != nil {
+		global.GVA_LOG.Println("添加在线心跳LastTime批量回写定时任务失败:" + 局_错误.Error())
 	}
 	_ = functions.S刷新数据库定时任务(true)
 	functions.D定时任务_统计初始化日活月活(&gin.Context{})

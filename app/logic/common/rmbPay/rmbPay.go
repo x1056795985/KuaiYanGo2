@@ -15,6 +15,7 @@ import (
 	"server/app/logic/common/ka"
 	"server/app/logic/common/log"
 	"server/app/logic/common/setting"
+	webUserCouponLogic "server/app/logic/common/webUserCoupon"
 	"server/app/logic/webUser/cpsPayOrder"
 	m "server/app/models/common"
 	"server/app/models/constant"
@@ -66,6 +67,16 @@ func (j *rmbPay) Z注册接口(通道 RmbPayItem) {
 }
 
 func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Request, err error) {
+	if 参数.CouponUserId > 0 {
+		defer func() {
+			if err != nil {
+				appId := 参数.E额外信息.Get("AppId").Int()
+				if appId > 0 {
+					_ = webUserCouponLogic.L_webUserCoupon.S释放锁定(c, appId, 参数.Uid, 参数.CouponUserId, 参数.PayOrder, "支付订单创建失败")
+				}
+			}
+		}()
+	}
 
 	参数.Z支付配置s = setting.Q在线支付配置()
 	参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
@@ -160,6 +171,18 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 	_, err = s.Create(参数.DB_LogRMBPayOrder)
 	if err != nil {
 		return
+	}
+	if 参数.CouponUserId > 0 {
+		appId := 参数.E额外信息.Get("AppId").Int()
+		if appId <= 0 {
+			err = errors.New("优惠券订单缺少AppId")
+			return
+		}
+		err = webUserCouponLogic.L_webUserCoupon.B绑定订单(c, appId, 参数.Uid, 参数.CouponUserId, 参数.PayOrder)
+		if err != nil {
+			_ = tx.Model(dbm.DB_LogRMBPayOrder{}).Where("PayOrder = ?", 参数.PayOrder).Update("Status", constant.D订单状态_已关闭).Error
+			return
+		}
 	}
 	req = 局_通道数据
 	//余额支付单独处理,直接回调
@@ -747,6 +770,15 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				Count: Float64取负值(参数.Rmb),
 				Note:  str,
 			})
+		}
+		if 参数.ProcessingType == constant.D订单类型_购卡直冲 && 参数.CouponUserId > 0 {
+			appId := 参数.E额外信息.Get("AppId").Int()
+			if appId <= 0 {
+				return errors.New("优惠券订单缺少AppId")
+			}
+			if err = webUserCouponLogic.L_webUserCoupon.Z支付成功后处理(c, appId, 参数.Uid, 参数.CouponUserId, 参数.PayOrder, 参数.CouponDiscount); err != nil {
+				return err
+			}
 		}
 		//如果能走到这里说明上面处理成功了, 订单状态改为成功
 		参数.Status = constant.D订单状态_成功
