@@ -80,6 +80,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("panel/captureCPUProfile", 局_Panel.C抓取CPU画像)
 		adminRouter.POST("panel/downloadMonitorProfile", 局_Panel.Q下载监控画像)
 		adminRouter.POST("panel/downloadLastCPUProfile", 局_Panel.Q下载最近CPU画像)
+		adminRouter.POST("panel/getMonitorMySQLDiag", 局_Panel.Q监控MySQL诊断)
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			adminRouter.POST("panel/reloadSystem", 局_Panel.ReloadSystem)
 			adminRouter.POST("panel/stopSystem", 局_Panel.StopSystem)

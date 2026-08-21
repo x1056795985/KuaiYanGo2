@@ -266,3 +266,13 @@ func (j *Panel) Q下载最近CPU画像(c *gin.Context) {
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
 	c.Data(http.StatusOK, "application/octet-stream", data)
 }
+
+// GetMonitorMySQLDiag 执行 MySQL 诊断（进程列表 / 慢日志开关 / SQL 摘要 Top10）
+func (j *Panel) Q监控MySQL诊断(c *gin.Context) {
+	局_结果, err := monitoring.Q监控.QMySQL诊断()
+	if err != nil {
+		response.FailWithMessage("MySQL 诊断失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(局_结果, "获取成功", c)
+}

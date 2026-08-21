@@ -50,6 +50,12 @@ func (s *WebUserCouponUser) GetList(请求 request.List, AppId int, Uid int, Sta
 			db = db.Where("CouponName LIKE ?", "%"+请求.Keywords+"%")
 		case 3:
 			db = db.Where("PayOrder LIKE ?", "%"+请求.Keywords+"%")
+		case 4:
+			if uid, err := strconv.Atoi(请求.Keywords); err == nil && uid > 0 {
+				db = db.Where("Uid = ?", uid)
+			}
+		case 5:
+			db = db.Where("Uid IN (?)", s.db.Model(new(dbm.DB_User)).Select("Id").Where("User LIKE ?", "%"+请求.Keywords+"%"))
 		}
 	}
 	var count int64
