@@ -10,6 +10,7 @@ import (
 	"io"
 	"server/app/controller/userSafetyApi/response"
 	"server/app/global"
+	"server/app/logic/common/captcha"
 	"server/app/logic/common/jsEngine"
 	"server/app/logic/common/lastTimeBuffer"
 	"server/app/logic/common/log"
@@ -274,4 +275,78 @@ func 校验请求基础字段(c *gin.Context, AppInfo dbm.DB_AppInfo, 请求 *gj
 		return constant.Status_状态码错误
 	}
 	return 0
+}
+
+func 取验证码类型(配置, Api string) int {
+	if 配置 == "" || Api == "" {
+		return 0
+	}
+	局_键 := `"` + Api + `"`
+	局_位置 := strings.Index(配置, 局_键)
+	if 局_位置 < 0 {
+		return 0
+	}
+	局_剩余 := strings.TrimLeft(配置[局_位置+len(局_键):], " \t\r\n")
+	if len(局_剩余) == 0 || 局_剩余[0] != ':' {
+		return 0
+	}
+	局_剩余 = strings.TrimLeft(局_剩余[1:], " \t\r\n")
+	if len(局_剩余) == 0 {
+		return 0
+	}
+	switch 局_剩余[0] {
+	case '1':
+		return 1
+	case '2':
+		return 2
+	case '3':
+		return 3
+	default:
+		return 0
+	}
+}
+
+func Y验证码校验() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		局_ctx := utils.Q取上下文(c)
+		局_验证码类型 := 取验证码类型(局_ctx.AppInfo.Captcha, 局_ctx.Api) //接口调用很频繁,不使用反序列化,使用找字符串,提高性能
+		if 局_验证码类型 > 0 {
+			局_验证码 := gjson.New(局_ctx.Q请求明文.Get("Captcha").String())
+			局_提交类型 := 局_验证码.Get("Type").Int()
+			局_验证码ID := 局_验证码.Get("Id").String()
+			局_验证码值 := 局_验证码.Get("Value").String()
+
+			if 局_提交类型 != 局_验证码类型 || 局_验证码ID == "" || 局_验证码值 == "" {
+				response.FailMsg(c, constant.Status_验证码错误, "验证码错误")
+				c.Abort()
+				return
+			}
+
+			switch 局_验证码类型 {
+			case 1:
+				if !captcha.VerificationCodes.Verify(局_验证码ID, 局_验证码值, true) {
+					response.FailMsg(c, constant.Status_验证码错误, "验证码错误")
+					c.Abort()
+					return
+				}
+			case 2:
+				if err := captcha.VerifyBehavior(局_验证码ID, 局_验证码值); err != nil {
+					response.FailMsg(c, constant.Status_验证码错误, "验证码错误")
+					c.Abort()
+					return
+				}
+			case 3:
+				if !captcha.VerificationCodes.Verify(局_验证码ID, 局_验证码值, false) {
+					response.FailMsg(c, constant.Status_验证码错误, "验证码错误")
+					c.Abort()
+					return
+				}
+			default:
+				response.FailMsg(c, constant.Status_验证码错误, "验证码错误")
+				c.Abort()
+				return
+			}
+		}
+		c.Next()
+	}
 }

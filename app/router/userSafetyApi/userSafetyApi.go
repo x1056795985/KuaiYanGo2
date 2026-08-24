@@ -23,5 +23,6 @@ func (r *AllRouter) InitWebApiRouter(router *gin.RouterGroup) {
 	局_安全api.Use(middleware.UserApi无Token解密()) ///鉴权中间件 检查 token  单独优先处理
 	局_安全api.Use(middleware.UserApi解密())       ///鉴权中间件 检查 token
 	局_安全api.Use(middleware.J解密Api名称())
+	局_安全api.Use(middleware.Y验证码校验())
 	局_安全api.POST("", F分发请求)
 }
