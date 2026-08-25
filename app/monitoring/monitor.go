@@ -350,65 +350,74 @@ func C初始化监控器() *监控器 {
 	return 局_监控器
 }
 
-func (j *监控器) Q监控中间件() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		局_开始时间 := time.Now()
-		局_请求Id := j.下一个请求Id.Add(1)
-		局_路由 := 归一化路由(c.FullPath(), c.Request.URL.Path)
+func (j *监控器) Q执行请求监控(c *gin.Context, 路由 string, 执行 func()) {
+	局_开始时间 := time.Now()
+	局_请求Id := j.下一个请求Id.Add(1)
 
-		局_统计 := j.取路由统计(c.Request.Method, 局_路由)
-		局_统计.增加进行中(1)
+	j.取路由统计(c.Request.Method, 路由).增加进行中(1)
+	j.加入活动请求(&监控_活动请求{
+		请求Id:  局_请求Id,
+		方法:    c.Request.Method,
+		路由:    路由,
+		路径:    c.Request.URL.Path,
+		查询:    c.Request.URL.RawQuery,
+		客户端IP: c.ClientIP(),
+		开始时间:  局_开始时间,
+	})
+	c.Set("监控路由", 路由)
 
-		j.加入活动请求(&监控_活动请求{
-			请求Id:  局_请求Id,
-			方法:    c.Request.Method,
-			路由:    局_路由,
-			路径:    c.Request.URL.Path,
-			查询:    c.Request.URL.RawQuery,
-			客户端IP: c.ClientIP(),
-			开始时间:  局_开始时间,
-		})
-
-		defer func() {
-			局_最终路由 := 归一化路由(c.FullPath(), 局_路由)
-			局_耗时 := time.Since(局_开始时间)
-			if 局_恢复值 := recover(); 局_恢复值 != nil {
-				局_统计.完成(局_耗时, 500, true, true)
-				j.移除活动请求(局_请求Id)
-				j.追加慢请求(监控_请求事件{
-					I请求Id:  局_请求Id,
-					F方法:    c.Request.Method,
-					L路由:    局_最终路由,
-					J路径:    c.Request.URL.Path,
-					C查询:    c.Request.URL.RawQuery,
-					K客户端IP: c.ClientIP(),
-					Z状态码:   500,
-					H耗时毫秒:  时长转毫秒(局_耗时),
-					K开始时间:  局_开始时间.Format(time.RFC3339),
-					J结束时间:  time.Now().Format(time.RFC3339),
-				}, true)
-				panic(局_恢复值)
-			}
-
-			局_状态码 := c.Writer.Status()
-			局_是否错误 := 局_状态码 >= 500 || len(c.Errors) > 0
-			局_统计.完成(局_耗时, 局_状态码, 局_是否错误, false)
+	defer func() {
+		局_耗时 := time.Since(局_开始时间)
+		if 局_恢复值 := recover(); 局_恢复值 != nil {
+			j.取路由统计(c.Request.Method, 路由).完成(局_耗时, 500, true, true)
 			j.移除活动请求(局_请求Id)
 			j.追加慢请求(监控_请求事件{
 				I请求Id:  局_请求Id,
 				F方法:    c.Request.Method,
-				L路由:    局_最终路由,
+				L路由:    路由,
 				J路径:    c.Request.URL.Path,
 				C查询:    c.Request.URL.RawQuery,
 				K客户端IP: c.ClientIP(),
-				Z状态码:   局_状态码,
+				Z状态码:   500,
 				H耗时毫秒:  时长转毫秒(局_耗时),
 				K开始时间:  局_开始时间.Format(time.RFC3339),
 				J结束时间:  time.Now().Format(time.RFC3339),
-			}, false)
-		}()
+			}, true)
+			panic(局_恢复值)
+		}
 
-		c.Next()
+		局_状态码 := c.Writer.Status()
+		局_是否错误 := 局_状态码 >= 500 || len(c.Errors) > 0
+		j.取路由统计(c.Request.Method, 路由).完成(局_耗时, 局_状态码, 局_是否错误, false)
+		j.移除活动请求(局_请求Id)
+		j.追加慢请求(监控_请求事件{
+			I请求Id:  局_请求Id,
+			F方法:    c.Request.Method,
+			L路由:    路由,
+			J路径:    c.Request.URL.Path,
+			C查询:    c.Request.URL.RawQuery,
+			K客户端IP: c.ClientIP(),
+			Z状态码:   局_状态码,
+			H耗时毫秒:  时长转毫秒(局_耗时),
+			K开始时间:  局_开始时间.Format(time.RFC3339),
+			J结束时间:  time.Now().Format(time.RFC3339),
+		}, false)
+	}()
+
+	执行()
+}
+
+func (j *监控器) Q监控中间件() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		局_路由 := 归一化路由(c.FullPath(), c.Request.URL.Path)
+		if 局_路由 == "/Api" {
+			c.Next()
+			return
+		}
+
+		j.Q执行请求监控(c, 局_路由, func() {
+			c.Next()
+		})
 	}
 }
 
@@ -420,9 +429,16 @@ func (j *监控器) J记录恐慌(c *gin.Context, 恢复值 interface{}, 栈信�
 	j.互斥锁.Lock()
 	defer j.互斥锁.Unlock()
 
+	局_路由 := 归一化路由(c.FullPath(), 安全路径(c))
+	if 局_监控路由, ok := c.Get("监控路由"); ok {
+		if 局_字符串, ok := 局_监控路由.(string); ok && 局_字符串 != "" {
+			局_路由 = 局_字符串
+		}
+	}
+
 	j.恐慌事件 = 追加有界切片(j.恐慌事件, 监控_恐慌事件{
 		F方法:    安全方法(c),
-		L路由:    归一化路由(c.FullPath(), 安全路径(c)),
+		L路由:    局_路由,
 		J路径:    安全路径(c),
 		C查询:    安全查询(c),
 		K客户端IP: 安全客户端IP(c),

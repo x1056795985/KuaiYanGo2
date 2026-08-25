@@ -5,6 +5,7 @@ import (
 	"server/app/controller/userSafetyApi"
 	"server/app/controller/userSafetyApi/response"
 	"server/app/models/constant"
+	"server/app/monitoring"
 	"server/app/utils"
 )
 
@@ -27,7 +28,9 @@ func F分发请求(c *gin.Context) {
 	局_ctx := utils.Q取上下文(c)
 
 	if 局_ctx.Api == "GetToken" { // 获取token 单独处理
-		userSafetyApi.UserApi_GetToken(c)
+		monitoring.Q监控.Q执行请求监控(c, "/Api[GetToken]", func() {
+			userSafetyApi.UserApi_GetToken(c)
+		})
 		return
 	}
 
@@ -37,6 +40,12 @@ func F分发请求(c *gin.Context) {
 		return
 	}
 
-	局_路由信息.Z指向函数(c)
+	局_监控路由 := "/Api[" + 局_ctx.Api + "]"
+	if 局_路由信息.Z中文名 != "" {
+		局_监控路由 = "/Api[" + 局_路由信息.Z中文名 + "]"
+	}
+	monitoring.Q监控.Q执行请求监控(c, 局_监控路由, func() {
+		局_路由信息.Z指向函数(c)
+	})
 	return
 }
