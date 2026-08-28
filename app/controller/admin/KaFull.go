@@ -360,7 +360,7 @@ func (C *KaFull) GetKaTemplate(c *gin.Context) {
 		return
 	}
 	db := *global.GVA_DB
-	模板 := service.NewUserConfig(c, &db).Q取值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId))
+	模板 := service.NewUserConfig(c, &db).Q取值(1, -c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId))
 	if 模板 == "" {
 		模板 = "卡号:{Name} "
 		if service.NewAppInfo(c, &db).App是否为计点(请求.AppId) {
@@ -383,7 +383,7 @@ func (C *KaFull) SetKaTemplate(c *gin.Context) {
 		return
 	}
 	db := *global.GVA_DB
-	err := service.NewUserConfig(c, &db).Z置值(1, c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId), 请求.KaTemplate)
+	err := service.NewUserConfig(c, &db).Z置值(1, -c.GetInt("Uid"), "卡号生成格式模板"+strconv.Itoa(请求.AppId), 请求.KaTemplate)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return

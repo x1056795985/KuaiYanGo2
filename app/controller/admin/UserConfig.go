@@ -148,12 +148,28 @@ func (C *UserConfig) Delete(c *gin.Context) {
 	}
 
 	var db = *global.GVA_DB
-	影响行数 := db.Model(dbm.DB_UserConfig{}).Delete(请求.Data).RowsAffected
+	//{"data":[{"AppId":1,"Name":"卡号生成格式模板10014","Uid":-1}]}
+	//{"data":[{"AppId":5,"Name":"卡号生成格式模板10014","Uid":5}]}
+
+	var 局_影响行数 int64
+	for 索引 := range 请求.Data {
+		if 请求.Data[索引].AppId == 1 { //管理的用户表不一致,需要转换 设置为负数是为了防止忘记判断appid导致信息泄露
+			请求.Data[索引].Uid = -请求.Data[索引].Uid
+		}
+
+		row, _ := service.NewUserConfig(c, &db).Delete2(map[string]interface{}{
+			"AppId": 请求.Data[索引].AppId,
+			"Name":  请求.Data[索引].Name,
+			"Uid":   请求.Data[索引].Uid,
+		})
+		局_影响行数 += row
+	}
+
 	if db.Error != nil {
 		response.FailWithMessage("删除失败", c)
 		return
 	}
-	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
+	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(局_影响行数, 10), c)
 }
 
 // New 新建用户云配置
