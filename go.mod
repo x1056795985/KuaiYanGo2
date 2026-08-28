@@ -1,8 +1,6 @@
 module server
 
-go 1.23.0
-
-toolchain go1.23.8
+go 1.25.0
 
 require EFunc v0.0.0
 
@@ -17,6 +15,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/gogf/gf/v2 v2.5.7
+	github.com/google/pprof v0.0.0-20240416155748-26353dc0451f
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/idoubi/goz v1.4.5
@@ -39,13 +38,14 @@ require (
 	github.com/valyala/fastjson v1.6.4
 	github.com/wechatpay-apiv3/wechatpay-go v0.2.21
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
-	golang.org/x/net v0.38.0
-	golang.org/x/text v0.23.0
-	gorm.io/driver/mysql v1.4.7
-	gorm.io/gorm v1.25.7
+	golang.org/x/net v0.57.0
+	golang.org/x/text v0.41.0
+	gorm.io/driver/mysql v1.6.0
+	gorm.io/gorm v1.31.2
 )
 
 require (
+	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/alex-ant/gomath v0.0.0-20160516115720-89013a210a82 // indirect
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394 // indirect
@@ -65,13 +65,12 @@ require (
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
-	github.com/go-sql-driver/mysql v1.7.0 // indirect
+	github.com/go-sql-driver/mysql v1.10.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/google/pprof v0.0.0-20240416155748-26353dc0451f // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -120,12 +119,12 @@ require (
 	go.opentelemetry.io/otel/trace v1.15.1 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
-	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
+	golang.org/x/mod v0.38.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/tools v0.48.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

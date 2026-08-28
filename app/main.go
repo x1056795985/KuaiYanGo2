@@ -52,7 +52,10 @@ func 主程序_捕获致命错误() {
 }
 
 func 主程序_初始化缓存() {
-	global.H缓存 = local_cache.NewCache(local_cache.SetDefaultExpire(24 * time.Hour))
+	global.H缓存 = local_cache.NewCache(
+		local_cache.SetDefaultExpire(24*time.Hour),
+		local_cache.SetCapture(func(k string, v interface{}) {}), // 设置缓存失效回调函数 不要默认的,默认是输出日志
+	)
 }
 
 func 主程序_初始化数据库() func() {

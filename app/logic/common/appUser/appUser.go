@@ -28,7 +28,6 @@ func (j *appUser) Id点数增减(c *gin.Context, AppId, Id int, 增减值 int64,
 		return nil
 	}
 	db := *global.GVA_DB
-	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
 	if is增加 {
 		//增加直接处理就可以了,不用事务
 		err := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipTime", gorm.Expr("VipTime + ?", 增减值)).Error
@@ -175,7 +174,6 @@ func (j *appUser) Z置状态_同步卡号修改(c *gin.Context, AppId int, id []
 		tx = tempObj.(*gorm.DB)
 	} else {
 		db := *global.GVA_DB
-		db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
 		tx = &db
 	}
 
@@ -183,13 +181,13 @@ func (j *appUser) Z置状态_同步卡号修改(c *gin.Context, AppId int, id []
 	// 卡号模式的   处理同步ka冻结
 	err = tx.Transaction(func(tx2 *gorm.DB) error {
 		//先修改软件用户
-		err = tx2.Table(表名_AppUser).Where("Id IN ? ", id).Update("Status", Status).Error
+		err = tx2.Model(dbm.DB_AppUser{}).Table(表名_AppUser).Where("Id IN ? ", id).Update("Status", Status).Error
 		if err != nil {
 			return err
 		}
 		if info.AppInfo.AppType == 3 || info.AppInfo.AppType == 4 {
-			// 子查询获取所有软件用户的Uid 在修改卡号
-			err = tx.Debug().Model(&dbm.DB_Ka{}).Where("Id IN (?)", tx.Table(表名_AppUser).Select("Uid").Where("Id IN (?)", id)).Update("Status", Status).Error
+			// 子查询获取所有软件用户的Uid 在修改卡号 注意:必须用tx2在同一事务连接执行,若用外层tx会跨连接等待自身事务持有的锁,造成死锁卡住
+			err = tx2.Model(&dbm.DB_Ka{}).Where("Id IN (?)", tx2.Table(表名_AppUser).Select("Uid").Where("Id IN (?)", id)).Update("Status", Status).Error
 		}
 		return err
 	})
@@ -214,7 +212,6 @@ func (j *appUser) Id积分增减(c *gin.Context, AppId, Id int, 增减值 float6
 		return nil
 	}
 	db := *global.GVA_DB
-	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
 	if is增加 {
 		//增加直接处理就可以了,不用事务
 		err := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id = ?", Id).Update("VipNumber", gorm.Expr("VipNumber + ?", 增减值)).Error
@@ -265,7 +262,6 @@ func (j *appUser) New用户信息(c *gin.Context, AppId int, Uid int, 绑定信�
 	局_AppUser.AgentUid = 0 //不在这里赋值,单独处理
 
 	db := *global.GVA_DB
-	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
 	_, err := service.NewAppUser(c, &db, AppId).Create(&局_AppUser)
 	return err
 }
@@ -280,7 +276,6 @@ func (j *appUser) S删除VipTime小于等于X(c *gin.Context, AppId int, VipTime
 // S删除VipTime小于等于X且删除卡号 删除VipTime<=X的软件用户及其卡号(多表事务操作)
 func (j *appUser) S删除VipTime小于等于X且删除卡号(c *gin.Context, AppId int, VipTime int64, Ip string) (id int64, err error) {
 	db := *global.GVA_DB
-	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId))
 	sAppInfo := service.NewAppInfo(c, &db)
 	if !sAppInfo.App是否为卡号(AppId) {
 		return 0, errors.New("仅限卡号类型应用使用")
