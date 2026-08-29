@@ -382,21 +382,21 @@ func (j *appUser) S删除卡号不存在的软件用户(c *gin.Context, AppId in
 
 // P批量_全部用户增减时间或点数 批量增减时间或点数(复杂查询)
 func (j *appUser) P批量_全部用户增减时间或点数(c *gin.Context, AppId int, Number int64, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int, UserClassId []int) (影响行数 int64, err error) {
-	db := *global.GVA_DB
-	sAppInfo := service.NewAppInfo(c, &db)
+	db := global.Get局db()
+	sAppInfo := service.NewAppInfo(c, db)
 	if AppId < 10000 || !sAppInfo.AppId是否存在(AppId) {
 		return 0, errors.New("AppId不存在")
 	}
 
-	db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+	db = db.Debug().Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
 
 	局_is计点 := sAppInfo.App是否为计点(AppId)
 	局_is卡号 := sAppInfo.App是否为卡号(AppId)
 	if 用户或卡号前缀 != "" {
 		if 局_is卡号 {
-			db.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
+			db = db.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
 		} else {
-			db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
+			db = db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
 		}
 	}
 
@@ -407,30 +407,30 @@ func (j *appUser) P批量_全部用户增减时间或点数(c *gin.Context, AppI
 
 	case 2: //已过期 点数为0
 		if 局_is计点 {
-			db.Where("ai.VipTime = 0 ")
+			db = db.Where("ai.VipTime = 0 ")
 		} else {
-			db.Where("ai.VipTime < ? ", time.Now().Unix())
+			db = db.Where("ai.VipTime < ? ", time.Now().Unix())
 		}
 
 	case 3: //未过期
 		if 局_is计点 {
-			db.Where("ai.VipTime >0 ")
+			db = db.Where("ai.VipTime >0 ")
 		} else {
-			db.Where("ai.VipTime > ? ", time.Now().Unix())
+			db = db.Where("ai.VipTime > ? ", time.Now().Unix())
 		}
 	}
 	if 注册时间开始 > 0 {
-		db.Where("ai.RegisterTime > ?", 注册时间开始)
+		db = db.Where("ai.RegisterTime > ?", 注册时间开始)
 	}
 	if 注册时间结束 > 0 {
-		db.Where("ai.RegisterTime < ?", 注册时间结束)
+		db = db.Where("ai.RegisterTime < ?", 注册时间结束)
 	}
 	if len(UserClassId) > 0 {
-		db.Where("ai.UserClassId IN ?", UserClassId)
+		db = db.Where("ai.UserClassId IN ?", UserClassId)
 	}
 
 	var 局_id数组 []int
-	db.Find(&局_id数组)
+	err = db.Find(&局_id数组).Error
 	if len(局_id数组) > 0 {
 		//如果是增加时间 Number 先给过期的修改为当前时间戳
 		if Number > 0 {
@@ -450,23 +450,23 @@ func (j *appUser) P批量_全部用户增减时间或点数(c *gin.Context, AppI
 
 // P批量_全部用户修改为指定时间或点数 批量修改为指定时间或点数(复杂查询)
 func (j *appUser) P批量_全部用户修改为指定时间或点数(c *gin.Context, AppId int, Number int64, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int) (影响行数 int64, err error) {
-	db := *global.GVA_DB
-	sAppInfo := service.NewAppInfo(c, &db)
+	db := global.Get局db()
+	sAppInfo := service.NewAppInfo(c, db)
 	if AppId < 10000 || !sAppInfo.AppId是否存在(AppId) {
 		return 0, errors.New("AppId不存在")
 	}
 
-	局_DB := *global.GVA_DB
+	局_DB := global.Get局db()
 
-	局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+	局_DB = 局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
 
 	局_is计点 := sAppInfo.App是否为计点(AppId)
 	局_is卡号 := sAppInfo.App是否为卡号(AppId)
 	if 用户或卡号前缀 != "" {
 		if 局_is卡号 {
-			局_DB.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
+			局_DB = 局_DB.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
 		} else {
-			局_DB.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
+			局_DB = 局_DB.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
 		}
 	}
 
@@ -477,20 +477,20 @@ func (j *appUser) P批量_全部用户修改为指定时间或点数(c *gin.Cont
 
 	case 2: //已过期 点数为0
 		if 局_is计点 {
-			局_DB.Where("ai.VipTime = 0 ")
+			局_DB = 局_DB.Where("ai.VipTime = 0 ")
 		} else {
-			局_DB.Where("ai.VipTime < ? ", time.Now().Unix())
+			局_DB = 局_DB.Where("ai.VipTime < ? ", time.Now().Unix())
 		}
 
 	case 3: //未过期
 		if 局_is计点 {
-			局_DB.Where("ai.VipTime >0 ")
+			局_DB = 局_DB.Where("ai.VipTime >0 ")
 		} else {
-			局_DB.Where("ai.VipTime > ? ", time.Now().Unix())
+			局_DB = 局_DB.Where("ai.VipTime > ? ", time.Now().Unix())
 		}
 	}
 	if 注册时间开始 > 0 {
-		局_DB.Where("ai.RegisterTime > ?", 注册时间开始)
+		局_DB = 局_DB.Where("ai.RegisterTime > ?", 注册时间开始)
 	}
 	if 注册时间结束 > 0 {
 		局_DB.Where("ai.RegisterTime < ?", 注册时间结束)
@@ -499,7 +499,7 @@ func (j *appUser) P批量_全部用户修改为指定时间或点数(c *gin.Cont
 	var 局_id数组 []int
 	局_DB.Find(&局_id数组)
 	if len(局_id数组) > 0 {
-		局_DB = *global.GVA_DB
+		局_DB = global.Get局db()
 		影响行数 = 局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", Number).RowsAffected
 		var 局_id数组文本 string
 		for _, num := range 局_id数组 {

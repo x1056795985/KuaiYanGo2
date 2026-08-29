@@ -39,14 +39,17 @@ func (C *LogMoney) Info(c *gin.Context) {
 
 // GetList 余额日志列表
 func (C *LogMoney) GetList(c *gin.Context) {
-	var 请求 request.List
+	var 请求 struct {
+		request.List
+		RegisterTime []string `json:"RegisterTime"`
+	}
 	if !C.ToJSON(c, &请求) {
 		return
 	}
 
 	var S = service.S_LogMoney{}
-	tx := *global.GVA_DB
-	总数, dataList, err := S.GetList(&tx, 请求)
+	tx := global.Get局db()
+	总数, dataList, err := S.GetList(tx, 请求.List, 请求.RegisterTime)
 	if err != nil {
 		response.FailWithMessage("查询失败,参数异常"+err.Error(), c)
 		return

@@ -40,11 +40,15 @@ var (
 	Q快验 KuaiYanSDK.Api快验_类
 
 	X系统信息 = K快验帐号信息{
-		B版本号当前: "1.0.502",
+		B版本号当前: "1.0.506",
 	}
 	// 定义一个全局翻译器T
 	Trans ut.Translator
 )
+
+func Get局db() *gorm.DB {
+	return GVA_DB.Session(&gorm.Session{NewDB: true})
+}
 
 type K快验帐号信息 struct {
 	B绑定信息      string

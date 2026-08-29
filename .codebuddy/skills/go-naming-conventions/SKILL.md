@@ -217,17 +217,18 @@ import (
 ```
 #  全局变量global.GVA_DB 使用约定
 
-先 db := *global.GVA_DB  然后使用&db 而不是直接使用global.GVA_DB
+先 db := global.Get局db()  然后使用db 而不是直接使用global.GVA_DB
 ```go
 // ✅ 正确
-db := *global.GVA_DB
-局_info, err2 := service.NewUserClass(c, &db).Info(请求.Id)
+db := global.Get局db()
+局_info, err2 := service.NewUserClass(c, db).Info(请求.Id)
 
-db := *global.GVA_DB
+db := global.Get局db()
 db.Model(dbm.DB_LogRMBPayOrder{}).Count(&局_数量)
 // ❌ 错误
 db := *global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{})    //错误 GVA_DB后面不可以跟任何代码
-service.NewUserClass(c, global.GVA_DB) 
+db := global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{})    //错误 GVA_DB后面不可以跟任何代码
+service.NewUserClass(c, global.GVA_DB)      //不可以直接用 GVA_DB
 ```
 
 

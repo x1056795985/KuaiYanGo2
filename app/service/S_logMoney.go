@@ -19,7 +19,7 @@ func (s *S_LogMoney) Info(tx *gorm.DB, Id int) (dbm.DB_LogMoney, error) {
 	return value, err
 }
 
-func (s *S_LogMoney) GetList(tx *gorm.DB, 请求 request.List) (int64, []dbm.DB_LogMoney, error) {
+func (s *S_LogMoney) GetList(tx *gorm.DB, 请求 request.List, RegisterTime []string) (int64, []dbm.DB_LogMoney, error) {
 	局_DB := tx.Model(dbm.DB_LogMoney{})
 	if 请求.Order == 1 {
 		局_DB.Order("Id ASC")
@@ -38,7 +38,11 @@ func (s *S_LogMoney) GetList(tx *gorm.DB, 请求 request.List) (int64, []dbm.DB_
 			局_DB.Where("Count = ?", 请求.Keywords)
 		}
 	}
-
+	if RegisterTime != nil && len(RegisterTime) == 2 && RegisterTime[0] != "" && RegisterTime[1] != "" {
+		开始时间, _ := strconv.ParseInt(RegisterTime[0], 10, 64)
+		结束时间, _ := strconv.ParseInt(RegisterTime[1], 10, 64)
+		局_DB.Where("Time > ?", 开始时间).Where("Time < ?", 结束时间+86400)
+	}
 	var 总数 int64
 	if 请求.Count > 500000 {
 		总数 = 请求.Count

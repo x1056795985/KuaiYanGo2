@@ -97,7 +97,7 @@ func (s *S_LogLogin) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords strin
 	return 影响行数, nil
 }
 
-// GetAppNameMap 取应用名称映射(用于日志列表附加应用名)
+// 取应用名称映射(用于日志列表附加应用名)
 func (s *S_LogLogin) GetAppNameMap(dataList []dbm.DB_LogLogin) map[string]string {
 	// 复用旧架构的AppInfo服务取应用名列表
 	var AppNameMap = make(map[string]string)
@@ -108,7 +108,7 @@ func (s *S_LogLogin) GetAppNameMap(dataList []dbm.DB_LogLogin) map[string]string
 	}
 	var apps []AppName
 	db := *global.GVA_DB
-	db.Table("db_App_Info").Select("Id, Name").Find(&apps)
+	db.Model(dbm.DB_AppInfo{}).Select("AppId", "AppName").Find(&apps)
 	for 索引 := range dataList {
 		for _, app := range apps {
 			if dataList[索引].LoginType == app.Id {
