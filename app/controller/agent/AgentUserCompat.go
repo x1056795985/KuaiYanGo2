@@ -395,7 +395,13 @@ func (C *AgentUser) SendRmbTOAgent(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithMessage("操作成功", c)
+	局_user, err := service.NewUser(c, global.GVA_DB).Info(c.GetInt("Uid"))
+	if err != nil {
+		response.OkWithDetailed(gin.H{"sourceRmb": 局_user.Rmb}, "操作成功,但是查询余额失败", c)
+		return
+	}
+
+	response.OkWithDetailed(gin.H{"sourceRmb": 局_user.Rmb}, "操作成功", c)
 }
 
 func (C *AgentUser) Get代理组织架构图(c *gin.Context) {

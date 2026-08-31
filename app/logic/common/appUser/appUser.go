@@ -79,6 +79,26 @@ func init() {
 
 }
 
+type J结构_批量维护全部用户修改请求 struct {
+	VipTimeType    int
+	VipTimeValue   int64
+	VipNumberType  int
+	VipNumberValue float64
+	NoteType       int
+	NoteValue      string
+	MaxOnlineType  int
+	MaxOnlineValue int
+	UserClassType  int
+	UserClassId    int
+	AgentUidType   int
+	AgentUidValue  int
+}
+
+type 结构_批量维护用户IdUid struct {
+	Id  int
+	Uid int
+}
+
 type appUser struct {
 }
 
@@ -382,132 +402,212 @@ func (j *appUser) S删除卡号不存在的软件用户(c *gin.Context, AppId in
 
 // P批量_全部用户增减时间或点数 批量增减时间或点数(复杂查询)
 func (j *appUser) P批量_全部用户增减时间或点数(c *gin.Context, AppId int, Number int64, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int, UserClassId []int) (影响行数 int64, err error) {
-	db := global.Get局db()
-	sAppInfo := service.NewAppInfo(c, db)
-	if AppId < 10000 || !sAppInfo.AppId是否存在(AppId) {
-		return 0, errors.New("AppId不存在")
+	局_id数组, _, err := j.Q批量维护_按条件取用户Id和Uid(c, AppId, 账号状态, 用户或卡号前缀, 注册时间开始, 注册时间结束, UserClassId)
+	if err != nil || len(局_id数组) == 0 {
+		return int64(len(局_id数组)), err
 	}
 
-	db = db.Debug().Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
-
-	局_is计点 := sAppInfo.App是否为计点(AppId)
-	局_is卡号 := sAppInfo.App是否为卡号(AppId)
-	if 用户或卡号前缀 != "" {
-		if 局_is卡号 {
-			db = db.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
-		} else {
-			db = db.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
-		}
+	局_请求 := J结构_批量维护全部用户修改请求{}
+	if Number >= 0 {
+		局_请求.VipTimeType = 1
+		局_请求.VipTimeValue = Number
+	} else {
+		局_请求.VipTimeType = 2
+		局_请求.VipTimeValue = -Number
 	}
-
-	switch 账号状态 {
-	default:
-		return 0, errors.New("账号状态错误")
-	case 1: //全部
-
-	case 2: //已过期 点数为0
-		if 局_is计点 {
-			db = db.Where("ai.VipTime = 0 ")
-		} else {
-			db = db.Where("ai.VipTime < ? ", time.Now().Unix())
-		}
-
-	case 3: //未过期
-		if 局_is计点 {
-			db = db.Where("ai.VipTime >0 ")
-		} else {
-			db = db.Where("ai.VipTime > ? ", time.Now().Unix())
-		}
+	影响行数, err = j.P批量维护_按Id数组修改多个字段(c, AppId, 局_id数组, 局_请求)
+	if err == nil {
+		global.GVA_LOG.Println(fmt.Sprintf("管理员进行了批量维护时间点数,AppId:%d,影响数量:%d,修改值:%d", AppId, 影响行数, Number))
 	}
-	if 注册时间开始 > 0 {
-		db = db.Where("ai.RegisterTime > ?", 注册时间开始)
-	}
-	if 注册时间结束 > 0 {
-		db = db.Where("ai.RegisterTime < ?", 注册时间结束)
-	}
-	if len(UserClassId) > 0 {
-		db = db.Where("ai.UserClassId IN ?", UserClassId)
-	}
-
-	var 局_id数组 []int
-	err = db.Find(&局_id数组).Error
-	if len(局_id数组) > 0 {
-		//如果是增加时间 Number 先给过期的修改为当前时间戳
-		if Number > 0 {
-			db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Where("VipTime < ?", time.Now().Unix()).Update("VipTime", time.Now().Unix())
-		}
-		影响行数 = db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", gorm.Expr("VipTime + ?", Number)).RowsAffected
-		var 局_id数组文本 string
-		for _, num := range 局_id数组 {
-			局_id数组文本 += strconv.Itoa(num) + ","
-		}
-		局_id数组文本 = fmt.Sprintf("管理员进行了批量维护时间点数,AppId:%d,软件用户ID[%s],操作类型增减指定值,修改值:%d", AppId, 局_id数组文本, Number)
-		global.GVA_LOG.Println(局_id数组文本)
-	}
-
 	return 影响行数, err
 }
 
 // P批量_全部用户修改为指定时间或点数 批量修改为指定时间或点数(复杂查询)
-func (j *appUser) P批量_全部用户修改为指定时间或点数(c *gin.Context, AppId int, Number int64, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int) (影响行数 int64, err error) {
-	db := global.Get局db()
-	sAppInfo := service.NewAppInfo(c, db)
-	if AppId < 10000 || !sAppInfo.AppId是否存在(AppId) {
-		return 0, errors.New("AppId不存在")
+func (j *appUser) P批量_全部用户修改为指定时间或点数(c *gin.Context, AppId int, Number int64, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int, UserClassId []int) (影响行数 int64, err error) {
+	局_id数组, _, err := j.Q批量维护_按条件取用户Id和Uid(c, AppId, 账号状态, 用户或卡号前缀, 注册时间开始, 注册时间结束, UserClassId)
+	if err != nil || len(局_id数组) == 0 {
+		return int64(len(局_id数组)), err
 	}
 
-	局_DB := global.Get局db()
+	影响行数, err = j.P批量维护_按Id数组修改多个字段(c, AppId, 局_id数组, J结构_批量维护全部用户修改请求{
+		VipTimeType:  3,
+		VipTimeValue: Number,
+	})
+	if err == nil {
+		global.GVA_LOG.Println(fmt.Sprintf("管理员进行了批量维护时间点数,AppId:%d,影响数量:%d,指定值:%d", AppId, 影响行数, Number))
+	}
+	return 影响行数, err
+}
 
-	局_DB = 局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai").Select("ai.Id")
+func (j *appUser) 批量维护_全部用户条件查询(c *gin.Context, AppId int, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int, UserClassId []int) (局_DB *gorm.DB, err error) {
+	局_db := global.Get局db()
+	局_app信息 := service.NewAppInfo(c, 局_db)
+	if AppId < 10000 || !局_app信息.AppId是否存在(AppId) {
+		return nil, errors.New("AppId不存在")
+	}
 
-	局_is计点 := sAppInfo.App是否为计点(AppId)
-	局_is卡号 := sAppInfo.App是否为卡号(AppId)
+	局_DB = 局_db.Model(dbm.DB_AppUser{}).Table("db_AppUser_" + strconv.Itoa(AppId) + " ai")
+	局_is计点 := 局_app信息.App是否为计点(AppId)
+	局_is卡号 := 局_app信息.App是否为卡号(AppId)
 	if 用户或卡号前缀 != "" {
 		if 局_is卡号 {
-			局_DB = 局_DB.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id").Where("ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
+			局_DB = 局_DB.Joins("LEFT JOIN db_Ka ka ON ai.Uid = ka.Id AND ka.AppId = ?", AppId).Where("ka.Name like ?", 用户或卡号前缀+"%")
 		} else {
-			局_DB = 局_DB.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Model(dbm.DB_User{}).Where("User like ?", 用户或卡号前缀+"%")
+			局_DB = 局_DB.Joins("LEFT JOIN db_User ON ai.Uid = db_User.Id").Where("db_User.User like ?", 用户或卡号前缀+"%")
 		}
 	}
 
 	switch 账号状态 {
 	default:
-		return 0, errors.New("账号状态错误")
-	case 1: //全部
-
-	case 2: //已过期 点数为0
+		return nil, errors.New("账号状态错误")
+	case 1:
+	case 2:
 		if 局_is计点 {
-			局_DB = 局_DB.Where("ai.VipTime = 0 ")
+			局_DB = 局_DB.Where("ai.VipTime = 0")
 		} else {
-			局_DB = 局_DB.Where("ai.VipTime < ? ", time.Now().Unix())
+			局_DB = 局_DB.Where("ai.VipTime < ?", time.Now().Unix())
 		}
-
-	case 3: //未过期
+	case 3:
 		if 局_is计点 {
-			局_DB = 局_DB.Where("ai.VipTime >0 ")
+			局_DB = 局_DB.Where("ai.VipTime > 0")
 		} else {
-			局_DB = 局_DB.Where("ai.VipTime > ? ", time.Now().Unix())
+			局_DB = 局_DB.Where("ai.VipTime > ?", time.Now().Unix())
 		}
 	}
+
 	if 注册时间开始 > 0 {
 		局_DB = 局_DB.Where("ai.RegisterTime > ?", 注册时间开始)
 	}
 	if 注册时间结束 > 0 {
-		局_DB.Where("ai.RegisterTime < ?", 注册时间结束)
+		局_DB = 局_DB.Where("ai.RegisterTime < ?", 注册时间结束)
+	}
+	if len(UserClassId) > 0 {
+		局_DB = 局_DB.Where("ai.UserClassId IN ?", UserClassId)
+	}
+	return 局_DB, nil
+}
+
+func (j *appUser) Q批量维护_按条件取用户Id和Uid(c *gin.Context, AppId int, 账号状态 int, 用户或卡号前缀 string, 注册时间开始, 注册时间结束 int, UserClassId []int) (局_id数组 []int, 局_uid数组 []int, err error) {
+	局_DB, err := j.批量维护_全部用户条件查询(c, AppId, 账号状态, 用户或卡号前缀, 注册时间开始, 注册时间结束, UserClassId)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	var 局_id数组 []int
-	局_DB.Find(&局_id数组)
-	if len(局_id数组) > 0 {
-		局_DB = global.Get局db()
-		影响行数 = 局_DB.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(AppId)).Where("Id IN ?", 局_id数组).Update("VipTime", Number).RowsAffected
-		var 局_id数组文本 string
-		for _, num := range 局_id数组 {
-			局_id数组文本 += strconv.Itoa(num) + ","
+	var 局_列表 []结构_批量维护用户IdUid
+	err = 局_DB.Select("ai.Id, ai.Uid").Scan(&局_列表).Error
+	if err != nil {
+		return nil, nil, err
+	}
+
+	局_id数组 = make([]int, 0, len(局_列表))
+	局_uid数组 = make([]int, 0, len(局_列表))
+	for _, 局_项目 := range 局_列表 {
+		局_id数组 = append(局_id数组, 局_项目.Id)
+		局_uid数组 = append(局_uid数组, 局_项目.Uid)
+	}
+	return 局_id数组, 局_uid数组, nil
+}
+
+func (j *appUser) P批量维护_按Id数组修改多个字段(c *gin.Context, AppId int, Id []int, 请求 J结构_批量维护全部用户修改请求) (影响行数 int64, err error) {
+	if len(Id) == 0 {
+		return 0, nil
+	}
+
+	局_db := *global.GVA_DB
+	局_app信息 := service.NewAppInfo(c, &局_db)
+	if AppId < 10000 || !局_app信息.AppId是否存在(AppId) {
+		return 0, errors.New("AppId不存在")
+	}
+	局_is计点 := 局_app信息.App是否为计点(AppId)
+	局_表名 := "db_AppUser_" + strconv.Itoa(AppId)
+	局_tx := 局_db.Begin()
+	if 局_tx.Error != nil {
+		return 0, 局_tx.Error
+	}
+
+	for i := 0; i < len(Id); i += 5000 {
+		局_结束 := i + 5000
+		if 局_结束 > len(Id) {
+			局_结束 = len(Id)
 		}
-		局_id数组文本 = fmt.Sprintf("管理员进行了批量维护时间点数,AppId:%d,软件用户ID[%s],操作类型修改指定值,修改值:%d", AppId, 局_id数组文本, Number)
-		global.GVA_LOG.Println(局_id数组文本)
+		局_id分片 := Id[i:局_结束]
+		局_更新数据 := map[string]interface{}{}
+
+		switch 请求.NoteType {
+		case 1:
+			局_更新数据["Note"] = 请求.NoteValue
+		case 2:
+			局_更新数据["Note"] = gorm.Expr("CONCAT(IFNULL(Note,''), ?)", 请求.NoteValue)
+		}
+
+		switch 请求.MaxOnlineType {
+		case 1:
+			局_更新数据["MaxOnline"] = gorm.Expr("MaxOnline + ?", 请求.MaxOnlineValue)
+		case 2:
+			局_更新数据["MaxOnline"] = gorm.Expr("CASE WHEN MaxOnline >= ? THEN MaxOnline - ? ELSE 0 END", 请求.MaxOnlineValue, 请求.MaxOnlineValue)
+		case 3:
+			局_更新数据["MaxOnline"] = 请求.MaxOnlineValue
+		}
+
+		if 请求.UserClassType == 1 && 请求.UserClassId > 0 {
+			局_更新数据["UserClassId"] = 请求.UserClassId
+		}
+		if 请求.AgentUidType == 1 {
+			局_更新数据["AgentUid"] = 请求.AgentUidValue
+		}
+
+		if len(局_更新数据) > 0 {
+			if err = 局_tx.Model(dbm.DB_AppUser{}).Table(局_表名).Where("Id IN ?", 局_id分片).Updates(局_更新数据).Error; err != nil {
+				局_tx.Rollback()
+				return 0, err
+			}
+		}
+
+		switch 请求.VipTimeType {
+		case 1:
+			if !局_is计点 && 请求.VipTimeValue > 0 {
+				if err = 局_tx.Model(dbm.DB_AppUser{}).Table(局_表名).Where("Id IN ?", 局_id分片).Where("VipTime < ?", time.Now().Unix()).Update("VipTime", time.Now().Unix()).Error; err != nil {
+					局_tx.Rollback()
+					return 0, err
+				}
+			}
+			if err = 局_tx.Model(dbm.DB_AppUser{}).Table(局_表名).Where("Id IN ?", 局_id分片).Update("VipTime", gorm.Expr("VipTime + ?", 请求.VipTimeValue)).Error; err != nil {
+				局_tx.Rollback()
+				return 0, err
+			}
+		case 2:
+			if err = 局_tx.Model(dbm.DB_AppUser{}).Table(局_表名).Where("Id IN ?", 局_id分片).Update("VipTime", gorm.Expr("VipTime - ?", 请求.VipTimeValue)).Error; err != nil {
+				局_tx.Rollback()
+				return 0, err
+			}
+		case 3:
+			if err = 局_tx.Model(dbm.DB_AppUser{}).Table(局_表名).Where("Id IN ?", 局_id分片).Update("VipTime", 请求.VipTimeValue).Error; err != nil {
+				局_tx.Rollback()
+				return 0, err
+			}
+		}
+
+		switch 请求.VipNumberType {
+		case 1:
+			if err = 局_tx.Model(dbm.DB_AppUser{}).Table(局_表名).Where("Id IN ?", 局_id分片).Update("VipNumber", gorm.Expr("VipNumber + ?", 请求.VipNumberValue)).Error; err != nil {
+				局_tx.Rollback()
+				return 0, err
+			}
+		case 2:
+			if err = 局_tx.Model(dbm.DB_AppUser{}).Table(局_表名).Where("Id IN ?", 局_id分片).Update("VipNumber", gorm.Expr("VipNumber - ?", 请求.VipNumberValue)).Error; err != nil {
+				局_tx.Rollback()
+				return 0, err
+			}
+		case 3:
+			if err = 局_tx.Model(dbm.DB_AppUser{}).Table(局_表名).Where("Id IN ?", 局_id分片).Update("VipNumber", 请求.VipNumberValue).Error; err != nil {
+				局_tx.Rollback()
+				return 0, err
+			}
+		}
 	}
 
-	return 影响行数, err
+	if err = 局_tx.Commit().Error; err != nil {
+		return 0, err
+	}
+	return int64(len(Id)), nil
 }

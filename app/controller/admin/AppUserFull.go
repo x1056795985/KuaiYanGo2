@@ -4,6 +4,7 @@ import (
 	"EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"server/app/controller/Common"
 	"server/app/global"
@@ -23,8 +24,23 @@ type AppUserFull struct {
 	Common.Common
 }
 
+const 集_缓存key前缀_批量维护全部用户 = "appUser_batch_update_all_"
+
 func NewAppUserFullController() *AppUserFull {
 	return &AppUserFull{}
+}
+
+type 结构_批量维护全部用户缓存 struct {
+	AppId   int
+	AdminId int
+	Id数组    []int
+	Uid数组   []int
+	已执行     bool
+	创建时间    int64
+}
+
+func 批量维护全部用户_取缓存key(任务Id string) string {
+	return 集_缓存key前缀_批量维护全部用户 + 任务Id
 }
 
 type DB_AppUser带User信息 struct {
@@ -589,13 +605,256 @@ func (C *AppUserFull) SetBatchAllUserVipTime(c *gin.Context) {
 			response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
 		}
 	case 3:
-		影响数量, err2 := appUser.L_appUser.P批量_全部用户修改为指定时间或点数(c, 请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd)
+		影响数量, err2 := appUser.L_appUser.P批量_全部用户修改为指定时间或点数(c, 请求.AppId, 请求.Number, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd, 请求.UserClassId)
 		if err2 != nil {
 			response.FailWithMessage(err2.Error(), c)
 		} else {
 			response.OkWithMessage("操作成功,影响数量:"+strconv.Itoa(int(影响数量)), c)
 		}
 	}
+}
+
+// GetBatchAllUserFilterResult 获取全部用户批量维护筛选结果
+func (C *AppUserFull) GetBatchAllUserFilterResult(c *gin.Context) {
+	var 请求 struct {
+		AppId             int    `json:"appId"`
+		UserVipTimeStatus int    `json:"userVipTimeStatus"`
+		UserPrefix        string `json:"userPrefix"`
+		OneLoginTimeStart int    `json:"oneLoginTimeStart"`
+		OneLoginTimeEnd   int    `json:"oneLoginTimeEnd"`
+		UserClassId       []int  `json:"userClassId"`
+	}
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+
+	局_id数组, 局_uid数组, err := appUser.L_appUser.Q批量维护_按条件取用户Id和Uid(c, 请求.AppId, 请求.UserVipTimeStatus, 请求.UserPrefix, 请求.OneLoginTimeStart, 请求.OneLoginTimeEnd, 请求.UserClassId)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if len(局_id数组) == 0 {
+		response.OkWithDetailed(struct {
+			TaskId     string `json:"taskId"`
+			Count      int    `json:"count"`
+			UidPreview []int  `json:"uidPreview"`
+			HasMore    bool   `json:"hasMore"`
+		}{
+			TaskId:     "",
+			Count:      0,
+			UidPreview: []int{},
+			HasMore:    false,
+		}, "查询成功", c)
+		return
+	}
+
+	局_taskId := uuid.New().String()
+	global.H缓存.Set(批量维护全部用户_取缓存key(局_taskId), 结构_批量维护全部用户缓存{
+		AppId:   请求.AppId,
+		AdminId: c.GetInt("Uid"),
+		Id数组:    局_id数组,
+		Uid数组:   局_uid数组,
+		已执行:     false,
+		创建时间:    time.Now().Unix(),
+	}, time.Minute*30)
+
+	局_预览数量 := 100
+	if len(局_uid数组) < 局_预览数量 {
+		局_预览数量 = len(局_uid数组)
+	}
+	response.OkWithDetailed(struct {
+		TaskId     string `json:"taskId"`
+		Count      int    `json:"count"`
+		UidPreview []int  `json:"uidPreview"`
+		HasMore    bool   `json:"hasMore"`
+	}{
+		TaskId:     局_taskId,
+		Count:      len(局_uid数组),
+		UidPreview: 局_uid数组[:局_预览数量],
+		HasMore:    len(局_uid数组) > 局_预览数量,
+	}, "查询成功", c)
+}
+
+// SetBatchAllUserData 按筛选结果批量修改全部用户
+func (C *AppUserFull) SetBatchAllUserData(c *gin.Context) {
+	var 请求 struct {
+		TaskId         string  `json:"taskId"`
+		VipTimeType    int     `json:"vipTimeType"`
+		VipTimeValue   int64   `json:"vipTimeValue"`
+		VipNumberType  int     `json:"vipNumberType"`
+		VipNumberValue float64 `json:"vipNumberValue"`
+		NoteType       int     `json:"noteType"`
+		NoteValue      string  `json:"noteValue"`
+		MaxOnlineType  int     `json:"maxOnlineType"`
+		MaxOnlineValue int     `json:"maxOnlineValue"`
+		UserClassType  int     `json:"userClassType"`
+		UserClassId    int     `json:"userClassId"`
+		AgentUidType   int     `json:"agentUidType"`
+		AgentUidValue  int     `json:"agentUidValue"`
+	}
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	if 请求.TaskId == "" {
+		response.FailWithMessage("taskId不能为空", c)
+		return
+	}
+
+	局_缓存值, ok := global.H缓存.Get(批量维护全部用户_取缓存key(请求.TaskId))
+	if !ok {
+		response.FailWithMessage("筛选任务不存在或已过期,请重新查询", c)
+		return
+	}
+	局_缓存, ok := 局_缓存值.(结构_批量维护全部用户缓存)
+	if !ok {
+		response.FailWithMessage("筛选任务数据异常,请重新查询", c)
+		return
+	}
+	if 局_缓存.AdminId != c.GetInt("Uid") {
+		response.FailWithMessage("无权使用此筛选任务", c)
+		return
+	}
+	//if 局_缓存.已执行 {  //考虑到快速还原错误修改,已执行过的,也可以继续使用
+	//	response.FailWithMessage("该筛选任务已执行过修改,请重新查询", c)
+	//	return
+	//}
+	if len(局_缓存.Id数组) == 0 {
+		response.FailWithMessage("筛选结果为空,请重新查询", c)
+		return
+	}
+
+	局_是否有修改 := false
+	switch 请求.VipTimeType {
+	case 0:
+	case 1, 2:
+		if 请求.VipTimeValue <= 0 {
+			response.FailWithMessage("时间(点数)增减值必须大于0", c)
+			return
+		}
+		局_是否有修改 = true
+	case 3:
+		if 请求.VipTimeValue < 0 {
+			response.FailWithMessage("时间(点数)指定值不能小于0", c)
+			return
+		}
+		局_是否有修改 = true
+	default:
+		response.FailWithMessage("时间(点数)操作类型错误", c)
+		return
+	}
+
+	switch 请求.VipNumberType {
+	case 0:
+	case 1, 2:
+		if 请求.VipNumberValue <= 0 {
+			response.FailWithMessage("积分增减值必须大于0", c)
+			return
+		}
+		局_是否有修改 = true
+	case 3:
+		if 请求.VipNumberValue < 0 {
+			response.FailWithMessage("积分指定值不能小于0", c)
+			return
+		}
+		局_是否有修改 = true
+	default:
+		response.FailWithMessage("积分操作类型错误", c)
+		return
+	}
+
+	switch 请求.NoteType {
+	case 0:
+	case 1:
+		局_是否有修改 = true
+	case 2:
+		if 请求.NoteValue == "" {
+			response.FailWithMessage("追加备注内容不能为空", c)
+			return
+		}
+		局_是否有修改 = true
+	default:
+		response.FailWithMessage("备注操作类型错误", c)
+		return
+	}
+
+	switch 请求.MaxOnlineType {
+	case 0:
+	case 1, 2:
+		if 请求.MaxOnlineValue <= 0 {
+			response.FailWithMessage("最大同时在线数量增减值必须大于0", c)
+			return
+		}
+		局_是否有修改 = true
+	case 3:
+		if 请求.MaxOnlineValue < 0 {
+			response.FailWithMessage("最大同时在线数量指定值不能小于0", c)
+			return
+		}
+		局_是否有修改 = true
+	default:
+		response.FailWithMessage("最大同时在线数量操作类型错误", c)
+		return
+	}
+
+	switch 请求.UserClassType {
+	case 0:
+	case 1:
+		局_是否有修改 = true
+	default:
+		response.FailWithMessage("用户类型操作错误", c)
+		return
+	}
+
+	switch 请求.AgentUidType {
+	case 0:
+	case 1:
+		if 请求.AgentUidValue < 0 {
+			response.FailWithMessage("归属代理Uid不能小于0", c)
+			return
+		}
+		if 请求.AgentUidType == 1 {
+			局_是否有修改 = true
+		}
+	default:
+		response.FailWithMessage("归属代理Uid操作类型错误", c)
+		return
+	}
+
+	if !局_是否有修改 {
+		response.FailWithMessage("请至少修改一项数据", c)
+		return
+	}
+
+	影响数量, err := appUser.L_appUser.P批量维护_按Id数组修改多个字段(c, 局_缓存.AppId, 局_缓存.Id数组, appUser.J结构_批量维护全部用户修改请求{
+		VipTimeType:    请求.VipTimeType,
+		VipTimeValue:   请求.VipTimeValue,
+		VipNumberType:  请求.VipNumberType,
+		VipNumberValue: 请求.VipNumberValue,
+		NoteType:       请求.NoteType,
+		NoteValue:      请求.NoteValue,
+		MaxOnlineType:  请求.MaxOnlineType,
+		MaxOnlineValue: 请求.MaxOnlineValue,
+		UserClassType:  请求.UserClassType,
+		UserClassId:    请求.UserClassId,
+		AgentUidType:   请求.AgentUidType,
+		AgentUidValue:  请求.AgentUidValue,
+	})
+	if err != nil {
+		response.FailWithMessage("修改失败:"+err.Error(), c)
+		return
+	}
+
+	局_缓存.已执行 = true
+	global.H缓存.Set(批量维护全部用户_取缓存key(请求.TaskId), 局_缓存, time.Minute*30)
+	response.OkWithDetailed(struct {
+		TaskId  string `json:"taskId"`
+		Count   int64  `json:"count"`
+		UidList []int  `json:"uidList"`
+	}{
+		TaskId:  请求.TaskId,
+		Count:   影响数量,
+		UidList: 局_缓存.Uid数组,
+	}, "修改成功", c)
 }
 
 // BatchSetAppUserKey 批量设置用户绑定信息

@@ -184,6 +184,8 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("appUser/setBatchSetUserConfig", 局_AppUserFull.SetBatchSetUserConfig)
 		adminRouter.POST("appUser/setBatchUserClass", 局_AppUserFull.SetBatchUserClass)
 		adminRouter.POST("appUser/setBatchAllUserVipTime", 局_AppUserFull.SetBatchAllUserVipTime)
+		adminRouter.POST("appUser/getBatchAllUserFilterResult", 局_AppUserFull.GetBatchAllUserFilterResult)
+		adminRouter.POST("appUser/setBatchAllUserData", 局_AppUserFull.SetBatchAllUserData)
 		adminRouter.POST("appUser/batchSetAppUserKey", 局_AppUserFull.BatchSetAppUserKey)
 		adminRouter.POST("appUser/batchSetAppUserNote", 局_AppUserFull.BatchSetAppUserNote)
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
