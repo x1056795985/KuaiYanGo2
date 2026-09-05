@@ -447,7 +447,7 @@ func UserApi_用户登录(c *gin.Context) {
 	var 局_用户类型 dbm.DB_UserClass
 	局_用户类型, err = service.NewUserClass(c, &db).Info(局_AppUser.UserClassId)
 	if err != nil {
-		局_用户类型.Name = "已删待改"
+		局_用户类型.Name = S三元(局_AppUser.UserClassId == 0, "未分类", "已删待改")
 		局_用户类型.Mark = 0
 	}
 	更新上下文缓存在线信息(c)
