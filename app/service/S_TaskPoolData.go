@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/app/global"
+	"server/app/models/constant"
 	"server/app/models/dbm"
 	"server/app/models/request"
 	"time"
@@ -40,6 +41,17 @@ func (s *TaskPoolData) Delete(Uuid interface{}) (影响行数 int64, error error
 	default:
 		return 0, errors.New("错误的数据")
 	}
+	//删除缓存
+	switch k := Uuid.(type) {
+	case string:
+		global.H缓存.Delete(constant.H缓存前缀_任务池_uuid数据 + k)
+	case []string:
+		for _, v := range k {
+			global.H缓存.Delete(constant.H缓存前缀_任务池_uuid数据 + v)
+		}
+
+	}
+
 	return tx2.RowsAffected, tx2.Error
 }
 
@@ -90,9 +102,24 @@ func (s *TaskPoolData) GetList(请求 request.List, Tid, SubmitAppId, SubmitUid 
 
 // 查
 func (s *TaskPoolData) Info(Uuid string) (info dbm.DB_TaskPoolData, err error) {
+	if 局_info, ok := global.H缓存.Get(constant.H缓存前缀_任务池_uuid数据 + Uuid); ok {
+		info, ok = 局_info.(dbm.DB_TaskPoolData)
+		if ok {
+			if info.Status == 3 { //如果任务完成了 则删除缓存一般本次读取后,就不回在轮训了,无需继续缓存数据,即使少量读取,直接读库就行
+				global.H缓存.Delete(constant.H缓存前缀_任务池_uuid数据 + Uuid)
+			}
+			return
+		} else {
+			global.H缓存.Delete(constant.H缓存前缀_任务池_uuid数据 + Uuid)
+		}
+	}
 	tx := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&info)
 	if tx.Error != nil {
 		err = tx.Error
+		return
+	}
+	if info.Status != 3 {
+		global.H缓存.Set(constant.H缓存前缀_任务池_uuid数据+Uuid, info, 120*time.Second) //如果有变动只需要缓存120秒
 	}
 	return
 }
@@ -110,12 +137,15 @@ func (s *TaskPoolData) Info2(where map[string]interface{}) (info dbm.DB_TaskPool
 func (s *TaskPoolData) Update(Uuid string, 数据 map[string]interface{}) (row int64, err error) {
 
 	tx := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).Updates(&数据)
-	return tx.RowsAffected, tx.Error
-}
+	if tx.Error == nil {
+		// 先删缓存，再通过 Info2(这个接口不回读取缓存) 回填最新数据，避免旧缓存覆盖新数据
+		global.H缓存.Delete(constant.H缓存前缀_任务池_uuid数据 + Uuid)
+		info, err2 := s.Info2(map[string]interface{}{"Uuid": Uuid})
+		if err2 == nil {
+			global.H缓存.Set(constant.H缓存前缀_任务池_uuid数据+Uuid, info, 120*time.Second) //如果有变动只需要缓存120秒
+		}
+	}
 
-// 保存
-func (s *TaskPoolData) Save(info dbm.DB_TaskPoolData) (row int64, err error) {
-	tx := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", info.Uuid).Save(&info)
 	return tx.RowsAffected, tx.Error
 }
 
@@ -129,34 +159,23 @@ func (s *TaskPoolData) Task数据读取_数组(Uuid []string) []dbm.TaskPool_数
 	return TaskPool_数据
 }
 
-// Task数据读取_单条 按Uuid取单条任务数据
-func (s *TaskPoolData) Task数据读取_单条(Uuid string) (dbm.DB_TaskPoolData, error) {
-	var TaskPool_数据 dbm.DB_TaskPoolData
-	err := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&TaskPool_数据).Error
-	return TaskPool_数据, err
-}
-
-// Task数据读取Tid 按Uuid取Tid
+// 按Uuid取Tid
 func (s *TaskPoolData) Task数据读取Tid(Uuid string) int {
-	var Tid int
-	_ = s.db.Model(dbm.DB_TaskPoolData{}).Select("Tid").Where("Uuid = ?", Uuid).First(&Tid).Error
-	return Tid
-}
-
-// Task数据修改 数据修改 Status=0 或ReturnData="" 不修改
-func (s *TaskPoolData) Task数据修改(Uuid string, Status int, ReturnData string) error {
-
-	局_UpData := make(map[string]interface{}, 3)
-	局_UpData["TimeEnd"] = time.Now().Unix()
-	if Status != 0 {
-		局_UpData["Status"] = Status
+	if 局_info, ok := global.H缓存.Get(constant.H缓存前缀_任务池_uuid数据 + Uuid); ok {
+		局_info2, ok2 := 局_info.(dbm.DB_TaskPoolData)
+		if ok2 {
+			return 局_info2.Tid
+		} else {
+			global.H缓存.Delete(constant.H缓存前缀_任务池_uuid数据 + Uuid)
+		}
 	}
-	if ReturnData != "" {
-		局_UpData["ReturnData"] = ReturnData
+	// 缓存未命中，查库并回填缓存（只查 Tid 不够，需要完整记录才能缓存）
+	var info dbm.DB_TaskPoolData
+	if err := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid = ?", Uuid).First(&info).Error; err == nil {
+		global.H缓存.Set(constant.H缓存前缀_任务池_uuid数据+Uuid, info, 120*time.Second)
+		return info.Tid
 	}
-
-	err := s.db.Model(dbm.DB_TaskPoolData{}).Where("Uuid=?", Uuid).Updates(局_UpData).Error
-	return err
+	return 0
 }
 
 // Task数据删除过期 删除超过30天的任务

@@ -497,6 +497,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("cloudStorage/getDownloadUrl", 局_云存储.GetDownloadUrl)
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			adminRouter.POST("cloudStorage/getUpToken", 局_云存储.GetUpToken)
+			adminRouter.POST("cloudStorage/getETag", 局_云存储.GetETag)
 			adminRouter.POST("cloudStorage/delete", 局_云存储.Delete)
 		}
 	}

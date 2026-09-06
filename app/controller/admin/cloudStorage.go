@@ -78,6 +78,25 @@ func (C *CloudStorage) GetUpToken(c *gin.Context) {
 	//继续对接前端
 }
 
+// GetETag
+// @action 取文件ETag
+// @show  2
+func (j *CloudStorage) GetETag(c *gin.Context) {
+	var 请求 struct {
+		Path string `json:"path"`
+	}
+	if !j.ToJSON(c, &请求) {
+		return
+	}
+
+	ETag, err := cloudStorage.L_云存储.Q取ETag(c, 请求.Path)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(ETag, "操作成功", c)
+}
+
 // Index
 // @action 移动文件
 // @show  1

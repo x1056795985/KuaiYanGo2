@@ -50,7 +50,7 @@ func 脚本引擎_任务池任务查询(taskID string) 脚本引擎_Api结果 {
 		return 脚本引擎_失败消息("任务Uuid错误")
 	}
 	db := *global.GVA_DB
-	局_任务, 局_错误 := service.NewTaskPoolData(脚本引擎_后台上下文(), &db).Task数据读取_单条(taskID)
+	局_任务, 局_错误 := service.NewTaskPoolData(脚本引擎_后台上下文(), &db).Info(taskID)
 	if 局_错误 != nil {
 		return 脚本引擎_失败消息("任务Uuid错误")
 	}

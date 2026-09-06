@@ -99,8 +99,16 @@ func (T *TaskPoolWebApi) TaskPoolSetTask(c *gin.Context) {
 			return
 		}
 	}
+	局_UpData := make(map[string]interface{}, 3)
+	局_UpData["TimeEnd"] = time.Now().Unix()
+	if 局_任务状态 != 0 {
+		局_UpData["Status"] = 局_任务状态
+	}
+	if 局_任务数据 != "" {
+		局_UpData["ReturnData"] = 局_任务数据
+	}
 
-	err = service.NewTaskPoolData(c, &db).Task数据修改(局_uuid, 局_任务状态, 局_任务数据)
+	_, err = service.NewTaskPoolData(c, &db).Update(局_uuid, 局_UpData)
 	if err != nil {
 		response.FailWithMessage("任务数据写入数据库失败", c)
 		return
@@ -184,7 +192,7 @@ func (T *TaskPoolWebApi) TaskPoolGetData(c *gin.Context) {
 		response.FailWithMessage("任务Uuid错误", c)
 		return
 	}
-	局_任务数据, err := service.NewTaskPoolData(c, &db).Task数据读取_单条(局_uuid)
+	局_任务数据, err := service.NewTaskPoolData(c, &db).Info(局_uuid)
 	if err != nil {
 		response.FailWithMessage("任务Uuid错误", c)
 		return
