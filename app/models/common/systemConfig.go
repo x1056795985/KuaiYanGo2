@@ -89,6 +89,7 @@ type S3兼容协议 struct {
 	Endpoint  string `  json:"Endpoint" `
 	AccessKey string `  json:"AccessKey" `
 	SecretKey string `  json:"SecretKey" `
+	Region    string `  json:"region" `    //地域(可选), 如ap-beijing; 不填则从Endpoint自动识别
 	W外链域名     string `json:"外链域名" `       //外链域名
 	Bucket    string `  json:"Bucket" `   //空间名称
 	RootPath  string `  json:"rootPath" ` //根文件夹

@@ -120,6 +120,6 @@ func (s *S_LogUserMsg) S删除重复消息(tx *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	err = tx.Debug().Model(dbm.DB_LogUserMsg{}).Where("id not IN ?", ids).Delete("").Error
+	err = tx.Model(dbm.DB_LogUserMsg{}).Where("id not IN ?", ids).Delete("").Error
 	return err
 }

@@ -25,17 +25,68 @@ func (j *S3Api) Q取云存储名称() string {
 	return "S3兼容协议"
 }
 
+// 云存储_取地域 从Endpoint自动提取常见云厂商的地域标识, 提取不到返回空
+// 腾讯COS: cos.ap-beijing.myqcloud.com | AWS: s3.us-east-1.amazonaws.com | 阿里OSS: oss-cn-hangzhou.aliyuncs.com
+func 云存储_取地域(endpoint string) string {
+	局_域名 := strings.ToLower(strings.TrimSpace(endpoint))
+	// Cloudflare R2官方S3地域固定为auto
+	if strings.Contains(局_域名, ".r2.cloudflarestorage.com") {
+		return "auto"
+	}
+	局_排除词 := map[string]bool{"amazonaws": true, "aliyuncs": true, "myqcloud": true, "accelerate": true, "www": true}
+	for _, 局_前缀 := range []string{"cos.", "s3.", "s3-", "oss.", "oss-"} {
+		局_起点 := strings.Index(局_域名, 局_前缀)
+		if 局_起点 < 0 {
+			continue
+		}
+		局_剩余 := 局_域名[局_起点+len(局_前缀):]
+		局_终点 := strings.Index(局_剩余, ".")
+		if 局_终点 > 0 {
+			局_地域 := 局_剩余[:局_终点]
+			if !局_排除词[局_地域] && !strings.ContainsAny(局_地域, ":/") {
+				return 局_地域
+			}
+		}
+	}
+	return ""
+}
+
 func (j *S3Api) C初始化数据(配置 common.Y云存储配置) bool {
 	j.配置 = 配置.S3兼容协议
 	if j.配置.RootPath == "" {
 		j.配置.RootPath = "fnkuaiyan/"
 	}
+	// 根目录统一去掉前导/ (S3对象Key不允许以/开头)
+	j.配置.RootPath = strings.TrimLeft(j.配置.RootPath, "/")
+
+	// minio.New要求Endpoint为 host:port 格式, 不能携带协议前缀, 因此必须先剥离
+	// 并根据原协议设置Secure; 未填写协议时默认启用HTTPS (R2等S3兼容服务的HTTP会301重定向且不跟随)
+	局_是否HTTPS := true
+	局_endpoint := strings.TrimSpace(j.配置.Endpoint)
+	if strings.HasPrefix(局_endpoint, "http://") {
+		局_是否HTTPS = false
+		局_endpoint = strings.TrimPrefix(局_endpoint, "http://")
+	} else {
+		局_endpoint = strings.TrimPrefix(局_endpoint, "https://")
+	}
+
+	// 显式指定Region: 未指定时minio-go会先发 GET /?location 自动探测,
+	// 但COS等S3兼容服务对非AWS端点的该请求会误报 "The specified key does not exist",
+	// 因此优先取配置, 其次从Endpoint自动识别; 自建MinIO识别不到则保持自动探测
+	局_地域 := strings.TrimSpace(j.配置.Region)
+	if 局_地域 == "" {
+		局_地域 = 云存储_取地域(局_endpoint)
+	}
+	局_选项 := &minio.Options{
+		Creds:  credentials.NewStaticV4(j.配置.AccessKey, j.配置.SecretKey, ""),
+		Secure: 局_是否HTTPS,
+	}
+	if 局_地域 != "" {
+		局_选项.Region = 局_地域
+	}
 
 	// 初始化Minio客户端
-	client, err := minio.New(j.配置.Endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(j.配置.AccessKey, j.配置.SecretKey, ""),
-		Secure: strings.HasPrefix(j.配置.Endpoint, "https://"),
-	})
+	client, err := minio.New(局_endpoint, 局_选项)
 	if err != nil {
 		return false
 	}

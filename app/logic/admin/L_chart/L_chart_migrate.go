@@ -882,7 +882,7 @@ func Get卡号月度汇总(c *gin.Context) gin.H {
 		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("RegisterTime >= ? AND RegisterTime < ?", 本月开始, 本月结束).Count(&局_本月制卡)
 		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("RegisterTime >= ? AND RegisterTime < ?", 上月开始, 本月开始).Count(&局_上月制卡)
 		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 本月开始, 本月结束).Count(&局_本月使用)
-		局_db.Model(dbm.DB_Ka{}).Debug().Select("COUNT(*)").Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 上月开始, 本月开始).Count(&局_上月使用)
+		局_db.Model(dbm.DB_Ka{}).Select("COUNT(*)").Where("UseTime > 0 AND UseTime >= ? AND UseTime < ?", 上月开始, 本月开始).Count(&局_上月使用)
 	}
 
 	Data := gin.H{

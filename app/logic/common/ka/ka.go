@@ -757,7 +757,7 @@ func (j *ka) K卡号追回(c *gin.Context, Id int, 操作人 string) (err error)
 					return errors.Join(tempTx.Error, errors.New("推荐人["+值+"]卡号不存在"))
 				}
 			} else {
-				tempTx = tx.Debug().Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时账号info, "User = ?", 值)
+				tempTx = tx.Model(dbm.DB_User{}).Clauses(clause.Locking{Strength: "UPDATE"}).First(&临时账号info, "User = ?", 值)
 				if tempTx.Error != nil {
 					return errors.Join(tempTx.Error, errors.New("推荐人["+值+"]账号不存在"))
 				}
