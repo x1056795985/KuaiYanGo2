@@ -54,13 +54,10 @@ func 服务_打印启动信息(port string) {
 }
 
 func 服务_初始化快验() {
-	global.Q快验.C初始化配置(string(B编码_BASE64解码("eyJBcHBXZWIiOiJodHRwOi8va3lhcGkuOXc5OS5jbi9BcGk/QXBwSWQ9MTAwMDEiLCJDcnlwdG9LZXlQdWJsaWMiOiItLS0tLUJFR0lOIFBVQkxJQyBLRVktLS0tLVxuTUlHZk1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTkFEQ0JpUUtCZ1FDM0hib1NYQ0trcUdWaDBsaEt6cFNwaDFYRVxuNUtNYnBtYUhBTzIyNzdnOGtZaVVRRk5XU21PNlZ0RjJlcENKTURleTJjSVZEMk9OUnFZSkxLeWdYbHpkSGtZNlxuQU1Oa3AweTh5elVMQUlUSkgyOTkwbzJTb3VPdzdYQlBPNTN0Nk9URVJSTG92Lzh5YTVMNXJaK1NzM2R4RHNJVFxudkZqd0drYzZ5QlBBVFJKM1N3SURBUUFCXG4tLS0tLUVORCBQVUJMSUMgS0VZLS0tLS1cbiIsIkNyeXB0b1R5cGUiOjN9")))
-	if global.GVA_Viper.GetInt("系统模式") == 1056795985 {
-		return
-	}
-	局_接口地址 := string(B编码_BASE64解码("aHR0cHM6Ly9hcGl3Zy45dzk5LmNu"))
+	global.Q快验.C初始化配置(string(B编码_BASE64解码("eyJBcHBXZWIiOiJodHRwczovL2FwaWdmMi45dzk5LmNuL0FwaT9BcHBJZD0xMDAwMSIsIkNyeXB0b0tleVB1YmxpYyI6Ii0tLS0tQkVHSU4gUFVCTElDIEtFWS0tLS0tXG5NSUdmTUEwR0NTcUdTSWIzRFFFQkFRVUFBNEdOQURDQmlRS0JnUUMzSGJvU1hDS2txR1ZoMGxoS3pwU3BoMVhFXG41S01icG1hSEFPMjI3N2c4a1lpVVFGTldTbU82VnRGMmVwQ0pNRGV5MmNJVkQyT05ScVlKTEt5Z1hsemRIa1k2XG5BTU5rcDB5OHl6VUxBSVRKSDI5OTBvMlNvdU93N1hCUE81M3Q2T1RFUlJMb3YvOHlhNUw1clorU3MzZHhEc0lUXG52Rmp3R2tjNnlCUEFUUkozU3dJREFRQUJcbi0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLVxuIiwiQ3J5cHRvVHlwZSI6M30=")))
+	局_接口地址 := string(B编码_BASE64解码("aHR0cHM6Ly9hcGlnZi45dzk5LmNu"))
 	局_响应, 局_错误 := req.C().EnableInsecureSkipVerify().R().Get(局_接口地址)
-	if 局_错误 == nil && 局_响应.GetHeader("X-Ca-Error-Code") != "" {
+	if 局_错误 == nil && W文本_是否包含关键字(局_响应.String(), "404 page not found") {
 		global.Q快验.SetAppWeb(局_接口地址)
 		global.Q快验.J集_连接方式 = 1
 	}
