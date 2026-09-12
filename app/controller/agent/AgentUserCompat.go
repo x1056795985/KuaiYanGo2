@@ -395,6 +395,13 @@ func (C *AgentUser) SendRmbTOAgent(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	//写入日志
+	局_db := global.Get局db()
+	局_转账人, _ := service.NewUser(c, 局_db).Info(c.GetInt("Uid"))
+	局_被转账人, _ := service.NewUser(c, 局_db).Info(请求.Id)
+	log.L_log.Log_写余额日志(局_转账人.User, "127.0.0.1", "转账给代理:"+局_被转账人.User, utils.Float64取负值(请求.Rmb))
+	log.L_log.Log_写余额日志(局_被转账人.User, "127.0.0.1", "收到转账:"+局_转账人.User, 请求.Rmb)
+
 	局_user, err := service.NewUser(c, global.GVA_DB).Info(c.GetInt("Uid"))
 	if err != nil {
 		response.OkWithDetailed(gin.H{"sourceRmb": 局_user.Rmb}, "操作成功,但是查询余额失败", c)

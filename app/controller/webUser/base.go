@@ -189,7 +189,7 @@ func (C *Base) LoginUserOrKa(c *gin.Context) {
 
 	//账号模式登录成功把登录信息写到账号表
 	if info.appInfo.AppType == 1 || info.appInfo.AppType == 2 {
-		_, err = service.NewUser(c, &tx).Update(info.appInfo.AppId, map[string]interface{}{"LoginAppid": constant.APPID_Web用户中心, "LoginIp": c.ClientIP(), "LoginTime": time.Now().Unix()})
+		_, err = service.NewUser(c, &tx).Update(info.DB_links_user.Uid, map[string]interface{}{"LoginAppid": constant.APPID_Web用户中心, "LoginIp": c.ClientIP(), "LoginTime": time.Now().Unix()})
 		if err != nil {
 			局_log := "账号模式登录成功把登录最后时间信息写到账号表失败:" + err.Error()
 			log.L_log.Log_写用户消息(log.Log用户消息类型_系统执行错误, info.appInfo.AppId, 请求.UserOrKa, "webUser", strconv.Itoa(请求.AppId), 局_log, c.ClientIP())

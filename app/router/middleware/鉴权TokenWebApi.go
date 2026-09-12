@@ -20,7 +20,7 @@ const WebApi = 3
 func IsWebApiHost() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if global.GVA_DB == nil {
-			c.String(404, "数据库连接失败,请重新设置", c)
+			c.String(404, "数据库连接失败,请重新设置")
 			c.Abort()
 			return
 		}

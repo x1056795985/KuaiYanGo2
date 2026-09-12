@@ -16,6 +16,7 @@ import (
 	utils2 "server/app/utils"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type User struct {
@@ -76,11 +77,19 @@ func (C *User) NewUserInfo(c *gin.Context) {
 
 // 密码找回或修改_密保手机
 func (C *User) GetPwSendSms(c *gin.Context) {
+	//{"user":"aaaaaa","phoneCaptchaValue":"","phoneCaptchaId":"","newPassword":"ssssss","captchaId":"sC2rCHYoPgUVyXXjJW","captchaValue":"69|123,133|116,165|115,259|119"}
 	var 请求 struct {
-		User string `json:"user" binding:"required,min=6,max=190" zh:"用户名"`
+		User          string `json:"user" binding:"required,min=6,max=190" zh:"用户名"`
+		CaptchaId     string `json:"captchaId" zh:"验证码id"`
+		CaptchaValue  string `json:"captchaValue" zh:"验证码值"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
+		return
+	}
+	//校验行为验证码,防止短信被刷
+	if !captcha.VerifyClick(请求.CaptchaId, 请求.CaptchaValue, true) {
+		response.FailWithMessage(c, "验证码错误")
 		return
 	}
 	var info = struct {
@@ -103,6 +112,19 @@ func (C *User) GetPwSendSms(c *gin.Context) {
 		return
 	}
 
+	//频率限制:同一IP一小时内最多发送10次
+	局_IP计数键 := "GetPwSendSms_IP_" + c.ClientIP()
+	if 局_缓存值, ok := global.H缓存.Get(局_IP计数键); ok && interfaceToInt(局_缓存值) >= 10 {
+		go log.L_log.S写风控日志(c, 0, log.Log风控类型_Api异常调用, 请求.User, c.ClientIP(), "使用绑定手机密码找回,IP发送短信过于频繁")
+		response.FailWithMessage(c, "发送过于频繁,请稍后再试")
+		return
+	}
+	//频率限制:同一用户60秒内只能发送一次(Add原子操作,防止并发绕过)
+	if err = global.H缓存.Add("GetPwSendSms_"+请求.User, 1, time.Minute); err != nil {
+		response.FailWithMessage(c, "发送过于频繁,请稍后再试")
+		return
+	}
+
 	局_验证码 := W文本_取随机字符串_数字(6)
 	局_验证码ID := "Note" + utils2.Md5String(info.user.Phone)[:16] + W文本_取随机字符串(15)
 	err = captcha.SendSMS([]string{局_验证码}, info.user.Phone)
@@ -110,6 +132,12 @@ func (C *User) GetPwSendSms(c *gin.Context) {
 		log.L_log.Log_写用户消息(log.Log用户消息类型_系统执行错误, constant.APPID_Web用户中心, 请求.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("短信验证码发送失败:%v,%v,%v", 局_验证码, info.user.Phone, err.Error()), c.ClientIP())
 		response.FailWithMessage(c, "发送失败")
 		return
+	}
+	//发送成功,IP计数+1
+	if _, ok := global.H缓存.Get(局_IP计数键); ok {
+		_ = global.H缓存.Increment(局_IP计数键, 1)
+	} else {
+		global.H缓存.Set(局_IP计数键, 1, time.Hour)
 	}
 	captcha.VerificationCodes.Set(局_验证码ID, 局_验证码)
 	response.OkWithData(c, gin.H{"captchaType": 3, "captchaId": 局_验证码ID})
@@ -189,10 +217,25 @@ func (C *User) SmsCodeSetPassWord(c *gin.Context) {
 		response.FailWithMessage(c, "验证码错误.")
 		return
 	}
+	//防暴力破解:失败次数达到上限后锁定10分钟
+	局_失败计数键 := "SmsPwErr_" + 请求.User
+	if 局_缓存值, ok := global.H缓存.Get(局_失败计数键); ok && interfaceToInt(局_缓存值) >= 5 {
+		go log.L_log.S写风控日志(c, 0, log.Log风控类型_Api异常调用, 请求.User, c.ClientIP(), "使用绑定手机密码找回或修改,短信验证码错误次数过多,疑似暴力破解")
+		response.FailWithMessage(c, "错误次数过多,请重新获取验证码")
+		return
+	}
 	if !captcha.VerificationCodes.Verify(请求.PhoneCaptchaId, 请求.PhoneCaptchaValue, false) {
+		//记录失败次数
+		if _, ok := global.H缓存.Get(局_失败计数键); ok {
+			_ = global.H缓存.Increment(局_失败计数键, 1)
+		} else {
+			global.H缓存.Set(局_失败计数键, 1, time.Minute*10)
+		}
 		response.FailWithMessage(c, "短信验证码错误.")
 		return
 	}
+	//验证成功,清除失败计数
+	global.H缓存.Delete(局_失败计数键)
 
 	_, err = service.NewUser(c, &tx).Update(info.user.Id, map[string]interface{}{"PassWord": utils2.Md5String(请求.NewPassWord)})
 	if err != nil {
@@ -311,6 +354,11 @@ func (C *User) SendSms(c *gin.Context) {
 	局_msg := "手机号码非正确手机号格式"
 	if !utils2.Z正则_校验手机号(请求.Phone, &局_msg) {
 		response.FailWithMessage(c, 局_msg)
+		return
+	}
+	//频率限制:同一手机号60秒内只能发送一次(Add原子操作,防止并发绕过)
+	if err = global.H缓存.Add("SendSms_"+请求.Phone, 1, time.Minute); err != nil {
+		response.FailWithMessage(c, "发送过于频繁,请稍后再试")
 		return
 	}
 	局_验证码 := W文本_取随机字符串_数字(6)

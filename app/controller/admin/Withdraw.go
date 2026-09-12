@@ -26,170 +26,170 @@ func NewWithdrawController() *Withdraw {
 	return &Withdraw{}
 }
 
-func (C *Withdraw) GetConfig(c *gin.Context) {
-	var S = service.S_RmbWithdraw{}
-	tx := *global.GVA_DB
-	response.OkWithDetailed(S.GetConfig(&tx), "获取成功", c)
+func (j *Withdraw) GetConfig(c *gin.Context) {
+	局_提现服务 := service.S_RmbWithdraw{}
+	局_数据库 := global.Get局db()
+	response.OkWithDetailed(局_提现服务.Q取配置(局_数据库), "获取成功", c)
 }
 
-func (C *Withdraw) SaveConfig(c *gin.Context) {
-	var req service.WithdrawConfig
-	if !C.ToJSON(c, &req) {
+func (j *Withdraw) SaveConfig(c *gin.Context) {
+	var 局_请求 service.T提现_配置
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	var S = service.S_RmbWithdraw{}
-	tx := *global.GVA_DB
-	if err := S.SaveConfig(&tx, req); err != nil {
+	局_提现服务 := service.S_RmbWithdraw{}
+	局_数据库 := global.Get局db()
+	if err := 局_提现服务.B保存配置(局_数据库, 局_请求); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithMessage("保存成功", c)
 }
 
-func (C *Withdraw) List(c *gin.Context) {
-	var req service.WithdrawListRequest
-	if !C.ToJSON(c, &req) {
+func (j *Withdraw) List(c *gin.Context) {
+	var 局_请求 service.T提现_列表请求
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	var S = service.S_RmbWithdraw{}
-	tx := *global.GVA_DB
-	count, list, err := S.List(&tx, req, 0)
+	局_提现服务 := service.S_RmbWithdraw{}
+	局_数据库 := global.Get局db()
+	局_数量, 局_列表, err := 局_提现服务.L列表(局_数据库, 局_请求, 0)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithDetailed(GetList2{List: list, Count: count}, "获取成功", c)
+	response.OkWithDetailed(GetList2{List: 局_列表, Count: 局_数量}, "获取成功", c)
 }
 
-func (C *Withdraw) Detail(c *gin.Context) {
-	var req request.Id2
-	if !C.ToJSON(c, &req) {
+func (j *Withdraw) Detail(c *gin.Context) {
+	var 局_请求 request.Id2
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	var S = service.S_RmbWithdraw{}
-	tx := *global.GVA_DB
-	data, err := S.Detail(&tx, req.Id, 0)
+	局_提现服务 := service.S_RmbWithdraw{}
+	局_数据库 := global.Get局db()
+	局_数据, err := 局_提现服务.X详情(局_数据库, 局_请求.Id, 0)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithDetailed(data, "获取成功", c)
+	response.OkWithDetailed(局_数据, "获取成功", c)
 }
 
-func (C *Withdraw) AuditPass(c *gin.Context) {
-	var req request.Id2
-	if !C.ToJSON(c, &req) {
+func (j *Withdraw) AuditPass(c *gin.Context) {
+	var 局_请求 request.Id2
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	if err := rmbWithdrawLogic.T提现_审核通过(global.GVA_DB, req.Id, c.GetInt("Uid"), c.GetString("User"), c.ClientIP()); err != nil {
+	if err := rmbWithdrawLogic.T提现_审核通过(global.Get局db(), 局_请求.Id, c.GetInt("Uid"), c.GetString("User"), c.ClientIP()); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithMessage("审核通过", c)
 }
 
-func (C *Withdraw) Reject(c *gin.Context) {
-	var req struct {
+func (j *Withdraw) Reject(c *gin.Context) {
+	var 局_请求 struct {
 		Id     int    `json:"id" binding:"required,min=1"`
 		Reason string `json:"reason" binding:"required"`
 	}
-	if !C.ToJSON(c, &req) {
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	if err := rmbWithdrawLogic.T提现_驳回(global.GVA_DB, req.Id, req.Reason, c.GetInt("Uid"), c.GetString("User"), c.ClientIP()); err != nil {
+	if err := rmbWithdrawLogic.T提现_驳回(global.Get局db(), 局_请求.Id, 局_请求.Reason, c.GetInt("Uid"), c.GetString("User"), c.ClientIP()); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithMessage("驳回成功", c)
 }
 
-func (C *Withdraw) MarkPaid(c *gin.Context) {
-	var req request.Id2
-	if !C.ToJSON(c, &req) {
+func (j *Withdraw) MarkPaid(c *gin.Context) {
+	var 局_请求 request.Id2
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	if err := rmbWithdrawLogic.T提现_标记已付款(global.GVA_DB, req.Id, c.GetInt("Uid"), c.GetString("User"), c.ClientIP()); err != nil {
+	if err := rmbWithdrawLogic.T提现_标记已付款(global.Get局db(), 局_请求.Id, c.GetInt("Uid"), c.GetString("User"), c.ClientIP()); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithMessage("已标记付款", c)
 }
 
-func (C *Withdraw) Delete(c *gin.Context) {
-	var req service.WithdrawDeleteRequest
-	if !C.ToJSON(c, &req) {
+func (j *Withdraw) Delete(c *gin.Context) {
+	var 局_请求 service.T提现_删除请求
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	var S = service.S_RmbWithdraw{}
-	tx := *global.GVA_DB
-	count, err := S.Delete(&tx, req)
+	局_提现服务 := service.S_RmbWithdraw{}
+	局_数据库 := global.Get局db()
+	局_数量, err := 局_提现服务.S删除(局_数据库, 局_请求)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(count, 10), c)
+	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(局_数量, 10), c)
 }
 
-func (C *Withdraw) UploadVoucher(c *gin.Context) {
-	id, _ := strconv.Atoi(c.PostForm("id"))
-	if id <= 0 {
+func (j *Withdraw) UploadVoucher(c *gin.Context) {
+	局_提现Id, _ := strconv.Atoi(c.PostForm("id"))
+	if 局_提现Id <= 0 {
 		response.FailWithMessage("提现单id错误", c)
 		return
 	}
-	file, err := c.FormFile("file")
+	局_文件, err := c.FormFile("file")
 	if err != nil {
 		response.FailWithMessage("请选择付款凭证", c)
 		return
 	}
-	path, err := rmbWithdrawLogic.T提现_上传凭证(global.GVA_DB, id, file, c.GetInt("Uid"), c.GetString("User"), c.ClientIP())
+	局_路径, err := rmbWithdrawLogic.T提现_上传凭证(global.Get局db(), 局_提现Id, 局_文件, c.GetInt("Uid"), c.GetString("User"), c.ClientIP())
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithDetailed(gin.H{"path": path}, "上传成功", c)
+	response.OkWithDetailed(gin.H{"path": 局_路径}, "上传成功", c)
 }
 
-func (C *Withdraw) Image(c *gin.Context) {
-	var req struct {
+func (j *Withdraw) Image(c *gin.Context) {
+	var 局_请求 struct {
 		Path string `json:"path" binding:"required"`
 	}
-	if !C.ToJSON(c, &req) {
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	var S = service.S_RmbWithdraw{}
-	tx := *global.GVA_DB
-	info, err := S.GetAdminImage(&tx, req.Path)
+	局_提现服务 := service.S_RmbWithdraw{}
+	局_数据库 := global.Get局db()
+	局_图片信息, err := 局_提现服务.Q取管理图片(局_数据库, 局_请求.Path)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	c.File(info.AbsPath)
+	c.File(局_图片信息.AbsPath)
 }
 
-func (C *Withdraw) CreateVoucherToken(c *gin.Context) {
-	var req request.Id2
-	if !C.ToJSON(c, &req) {
+func (j *Withdraw) CreateVoucherToken(c *gin.Context) {
+	var 局_请求 request.Id2
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	var S = service.S_RmbWithdraw{}
-	info, err := S.CreateVoucherToken(req.Id, c.GetInt("Uid"), c.GetString("User"))
+	局_提现服务 := service.S_RmbWithdraw{}
+	局_令牌信息, err := 局_提现服务.C创建凭证令牌(局_请求.Id, c.GetInt("Uid"), c.GetString("User"))
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	uploadUrl := "/" + strings.Trim(global.GVA_Viper.GetString("管理入口"), "/") + "/withdraw/uploadVoucherByToken?token=" + info.Token
-	fullUploadUrl := requestOrigin(c) + uploadUrl
+	局_上传地址 := "/" + strings.Trim(global.GVA_Viper.GetString("管理入口"), "/") + "/withdraw/uploadVoucherByToken?token=" + 局_令牌信息.Token
+	局_完整上传地址 := 请求_来源(c) + 局_上传地址
 	response.OkWithDetailed(gin.H{
-		"token":         info.Token,
-		"expireTime":    info.ExpireTime,
-		"uploadUrl":     uploadUrl,
-		"fullUploadUrl": fullUploadUrl,
-		"qrcodeBase64":  makeQrBase64(fullUploadUrl),
+		"token":         局_令牌信息.Token,
+		"expireTime":    局_令牌信息.ExpireTime,
+		"uploadUrl":     局_上传地址,
+		"fullUploadUrl": 局_完整上传地址,
+		"qrcodeBase64":  二维码_生成base64(局_完整上传地址),
 	}, "创建成功", c)
 }
 
-func (C *Withdraw) UploadVoucherByTokenPage(c *gin.Context) {
-	token := c.Query("token")
+func (j *Withdraw) UploadVoucherByTokenPage(c *gin.Context) {
+	局_令牌 := c.Query("token")
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	c.String(http.StatusOK, `<!doctype html>
 <html lang="zh-CN">
@@ -211,7 +211,7 @@ button{margin-top:14px;border:0;border-radius:6px;padding:12px;background:#1677f
 <body><div class="box"><div class="card">
 <h1>上传付款凭证</h1>
 <form method="post" enctype="multipart/form-data">
-<input type="hidden" name="token" value="`+html.EscapeString(token)+`">
+<input type="hidden" name="token" value="`+html.EscapeString(局_令牌)+`">
 <input type="file" name="file" accept="image/*" required>
 <button type="submit">提交凭证</button>
 </form>
@@ -219,17 +219,17 @@ button{margin-top:14px;border:0;border-radius:6px;padding:12px;background:#1677f
 </div></div></body></html>`)
 }
 
-func (C *Withdraw) UploadVoucherByToken(c *gin.Context) {
-	token := c.Query("token")
-	if token == "" {
-		token = c.PostForm("token")
+func (j *Withdraw) UploadVoucherByToken(c *gin.Context) {
+	局_令牌 := c.Query("token")
+	if 局_令牌 == "" {
+		局_令牌 = c.PostForm("token")
 	}
-	file, err := c.FormFile("file")
-	if token == "" || err != nil {
+	局_文件, err := c.FormFile("file")
+	if 局_令牌 == "" || err != nil {
 		response.FailWithMessage("token或文件不能为空", c)
 		return
 	}
-	path, err := rmbWithdrawLogic.T提现_使用令牌上传凭证(global.GVA_DB, token, file, c.ClientIP())
+	局_路径, err := rmbWithdrawLogic.T提现_使用令牌上传凭证(global.Get局db(), 局_令牌, 局_文件, c.ClientIP())
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -239,55 +239,55 @@ func (C *Withdraw) UploadVoucherByToken(c *gin.Context) {
 		c.String(http.StatusOK, "<!doctype html><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><body style=\"font-family:sans-serif;padding:24px;text-align:center\"><h2>上传成功</h2><p>可以返回电脑端继续处理。</p></body>")
 		return
 	}
-	response.OkWithDetailed(gin.H{"path": path}, "上传成功", c)
+	response.OkWithDetailed(gin.H{"path": 局_路径}, "上传成功", c)
 }
 
-func (C *Withdraw) GetUploadVoucherByTokenStatus(c *gin.Context) {
-	var req struct {
+func (j *Withdraw) GetUploadVoucherByTokenStatus(c *gin.Context) {
+	var 局_请求 struct {
 		Token string `json:"token" binding:"required"`
 	}
-	if !C.ToJSON(c, &req) {
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	var S = service.S_RmbWithdraw{}
-	info, ok := S.GetVoucherTokenStatus(req.Token)
-	response.OkWithDetailed(gin.H{"exists": ok, "info": info}, "获取成功", c)
+	局_提现服务 := service.S_RmbWithdraw{}
+	局_令牌信息, 局_有效 := 局_提现服务.Q取凭证令牌状态(局_请求.Token)
+	response.OkWithDetailed(gin.H{"exists": 局_有效, "info": 局_令牌信息}, "获取成功", c)
 }
 
-func requestOrigin(c *gin.Context) string {
-	proto := c.GetHeader("X-Forwarded-Proto")
-	if proto == "" {
-		proto = "http"
+func 请求_来源(c *gin.Context) string {
+	局_协议 := c.GetHeader("X-Forwarded-Proto")
+	if 局_协议 == "" {
+		局_协议 = "http"
 		if c.Request.TLS != nil {
-			proto = "https"
+			局_协议 = "https"
 		}
 	}
-	host := c.GetHeader("X-Forwarded-Host")
-	if host == "" {
-		host = c.Request.Host
+	局_主机 := c.GetHeader("X-Forwarded-Host")
+	if 局_主机 == "" {
+		局_主机 = c.Request.Host
 	}
-	return proto + "://" + host
+	return 局_协议 + "://" + 局_主机
 }
 
-func makeQrBase64(content string) string {
-	png, err := qrcode.Encode(content, qrcode.Medium, 220)
+func 二维码_生成base64(内容 string) string {
+	局_图片, err := qrcode.Encode(内容, qrcode.Medium, 220)
 	if err != nil {
 		return ""
 	}
-	return base64.StdEncoding.EncodeToString(png)
+	return base64.StdEncoding.EncodeToString(局_图片)
 }
 
-func (C *Withdraw) Logs(c *gin.Context) {
-	var req service.WithdrawListRequest
-	if !C.ToJSON(c, &req) {
+func (j *Withdraw) Logs(c *gin.Context) {
+	var 局_请求 service.T提现_列表请求
+	if !j.ToJSON(c, &局_请求) {
 		return
 	}
-	var S = service.S_RmbWithdraw{}
-	tx := *global.GVA_DB
-	count, list, err := S.Logs(&tx, req)
+	局_提现服务 := service.S_RmbWithdraw{}
+	局_数据库 := global.Get局db()
+	局_数量, 局_列表, err := 局_提现服务.R日志列表(局_数据库, 局_请求)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithDetailed(GetList2{List: list, Count: count}, "获取成功", c)
+	response.OkWithDetailed(GetList2{List: 局_列表, Count: 局_数量}, "获取成功", c)
 }

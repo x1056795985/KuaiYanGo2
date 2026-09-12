@@ -55,11 +55,15 @@ func (j *appUser) S设置邀请人(c *gin.Context, AppId, 邀请人, 被邀请�
 	info.上级, info.上上级, err = service.NewCpsInvitingRelation(c, tx).Q取归属邀请人(AppId, 被邀请人)
 	if info.上级.Id > 0 {
 		// 删除上级关系
-		_ = tx.Delete(&info.上级)
+		if err = tx.Delete(&dbm.DB_CpsInvitingRelation{}, info.上级.Id).Error; err != nil {
+			return
+		}
 	}
 	if info.上上级.Id > 0 {
 		// 删除上上级关系
-		_ = tx.Delete(&info.上级)
+		if err = tx.Delete(&dbm.DB_CpsInvitingRelation{}, info.上上级.Id).Error; err != nil {
+			return
+		}
 	}
 	info.上级, info.上上级, err = service.NewCpsInvitingRelation(c, tx).Q取归属邀请人(AppId, 邀请人)
 	局_time := time.Now().Unix()

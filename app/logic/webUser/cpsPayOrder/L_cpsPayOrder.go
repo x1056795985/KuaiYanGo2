@@ -236,14 +236,13 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 				Count: info.cpsPayOrder.GrandpaRMB,
 				Note:  "订单:" + 参数.PayOrder + ",cps裂变客户佣金|新余额≈" + Float64到文本(局_新余额, 2),
 			})
-			// 增加累计收入缓存
-			// 增加累计收入缓存
-			err = tx.Model(dbm.DB_CpsUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("userId=?", info.cpsPayOrder.InviterId).First(&info.cpsUser).Error
+			// 增加累计收入缓存(上上级)
+			err = tx.Model(dbm.DB_CpsUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("appId=?", info.cpsPayOrder.AppId).Where("userId=?", info.cpsPayOrder.GrandpaId).First(&info.cpsUser).Error
 			if err != nil {
 				return errors.Join(err, errors.New("读取cps用户信息失败"))
 			}
-			info.cpsUser.CumulativeRMB = Float64加float64(info.cpsUser.CumulativeRMB, info.cpsPayOrder.InviterRMB, 2)
-			err = tx.Model(dbm.DB_CpsUser{}).Where("appId=?", info.cpsPayOrder.AppId).Where("userId=?", info.cpsPayOrder.InviterId).Update("cumulativeRMB", info.cpsUser.CumulativeRMB).Error
+			info.cpsUser.CumulativeRMB = Float64加float64(info.cpsUser.CumulativeRMB, info.cpsPayOrder.GrandpaRMB, 2)
+			err = tx.Model(dbm.DB_CpsUser{}).Where("appId=?", info.cpsPayOrder.AppId).Where("userId=?", info.cpsPayOrder.GrandpaId).Update("cumulativeRMB", info.cpsUser.CumulativeRMB).Error
 			if err != nil {
 				return errors.Join(err, errors.New("邀请人上级更新累计收入缓存失败"))
 			}

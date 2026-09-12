@@ -126,7 +126,8 @@ func (j *user) Id余额增减_批量(c *gin.Context, Ids []int, 增减值 float6
 	return
 }
 
-// Id余额转账 用户余额转账(事务操作,保证余额不为负)
+//	用户余额转账(事务操作,保证余额不为负)
+//
 // 从Id从扣款,转入ToId,转账金额必须大于0
 func (j *user) Id余额转账(c *gin.Context, FromId, ToId int, 转账金额 float64) (err error) {
 	if FromId == 0 || ToId == 0 {

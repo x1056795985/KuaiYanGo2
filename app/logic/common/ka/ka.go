@@ -298,7 +298,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 	if 充值用户 == 推荐人 {
 		return errors.New("充值用户和推荐人不能相同")
 	}
-	if info.卡号详情.KaType == 2 && W文本_是否包含关键字(info.卡号详情.User, 充值用户+",") {
+	if info.卡号详情.KaType == 2 && W文本_是否包含关键字(","+info.卡号详情.User, ","+充值用户+",") {
 		return errors.New("账号已使用本卡号充值过了,请勿重复充值")
 	}
 	if info.app详情, err = service.NewAppInfo(c, &db).Info(info.卡号详情.AppId); err != nil {
@@ -306,16 +306,6 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		return
 	}
 
-	//只有代理的卡号,才需要判断这个,webapi和管理员的卡号不用
-	if info.app用户详情.AgentUid > 0 && info.卡号详情.RegisterId > 0 {
-		//判断卡号制卡人,是否为当前用户的归属代理,无归属代理可以充值,有归属代理,只允许充值归属代理的卡号
-		switch info.app详情.AgentKaUseModel {
-		case 1: //仅限充值自己的卡号
-			if info.卡号详情.RegisterId != info.app用户详情.AgentUid {
-				return errors.New("卡号异常,非该用户归属代理制卡")
-			}
-		}
-	}
 	info.is卡号 = S三元(info.app详情.AppType == 3 || info.app详情.AppType == 4, true, false)
 	info.is计点 = S三元(info.app详情.AppType == 2 || info.app详情.AppType == 4, true, false)
 
@@ -338,11 +328,22 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		}
 		info.app用户详情, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.ka用户详情.Id)
 	}
+
 	if err != nil {
 		return errors.New("用户未登录过本应用,请先操作登录")
 	}
 	if info.app用户详情.Status == 2 {
 		return errors.New("app用户已冻结,无法充值")
+	}
+	//只有代理的卡号,才需要判断这个,webapi和管理员的卡号不用
+	if info.app用户详情.AgentUid > 0 && info.卡号详情.RegisterId > 0 {
+		//判断卡号制卡人,是否为当前用户的归属代理,无归属代理可以充值,有归属代理,只允许充值归属代理的卡号
+		switch info.app详情.AgentKaUseModel {
+		case 1: //仅限充值自己的卡号
+			if info.卡号详情.RegisterId != info.app用户详情.AgentUid {
+				return errors.New("卡号异常,非该用户归属代理制卡")
+			}
+		}
 	}
 
 	if 推荐人 != "" {

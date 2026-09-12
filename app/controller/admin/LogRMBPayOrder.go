@@ -106,33 +106,33 @@ func (C *LogRMBPayOrderCtrl) GetList(c *gin.Context) {
 	db := *global.GVA_DB
 	局_DB := db.Model(dbm.DB_LogRMBPayOrder{})
 	if 请求.Order == 1 {
-		局_DB.Order("db_Log_RMBPayOrder.Id ASC")
+		局_DB = 局_DB.Order("db_Log_RMBPayOrder.Id ASC")
 	} else {
-		局_DB.Order("db_Log_RMBPayOrder.Id DESC")
+		局_DB = 局_DB.Order("db_Log_RMBPayOrder.Id DESC")
 	}
 	if 请求.RegisterTime != nil && len(请求.RegisterTime) == 2 && 请求.RegisterTime[0] != "" && 请求.RegisterTime[1] != "" {
 		制卡开始时间, _ := strconv.ParseInt(请求.RegisterTime[0], 10, 64)
 		制卡结束时间, _ := strconv.ParseInt(请求.RegisterTime[1], 10, 64)
-		局_DB.Where("db_Log_RMBPayOrder.Time > ?", 制卡开始时间).Where("db_Log_RMBPayOrder.Time < ?", 制卡结束时间+86400)
+		局_DB = 局_DB.Where("db_Log_RMBPayOrder.Time > ?", 制卡开始时间).Where("db_Log_RMBPayOrder.Time < ?", 制卡结束时间+86400)
 	}
 	if 请求.Keywords != "" {
 		switch 请求.Type {
 		case 1:
-			局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.User)>0 ", 请求.Keywords)
+			局_DB = 局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.User)>0 ", 请求.Keywords)
 		case 2:
-			局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.Note)>0 ", 请求.Keywords)
+			局_DB = 局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.Note)>0 ", 请求.Keywords)
 		case 3:
-			局_DB.Where("db_Log_RMBPayOrder.Ip = ? ", 请求.Keywords)
+			局_DB = 局_DB.Where("db_Log_RMBPayOrder.Ip = ? ", 请求.Keywords)
 		case 4:
-			局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.PayOrder)>0 ", 请求.Keywords)
+			局_DB = 局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.PayOrder)>0 ", 请求.Keywords)
 		case 5:
-			局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.PayOrder2)>0 ", 请求.Keywords)
+			局_DB = 局_DB.Where("LOCATE( ?, db_Log_RMBPayOrder.PayOrder2)>0 ", 请求.Keywords)
 		case 6:
-			局_DB.Where("db_Log_RMBPayOrder.Rmb = ? ", 请求.Keywords)
+			局_DB = 局_DB.Where("db_Log_RMBPayOrder.Rmb = ? ", 请求.Keywords)
 		}
 	}
 	if 请求.Status > 0 {
-		局_DB.Where("db_Log_RMBPayOrder.Status  = ? ", 请求.Status)
+		局_DB = 局_DB.Where("db_Log_RMBPayOrder.Status  = ? ", 请求.Status)
 	}
 
 	var DB_LogRMBPayOrder []dbm.DB_LogRMBPayOrder

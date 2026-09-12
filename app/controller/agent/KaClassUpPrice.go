@@ -68,12 +68,39 @@ func (J *KaClassUpPrice) Delete(c *gin.Context) {
 		return
 	}
 
+	if len(请求.Id) == 0 {
+		response.FailWithMessage("请选择要删除的调价记录", c)
+		return
+	}
+
 	tx := *global.GVA_DB
 	var S = service.NewKaClassUpPrice(c, &tx)
 
-	row, err := S.Delete(请求.Id)
+	//Id去重,防止重复Id导致归属校验误判
+	局_Id去重 := make(map[int]struct{}, len(请求.Id))
+	局_Id列表 := make([]int, 0, len(请求.Id))
+	for _, 局_id := range 请求.Id {
+		if _, 局_存在 := 局_Id去重[局_id]; !局_存在 {
+			局_Id去重[局_id] = struct{}{}
+			局_Id列表 = append(局_Id列表, 局_id)
+		}
+	}
+
+	//归属校验:只能删除自己的调价记录,防止持权代理删除他人调价记录
+	局_自己记录列表, err := S.Infos(map[string]interface{}{"Id": 局_Id列表, "AgentId": c.GetInt("Uid")})
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if len(局_自己记录列表) != len(局_Id列表) {
+		response.FailWithMessage("包含无权删除的调价记录", c)
+		return
+	}
+
+	row, err := S.Delete(局_Id列表)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	response.OkWithMessage("操作成功,数量:"+strconv.Itoa(int(row)), c)
 

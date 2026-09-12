@@ -374,7 +374,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 		//err = 参数.E额外信息.Set("总调价", 总调价)
 		for 索引 := range 参数.E额外信息.Len("调价详情") {
 			局_uid := 参数.E额外信息.Get("调价详情." + strconv.Itoa(索引) + ".AgentId").Int()
-			局_金额 := 参数.E额外信息.Get("分成详细." + strconv.Itoa(索引) + ".Markup").Float64()
+			局_金额 := 参数.E额外信息.Get("调价详情." + strconv.Itoa(索引) + ".Markup").Float64()
 			var 代理详情 dbm.DB_User
 			代理详情, err = service.NewUser(c, tx).Info(局_uid)
 			if err != nil {

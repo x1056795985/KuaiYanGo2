@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"server/app/global"
+	"server/app/models/constant"
 	"strconv"
 	"strings"
 	"time"
@@ -29,36 +30,11 @@ import (
 )
 
 const (
-	WithdrawStatusPending  = 1
-	WithdrawStatusRejected = 2
-	WithdrawStatusPaying   = 3
-	WithdrawStatusPaid     = 4
-	WithdrawStatusCanceled = 5
+	集_提现配置键名   = "agentWithdrawConfig"
+	集_提现凭证令牌前缀 = "withdrawVoucherToken:"
 )
 
-const (
-	WithdrawActionCreate          = 1
-	WithdrawActionUserCancel      = 2
-	WithdrawActionAuditPass       = 3
-	WithdrawActionReject          = 4
-	WithdrawActionUploadVoucher   = 5
-	WithdrawActionReuploadVoucher = 6
-	WithdrawActionMarkPaid        = 7
-	WithdrawActionPayFailReject   = 8
-)
-
-const (
-	WithdrawOperatorUser  = 1
-	WithdrawOperatorAdmin = 2
-	WithdrawOperatorSys   = 3
-)
-
-const (
-	withdrawConfigKey     = "agentWithdrawConfig"
-	withdrawVoucherPrefix = "withdrawVoucherToken:"
-)
-
-type WithdrawConfig struct {
+type T提现_配置 struct {
 	Enable              bool    `json:"enable"`
 	MinAmount           float64 `json:"minAmount"`
 	MaxAmount           float64 `json:"maxAmount"`
@@ -72,7 +48,7 @@ type WithdrawConfig struct {
 	VoucherMaxSizeMb    int64   `json:"voucherMaxSizeMb"`
 }
 
-type WithdrawCreateRequest struct {
+type T提现_创建请求 struct {
 	Amount         float64 `json:"amount"`
 	PayeeType      int     `json:"payeeType"`
 	UseLastPayeeQr bool    `json:"useLastPayeeQr"`
@@ -82,7 +58,7 @@ type WithdrawCreateRequest struct {
 	RequestId      string  `json:"requestId"`
 }
 
-type WithdrawListRequest struct {
+type T提现_列表请求 struct {
 	Page         int      `json:"page"`
 	Size         int      `json:"size"`
 	Status       int      `json:"status"`
@@ -97,18 +73,18 @@ type WithdrawListRequest struct {
 	Count        int64    `json:"count"`
 }
 
-type WithdrawDeleteRequest struct {
+type T提现_删除请求 struct {
 	Id       []int  `json:"id"`
 	Type     int    `json:"type"`
 	Keywords string `json:"keywords"`
 }
 
-type WithdrawImageInfo struct {
+type T提现_图片信息 struct {
 	AbsPath string
 	Ext     string
 }
 
-type WithdrawVoucherToken struct {
+type T提现_凭证令牌 struct {
 	Token        string `json:"token"`
 	WithdrawId   int    `json:"withdrawId"`
 	AdminId      int    `json:"adminId"`
@@ -120,8 +96,9 @@ type WithdrawVoucherToken struct {
 
 type S_RmbWithdraw struct{}
 
-func DefaultWithdrawConfig() WithdrawConfig {
-	return WithdrawConfig{
+// Q取默认配置 返回提现配置默认值
+func Q取默认配置() T提现_配置 {
+	return T提现_配置{
 		Enable:              false,
 		MinAmount:           10,
 		MaxAmount:           5000,
@@ -136,900 +113,900 @@ func DefaultWithdrawConfig() WithdrawConfig {
 	}
 }
 
-func (s *S_RmbWithdraw) GetConfig(tx *gorm.DB) WithdrawConfig {
-	cfg := DefaultWithdrawConfig()
-	var setting dbm.DB_Setting
-	if err := tx.Model(dbm.DB_Setting{}).Where("ItemKey = ?", withdrawConfigKey).First(&setting).Error; err == nil && setting.ItemValue != "" {
-		_ = json.Unmarshal([]byte(setting.ItemValue), &cfg)
+func (j *S_RmbWithdraw) Q取配置(数据库 *gorm.DB) T提现_配置 {
+	局_配置 := Q取默认配置()
+	var 局_设置 dbm.DB_Setting
+	if err := 数据库.Model(dbm.DB_Setting{}).Where("ItemKey = ?", 集_提现配置键名).First(&局_设置).Error; err == nil && 局_设置.ItemValue != "" {
+		_ = json.Unmarshal([]byte(局_设置.ItemValue), &局_配置)
 	}
-	if cfg.VoucherTokenSeconds <= 0 {
-		cfg.VoucherTokenSeconds = 300
+	if 局_配置.VoucherTokenSeconds <= 0 {
+		局_配置.VoucherTokenSeconds = 300
 	}
-	if cfg.PayeeQrMaxSizeMb <= 0 {
-		cfg.PayeeQrMaxSizeMb = 5
+	if 局_配置.PayeeQrMaxSizeMb <= 0 {
+		局_配置.PayeeQrMaxSizeMb = 5
 	}
-	if cfg.VoucherMaxSizeMb <= 0 {
-		cfg.VoucherMaxSizeMb = 10
+	if 局_配置.VoucherMaxSizeMb <= 0 {
+		局_配置.VoucherMaxSizeMb = 10
 	}
-	return cfg
+	return 局_配置
 }
 
-func (s *S_RmbWithdraw) SaveConfig(tx *gorm.DB, cfg WithdrawConfig) error {
-	if cfg.MinAmount < 0 || cfg.MaxAmount < 0 || (cfg.MaxAmount > 0 && cfg.MaxAmount < cfg.MinAmount) {
+func (j *S_RmbWithdraw) B保存配置(数据库 *gorm.DB, 配置 T提现_配置) error {
+	if 配置.MinAmount < 0 || 配置.MaxAmount < 0 || (配置.MaxAmount > 0 && 配置.MaxAmount < 配置.MinAmount) {
 		return errors.New("提现金额配置不正确")
 	}
-	data, _ := json.Marshal(cfg)
-	var setting dbm.DB_Setting
-	if err := tx.Model(dbm.DB_Setting{}).Where("ItemKey = ?", withdrawConfigKey).First(&setting).Error; err == nil {
-		return tx.Model(dbm.DB_Setting{}).Where("ItemKey = ?", withdrawConfigKey).Update("ItemValue", string(data)).Error
+	局_数据, _ := json.Marshal(配置)
+	var 局_设置 dbm.DB_Setting
+	if err := 数据库.Model(dbm.DB_Setting{}).Where("ItemKey = ?", 集_提现配置键名).First(&局_设置).Error; err == nil {
+		return 数据库.Model(dbm.DB_Setting{}).Where("ItemKey = ?", 集_提现配置键名).Update("ItemValue", string(局_数据)).Error
 	}
-	return tx.Model(dbm.DB_Setting{}).Create(&dbm.DB_Setting{ItemKey: withdrawConfigKey, ItemValue: string(data)}).Error
+	return 数据库.Model(dbm.DB_Setting{}).Create(&dbm.DB_Setting{ItemKey: 集_提现配置键名, ItemValue: string(局_数据)}).Error
 }
 
-func (s *S_RmbWithdraw) GetAgentConfig(tx *gorm.DB, uid int) (gin.H, error) {
-	cfg := s.GetConfig(tx)
-	var user dbm.DB_User
-	if err := tx.Model(dbm.DB_User{}).Where("Id = ?", uid).First(&user).Error; err != nil {
+func (j *S_RmbWithdraw) Q取代理配置(数据库 *gorm.DB, uid int) (gin.H, error) {
+	局_配置 := j.Q取配置(数据库)
+	var 局_用户 dbm.DB_User
+	if err := 数据库.Model(dbm.DB_User{}).Where("Id = ?", uid).First(&局_用户).Error; err != nil {
 		return nil, errors.New("用户不存在")
 	}
-	frozen := s.sumAmount(tx, uid, []int{WithdrawStatusPending, WithdrawStatusPaying})
-	auditing := s.sumAmount(tx, uid, []int{WithdrawStatusPending})
-	var last dbm.DB_RmbWithdraw
-	_ = tx.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ?", uid).Order("Id DESC").First(&last).Error
+	局_冻结金额 := j.提现_统计金额(数据库, uid, []int{constant.T提现状态_待审核, constant.T提现状态_付款中})
+	局_审核中金额 := j.提现_统计金额(数据库, uid, []int{constant.T提现状态_待审核})
+	var 局_最近一条 dbm.DB_RmbWithdraw
+	_ = 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ?", uid).Order("Id DESC").First(&局_最近一条).Error
 
-	next := int64(0)
-	if cfg.IntervalSeconds > 0 {
-		var lastValid dbm.DB_RmbWithdraw
-		if err := tx.Model(dbm.DB_RmbWithdraw{}).
-			Where("Uid = ? AND Status NOT IN ?", uid, []int{WithdrawStatusRejected, WithdrawStatusCanceled}).
-			Order("CreateTime DESC").First(&lastValid).Error; err == nil {
-			next = lastValid.CreateTime + cfg.IntervalSeconds
-			if next < time.Now().Unix() {
-				next = 0
+	局_下次可提时间 := int64(0)
+	if 局_配置.IntervalSeconds > 0 {
+		var 局_最近有效 dbm.DB_RmbWithdraw
+		if err := 数据库.Model(dbm.DB_RmbWithdraw{}).
+			Where("Uid = ? AND Status NOT IN ?", uid, []int{constant.T提现状态_已驳回, constant.T提现状态_已取消}).
+			Order("CreateTime DESC").First(&局_最近有效).Error; err == nil {
+			局_下次可提时间 = 局_最近有效.CreateTime + 局_配置.IntervalSeconds
+			if 局_下次可提时间 < time.Now().Unix() {
+				局_下次可提时间 = 0
 			}
 		}
 	}
 
-	qr := payeeQrPath(uid)
-	_, hasQr := fileExists(absPath(qr))
+	局_收款码路径 := 图片_收款码路径(uid)
+	_, 局_有收款码 := 文件_存在(路径_转绝对(局_收款码路径))
 	return gin.H{
-		"enable":             cfg.Enable,
-		"minAmount":          cfg.MinAmount,
-		"maxAmount":          cfg.MaxAmount,
-		"intervalSeconds":    cfg.IntervalSeconds,
-		"allowUserCancel":    cfg.AllowUserCancel,
-		"requirePayeeQr":     cfg.RequirePayeeQr,
-		"allowPayeeAccount":  cfg.AllowPayeeAccount,
-		"nextWithdrawTime":   next,
-		"availableRmb":       user.Rmb,
-		"frozenAmount":       frozen,
-		"auditingAmount":     auditing,
-		"lastAmount":         last.Amount,
-		"lastWithdrawAmount": last.Amount,
-		"hasPayeeQr":         hasQr,
-		"payeeQrPath":        qr,
+		"enable":             局_配置.Enable,
+		"minAmount":          局_配置.MinAmount,
+		"maxAmount":          局_配置.MaxAmount,
+		"intervalSeconds":    局_配置.IntervalSeconds,
+		"allowUserCancel":    局_配置.AllowUserCancel,
+		"requirePayeeQr":     局_配置.RequirePayeeQr,
+		"allowPayeeAccount":  局_配置.AllowPayeeAccount,
+		"nextWithdrawTime":   局_下次可提时间,
+		"availableRmb":       局_用户.Rmb,
+		"frozenAmount":       局_冻结金额,
+		"auditingAmount":     局_审核中金额,
+		"lastAmount":         局_最近一条.Amount,
+		"lastWithdrawAmount": 局_最近一条.Amount,
+		"hasPayeeQr":         局_有收款码,
+		"payeeQrPath":        局_收款码路径,
 	}, nil
 }
 
-func (s *S_RmbWithdraw) UploadPayeeQr(uid int, file *multipart.FileHeader) (string, error) {
-	db := *global.GVA_DB
-	cfg := s.GetConfig(&db)
-	return savePayeeQrImage(file, payeeQrPath(uid), cfg.PayeeQrMaxSizeMb)
+func (j *S_RmbWithdraw) S上传收款码(uid int, 文件 *multipart.FileHeader) (string, error) {
+	局_数据库 := global.Get局db()
+	局_配置 := j.Q取配置(局_数据库)
+	return 图片_保存收款码(文件, 图片_收款码路径(uid), 局_配置.PayeeQrMaxSizeMb)
 }
 
-func (s *S_RmbWithdraw) GetAgentImage(tx *gorm.DB, uid int, path string) (WithdrawImageInfo, error) {
-	path = normalizeRuntimeImagePath(path)
-	if path == "" {
-		return WithdrawImageInfo{}, errors.New("图片地址错误")
+func (j *S_RmbWithdraw) Q取代理图片(数据库 *gorm.DB, uid int, 路径 string) (T提现_图片信息, error) {
+	局_路径 := 路径_规范图片路径(路径)
+	if 局_路径 == "" {
+		return T提现_图片信息{}, errors.New("图片地址错误")
 	}
-	if path == payeeQrPath(uid) {
-		return imageInfo(path)
+	if 局_路径 == 图片_收款码路径(uid) {
+		return 图片_取信息(局_路径)
 	}
 
-	var count int64
-	err := tx.Model(dbm.DB_RmbWithdraw{}).
-		Where("Uid = ? AND (PayeeQrPath = ? OR VoucherPath = ?)", uid, path, path).
-		Count(&count).Error
-	if err != nil {
-		return WithdrawImageInfo{}, err
+	var 局_数量 int64
+	局_错误 := 数据库.Model(dbm.DB_RmbWithdraw{}).
+		Where("Uid = ? AND (PayeeQrPath = ? OR VoucherPath = ?)", uid, 局_路径, 局_路径).
+		Count(&局_数量).Error
+	if 局_错误 != nil {
+		return T提现_图片信息{}, 局_错误
 	}
-	if count == 0 {
-		return WithdrawImageInfo{}, errors.New("无权查看该图片")
+	if 局_数量 == 0 {
+		return T提现_图片信息{}, errors.New("无权查看该图片")
 	}
-	return imageInfo(path)
+	return 图片_取信息(局_路径)
 }
 
-func (s *S_RmbWithdraw) GetAdminImage(tx *gorm.DB, path string) (WithdrawImageInfo, error) {
-	path = normalizeRuntimeImagePath(path)
-	if path == "" {
-		return WithdrawImageInfo{}, errors.New("图片地址错误")
+func (j *S_RmbWithdraw) Q取管理图片(数据库 *gorm.DB, 路径 string) (T提现_图片信息, error) {
+	局_路径 := 路径_规范图片路径(路径)
+	if 局_路径 == "" {
+		return T提现_图片信息{}, errors.New("图片地址错误")
 	}
 
-	var count int64
-	err := tx.Model(dbm.DB_RmbWithdraw{}).
-		Where("PayeeQrPath = ? OR VoucherPath = ? OR Id IN (?)", path, path,
-			tx.Model(dbm.DB_RmbWithdrawLog{}).Select("WithdrawId").Where("Action IN ? AND LOCATE(?, Note)>0", []int{WithdrawActionUploadVoucher, WithdrawActionReuploadVoucher}, voucherLogPathToken(path))).
-		Count(&count).Error
-	if err != nil {
-		return WithdrawImageInfo{}, err
+	var 局_数量 int64
+	局_错误 := 数据库.Model(dbm.DB_RmbWithdraw{}).
+		Where("PayeeQrPath = ? OR VoucherPath = ? OR Id IN (?)", 局_路径, 局_路径,
+			数据库.Model(dbm.DB_RmbWithdrawLog{}).Select("WithdrawId").Where("Action IN ? AND LOCATE(?, Note)>0", []int{constant.T提现动作_上传凭证, constant.T提现动作_重新上传凭证}, 凭证_日志路径标记(局_路径))).
+		Count(&局_数量).Error
+	if 局_错误 != nil {
+		return T提现_图片信息{}, 局_错误
 	}
-	if count == 0 {
-		return WithdrawImageInfo{}, errors.New("无权查看该图片")
+	if 局_数量 == 0 {
+		return T提现_图片信息{}, errors.New("无权查看该图片")
 	}
-	return imageInfo(path)
+	return 图片_取信息(局_路径)
 }
 
-func (s *S_RmbWithdraw) UploadVoucher(tx *gorm.DB, withdrawId int, file *multipart.FileHeader, operatorId int, operatorUser string, ip string) (string, error) {
-	path := fmt.Sprintf("runtime/img/admin/withdraw_voucher_%d_%d%s", withdrawId, time.Now().Unix(), normalizedExt(file.Filename))
-	cfg := s.GetConfig(tx)
-	path, err := saveUploadedImage(file, path, cfg.VoucherMaxSizeMb)
-	if err != nil {
-		return "", err
+func (j *S_RmbWithdraw) S上传凭证(数据库 *gorm.DB, 提现Id int, 文件 *multipart.FileHeader, 操作员Id int, 操作员账号 string, ip string) (string, error) {
+	局_路径 := fmt.Sprintf("runtime/img/admin/withdraw_voucher_%d_%d%s", 提现Id, time.Now().Unix(), 文件_规范扩展名(文件.Filename))
+	局_配置 := j.Q取配置(数据库)
+	局_路径, 局_错误 := 图片_保存上传(文件, 局_路径, 局_配置.VoucherMaxSizeMb)
+	if 局_错误 != nil {
+		return "", 局_错误
 	}
 
-	var withdraw dbm.DB_RmbWithdraw
-	if err = tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", withdrawId).First(&withdraw).Error; err != nil {
+	var 局_提现单 dbm.DB_RmbWithdraw
+	if 局_错误 = 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", 提现Id).First(&局_提现单).Error; 局_错误 != nil {
 		return "", errors.New("提现单不存在")
 	}
-	if withdraw.Status != WithdrawStatusPaying && withdraw.Status != WithdrawStatusPaid {
+	if 局_提现单.Status != constant.T提现状态_付款中 && 局_提现单.Status != constant.T提现状态_已付款 {
 		return "", errors.New("当前状态不允许上传凭证")
 	}
 
-	action := WithdrawActionUploadVoucher
-	if withdraw.VoucherPath != "" {
-		action = WithdrawActionReuploadVoucher
+	局_动作 := constant.T提现动作_上传凭证
+	if 局_提现单.VoucherPath != "" {
+		局_动作 = constant.T提现动作_重新上传凭证
 	}
-	err = tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", withdrawId).Updates(map[string]interface{}{
-		"VoucherPath":  path,
-		"OperatorId":   operatorId,
-		"OperatorUser": operatorUser,
+	局_错误 = 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", 提现Id).Updates(map[string]interface{}{
+		"VoucherPath":  局_路径,
+		"OperatorId":   操作员Id,
+		"OperatorUser": 操作员账号,
 		"UpdateTime":   time.Now().Unix(),
 	}).Error
-	if err == nil {
-		err = s.writeLog(tx, withdraw, withdraw.Status, withdraw.Status, action, operatorId, operatorUser, WithdrawOperatorAdmin, ip, "upload voucher "+voucherLogPathToken(path))
+	if 局_错误 == nil {
+		局_错误 = j.提现_写日志(数据库, 局_提现单, 局_提现单.Status, 局_提现单.Status, 局_动作, 操作员Id, 操作员账号, constant.T提现操作人_管理员, ip, "upload voucher "+凭证_日志路径标记(局_路径))
 	}
-	return path, err
+	return 局_路径, 局_错误
 }
 
-func (s *S_RmbWithdraw) Create(tx *gorm.DB, uid int, user string, ip string, req WithdrawCreateRequest) (dbm.DB_RmbWithdraw, error) {
-	var empty dbm.DB_RmbWithdraw
-	if req.Amount <= 0 {
-		return empty, errors.New("提现金额必须大于0")
+func (j *S_RmbWithdraw) C创建(数据库 *gorm.DB, uid int, user string, ip string, 请求 T提现_创建请求) (dbm.DB_RmbWithdraw, error) {
+	var 局_空单 dbm.DB_RmbWithdraw
+	if 请求.Amount <= 0 {
+		return 局_空单, errors.New("提现金额必须大于0")
 	}
 
-	cfg := s.GetConfig(tx)
-	if !cfg.Enable {
-		return empty, errors.New("代理提现未启用")
+	局_配置 := j.Q取配置(数据库)
+	if !局_配置.Enable {
+		return 局_空单, errors.New("代理提现未启用")
 	}
-	if req.Amount < cfg.MinAmount || (cfg.MaxAmount > 0 && req.Amount > cfg.MaxAmount) {
-		return empty, errors.New("提现金额不符合规则")
+	if 请求.Amount < 局_配置.MinAmount || (局_配置.MaxAmount > 0 && 请求.Amount > 局_配置.MaxAmount) {
+		return 局_空单, errors.New("提现金额不符合规则")
 	}
-	if req.RequestId != "" {
-		var old dbm.DB_RmbWithdraw
-		if err := tx.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ? AND RequestId = ?", uid, req.RequestId).First(&old).Error; err == nil {
-			return old, nil
+	if 请求.RequestId != "" {
+		var 局_旧单 dbm.DB_RmbWithdraw
+		if err := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ? AND RequestId = ?", uid, 请求.RequestId).First(&局_旧单).Error; err == nil {
+			return 局_旧单, nil
 		}
 	}
 
-	var dbUser dbm.DB_User
-	if err := tx.Model(dbm.DB_User{}).Where("Id = ?", uid).First(&dbUser).Error; err != nil {
-		return empty, errors.New("用户不存在")
+	var 局_用户 dbm.DB_User
+	if err := 数据库.Model(dbm.DB_User{}).Where("Id = ?", uid).First(&局_用户).Error; err != nil {
+		return 局_空单, errors.New("用户不存在")
 	}
-	if dbUser.Status != 1 {
-		return empty, errors.New("用户状态不正常")
+	if 局_用户.Status != 1 {
+		return 局_空单, errors.New("用户状态不正常")
 	}
-	if dbUser.AgentDiscount <= 0 && dbUser.UPAgentId == 0 {
-		return empty, errors.New("当前账号不是代理")
+	if 局_用户.AgentDiscount <= 0 && 局_用户.UPAgentId == 0 {
+		return 局_空单, errors.New("当前账号不是代理")
 	}
-	if err := s.checkInterval(tx, uid, cfg.IntervalSeconds); err != nil {
-		return empty, err
+	if err := j.提现_检查间隔(数据库, uid, 局_配置.IntervalSeconds); err != nil {
+		return 局_空单, err
 	}
 
-	payeeQr := ""
-	if req.PayeeType == 1 || cfg.RequirePayeeQr {
-		src := payeeQrPath(uid)
-		if _, ok := fileExists(absPath(src)); !ok {
-			return empty, errors.New("请先上传收款码")
+	局_收款码路径 := ""
+	if 请求.PayeeType == 1 || 局_配置.RequirePayeeQr {
+		局_源路径 := 图片_收款码路径(uid)
+		if _, ok := 文件_存在(路径_转绝对(局_源路径)); !ok {
+			return 局_空单, errors.New("请先上传收款码")
 		}
-		payeeQr = fmt.Sprintf("runtime/img/agent/withdraw/payee_qr_%d_%d.jpg", uid, time.Now().Unix())
-		if err := copyFile(absPath(src), absPath(payeeQr)); err != nil {
-			return empty, err
+		局_收款码路径 = fmt.Sprintf("runtime/img/agent/withdraw/payee_qr_%d_%d.jpg", uid, time.Now().Unix())
+		if err := 文件_复制(路径_转绝对(局_源路径), 路径_转绝对(局_收款码路径)); err != nil {
+			return 局_空单, err
 		}
-	} else if req.PayeeType == 2 {
-		if !cfg.AllowPayeeAccount {
-			return empty, errors.New("当前不允许填写收款账号")
+	} else if 请求.PayeeType == 2 {
+		if !局_配置.AllowPayeeAccount {
+			return 局_空单, errors.New("当前不允许填写收款账号")
 		}
-		if strings.TrimSpace(req.PayeeAccount) == "" {
-			return empty, errors.New("收款账号不能为空")
+		if strings.TrimSpace(请求.PayeeAccount) == "" {
+			return 局_空单, errors.New("收款账号不能为空")
 		}
 	} else {
-		return empty, errors.New("收款方式错误")
+		return 局_空单, errors.New("收款方式错误")
 	}
 
-	ret := tx.Model(dbm.DB_User{}).Where("Id = ? AND Rmb >= ?", uid, req.Amount).Update("Rmb", gorm.Expr("Rmb - ?", req.Amount))
-	if ret.Error != nil {
-		return empty, ret.Error
+	局_结果 := 数据库.Model(dbm.DB_User{}).Where("Id = ? AND Rmb >= ?", uid, 请求.Amount).Update("Rmb", gorm.Expr("Rmb - ?", 请求.Amount))
+	if 局_结果.Error != nil {
+		return 局_空单, 局_结果.Error
 	}
-	if ret.RowsAffected == 0 {
-		return empty, errors.New("余额不足")
+	if 局_结果.RowsAffected == 0 {
+		return 局_空单, errors.New("余额不足")
 	}
 
-	now := time.Now().Unix()
-	raw, _ := json.Marshal(gin.H{"payeeType": req.PayeeType, "payeeQrPath": payeeQr, "payeeAccount": req.PayeeAccount, "payeeName": req.PayeeName})
-	withdraw := dbm.DB_RmbWithdraw{
-		OrderNo:      makeOrderNo(uid),
-		RequestId:    req.RequestId,
+	局_时间 := time.Now().Unix()
+	局_原始收款信息, _ := json.Marshal(gin.H{"payeeType": 请求.PayeeType, "payeeQrPath": 局_收款码路径, "payeeAccount": 请求.PayeeAccount, "payeeName": 请求.PayeeName})
+	局_提现单 := dbm.DB_RmbWithdraw{
+		OrderNo:      单号_生成(uid),
+		RequestId:    请求.RequestId,
 		Uid:          uid,
 		User:         user,
 		WithdrawType: 1,
-		Amount:       req.Amount,
-		Status:       WithdrawStatusPending,
-		UserNote:     req.UserNote,
-		PayeeType:    req.PayeeType,
-		PayeeQrPath:  payeeQr,
-		PayeeAccount: req.PayeeAccount,
-		PayeeName:    req.PayeeName,
-		PayeeRawInfo: string(raw),
-		CreateTime:   now,
-		UpdateTime:   now,
+		Amount:       请求.Amount,
+		Status:       constant.T提现状态_待审核,
+		UserNote:     请求.UserNote,
+		PayeeType:    请求.PayeeType,
+		PayeeQrPath:  局_收款码路径,
+		PayeeAccount: 请求.PayeeAccount,
+		PayeeName:    请求.PayeeName,
+		PayeeRawInfo: string(局_原始收款信息),
+		CreateTime:   局_时间,
+		UpdateTime:   局_时间,
 		Ip:           ip,
 	}
-	err := tx.Model(dbm.DB_RmbWithdraw{}).Create(&withdraw).Error
-	if err == nil {
-		err = s.writeMoneyLog(tx, uid, user, ip, "提现冻结,提现单号:"+withdraw.OrderNo, -req.Amount)
+	局_错误 := 数据库.Model(dbm.DB_RmbWithdraw{}).Create(&局_提现单).Error
+	if 局_错误 == nil {
+		局_错误 = j.提现_写资金日志(数据库, uid, user, ip, "提现冻结,提现单号:"+局_提现单.OrderNo, -请求.Amount)
 	}
-	if err == nil {
-		err = s.writeLog(tx, withdraw, 0, WithdrawStatusPending, WithdrawActionCreate, uid, user, WithdrawOperatorUser, ip, "提交提现申请")
+	if 局_错误 == nil {
+		局_错误 = j.提现_写日志(数据库, 局_提现单, 0, constant.T提现状态_待审核, constant.T提现动作_提交申请, uid, user, constant.T提现操作人_用户, ip, "提交提现申请")
 	}
-	return withdraw, err
+	return 局_提现单, 局_错误
 }
 
-func (s *S_RmbWithdraw) List(tx *gorm.DB, req WithdrawListRequest, uid int) (int64, []dbm.DB_RmbWithdraw, error) {
-	normalizeListRequest(&req)
-	db := tx.Model(dbm.DB_RmbWithdraw{}).Order("Id DESC")
+func (j *S_RmbWithdraw) L列表(数据库 *gorm.DB, 请求 T提现_列表请求, uid int) (int64, []dbm.DB_RmbWithdraw, error) {
+	请求_规范列表参数(&请求)
+	局_查询 := 数据库.Model(dbm.DB_RmbWithdraw{}).Order("Id DESC")
 	if uid > 0 {
-		db = db.Where("Uid = ?", uid)
+		局_查询 = 局_查询.Where("Uid = ?", uid)
 	}
-	if req.Status > 0 {
-		db = db.Where("Status = ?", req.Status)
+	if 请求.Status > 0 {
+		局_查询 = 局_查询.Where("Status = ?", 请求.Status)
 	}
-	if req.Uid > 0 {
-		db = db.Where("Uid = ?", req.Uid)
+	if 请求.Uid > 0 {
+		局_查询 = 局_查询.Where("Uid = ?", 请求.Uid)
 	}
-	if req.User != "" {
-		db = db.Where("User = ?", req.User)
+	if 请求.User != "" {
+		局_查询 = 局_查询.Where("User = ?", 请求.User)
 	}
-	if req.OrderNo != "" {
-		db = db.Where("OrderNo = ?", req.OrderNo)
+	if 请求.OrderNo != "" {
+		局_查询 = 局_查询.Where("OrderNo = ?", 请求.OrderNo)
 	}
-	if req.MinAmount > 0 {
-		db = db.Where("Amount >= ?", req.MinAmount)
+	if 请求.MinAmount > 0 {
+		局_查询 = 局_查询.Where("Amount >= ?", 请求.MinAmount)
 	}
-	if req.MaxAmount > 0 {
-		db = db.Where("Amount <= ?", req.MaxAmount)
+	if 请求.MaxAmount > 0 {
+		局_查询 = 局_查询.Where("Amount <= ?", 请求.MaxAmount)
 	}
-	if len(req.RegisterTime) == 2 && req.RegisterTime[0] != "" && req.RegisterTime[1] != "" {
-		start, _ := strconv.ParseInt(req.RegisterTime[0], 10, 64)
-		end, _ := strconv.ParseInt(req.RegisterTime[1], 10, 64)
-		db = db.Where("CreateTime >= ? AND CreateTime < ?", start, end+86400)
+	if len(请求.RegisterTime) == 2 && 请求.RegisterTime[0] != "" && 请求.RegisterTime[1] != "" {
+		局_开始, _ := strconv.ParseInt(请求.RegisterTime[0], 10, 64)
+		局_结束, _ := strconv.ParseInt(请求.RegisterTime[1], 10, 64)
+		局_查询 = 局_查询.Where("CreateTime >= ? AND CreateTime < ?", 局_开始, 局_结束+86400)
 	}
-	if req.Keywords != "" {
-		switch req.Type {
+	if 请求.Keywords != "" {
+		switch 请求.Type {
 		case 1:
-			db = db.Where("User = ?", req.Keywords)
+			局_查询 = 局_查询.Where("User = ?", 请求.Keywords)
 		case 2:
-			db = db.Where("Uid = ?", req.Keywords)
+			局_查询 = 局_查询.Where("Uid = ?", 请求.Keywords)
 		case 3:
-			db = db.Where("OrderNo = ?", req.Keywords)
+			局_查询 = 局_查询.Where("OrderNo = ?", 请求.Keywords)
 		case 4:
-			db = db.Where("Amount = ?", req.Keywords)
+			局_查询 = 局_查询.Where("Amount = ?", 请求.Keywords)
 		default:
-			db = db.Where("LOCATE(?, OrderNo)>0 OR LOCATE(?, User)>0", req.Keywords, req.Keywords)
+			局_查询 = 局_查询.Where("LOCATE(?, OrderNo)>0 OR LOCATE(?, User)>0", 请求.Keywords, 请求.Keywords)
 		}
 	}
 
-	var count int64
-	if req.Count > 500000 {
-		count = req.Count
+	var 局_数量 int64
+	if 请求.Count > 500000 {
+		局_数量 = 请求.Count
 	} else {
-		db.Count(&count)
+		局_查询.Count(&局_数量)
 	}
-	var list []dbm.DB_RmbWithdraw
-	err := db.Limit(req.Size).Offset((req.Page - 1) * req.Size).Find(&list).Error
-	return count, list, err
+	var 局_列表 []dbm.DB_RmbWithdraw
+	局_错误 := 局_查询.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_列表).Error
+	return 局_数量, 局_列表, 局_错误
 }
 
-func (s *S_RmbWithdraw) Detail(tx *gorm.DB, id int, uid int) (gin.H, error) {
-	var withdraw dbm.DB_RmbWithdraw
-	db := tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", id)
+func (j *S_RmbWithdraw) X详情(数据库 *gorm.DB, id int, uid int) (gin.H, error) {
+	var 局_提现单 dbm.DB_RmbWithdraw
+	局_查询 := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", id)
 	if uid > 0 {
-		db = db.Where("Uid = ?", uid)
+		局_查询 = 局_查询.Where("Uid = ?", uid)
 	}
-	if err := db.First(&withdraw).Error; err != nil {
+	if err := 局_查询.First(&局_提现单).Error; err != nil {
 		return nil, errors.New("提现单不存在")
 	}
 
-	var logs []dbm.DB_RmbWithdrawLog
-	_ = tx.Model(dbm.DB_RmbWithdrawLog{}).Where("WithdrawId = ?", id).Order("Id ASC").Find(&logs).Error
-	var user dbm.DB_User
-	_ = tx.Model(dbm.DB_User{}).Where("Id = ?", withdraw.Uid).First(&user).Error
-	return gin.H{"info": withdraw, "logs": logs, "user": user, "riskTags": s.riskTags(tx, withdraw), "voucherHistory": voucherHistoryFromLogs(logs, withdraw.VoucherPath)}, nil
+	var 局_日志列表 []dbm.DB_RmbWithdrawLog
+	_ = 数据库.Model(dbm.DB_RmbWithdrawLog{}).Where("WithdrawId = ?", id).Order("Id ASC").Find(&局_日志列表).Error
+	var 局_用户 dbm.DB_User
+	_ = 数据库.Model(dbm.DB_User{}).Where("Id = ?", 局_提现单.Uid).First(&局_用户).Error
+	return gin.H{"info": 局_提现单, "logs": 局_日志列表, "user": 局_用户, "riskTags": j.提现_风险标签(数据库, 局_提现单), "voucherHistory": 凭证_历史记录(局_日志列表, 局_提现单.VoucherPath)}, nil
 }
 
-func (s *S_RmbWithdraw) Cancel(tx *gorm.DB, id int, uid int, user string, ip string) error {
-	var withdraw dbm.DB_RmbWithdraw
-	if err := tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Uid = ?", id, uid).First(&withdraw).Error; err != nil {
+func (j *S_RmbWithdraw) Q取消(数据库 *gorm.DB, id int, uid int, user string, ip string) error {
+	var 局_提现单 dbm.DB_RmbWithdraw
+	if err := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Uid = ?", id, uid).First(&局_提现单).Error; err != nil {
 		return errors.New("提现单不存在")
 	}
-	if withdraw.Status != WithdrawStatusPending {
+	if 局_提现单.Status != constant.T提现状态_待审核 {
 		return errors.New("只有待审核提现可以取消")
 	}
-	if !s.GetConfig(tx).AllowUserCancel {
+	if !j.Q取配置(数据库).AllowUserCancel {
 		return errors.New("当前不允许用户取消提现")
 	}
-	return s.changeToRefund(tx, withdraw, WithdrawStatusCanceled, WithdrawActionUserCancel, uid, user, WithdrawOperatorUser, ip, "用户取消提现")
+	return j.提现_转退款(数据库, 局_提现单, constant.T提现状态_已取消, constant.T提现动作_用户取消, uid, user, constant.T提现操作人_用户, ip, "用户取消提现")
 }
 
-func (s *S_RmbWithdraw) AuditPass(tx *gorm.DB, id int, adminId int, adminUser string, ip string) error {
-	var withdraw dbm.DB_RmbWithdraw
-	if err := tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", id).First(&withdraw).Error; err != nil {
+func (j *S_RmbWithdraw) S审核通过(数据库 *gorm.DB, id int, 管理员Id int, 管理员账号 string, ip string) error {
+	var 局_提现单 dbm.DB_RmbWithdraw
+	if err := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", id).First(&局_提现单).Error; err != nil {
 		return errors.New("提现单不存在")
 	}
-	if withdraw.Status != WithdrawStatusPending {
+	if 局_提现单.Status != constant.T提现状态_待审核 {
 		return errors.New("只有待审核提现可以审核通过")
 	}
-	now := time.Now().Unix()
-	err := tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", id, WithdrawStatusPending).Updates(map[string]interface{}{
-		"Status":       WithdrawStatusPaying,
-		"AuditTime":    now,
-		"OperatorId":   adminId,
-		"OperatorUser": adminUser,
-		"UpdateTime":   now,
+	局_时间 := time.Now().Unix()
+	局_错误 := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", id, constant.T提现状态_待审核).Updates(map[string]interface{}{
+		"Status":       constant.T提现状态_付款中,
+		"AuditTime":    局_时间,
+		"OperatorId":   管理员Id,
+		"OperatorUser": 管理员账号,
+		"UpdateTime":   局_时间,
 	}).Error
-	if err == nil {
-		err = s.writeLog(tx, withdraw, WithdrawStatusPending, WithdrawStatusPaying, WithdrawActionAuditPass, adminId, adminUser, WithdrawOperatorAdmin, ip, "审核通过")
+	if 局_错误 == nil {
+		局_错误 = j.提现_写日志(数据库, 局_提现单, constant.T提现状态_待审核, constant.T提现状态_付款中, constant.T提现动作_审核通过, 管理员Id, 管理员账号, constant.T提现操作人_管理员, ip, "审核通过")
 	}
-	return err
+	return 局_错误
 }
 
-func (s *S_RmbWithdraw) Reject(tx *gorm.DB, id int, reason string, adminId int, adminUser string, ip string) error {
-	if strings.TrimSpace(reason) == "" {
+func (j *S_RmbWithdraw) B驳回(数据库 *gorm.DB, id int, 原因 string, 管理员Id int, 管理员账号 string, ip string) error {
+	if strings.TrimSpace(原因) == "" {
 		return errors.New("驳回原因不能为空")
 	}
-	var withdraw dbm.DB_RmbWithdraw
-	if err := tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", id).First(&withdraw).Error; err != nil {
+	var 局_提现单 dbm.DB_RmbWithdraw
+	if err := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", id).First(&局_提现单).Error; err != nil {
 		return errors.New("提现单不存在")
 	}
-	if withdraw.Status != WithdrawStatusPending && withdraw.Status != WithdrawStatusPaying {
+	if 局_提现单.Status != constant.T提现状态_待审核 && 局_提现单.Status != constant.T提现状态_付款中 {
 		return errors.New("当前状态不允许驳回")
 	}
-	action := WithdrawActionReject
-	if withdraw.Status == WithdrawStatusPaying {
-		action = WithdrawActionPayFailReject
+	局_动作 := constant.T提现动作_驳回
+	if 局_提现单.Status == constant.T提现状态_付款中 {
+		局_动作 = constant.T提现动作_付款失败驳回
 	}
-	return s.changeToRefund(tx, withdraw, WithdrawStatusRejected, action, adminId, adminUser, WithdrawOperatorAdmin, ip, reason)
+	return j.提现_转退款(数据库, 局_提现单, constant.T提现状态_已驳回, 局_动作, 管理员Id, 管理员账号, constant.T提现操作人_管理员, ip, 原因)
 }
 
-func (s *S_RmbWithdraw) MarkPaid(tx *gorm.DB, id int, adminId int, adminUser string, ip string) error {
-	var withdraw dbm.DB_RmbWithdraw
-	if err := tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", id).First(&withdraw).Error; err != nil {
+func (j *S_RmbWithdraw) B标记已付款(数据库 *gorm.DB, id int, 管理员Id int, 管理员账号 string, ip string) error {
+	var 局_提现单 dbm.DB_RmbWithdraw
+	if err := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ?", id).First(&局_提现单).Error; err != nil {
 		return errors.New("提现单不存在")
 	}
-	if withdraw.Status != WithdrawStatusPaying {
+	if 局_提现单.Status != constant.T提现状态_付款中 {
 		return errors.New("只有待付款提现可以标记已付款")
 	}
-	now := time.Now().Unix()
-	err := tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", id, WithdrawStatusPaying).Updates(map[string]interface{}{
-		"Status":       WithdrawStatusPaid,
-		"PayTime":      now,
-		"OperatorId":   adminId,
-		"OperatorUser": adminUser,
-		"UpdateTime":   now,
+	局_时间 := time.Now().Unix()
+	局_错误 := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", id, constant.T提现状态_付款中).Updates(map[string]interface{}{
+		"Status":       constant.T提现状态_已付款,
+		"PayTime":      局_时间,
+		"OperatorId":   管理员Id,
+		"OperatorUser": 管理员账号,
+		"UpdateTime":   局_时间,
 	}).Error
-	if err == nil {
-		err = s.writeLog(tx, withdraw, WithdrawStatusPaying, WithdrawStatusPaid, WithdrawActionMarkPaid, adminId, adminUser, WithdrawOperatorAdmin, ip, "标记已付款")
+	if 局_错误 == nil {
+		局_错误 = j.提现_写日志(数据库, 局_提现单, constant.T提现状态_付款中, constant.T提现状态_已付款, constant.T提现动作_标记已付款, 管理员Id, 管理员账号, constant.T提现操作人_管理员, ip, "标记已付款")
 	}
-	return err
+	return 局_错误
 }
 
-func (s *S_RmbWithdraw) Logs(tx *gorm.DB, req WithdrawListRequest) (int64, []dbm.DB_RmbWithdrawLog, error) {
-	normalizeListRequest(&req)
-	db := tx.Model(dbm.DB_RmbWithdrawLog{}).Order("Id DESC")
-	if req.Uid > 0 {
-		db = db.Where("Uid = ?", req.Uid)
+func (j *S_RmbWithdraw) R日志列表(数据库 *gorm.DB, 请求 T提现_列表请求) (int64, []dbm.DB_RmbWithdrawLog, error) {
+	请求_规范列表参数(&请求)
+	局_查询 := 数据库.Model(dbm.DB_RmbWithdrawLog{}).Order("Id DESC")
+	if 请求.Uid > 0 {
+		局_查询 = 局_查询.Where("Uid = ?", 请求.Uid)
 	}
-	if req.OrderNo != "" {
-		db = db.Where("OrderNo = ?", req.OrderNo)
+	if 请求.OrderNo != "" {
+		局_查询 = 局_查询.Where("OrderNo = ?", 请求.OrderNo)
 	}
-	if req.Keywords != "" {
-		db = db.Where("LOCATE(?, OrderNo)>0 OR LOCATE(?, OperatorUser)>0 OR LOCATE(?, Note)>0", req.Keywords, req.Keywords, req.Keywords)
+	if 请求.Keywords != "" {
+		局_查询 = 局_查询.Where("LOCATE(?, OrderNo)>0 OR LOCATE(?, OperatorUser)>0 OR LOCATE(?, Note)>0", 请求.Keywords, 请求.Keywords, 请求.Keywords)
 	}
-	var count int64
-	db.Count(&count)
-	var list []dbm.DB_RmbWithdrawLog
-	err := db.Limit(req.Size).Offset((req.Page - 1) * req.Size).Find(&list).Error
-	return count, list, err
+	var 局_数量 int64
+	局_查询.Count(&局_数量)
+	var 局_列表 []dbm.DB_RmbWithdrawLog
+	局_错误 := 局_查询.Limit(请求.Size).Offset((请求.Page - 1) * 请求.Size).Find(&局_列表).Error
+	return 局_数量, 局_列表, 局_错误
 }
 
-func (s *S_RmbWithdraw) Delete(tx *gorm.DB, req WithdrawDeleteRequest) (int64, error) {
-	db := tx.Model(dbm.DB_RmbWithdraw{})
-	switch req.Type {
+func (j *S_RmbWithdraw) S删除(数据库 *gorm.DB, 请求 T提现_删除请求) (int64, error) {
+	局_查询 := 数据库.Model(dbm.DB_RmbWithdraw{})
+	switch 请求.Type {
 	default:
 		return 0, errors.New("Type错误")
 	case 1:
-		if len(req.Id) == 0 {
+		if len(请求.Id) == 0 {
 			return 0, errors.New("Id数组没有要删除的ID")
 		}
-		db = db.Where("Id IN ?", req.Id)
+		局_查询 = 局_查询.Where("Id IN ?", 请求.Id)
 	case 2:
-		if strings.TrimSpace(req.Keywords) == "" {
+		if strings.TrimSpace(请求.Keywords) == "" {
 			return 0, errors.New("用户名不能为空")
 		}
-		db = db.Where("User = ?", strings.TrimSpace(req.Keywords))
+		局_查询 = 局_查询.Where("User = ?", strings.TrimSpace(请求.Keywords))
 	case 3:
-		db = db.Where("1 = 1")
+		局_查询 = 局_查询.Where("1 = 1")
 	case 4:
-		db = db.Where("CreateTime < ?", time.Now().Unix()-604800)
+		局_查询 = 局_查询.Where("CreateTime < ?", time.Now().Unix()-604800)
 	case 5:
-		db = db.Where("CreateTime < ?", time.Now().Unix()-2592000)
+		局_查询 = 局_查询.Where("CreateTime < ?", time.Now().Unix()-2592000)
 	case 6:
-		db = db.Where("CreateTime < ?", time.Now().Unix()-7776000)
+		局_查询 = 局_查询.Where("CreateTime < ?", time.Now().Unix()-7776000)
 	case 8:
-		db = db.Where("Status = ?", WithdrawStatusCanceled)
+		局_查询 = 局_查询.Where("Status = ?", constant.T提现状态_已取消)
 	}
-	result := db.Delete(dbm.DB_RmbWithdraw{})
-	return result.RowsAffected, result.Error
+	局_结果 := 局_查询.Delete(dbm.DB_RmbWithdraw{})
+	return 局_结果.RowsAffected, 局_结果.Error
 }
 
-func (s *S_RmbWithdraw) CreateVoucherToken(id int, adminId int, adminUser string) (WithdrawVoucherToken, error) {
-	db := *global.GVA_DB
-	cfg := s.GetConfig(&db)
-	var withdraw dbm.DB_RmbWithdraw
-	if err := db.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", id, WithdrawStatusPaying).First(&withdraw).Error; err != nil {
-		return WithdrawVoucherToken{}, errors.New("提现单不存在或状态不允许上传凭证")
+func (j *S_RmbWithdraw) C创建凭证令牌(id int, 管理员Id int, 管理员账号 string) (T提现_凭证令牌, error) {
+	局_数据库 := global.Get局db()
+	局_配置 := j.Q取配置(局_数据库)
+	var 局_提现单 dbm.DB_RmbWithdraw
+	if err := 局_数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", id, constant.T提现状态_付款中).First(&局_提现单).Error; err != nil {
+		return T提现_凭证令牌{}, errors.New("提现单不存在或状态不允许上传凭证")
 	}
-	token := randomToken()
-	info := WithdrawVoucherToken{Token: token, WithdrawId: id, AdminId: adminId, AdminUser: adminUser, ExpireTime: time.Now().Unix() + cfg.VoucherTokenSeconds}
-	global.H缓存.Set(withdrawVoucherPrefix+token, info, time.Duration(cfg.VoucherTokenSeconds)*time.Second)
-	return info, nil
+	局_令牌 := 令牌_随机生成()
+	局_信息 := T提现_凭证令牌{Token: 局_令牌, WithdrawId: id, AdminId: 管理员Id, AdminUser: 管理员账号, ExpireTime: time.Now().Unix() + 局_配置.VoucherTokenSeconds}
+	global.H缓存.Set(集_提现凭证令牌前缀+局_令牌, 局_信息, time.Duration(局_配置.VoucherTokenSeconds)*time.Second)
+	return 局_信息, nil
 }
 
-func (s *S_RmbWithdraw) GetVoucherTokenStatus(token string) (WithdrawVoucherToken, bool) {
-	raw, ok := global.H缓存.Get(withdrawVoucherPrefix + token)
-	if !ok {
-		return WithdrawVoucherToken{}, false
+func (j *S_RmbWithdraw) Q取凭证令牌状态(token string) (T提现_凭证令牌, bool) {
+	局_原始, 局_存在 := global.H缓存.Get(集_提现凭证令牌前缀 + token)
+	if !局_存在 {
+		return T提现_凭证令牌{}, false
 	}
-	info, ok := raw.(WithdrawVoucherToken)
-	if !ok || info.ExpireTime < time.Now().Unix() {
-		return WithdrawVoucherToken{}, false
+	局_信息, ok := 局_原始.(T提现_凭证令牌)
+	if !ok || 局_信息.ExpireTime < time.Now().Unix() {
+		return T提现_凭证令牌{}, false
 	}
-	return info, true
+	return 局_信息, true
 }
 
-func (s *S_RmbWithdraw) UploadVoucherByToken(tx *gorm.DB, token string, file *multipart.FileHeader, ip string) (string, error) {
-	info, ok := s.GetVoucherTokenStatus(token)
-	if !ok {
+func (j *S_RmbWithdraw) A按令牌上传凭证(数据库 *gorm.DB, token string, 文件 *multipart.FileHeader, ip string) (string, error) {
+	局_信息, 局_有效 := j.Q取凭证令牌状态(token)
+	if !局_有效 {
 		return "", errors.New("上传token无效或已过期")
 	}
-	if info.Used {
+	if 局_信息.Used {
 		return "", errors.New("上传token已使用")
 	}
-	path, err := s.UploadVoucher(tx, info.WithdrawId, file, info.AdminId, info.AdminUser, ip)
-	if err != nil {
-		return "", err
+	局_路径, 局_错误 := j.S上传凭证(数据库, 局_信息.WithdrawId, 文件, 局_信息.AdminId, 局_信息.AdminUser, ip)
+	if 局_错误 != nil {
+		return "", 局_错误
 	}
-	info.Used = true
-	info.UploadedPath = path
-	global.H缓存.Set(withdrawVoucherPrefix+token, info, time.Minute*5)
-	return path, nil
+	局_信息.Used = true
+	局_信息.UploadedPath = 局_路径
+	global.H缓存.Set(集_提现凭证令牌前缀+token, 局_信息, time.Minute*5)
+	return 局_路径, nil
 }
 
-func (s *S_RmbWithdraw) changeToRefund(tx *gorm.DB, w dbm.DB_RmbWithdraw, afterStatus int, action int, operatorId int, operatorUser string, operatorType int, ip string, note string) error {
-	now := time.Now().Unix()
-	updates := map[string]interface{}{
-		"Status":       afterStatus,
-		"AdminReply":   note,
-		"OperatorId":   operatorId,
-		"OperatorUser": operatorUser,
-		"UpdateTime":   now,
+func (j *S_RmbWithdraw) 提现_转退款(数据库 *gorm.DB, 提现单 dbm.DB_RmbWithdraw, 目标状态 int, 动作 int, 操作员Id int, 操作员账号 string, 操作员类型 int, ip string, 备注 string) error {
+	局_时间 := time.Now().Unix()
+	局_更新 := map[string]interface{}{
+		"Status":       目标状态,
+		"AdminReply":   备注,
+		"OperatorId":   操作员Id,
+		"OperatorUser": 操作员账号,
+		"UpdateTime":   局_时间,
 	}
-	if afterStatus == WithdrawStatusCanceled {
-		updates["CancelTime"] = now
+	if 目标状态 == constant.T提现状态_已取消 {
+		局_更新["CancelTime"] = 局_时间
 	}
-	ret := tx.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", w.Id, w.Status).Updates(updates)
-	if ret.Error != nil {
-		return ret.Error
+	局_结果 := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Id = ? AND Status = ?", 提现单.Id, 提现单.Status).Updates(局_更新)
+	if 局_结果.Error != nil {
+		return 局_结果.Error
 	}
-	if ret.RowsAffected == 0 {
+	if 局_结果.RowsAffected == 0 {
 		return errors.New("状态已被其他人处理,请刷新")
 	}
-	if err := tx.Model(dbm.DB_User{}).Where("Id = ?", w.Uid).Update("Rmb", gorm.Expr("Rmb + ?", w.Amount)).Error; err != nil {
+	if err := 数据库.Model(dbm.DB_User{}).Where("Id = ?", 提现单.Uid).Update("Rmb", gorm.Expr("Rmb + ?", 提现单.Amount)).Error; err != nil {
 		return err
 	}
-	moneyNote := "提现驳回返还,提现单号:" + w.OrderNo
-	if afterStatus == WithdrawStatusCanceled {
-		moneyNote = "提现取消返还,提现单号:" + w.OrderNo
-	} else if action == WithdrawActionPayFailReject {
-		moneyNote = "付款失败驳回返还,提现单号:" + w.OrderNo
+	局_资金备注 := "提现驳回返还,提现单号:" + 提现单.OrderNo
+	if 目标状态 == constant.T提现状态_已取消 {
+		局_资金备注 = "提现取消返还,提现单号:" + 提现单.OrderNo
+	} else if 动作 == constant.T提现动作_付款失败驳回 {
+		局_资金备注 = "付款失败驳回返还,提现单号:" + 提现单.OrderNo
 	}
-	if err := s.writeMoneyLog(tx, w.Uid, w.User, ip, moneyNote, w.Amount); err != nil {
+	if err := j.提现_写资金日志(数据库, 提现单.Uid, 提现单.User, ip, 局_资金备注, 提现单.Amount); err != nil {
 		return err
 	}
-	return s.writeLog(tx, w, w.Status, afterStatus, action, operatorId, operatorUser, operatorType, ip, note)
+	return j.提现_写日志(数据库, 提现单, 提现单.Status, 目标状态, 动作, 操作员Id, 操作员账号, 操作员类型, ip, 备注)
 }
 
-func (s *S_RmbWithdraw) writeLog(tx *gorm.DB, w dbm.DB_RmbWithdraw, beforeStatus int, afterStatus int, action int, operatorId int, operatorUser string, operatorType int, ip string, note string) error {
-	return tx.Model(dbm.DB_RmbWithdrawLog{}).Create(&dbm.DB_RmbWithdrawLog{
-		WithdrawId:   w.Id,
-		OrderNo:      w.OrderNo,
-		Uid:          w.Uid,
-		BeforeStatus: beforeStatus,
-		AfterStatus:  afterStatus,
-		Action:       action,
-		OperatorId:   operatorId,
-		OperatorUser: operatorUser,
-		OperatorType: operatorType,
+func (j *S_RmbWithdraw) 提现_写日志(数据库 *gorm.DB, 提现单 dbm.DB_RmbWithdraw, 前状态 int, 后状态 int, 动作 int, 操作员Id int, 操作员账号 string, 操作员类型 int, ip string, 备注 string) error {
+	return 数据库.Model(dbm.DB_RmbWithdrawLog{}).Create(&dbm.DB_RmbWithdrawLog{
+		WithdrawId:   提现单.Id,
+		OrderNo:      提现单.OrderNo,
+		Uid:          提现单.Uid,
+		BeforeStatus: 前状态,
+		AfterStatus:  后状态,
+		Action:       动作,
+		OperatorId:   操作员Id,
+		OperatorUser: 操作员账号,
+		OperatorType: 操作员类型,
 		Ip:           ip,
-		Note:         note,
+		Note:         备注,
 		Time:         time.Now().Unix(),
 	}).Error
 }
 
-func (s *S_RmbWithdraw) writeMoneyLog(tx *gorm.DB, uid int, user string, ip string, note string, amount float64) error {
+func (j *S_RmbWithdraw) 提现_写资金日志(数据库 *gorm.DB, uid int, user string, ip string, 备注 string, 金额 float64) error {
 	var 局_新余额 float64
-	_ = tx.Model(dbm.DB_User{}).Select("Rmb").Where("Id = ?", uid).Scan(&局_新余额).Error
-	note = note + "|新余额≈" + strconv.FormatFloat(局_新余额, 'f', 2, 64)
-	return tx.Model(dbm.DB_LogMoney{}).Create(&dbm.DB_LogMoney{
+	_ = 数据库.Model(dbm.DB_User{}).Select("Rmb").Where("Id = ?", uid).Scan(&局_新余额).Error
+	备注 = 备注 + "|新余额≈" + strconv.FormatFloat(局_新余额, 'f', 2, 64)
+	return 数据库.Model(dbm.DB_LogMoney{}).Create(&dbm.DB_LogMoney{
 		User:  user,
 		Ip:    ip,
 		Time:  time.Now().Unix(),
-		Count: amount,
-		Note:  note,
+		Count: 金额,
+		Note:  备注,
 	}).Error
 }
 
-func (s *S_RmbWithdraw) sumAmount(tx *gorm.DB, uid int, status []int) float64 {
-	var sum float64
-	_ = tx.Model(dbm.DB_RmbWithdraw{}).Select("IFNULL(SUM(Amount), 0)").Where("Uid = ? AND Status IN ?", uid, status).Scan(&sum).Error
-	return sum
+func (j *S_RmbWithdraw) 提现_统计金额(数据库 *gorm.DB, uid int, 状态数组 []int) float64 {
+	var 局_合计 float64
+	_ = 数据库.Model(dbm.DB_RmbWithdraw{}).Select("IFNULL(SUM(Amount), 0)").Where("Uid = ? AND Status IN ?", uid, 状态数组).Scan(&局_合计).Error
+	return 局_合计
 }
 
-func (s *S_RmbWithdraw) checkInterval(tx *gorm.DB, uid int, interval int64) error {
-	if interval <= 0 {
+func (j *S_RmbWithdraw) 提现_检查间隔(数据库 *gorm.DB, uid int, 间隔 int64) error {
+	if 间隔 <= 0 {
 		return nil
 	}
-	var last dbm.DB_RmbWithdraw
-	if err := tx.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ? AND Status NOT IN ?", uid, []int{WithdrawStatusRejected, WithdrawStatusCanceled}).Order("CreateTime DESC").First(&last).Error; err == nil {
-		if time.Now().Unix()-last.CreateTime < interval {
+	var 局_最近一条 dbm.DB_RmbWithdraw
+	if err := 数据库.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ? AND Status NOT IN ?", uid, []int{constant.T提现状态_已驳回, constant.T提现状态_已取消}).Order("CreateTime DESC").First(&局_最近一条).Error; err == nil {
+		if time.Now().Unix()-局_最近一条.CreateTime < 间隔 {
 			return errors.New("未满足最小提现间隔")
 		}
 	}
 	return nil
 }
 
-func (s *S_RmbWithdraw) riskTags(tx *gorm.DB, w dbm.DB_RmbWithdraw) []string {
-	tags := make([]string, 0)
-	var count int64
-	tx.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ? AND Id <> ?", w.Uid, w.Id).Count(&count)
-	if count == 0 {
-		tags = append(tags, "首次提现")
+func (j *S_RmbWithdraw) 提现_风险标签(数据库 *gorm.DB, 提现单 dbm.DB_RmbWithdraw) []string {
+	局_标签 := make([]string, 0)
+	var 局_数量 int64
+	数据库.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ? AND Id <> ?", 提现单.Uid, 提现单.Id).Count(&局_数量)
+	if 局_数量 == 0 {
+		局_标签 = append(局_标签, "首次提现")
 	}
-	tx.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ? AND CreateTime >= ?", w.Uid, time.Now().Unix()-86400).Count(&count)
-	if count >= 2 {
-		tags = append(tags, "今日多次提现")
+	数据库.Model(dbm.DB_RmbWithdraw{}).Where("Uid = ? AND CreateTime >= ?", 提现单.Uid, time.Now().Unix()-86400).Count(&局_数量)
+	if 局_数量 >= 2 {
+		局_标签 = append(局_标签, "今日多次提现")
 	}
-	cfg := s.GetConfig(tx)
-	if cfg.MaxAmount > 0 && w.Amount >= cfg.MaxAmount*0.9 {
-		tags = append(tags, "金额接近上限")
+	局_配置 := j.Q取配置(数据库)
+	if 局_配置.MaxAmount > 0 && 提现单.Amount >= 局_配置.MaxAmount*0.9 {
+		局_标签 = append(局_标签, "金额接近上限")
 	}
-	return tags
+	return 局_标签
 }
 
-func saveUploadedImage(file *multipart.FileHeader, relPath string, maxMb int64) (string, error) {
-	ext := normalizedExt(file.Filename)
-	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+func 图片_保存上传(文件 *multipart.FileHeader, 相对路径 string, 最大Mb int64) (string, error) {
+	局_扩展名 := 文件_规范扩展名(文件.Filename)
+	if 局_扩展名 != ".jpg" && 局_扩展名 != ".jpeg" && 局_扩展名 != ".png" {
 		return "", errors.New("仅支持jpg/png/jpeg")
 	}
-	if file.Size > maxMb*1024*1024 {
+	if 文件.Size > 最大Mb*1024*1024 {
 		return "", errors.New("文件过大")
 	}
-	if _, err := decodeUploadedImage(file); err != nil {
+	if _, err := 图片_解码(文件); err != nil {
 		return "", err
 	}
-	abs := absPath(relPath)
-	if err := os.MkdirAll(filepath.Dir(abs), 0755); err != nil {
+	局_绝对路径 := 路径_转绝对(相对路径)
+	if err := os.MkdirAll(filepath.Dir(局_绝对路径), 0755); err != nil {
 		return "", err
 	}
-	src, err := file.Open()
+	局_源, err := 文件.Open()
 	if err != nil {
 		return "", err
 	}
-	defer src.Close()
-	dst, err := os.Create(abs)
+	defer 局_源.Close()
+	局_目标, err := os.Create(局_绝对路径)
 	if err != nil {
 		return "", err
 	}
-	defer dst.Close()
-	_, err = io.Copy(dst, src)
+	defer 局_目标.Close()
+	_, err = io.Copy(局_目标, 局_源)
 	if err != nil {
 		return "", err
 	}
-	return relPath, nil
+	return 相对路径, nil
 }
 
-func savePayeeQrImage(file *multipart.FileHeader, relPath string, maxMb int64) (string, error) {
-	if file.Size > maxMb*1024*1024 {
+func 图片_保存收款码(文件 *multipart.FileHeader, 相对路径 string, 最大Mb int64) (string, error) {
+	if 文件.Size > 最大Mb*1024*1024 {
 		return "", errors.New("尺寸错误")
 	}
-	img, err := decodeUploadedImage(file)
+	局_图片, err := 图片_解码(文件)
 	if err != nil {
 		return "", err
 	}
-	points, err := decodeQrPoints(img)
+	局_定位点, err := 二维码_取定位点(局_图片)
 	if err != nil {
 		return "", errors.New("无法识别出图片二维码,请更换更清晰图片")
 	}
-	cropped := cropQrSquare(img, points)
-	resized := resizeNearest(cropped, 500, 500)
-	abs := absPath(relPath)
-	if err := os.MkdirAll(filepath.Dir(abs), 0755); err != nil {
+	局_裁剪图 := 二维码_裁剪方形区域(局_图片, 局_定位点)
+	局_缩放图 := 图片_最近邻缩放(局_裁剪图, 500, 500)
+	局_绝对路径 := 路径_转绝对(相对路径)
+	if err := os.MkdirAll(filepath.Dir(局_绝对路径), 0755); err != nil {
 		return "", err
 	}
-	return relPath, writeImage(abs, resized, ".jpg")
+	return 相对路径, 图片_写入文件(局_绝对路径, 局_缩放图, ".jpg")
 }
 
-func decodeUploadedImage(file *multipart.FileHeader) (image.Image, error) {
-	src, err := file.Open()
+func 图片_解码(文件 *multipart.FileHeader) (image.Image, error) {
+	局_源, err := 文件.Open()
 	if err != nil {
 		return nil, err
 	}
-	defer src.Close()
-	img, _, err := image.Decode(src)
+	defer 局_源.Close()
+	局_图片, _, err := image.Decode(局_源)
 	if err != nil {
 		return nil, errors.New("invalid image file")
 	}
-	return img, nil
+	return 局_图片, nil
 }
 
-func decodeQrPoints(img image.Image) ([]gozxing.ResultPoint, error) {
-	bmp, err := gozxing.NewBinaryBitmapFromImage(img)
+func 二维码_取定位点(图片 image.Image) ([]gozxing.ResultPoint, error) {
+	局_位图, err := gozxing.NewBinaryBitmapFromImage(图片)
 	if err != nil {
 		return nil, err
 	}
-	result, err := qrcode.NewQRCodeReader().Decode(bmp, nil)
+	局_结果, err := qrcode.NewQRCodeReader().Decode(局_位图, nil)
 	if err != nil {
 		return nil, err
 	}
-	if len(result.GetText()) == 0 {
+	if len(局_结果.GetText()) == 0 {
 		return nil, errors.New("empty qrcode")
 	}
-	return result.GetResultPoints(), nil
+	return 局_结果.GetResultPoints(), nil
 }
 
-func cropQrSquare(img image.Image, points []gozxing.ResultPoint) image.Image {
-	bounds := img.Bounds()
-	if len(points) == 0 {
-		return img
+func 二维码_裁剪方形区域(图片 image.Image, 定位点 []gozxing.ResultPoint) image.Image {
+	局_边界 := 图片.Bounds()
+	if len(定位点) == 0 {
+		return 图片
 	}
-	minX, minY := math.MaxFloat64, math.MaxFloat64
-	maxX, maxY := -math.MaxFloat64, -math.MaxFloat64
-	for _, point := range points {
-		x, y := float64(point.GetX()), float64(point.GetY())
-		if x < minX {
-			minX = x
+	局_最小X, 局_最小Y := math.MaxFloat64, math.MaxFloat64
+	局_最大X, 局_最大Y := -math.MaxFloat64, -math.MaxFloat64
+	for _, 局_点 := range 定位点 {
+		局_X, 局_Y := float64(局_点.GetX()), float64(局_点.GetY())
+		if 局_X < 局_最小X {
+			局_最小X = 局_X
 		}
-		if x > maxX {
-			maxX = x
+		if 局_X > 局_最大X {
+			局_最大X = 局_X
 		}
-		if y < minY {
-			minY = y
+		if 局_Y < 局_最小Y {
+			局_最小Y = 局_Y
 		}
-		if y > maxY {
-			maxY = y
+		if 局_Y > 局_最大Y {
+			局_最大Y = 局_Y
 		}
 	}
-	width := maxX - minX
-	height := maxY - minY
-	side := math.Max(width, height)
-	if side <= 0 {
-		return img
+	局_宽 := 局_最大X - 局_最小X
+	局_高 := 局_最大Y - 局_最小Y
+	局_边长 := math.Max(局_宽, 局_高)
+	if 局_边长 <= 0 {
+		return 图片
 	}
-	margin := math.Max(12, side*0.28)
-	centerX := (minX + maxX) / 2
-	centerY := (minY + maxY) / 2
-	side += margin * 2
-	left := int(math.Floor(centerX - side/2))
-	top := int(math.Floor(centerY - side/2))
-	right := int(math.Ceil(centerX + side/2))
-	bottom := int(math.Ceil(centerY + side/2))
-	if left < bounds.Min.X {
-		left = bounds.Min.X
+	局_边距 := math.Max(12, 局_边长*0.28)
+	局_中心X := (局_最小X + 局_最大X) / 2
+	局_中心Y := (局_最小Y + 局_最大Y) / 2
+	局_边长 += 局_边距 * 2
+	局_左 := int(math.Floor(局_中心X - 局_边长/2))
+	局_上 := int(math.Floor(局_中心Y - 局_边长/2))
+	局_右 := int(math.Ceil(局_中心X + 局_边长/2))
+	局_下 := int(math.Ceil(局_中心Y + 局_边长/2))
+	if 局_左 < 局_边界.Min.X {
+		局_左 = 局_边界.Min.X
 	}
-	if top < bounds.Min.Y {
-		top = bounds.Min.Y
+	if 局_上 < 局_边界.Min.Y {
+		局_上 = 局_边界.Min.Y
 	}
-	if right > bounds.Max.X {
-		right = bounds.Max.X
+	if 局_右 > 局_边界.Max.X {
+		局_右 = 局_边界.Max.X
 	}
-	if bottom > bounds.Max.Y {
-		bottom = bounds.Max.Y
+	if 局_下 > 局_边界.Max.Y {
+		局_下 = 局_边界.Max.Y
 	}
-	if right <= left || bottom <= top {
-		return img
+	if 局_右 <= 局_左 || 局_下 <= 局_上 {
+		return 图片
 	}
-	return copyImageRegion(img, image.Rect(left, top, right, bottom))
+	return 图片_复制区域(图片, image.Rect(局_左, 局_上, 局_右, 局_下))
 }
 
-func copyImageRegion(src image.Image, rect image.Rectangle) image.Image {
-	dst := image.NewRGBA(image.Rect(0, 0, rect.Dx(), rect.Dy()))
-	for y := 0; y < rect.Dy(); y++ {
-		for x := 0; x < rect.Dx(); x++ {
-			dst.Set(x, y, src.At(rect.Min.X+x, rect.Min.Y+y))
+func 图片_复制区域(源 image.Image, 区域 image.Rectangle) image.Image {
+	局_目标 := image.NewRGBA(image.Rect(0, 0, 区域.Dx(), 区域.Dy()))
+	for 局_Y := 0; 局_Y < 区域.Dy(); 局_Y++ {
+		for 局_X := 0; 局_X < 区域.Dx(); 局_X++ {
+			局_目标.Set(局_X, 局_Y, 源.At(区域.Min.X+局_X, 区域.Min.Y+局_Y))
 		}
 	}
-	return dst
+	return 局_目标
 }
 
-func resizeNearest(src image.Image, width int, height int) image.Image {
-	bounds := src.Bounds()
-	dst := image.NewRGBA(image.Rect(0, 0, width, height))
-	for y := 0; y < height; y++ {
-		sy := bounds.Min.Y + y*bounds.Dy()/height
-		for x := 0; x < width; x++ {
-			sx := bounds.Min.X + x*bounds.Dx()/width
-			dst.Set(x, y, src.At(sx, sy))
+func 图片_最近邻缩放(源 image.Image, 宽 int, 高 int) image.Image {
+	局_边界 := 源.Bounds()
+	局_目标 := image.NewRGBA(image.Rect(0, 0, 宽, 高))
+	for 局_Y := 0; 局_Y < 高; 局_Y++ {
+		局_源Y := 局_边界.Min.Y + 局_Y*局_边界.Dy()/高
+		for 局_X := 0; 局_X < 宽; 局_X++ {
+			局_源X := 局_边界.Min.X + 局_X*局_边界.Dx()/宽
+			局_目标.Set(局_X, 局_Y, 源.At(局_源X, 局_源Y))
 		}
 	}
-	return dst
+	return 局_目标
 }
 
-func writeImage(abs string, img image.Image, ext string) error {
-	dst, err := os.Create(abs)
+func 图片_写入文件(绝对路径 string, 图片 image.Image, 扩展名 string) error {
+	局_目标, err := os.Create(绝对路径)
 	if err != nil {
 		return err
 	}
-	defer dst.Close()
-	if ext == ".png" {
-		return png.Encode(dst, img)
+	defer 局_目标.Close()
+	if 扩展名 == ".png" {
+		return png.Encode(局_目标, 图片)
 	}
-	return jpeg.Encode(dst, img, &jpeg.Options{Quality: 92})
+	return jpeg.Encode(局_目标, 图片, &jpeg.Options{Quality: 92})
 }
 
-func voucherLogPathToken(path string) string {
-	return "voucherPath=" + path
+func 凭证_日志路径标记(路径 string) string {
+	return "voucherPath=" + 路径
 }
 
-func extractVoucherLogPath(note string) string {
-	idx := strings.Index(note, "voucherPath=")
-	if idx < 0 {
+func 凭证_从日志提取路径(备注 string) string {
+	局_索引 := strings.Index(备注, "voucherPath=")
+	if 局_索引 < 0 {
 		return ""
 	}
-	path := note[idx+len("voucherPath="):]
-	if end := strings.IndexAny(path, " \t\r\n"); end >= 0 {
-		path = path[:end]
+	局_路径 := 备注[局_索引+len("voucherPath="):]
+	if 局_结束 := strings.IndexAny(局_路径, " \t\r\n"); 局_结束 >= 0 {
+		局_路径 = 局_路径[:局_结束]
 	}
-	return normalizeRuntimeImagePath(path)
+	return 路径_规范图片路径(局_路径)
 }
 
-func voucherHistoryFromLogs(logs []dbm.DB_RmbWithdrawLog, currentPath string) []gin.H {
-	history := make([]gin.H, 0)
-	seen := map[string]bool{}
-	currentPath = normalizeRuntimeImagePath(currentPath)
-	add := func(path string, log dbm.DB_RmbWithdrawLog, current bool) {
-		path = normalizeRuntimeImagePath(path)
-		if path == "" || seen[path] {
+func 凭证_历史记录(日志列表 []dbm.DB_RmbWithdrawLog, 当前路径 string) []gin.H {
+	局_历史 := make([]gin.H, 0)
+	局_已见 := map[string]bool{}
+	当前路径 = 路径_规范图片路径(当前路径)
+	局_添加 := func(路径 string, 日志 dbm.DB_RmbWithdrawLog, 当前 bool) {
+		路径 = 路径_规范图片路径(路径)
+		if 路径 == "" || 局_已见[路径] {
 			return
 		}
-		seen[path] = true
-		history = append(history, gin.H{
-			"path":         path,
-			"time":         log.Time,
-			"action":       log.Action,
-			"operatorUser": log.OperatorUser,
-			"current":      current,
+		局_已见[路径] = true
+		局_历史 = append(局_历史, gin.H{
+			"path":         路径,
+			"time":         日志.Time,
+			"action":       日志.Action,
+			"operatorUser": 日志.OperatorUser,
+			"current":      当前,
 		})
 	}
-	for i := len(logs) - 1; i >= 0; i-- {
-		if logs[i].Action != WithdrawActionUploadVoucher && logs[i].Action != WithdrawActionReuploadVoucher {
+	for 局_序号 := len(日志列表) - 1; 局_序号 >= 0; 局_序号-- {
+		if 日志列表[局_序号].Action != constant.T提现动作_上传凭证 && 日志列表[局_序号].Action != constant.T提现动作_重新上传凭证 {
 			continue
 		}
-		path := extractVoucherLogPath(logs[i].Note)
-		add(path, logs[i], path == currentPath)
+		局_路径 := 凭证_从日志提取路径(日志列表[局_序号].Note)
+		局_添加(局_路径, 日志列表[局_序号], 局_路径 == 当前路径)
 	}
-	add(currentPath, dbm.DB_RmbWithdrawLog{Action: WithdrawActionUploadVoucher}, true)
-	return history
+	局_添加(当前路径, dbm.DB_RmbWithdrawLog{Action: constant.T提现动作_上传凭证}, true)
+	return 局_历史
 }
 
-func normalizedExt(name string) string {
-	ext := strings.ToLower(filepath.Ext(name))
-	if ext == ".jpeg" || ext == ".png" {
-		return ext
+func 文件_规范扩展名(名称 string) string {
+	局_扩展名 := strings.ToLower(filepath.Ext(名称))
+	if 局_扩展名 == ".jpeg" || 局_扩展名 == ".png" {
+		return 局_扩展名
 	}
 	return ".jpg"
 }
 
-func payeeQrPath(uid int) string {
+func 图片_收款码路径(uid int) string {
 	return fmt.Sprintf("runtime/img/agent/payee_qr_%d.jpg", uid)
 }
 
-func absPath(relPath string) string {
-	rel := strings.TrimPrefix(filepath.FromSlash(relPath), string(filepath.Separator))
-	return filepath.Join(global.GVA_CONFIG.Q取运行目录, rel)
+func 路径_转绝对(相对路径 string) string {
+	局_相对 := strings.TrimPrefix(filepath.FromSlash(相对路径), string(filepath.Separator))
+	return filepath.Join(global.GVA_CONFIG.Q取运行目录, 局_相对)
 }
 
-func normalizeRuntimeImagePath(raw string) string {
-	path := strings.TrimSpace(raw)
-	path = strings.TrimPrefix(path, "/")
-	path = filepath.ToSlash(path)
-	path = strings.TrimPrefix(path, "./")
-	if path == "" || strings.Contains(path, "..") || filepath.IsAbs(path) {
+func 路径_规范图片路径(原始 string) string {
+	局_路径 := strings.TrimSpace(原始)
+	局_路径 = strings.TrimPrefix(局_路径, "/")
+	局_路径 = filepath.ToSlash(局_路径)
+	局_路径 = strings.TrimPrefix(局_路径, "./")
+	if 局_路径 == "" || strings.Contains(局_路径, "..") || filepath.IsAbs(局_路径) {
 		return ""
 	}
-	if !strings.HasPrefix(path, "runtime/img/") {
+	if !strings.HasPrefix(局_路径, "runtime/img/") {
 		return ""
 	}
-	ext := strings.ToLower(filepath.Ext(path))
-	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+	局_扩展名 := strings.ToLower(filepath.Ext(局_路径))
+	if 局_扩展名 != ".jpg" && 局_扩展名 != ".jpeg" && 局_扩展名 != ".png" {
 		return ""
 	}
-	return path
+	return 局_路径
 }
 
-func imageInfo(relPath string) (WithdrawImageInfo, error) {
-	abs := absPath(relPath)
-	root := filepath.Clean(filepath.Join(global.GVA_CONFIG.Q取运行目录, "runtime", "img"))
-	cleanAbs := filepath.Clean(abs)
-	if cleanAbs != root && !strings.HasPrefix(cleanAbs, root+string(filepath.Separator)) {
-		return WithdrawImageInfo{}, errors.New("图片地址错误")
+func 图片_取信息(相对路径 string) (T提现_图片信息, error) {
+	局_绝对 := 路径_转绝对(相对路径)
+	局_根 := filepath.Clean(filepath.Join(global.GVA_CONFIG.Q取运行目录, "runtime", "img"))
+	局_干净绝对 := filepath.Clean(局_绝对)
+	if 局_干净绝对 != 局_根 && !strings.HasPrefix(局_干净绝对, 局_根+string(filepath.Separator)) {
+		return T提现_图片信息{}, errors.New("图片地址错误")
 	}
-	if _, ok := fileExists(cleanAbs); !ok {
-		return WithdrawImageInfo{}, errors.New("图片不存在")
+	if _, ok := 文件_存在(局_干净绝对); !ok {
+		return T提现_图片信息{}, errors.New("图片不存在")
 	}
-	return WithdrawImageInfo{AbsPath: cleanAbs, Ext: strings.ToLower(filepath.Ext(cleanAbs))}, nil
+	return T提现_图片信息{AbsPath: 局_干净绝对, Ext: strings.ToLower(filepath.Ext(局_干净绝对))}, nil
 }
 
-func fileExists(path string) (os.FileInfo, bool) {
-	info, err := os.Stat(path)
-	return info, err == nil && !info.IsDir()
+func 文件_存在(路径 string) (os.FileInfo, bool) {
+	局_信息, err := os.Stat(路径)
+	return 局_信息, err == nil && !局_信息.IsDir()
 }
 
-func copyFile(src string, dst string) error {
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+func 文件_复制(源 string, 目标 string) error {
+	if err := os.MkdirAll(filepath.Dir(目标), 0755); err != nil {
 		return err
 	}
-	in, err := os.Open(src)
+	局_输入, err := os.Open(源)
 	if err != nil {
 		return err
 	}
-	defer in.Close()
-	out, err := os.Create(dst)
+	defer 局_输入.Close()
+	局_输出, err := os.Create(目标)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
-	_, err = io.Copy(out, in)
+	defer 局_输出.Close()
+	_, err = io.Copy(局_输出, 局_输入)
 	return err
 }
 
-func normalizeListRequest(req *WithdrawListRequest) {
-	if req.Page <= 0 {
-		req.Page = 1
+func 请求_规范列表参数(请求 *T提现_列表请求) {
+	if 请求.Page <= 0 {
+		请求.Page = 1
 	}
-	if req.Size <= 0 {
-		req.Size = 10
+	if 请求.Size <= 0 {
+		请求.Size = 10
 	}
-	if req.Size > 100 {
-		req.Size = 100
+	if 请求.Size > 100 {
+		请求.Size = 100
 	}
 }
 
-func makeOrderNo(uid int) string {
+func 单号_生成(uid int) string {
 	return fmt.Sprintf("WD%d%d", time.Now().UnixNano(), uid)
 }
 
-func randomToken() string {
-	buf := make([]byte, 24)
-	_, _ = rand.Read(buf)
-	hash := sha256.Sum256([]byte(fmt.Sprintf("%x-%d", buf, time.Now().UnixNano())))
-	return hex.EncodeToString(hash[:])
+func 令牌_随机生成() string {
+	局_缓冲 := make([]byte, 24)
+	_, _ = rand.Read(局_缓冲)
+	局_哈希 := sha256.Sum256([]byte(fmt.Sprintf("%x-%d", 局_缓冲, time.Now().UnixNano())))
+	return hex.EncodeToString(局_哈希[:])
 }

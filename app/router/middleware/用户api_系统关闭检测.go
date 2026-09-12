@@ -32,6 +32,7 @@ func UserApi检查数据库连接() gin.HandlerFunc {
 		if global.GVA_DB == nil {
 			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), constant.Status_SQl错误, "服务器还未连接数据库,暂不可用,请管理员检查原因,或重启系统"})
 			c.Abort()
+			return
 		}
 		c.Next()
 	}
@@ -46,17 +47,20 @@ func C初始化上下文() gin.HandlerFunc {
 		if ctx.AppInfo.AppId < 10000 {
 			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), constant.Status_App不存在, "App不存在"})
 			c.Abort()
+			return
 		}
 		db := *global.GVA_DB
 		ctx.AppInfo, err = service.NewAppInfo(c, &db).Info(ctx.AppInfo.AppId)
 		if err != nil {
 			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), constant.Status_App不存在, "App不存在"})
 			c.Abort()
+			return
 		}
 
 		if ctx.AppInfo.Status == 1 {
 			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), constant.Status_已停止运营, ctx.AppInfo.AppStatusMessage})
 			c.Abort()
+			return
 		}
 		utils.Z置上下文(c, ctx)
 		c.Next()
@@ -68,6 +72,7 @@ func J检查黑名单() gin.HandlerFunc {
 		if blacklist.Is黑名单(c.ClientIP(), ctx.AppInfo.AppId) {
 			c.JSON(http.StatusOK, 请求响应_X响应状态{time.Now().Unix(), constant.Status_黑名单信息, "黑名单ip"})
 			c.Abort()
+			return
 		}
 		c.Next()
 	}

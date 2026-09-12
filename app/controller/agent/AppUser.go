@@ -3,7 +3,6 @@ package controller
 import (
 	. "EFunc/utils"
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/app/controller/Common"
@@ -11,7 +10,6 @@ import (
 	"server/app/logic/agent/L_appUser"
 	"server/app/logic/common/agent"
 	appUserLogic "server/app/logic/common/appUser"
-	"server/app/logic/common/log"
 	"server/app/models/constant"
 	"server/app/models/dbm"
 	"server/app/models/old/response"
@@ -252,38 +250,10 @@ type 结构响应_GetAppUserList struct {
 
 type DB_AppUser带User信息 struct {
 	dbm.DB_AppUser
-	User       string `json:"User" gorm:"column:User;index;comment:用户登录名"`                 // 用户登录名
-	Name       string `json:"Name" gorm:"column:Name;index;comment:卡号"`                    // 用户登录名
+	User       string `json:"User" gorm:"column:User;index;comment:用户登录名"`                     // 用户登录名
+	Name       string `json:"Name" gorm:"column:Name;index;comment:卡号"`                           // 用户登录名
 	Status     int    `json:"Status" gorm:"column:Status;default:1;comment:用户是状态 1正常 2冻结"` // 1正常 2冻结
 	LinksCount int    `json:"LinksCount" gorm:"column:LinksCount;index;comment:在线总数"`
-}
-
-// Del批量删除软件用户
-func (C *AppUser) Del批量删除软件用户(c *gin.Context) {
-	var 请求 struct {
-		Id    []int `json:"Id"` //用户id数组
-		AppId int   `json:"AppId" binding:"required,min=10000"`
-	}
-	if !C.ToJSON(c, &请求) {
-		return
-	}
-
-	if len(请求.Id) == 0 {
-		response.FailWithMessage("Id数组为空", c)
-		return
-	}
-
-	tx := *global.GVA_DB
-	var 软件用户Uid = service.NewUser(c, &tx).Id取Uid_批量(请求.AppId, 请求.Id)
-	局_结果 := tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Where("Id IN ? ", 请求.Id).Delete("")
-	if 局_结果.Error != nil {
-		response.FailWithMessage("删除失败", c)
-		return
-	}
-	_ = tx.Model(dbm.DB_UserConfig{}).Where("AppId = ? ", 请求.AppId).Where("Uid IN ? ", 软件用户Uid).Delete("").RowsAffected
-
-	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(局_结果.RowsAffected, 10), c)
-	return
 }
 
 // save 保存
@@ -360,86 +330,6 @@ func (C *AppUser) Save用户信息(c *gin.Context) {
 	return
 }
 
-// New用户信息
-func (C *AppUser) New用户信息(c *gin.Context) {
-	var 请求 struct {
-		AppId int `json:"AppId" binding:"required,min=10000"` // Appid 必填
-		dbm.DB_AppUser
-	}
-	if !C.ToJSON(c, &请求) {
-		return
-	}
-	if 请求.Id > 0 {
-		response.FailWithMessage("添加用户不能有id值", c)
-		return
-	}
-	var err error
-	defer func() {
-		if err != nil {
-			response.FailWithMessage(err.Error(), c)
-		}
-	}()
-	var tx = *global.GVA_DB
-	var info struct {
-		AppInfo  dbm.DB_AppInfo
-		KaInfo   dbm.DB_Ka
-		UserInfo dbm.DB_User
-	}
-	info.AppInfo, err = service.NewAppInfo(c, &tx).Info(请求.AppId)
-	if err != nil {
-		err = errors.New("AppId不存在")
-		return
-	}
-
-	if info.AppInfo.AppType == 3 || info.AppInfo.AppType == 4 {
-		info.KaInfo, err = service.NewKa(c, &tx).Info2(map[string]interface{}{"AppId": 请求.AppId, "Uid": 请求.Uid})
-		if info.KaInfo.Id == 0 {
-			err = errors.New(`卡号Uid不存在,
-请先去[ 卡号列表 => 制新卡 ],
-添加信息`)
-			return
-		}
-	} else {
-		info.UserInfo, err = service.NewUser(c, &tx).Info(请求.Uid)
-		if info.UserInfo.Id == 0 {
-			err = errors.New(`用户Uid不存在,
-请先去[ 用户管理 => 用户账户 ],
-添加该用户信息`)
-			return
-		}
-	}
-
-	_, err = service.NewAppUser(c, &tx, 请求.AppId).InfoUid(请求.Uid)
-	if err == nil {
-		err = errors.New("用户已存在")
-		return
-	}
-	请求.RegisterTime = time.Now().Unix()
-	//app_id 没有这个字段排除掉
-	局_信息 := dbm.DB_AppUser{
-		Uid:          请求.Uid,
-		Status:       请求.Status,
-		Key:          请求.Key,
-		VipTime:      请求.VipTime,
-		VipNumber:    请求.VipNumber,
-		Note:         请求.Note,
-		MaxOnline:    请求.MaxOnline,
-		UserClassId:  请求.UserClassId,
-		RegisterTime: 请求.RegisterTime,
-	}
-	_, err = service.NewAppUser(c, &tx, 请求.AppId).Create(&局_信息)
-	if err != nil {
-		err = errors.Join(err, errors.New("添加失败"))
-		return
-	}
-	response.OkWithMessage("添加成功", c)
-
-	if 局_信息.VipNumber != 0 {
-		go log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, &tx, 请求.AppId).Uid取User(请求.AppId, 请求.Uid), c.ClientIP(), fmt.Sprintf("管理员(%v),新增用户携带积分:%v", c.GetInt("Uid"), 局_信息.VipNumber), 局_信息.VipNumber, 请求.AppId, 1)
-	}
-	return
-}
-
 // 批量修改状态
 func (C *AppUser) Set修改状态(c *gin.Context) {
 	var 请求 struct {
@@ -485,46 +375,6 @@ func (C *AppUser) Set修改状态(c *gin.Context) {
 	}
 
 	response.OkWithMessage("修改成功", c)
-	return
-}
-
-// 批量维护 增减时间点数
-func (C *AppUser) Set批量维护_增减时间点数(c *gin.Context) {
-	var 请求 struct {
-		Id     []int `json:"Id" binding:"required,gt=0" zh:"Id数组"` //用户id数组
-		AppId  int   `json:"AppId" binding:"required,min=1"`
-		Status int   `json:"Status"`
-	}
-	if !C.ToJSON(c, &请求) {
-		return
-	}
-
-	if len(请求.Id) == 0 {
-		response.FailWithMessage("Id数组为空", c)
-		return
-	}
-	var err error
-	defer func() {
-		if err != nil {
-			response.FailWithMessage(err.Error(), c)
-		}
-	}()
-	var tx = *global.GVA_DB
-	if 请求.Status > 0 {
-		err = service.NewAppUser(c, &tx, 请求.AppId).Id点数增减_批量(请求.Id, int64(请求.Status), true)
-	} else {
-		err = service.NewAppUser(c, &tx, 请求.AppId).Id点数增减_批量(请求.Id, int64(-请求.Status), false)
-	}
-
-	if err != nil {
-		return
-	}
-
-	response.OkWithMessage("修改成功", c)
-
-	for _, 局_id := range 请求.Id {
-		log.L_log.Log_写积分点数时间日志(service.NewAppUser(c, &tx, 请求.AppId).Id取User(请求.AppId, 局_id), c.ClientIP(), "管理员"+service.NewAdmin(c, &tx).Id取User(c.GetInt("Uid"))+"批量增减点数", float64(请求.Status), 请求.AppId, S三元(service.NewAppInfo(c, &tx).App是否为计点(请求.AppId), 2, 3))
-	}
 	return
 }
 

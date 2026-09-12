@@ -582,7 +582,7 @@ func Get余额充值消费统计(c *gin.Context) []gin.H {
 	Data[0] = gin.H{"name": "充值金额", "type": "line", "data": 局_数量}
 
 	global.GVA_DB.Model(dbm.DB_LogMoney{}).
-		Select("Count(case when ( Time between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then Count else null end) as  '1' ",
+		Select("SUM(case when ( Time between "+时间处理函数(-6)+" and "+时间处理函数(-5)+") then Count else null end) as  '1' ",
 			"SUM(case when ( Time between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then Count else null end) as  '2' ",
 			"SUM(case when ( Time between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then Count else null end) as  '3' ",
 			"SUM(case when ( Time between "+时间处理函数(-3)+" and "+时间处理函数(-2)+") then Count else null end) as  '4' ",
@@ -642,7 +642,7 @@ func Get积分点数消费统计(c *gin.Context) []gin.H {
 			"SUM(case when ( Time between "+时间处理函数(-5)+" and "+时间处理函数(-4)+") then Count else null end) as  '2' ",
 			"SUM(case when ( Time between "+时间处理函数(-4)+" and "+时间处理函数(-3)+") then Count else null end) as  '3' ",
 			"SUM(case when ( Time between "+时间处理函数(-3)+" and "+时间处理函数(-2)+") then Count else null end) as  '4' ",
-			"SUM(case when ( Time between "+时间处理函数(-2)+" and "+时间处理函数(-0)+") then Count else null end) as  '5' ",
+			"SUM(case when ( Time between "+时间处理函数(-2)+" and "+时间处理函数(-1)+") then Count else null end) as  '5' ",
 			"SUM(case when ( Time between "+时间处理函数(-1)+" and "+时间处理函数(0)+") then Count else null end) as  '6' ",
 			"SUM(case when ( Time between "+时间处理函数(0)+" and "+时间处理函数(1)+") then Count else null end) as  '7' ").
 		Order("").Where("Type=1").

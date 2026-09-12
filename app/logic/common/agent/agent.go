@@ -68,6 +68,10 @@ func (j *agent) D代理分成计算(c *gin.Context, 代理id int, 局_总计金�
 }
 
 func (j *agent) Id功能权限检测(c *gin.Context, 代理ID, 权限代号 int) bool {
+	if 代理ID == 1 {
+		//超级管理员默认拥有全部代理功能权限
+		return true
+	}
 	var 临时 int
 	db := *global.GVA_DB
 	db.Model(dbm.Db_Agent_卡类授权{}).Select("1").Where("KId=?", 权限代号).Where("Uid=?", 代理ID).Take(&临时)
