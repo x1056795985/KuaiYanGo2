@@ -48,6 +48,7 @@ func InitDbTables(c *gin.Context) {
 
 		dbm.DB_LogMoney{},
 		dbm.DB_LogLogin{},
+		dbm.DB_RmbWithdraw{},
 		dbm.DB_RmbWithdrawLog{},
 
 		dbm.DB_LogUserMsg{},
