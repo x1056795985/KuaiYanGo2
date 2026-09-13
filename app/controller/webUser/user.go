@@ -77,8 +77,9 @@ func (C *User) NewUserInfo(c *gin.Context) {
 
 // 密码找回或修改_密保手机
 func (C *User) GetPwSendSms(c *gin.Context) {
-	//{"user":"aaaaaa","phoneCaptchaValue":"","phoneCaptchaId":"","newPassword":"ssssss","captchaId":"sC2rCHYoPgUVyXXjJW","captchaValue":"69|123,133|116,165|115,259|119"}
+	//{"appId":10001,"user":"aaaaaa","phoneCaptchaValue":"","phoneCaptchaId":"","newPassword":"ssssss","captchaId":"sC2rCHYoPgUVyXXjJW","captchaValue":"69|123,133|116,165|115,259|119"}
 	var 请求 struct {
+		AppId         int    `json:"appId" zh:"应用id"`
 		User          string `json:"user" binding:"required,min=6,max=190" zh:"用户名"`
 		CaptchaId     string `json:"captchaId" zh:"验证码id"`
 		CaptchaValue  string `json:"captchaValue" zh:"验证码值"`
@@ -87,16 +88,24 @@ func (C *User) GetPwSendSms(c *gin.Context) {
 	if !C.ToJSON(c, &请求) {
 		return
 	}
-	//校验行为验证码,防止短信被刷
-	if !captcha.VerifyClick(请求.CaptchaId, 请求.CaptchaValue, true) {
-		response.FailWithMessage(c, "验证码错误")
-		return
-	}
 	var info = struct {
-		user dbm.DB_User
+		网页用户中心配置 dbm.DB_AppInfoWebUser
+		user     dbm.DB_User
 	}{}
 	var err error
 	tx := *global.GVA_DB
+	info.网页用户中心配置, err = service.NewAppInfoWebUser(c, &tx).Info(请求.AppId)
+	if err != nil || info.网页用户中心配置.Status != 1 {
+		response.FailWithMessage(c, constant.C常_关闭提示)
+		return
+	}
+	//校验行为验证码,防止短信被刷,与SendSms接口一致,按应用配置开关校验,关闭时前端不弹验证码无需校验
+	if info.网页用户中心配置.CaptchaSendSms == 1 {
+		if !captcha.VerifyClick(请求.CaptchaId, 请求.CaptchaValue, true) {
+			response.FailWithMessage(c, "验证码错误")
+			return
+		}
+	}
 	info.user, err = service.NewUser(c, &tx).InfoName(请求.User)
 	if err != nil {
 		response.FailWithMessage(c, "用户不存在")
