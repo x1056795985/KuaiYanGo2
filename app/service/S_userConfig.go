@@ -129,19 +129,29 @@ func (s *UserConfig) P批量置值(DB_PublicData []dbm.DB_UserConfig) error {
 	return s.db.Model(dbm.DB_UserConfig{}).Save(DB_PublicData).Error
 }
 
-// P批量置值2 批量置值(按Appid, Uid数组, Name)
-func (s *UserConfig) P批量置值2(Appid int, Uid []int, Name string, Value string) error {
+// 批量置值(按Appid, Uid数组, Name)
+func (s *UserConfig) P批量置值2(Appid int, map_id_user map[int]string, Name string, Value string) error {
+	局_uids := make([]int, len(map_id_user))
+	for k, _ := range map_id_user {
+		局_uids = append(局_uids, k)
+	}
+
 	if Value == "" {
-		return s.db.Model(dbm.DB_UserConfig{}).Where("AppId=?", Appid).Where("Uid IN ?", Uid).Where("Name=?", Name).Delete("").Error
+		return s.db.Model(dbm.DB_UserConfig{}).Where("AppId=?", Appid).Where("Uid IN ?", 局_uids).Where("Name=?", Name).Delete("").Error
 	}
 
 	var 局_数据 []dbm.DB_UserConfig
-	局_数据 = make([]dbm.DB_UserConfig, len(Uid))
-	for i, v := range Uid {
-		局_数据[i].AppId = Appid
-		局_数据[i].Uid = v
-		局_数据[i].Name = Name
-		局_数据[i].Value = Value
+	局_数据 = make([]dbm.DB_UserConfig, len(map_id_user))
+	for k, v := range map_id_user {
+		局_数据 = append(局_数据, dbm.DB_UserConfig{
+			AppId:      Appid,
+			Uid:        k,
+			User:       v,
+			Name:       Name,
+			Value:      Value,
+			Time:       time.Now().Unix(),
+			UpdateTime: time.Now().Unix(),
+		})
 	}
 
 	return s.db.Model(dbm.DB_UserConfig{}).Save(局_数据).Error

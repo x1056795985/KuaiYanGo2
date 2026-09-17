@@ -522,7 +522,16 @@ func (C *AppUserFull) SetBatchSetUserConfig(c *gin.Context) {
 		return
 	}
 	db := *global.GVA_DB
-	err := service.NewUserConfig(c, &db).P批量置值2(请求.AppId, 请求.Uids, 请求.Name, 请求.Value)
+
+	局_map_id_user := make(map[int]string)
+	for _, 局_uid := range 请求.Uids {
+		局_User := service.NewAppUser(c, &db, 请求.AppId).Uid取User(请求.AppId, 局_uid)
+		if 局_User != "" {
+			局_map_id_user[局_uid] = 局_User
+		}
+	}
+
+	err := service.NewUserConfig(c, &db).P批量置值2(请求.AppId, 局_map_id_user, 请求.Name, 请求.Value)
 	if err != nil {
 		response.FailWithMessage("修改失败", c)
 		return

@@ -1,144 +1,68 @@
 package captcha
 
 import (
-	"bytes"
-	"embed"
 	"encoding/base64"
-	"fmt"
+	"errors"
 	"image"
-	"image/color"
-	"image/draw"
-	"image/png"
-	"math"
+	"math/rand"
 	"strconv"
 	"strings"
-	"sync"
 
-	drawx "golang.org/x/image/draw"
-	"golang.org/x/image/math/f64"
+	"server/app/logic/common/captcha/clickItem"
 )
 
-const (
-	clickColumns       = 7
-	clickRows          = 3
-	iconSize           = 48
-	clickCount         = 4
-	maxClickDifficulty = clickColumns*clickRows - clickCount - 1
-	imageDataPrefix    = "data:image/png;base64,"
-)
-
-var (
-	//go:embed icon/*.png
-	iconFiles embed.FS
-
-	assetsOnce sync.Once
-	assets     clickAssets
-	assetsErr  error
-	bufferPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
-	pngEncoder = png.Encoder{
-		CompressionLevel: png.BestSpeed,
-		BufferPool:       &captchaPNGBufferPool,
-	}
-	captchaPNGBufferPool pngBufferPool
-)
-
-type pngBufferPool struct {
-	pool sync.Pool
+// 集_点击题型表 已注册的题型成员及其抽取权重：
+// 权重即灰度机制，新题型以小权重上线观察，被攻破的题型可动态降权。
+var 集_点击题型表 = []结构_题型项{
+	{题型: clickItem.T题_静态扰动{}, 权重: 6},
+	{题型: clickItem.T题_遮挡脑补{}, 权重: 3},
 }
 
-func (p *pngBufferPool) Get() *png.EncoderBuffer {
-	if value := p.pool.Get(); value != nil {
-		return value.(*png.EncoderBuffer)
-	}
-	return new(png.EncoderBuffer)
+// 结构_题型项 注册表条目：题型实现与抽取权重。
+type 结构_题型项 struct {
+	题型 点击_题型
+	权重 int
 }
 
-func (p *pngBufferPool) Put(buffer *png.EncoderBuffer) {
-	p.pool.Put(buffer)
+// 点击_题型 点击式验证码题型成员的统一契约。
+// 所有题型的产物都归一化为"画布帧序列+有序目标矩形"，
+// 因此验证协议、存储格式与前端交互完全不变。
+// 新增题型只需在 clickItem 包实现本接口并注册到 集_点击题型表。
+type 点击_题型 interface {
+	// Q题型_名称 返回题型名称，用于日志与失败率统计。
+	Q题型_名称() string
+	// T题_生成 按难度生成一题，随机源由入口层注入(crypto种子)。
+	T题_生成(难度 int, 随机 *rand.Rand) (*clickItem.T题_挑战, error)
 }
 
-type clickAssets struct {
-	prompt   image.Image
-	blank    image.Image
-	original [91]image.Image
-	variants [91][]image.Image
-}
-
-// GenerateClick creates a click-in-order challenge. Difficulty controls the
-// number of distractors and is clamped to the supported range.
+//	创建一个按序点击挑战：从注册成员中加权随机抽取题型生成，
+//
+// 攻击者必须同时攻破所有已注册题型。difficulty 控制干扰图标数量。
 func GenerateClick(difficulty int) (id, dataURL string, err error) {
-	assetsOnce.Do(loadClickAssets)
-	if assetsErr != nil {
-		return "", "", assetsErr
-	}
-	if difficulty < 0 {
-		difficulty = 0
-	} else if difficulty > maxClickDifficulty {
-		difficulty = maxClickDifficulty
-	}
+	difficulty = 难度_钳制(difficulty)
 
 	id, err = randomToken(18, "23456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ")
 	if err != nil {
 		return "", "", err
 	}
-
-	icons := make([]int, 90)
-	for i := range icons {
-		icons[i] = i + 1
-	}
-	if err = secureShuffle(icons); err != nil {
+	局_随机, err := clickItem.X渲染_新建随机源()
+	if err != nil {
 		return "", "", err
 	}
-	icons = icons[:clickCount+difficulty]
-	selected := append([]int(nil), icons[:clickCount]...)
-	if err = secureShuffle(icons); err != nil {
+	局_挑战, err := 题型_抽取(difficulty, 局_随机)
+	if err != nil {
 		return "", "", err
 	}
 
-	grid := make([]int, clickColumns*clickRows)
-	leftPadding := (len(grid) - len(icons)) / 2
-	copy(grid[leftPadding:], icons)
-
-	background := image.NewRGBA(image.Rect(0, 0, clickColumns*iconSize, (clickRows+1)*iconSize))
-	draw.Draw(background, image.Rect(0, 0, 150, iconSize), assets.prompt, image.Point{}, draw.Src)
-	for i, iconID := range selected {
-		x := 150 + i*iconSize
-		draw.Draw(background, image.Rect(x, 0, x+iconSize, iconSize), assets.original[iconID], image.Point{}, draw.Over)
-	}
-	draw.Draw(background, image.Rect(0, iconSize-1, background.Bounds().Dx(), iconSize), image.NewUniform(color.Black), image.Point{}, draw.Src)
-
-	targets := make([]image.Rectangle, clickCount)
-	for index, iconID := range grid {
-		x := index % clickColumns * iconSize
-		y := index/clickColumns*iconSize + iconSize
-		rect := image.Rect(x, y, x+iconSize, y+iconSize)
-		icon := assets.blank
-		if iconID != 0 {
-			variant, randomErr := randomInt(len(assets.variants[iconID]))
-			if randomErr != nil {
-				return "", "", randomErr
-			}
-			icon = assets.variants[iconID][variant]
-			for selectedIndex, selectedID := range selected {
-				if selectedID == iconID {
-					targets[selectedIndex] = rect
-				}
-			}
-		}
-		draw.Draw(background, rect, icon, image.Point{}, draw.Over)
-	}
-
-	buffer := bufferPool.Get().(*bytes.Buffer)
-	buffer.Reset()
-	defer bufferPool.Put(buffer)
-	if err = pngEncoder.Encode(buffer, background); err != nil {
+	局_前缀, 局_数据, err := 编码_挑战图(局_挑战)
+	if err != nil {
 		return "", "", err
 	}
-	VerificationCodes.set(id, targets)
-	return id, imageDataPrefix + base64.StdEncoding.EncodeToString(buffer.Bytes()), nil
+	VerificationCodes.set(id, 局_挑战.M目标)
+	return id, 局_前缀 + base64.StdEncoding.EncodeToString(局_数据), nil
 }
 
-// VerifyClick validates four ordered x|y points and optionally consumes the challenge.
+// VerifyClick 校验四个有序的 x|y 坐标点，consume 为真时消费该挑战。
 func VerifyClick(id, answer string, consume bool) bool {
 	if id == "" || answer == "" {
 		return false
@@ -151,11 +75,11 @@ func VerifyClick(id, answer string, consume bool) bool {
 		return false
 	}
 	targets, ok := raw.([]image.Rectangle)
-	if !ok || len(targets) != clickCount {
+	if !ok || len(targets) != clickItem.T题_点击数 {
 		return false
 	}
 	points := strings.Split(answer, ",")
-	if len(points) != clickCount {
+	if len(points) != clickItem.T题_点击数 {
 		return false
 	}
 	for i, encoded := range points {
@@ -175,79 +99,45 @@ func VerifyClick(id, answer string, consume bool) bool {
 	return true
 }
 
-func loadClickAssets() {
-	assets.prompt, assetsErr = decodeEmbeddedImage("icon/请依次点击.png")
-	if assetsErr != nil {
-		return
+// 难度_钳制 将难度限制到题型支持的区间。
+func 难度_钳制(难度 int) int {
+	if 难度 < 0 {
+		return 0
 	}
-	assets.blank, assetsErr = decodeEmbeddedImage("icon/0.png")
-	if assetsErr != nil {
-		return
+	if 难度 > clickItem.T题_最大难度 {
+		return clickItem.T题_最大难度
 	}
-	angles := [...]float64{-36, -24, -12, 0, 12, 24, 36}
-	for iconID := 1; iconID <= 90; iconID++ {
-		var source image.Image
-		source, assetsErr = decodeEmbeddedImage(fmt.Sprintf("icon/%d.png", iconID))
-		if assetsErr != nil {
-			return
-		}
-		assets.original[iconID] = source
-		distorted := distort(source, 10, 0.05)
-		variants := make([]image.Image, len(angles))
-		for i, angle := range angles {
-			variants[i] = rotate(distorted, angle)
-		}
-		assets.variants[iconID] = variants
-	}
+	return 难度
 }
 
-func decodeEmbeddedImage(name string) (image.Image, error) {
-	data, err := iconFiles.ReadFile(name)
-	if err != nil {
-		return nil, err
+// 题型_抽取 按权重随机抽一个成员生成挑战；
+// 成员生成失败或产物非法时降级到静态成员，保证可用性。
+func 题型_抽取(难度 int, 随机 *rand.Rand) (*clickItem.T题_挑战, error) {
+	局_总权重 := 0
+	for _, 局_项 := range 集_点击题型表 {
+		局_总权重 += 局_项.权重
 	}
-	img, err := png.Decode(bytes.NewReader(data))
-	if err != nil {
-		return nil, fmt.Errorf("decode captcha asset %s: %w", name, err)
-	}
-	return img, nil
-}
-
-func secureShuffle[T any](values []T) error {
-	for i := len(values) - 1; i > 0; i-- {
-		j, err := randomInt(i + 1)
-		if err != nil {
-			return err
+	局_抽中 := 随机.Intn(局_总权重)
+	局_题型 := 集_点击题型表[len(集_点击题型表)-1].题型
+	for _, 局_项 := range 集_点击题型表 {
+		if 局_抽中 < 局_项.权重 {
+			局_题型 = 局_项.题型
+			break
 		}
-		values[i], values[j] = values[j], values[i]
+		局_抽中 -= 局_项.权重
 	}
-	return nil
+
+	局_挑战, 局_错误 := 局_题型.T题_生成(难度, 随机)
+	if 局_错误 == nil && 题_合法(局_挑战) {
+		return 局_挑战, nil
+	}
+	if 局_挑战, 局_错误 = (clickItem.T题_静态扰动{}).T题_生成(难度, 随机); 局_错误 != nil {
+		return nil, errors.New("点击验证码题型生成失败: " + 局_错误.Error())
+	}
+	return 局_挑战, nil
 }
 
-func rotate(source image.Image, angle float64) image.Image {
-	radians := angle * math.Pi / 180
-	center := float64(iconSize) / 2
-	cosine, sine := math.Cos(radians), math.Sin(radians)
-	matrix := f64.Aff3{
-		cosine, -sine, center - cosine*center + sine*center,
-		sine, cosine, center - sine*center - cosine*center,
-	}
-	destination := image.NewRGBA(image.Rect(0, 0, iconSize, iconSize))
-	drawx.BiLinear.Transform(destination, matrix, source, source.Bounds(), draw.Over, nil)
-	return destination
-}
-
-func distort(source image.Image, amplitude, frequency float64) image.Image {
-	bounds := source.Bounds()
-	destination := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
-	for y := 0; y < bounds.Dy(); y++ {
-		offset := int(amplitude * math.Sin(float64(y)*frequency))
-		for x := 0; x < bounds.Dx(); x++ {
-			sourceX := x + offset
-			if sourceX >= 0 && sourceX < bounds.Dx() {
-				destination.Set(x, y, source.At(bounds.Min.X+sourceX, bounds.Min.Y+y))
-			}
-		}
-	}
-	return destination
+// 题_合法 校验挑战产物的基本完整性。
+func 题_合法(挑战 *clickItem.T题_挑战) bool {
+	return 挑战 != nil && len(挑战.Z帧) > 0 && len(挑战.M目标) == clickItem.T题_点击数
 }
