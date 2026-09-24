@@ -37,6 +37,7 @@ func (j *publicJs) Z置值2(c *gin.Context, PublicJs dbm.DB_PublicJs) error {
 	m["Value"] = PublicJs.Value
 	m["IsVip"] = PublicJs.IsVip
 	m["Note"] = PublicJs.Note
+	m["CategoryId"] = PublicJs.CategoryId
 	db := *global.GVA_DB
 	err = db.Model(dbm.DB_PublicJs{}).Where("Id=?", PublicJs.Id).Updates(&m).Error
 	if err == nil && global.H缓存 != nil { //删除缓存

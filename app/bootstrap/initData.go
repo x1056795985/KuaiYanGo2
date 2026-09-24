@@ -34,6 +34,7 @@ func InitDbTables(c *gin.Context) {
 		// 系统模块表
 		dbm.DB_PublicData{},
 		dbm.DB_PublicJs{},
+		dbm.DB_PublicJsCategory{},
 		dbm.DB_UserConfig{},
 
 		dbm.DB_Admin{},

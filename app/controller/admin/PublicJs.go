@@ -32,12 +32,13 @@ type 请求_PublicJsGetInfo struct {
 }
 
 type 请求_PublicJsGetList struct {
-	AppId    int    `json:"appId"`
-	Page     int    `json:"page"`
-	Size     int    `json:"size"`
-	Type     int    `json:"type"`
-	Keywords string `json:"keywords"`
-	Order    int    `json:"order"`
+	AppId      int    `json:"appId"`
+	Page       int    `json:"page"`
+	Size       int    `json:"size"`
+	Type       int    `json:"type"`
+	Keywords   string `json:"keywords"`
+	Order      int    `json:"order"`
+	CategoryId int    `json:"CategoryId"` //分类筛选 0=全部 -1=未分类 >0=指定分类
 }
 
 type 请求_PublicJsDelete struct {
@@ -127,6 +128,11 @@ func (C *PublicJsCtrl) GetList(c *gin.Context) {
 	}
 	if 请求.AppId > 0 {
 		局_DB.Where("AppId = ?", 请求.AppId)
+	}
+	if 请求.CategoryId > 0 {
+		局_DB.Where("CategoryId = ?", 请求.CategoryId)
+	} else if 请求.CategoryId < 0 { //-1=只看未分类
+		局_DB.Where("CategoryId = 0")
 	}
 	if 请求.Keywords != "" {
 		switch 请求.Type {

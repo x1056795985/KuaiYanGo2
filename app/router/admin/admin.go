@@ -312,6 +312,18 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		}
 	}
 
+	// ========== 公共函数分类管理 ==========
+	局_PublicJsCategory := controller.NewPublicJsCategoryController()
+	{
+		adminRouter.POST("publicJs/category/getList", 局_PublicJsCategory.GetList)
+		adminRouter.POST("publicJs/category/new", 局_PublicJsCategory.New)
+		adminRouter.POST("publicJs/category/saveInfo", 局_PublicJsCategory.SaveInfo)
+		adminRouter.POST("publicJs/category/setFunctionCategory", 局_PublicJsCategory.SetFunctionCategory)
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
+			adminRouter.POST("publicJs/category/delete", 局_PublicJsCategory.Delete)
+		}
+	}
+
 	// ========== 系统设置 ==========
 	局_SetSystem := controller.NewSetSystemFullController()
 	{
