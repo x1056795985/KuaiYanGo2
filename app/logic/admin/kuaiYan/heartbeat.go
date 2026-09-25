@@ -38,7 +38,7 @@ func K快验_心跳() {
 	}
 	db := *global.GVA_DB
 	局_动态标记 := fmt.Sprintf("%s %dH%.2fG %dG %d协程,用户数:%d,卡总数:%d,在线数:%d",
-		utils.S三元(global.Q快验.J集_连接方式 == 0, "直连", "网关"),
+		utils.S三元(global.Q快验.J集_连接方式 == 0, "国内高防", "香港高防"),
 		runtime.NumCPU(),
 		utils.Float64除int64(utils.Int64到Float64(int64(局_设备信息.Ram.TotalMB)), 1024, 2),
 		局_设备信息.Disk.TotalGB,
