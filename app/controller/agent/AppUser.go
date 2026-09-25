@@ -17,11 +17,18 @@ import (
 	. "server/app/models/response"
 	"server/app/service"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type AppUser struct {
 	Common.Common
+}
+
+// 文本_转义Like 转义SQL LIKE通配符(\ % _),避免用户名中的下划线被当作单字符通配符导致误匹配
+func 文本_转义Like(值 string) string {
+	局_替换器 := strings.NewReplacer("\\", "\\\\", "%", "\\%", "_", "\\_")
+	return 局_替换器.Replace(值)
 }
 
 func NewAppUserController() *AppUser {
@@ -157,16 +164,16 @@ func (C *AppUser) GetList(c *gin.Context) {
 		case 2: //用户id
 			局_DB.Where(表名_AppUser+".Uid = ?", 请求.Keywords)
 		case 3: //用户名 '支持,号分割
-			局_用户名数组 := Z正则_取全部匹配子文本(请求.Keywords, "([A-Za-z0-9]+)")
+			局_用户名数组 := Z正则_取全部匹配子文本(请求.Keywords, "([A-Za-z0-9_]+)")
 			if info.AppInfo.AppType == 3 || info.AppInfo.AppType == 4 {
 				if len(局_用户名数组) == 1 {
-					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where db_Ka.Name like ? )", "%"+请求.Keywords+"%"))
+					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where db_Ka.Name like ? )", "%"+文本_转义Like(请求.Keywords)+"%"))
 				} else {
 					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where db_Ka.Name IN ? )", 局_用户名数组))
 				}
 			} else {
 				if len(局_用户名数组) == 1 {
-					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where db_User.User  LIKE ? )", "%"+请求.Keywords+"%"))
+					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where db_User.User  LIKE ? )", "%"+文本_转义Like(请求.Keywords)+"%"))
 				} else {
 					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where db_User.User IN ? )", 局_用户名数组))
 				}

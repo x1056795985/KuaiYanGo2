@@ -17,6 +17,7 @@ import (
 	"server/app/models/old/response"
 	"server/app/service"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -28,6 +29,12 @@ const 集_缓存key前缀_批量维护全部用户 = "appUser_batch_update_all_"
 
 func NewAppUserFullController() *AppUserFull {
 	return &AppUserFull{}
+}
+
+// 文本_转义Like 转义SQL LIKE通配符(\ % _),避免用户名中的下划线被当作单字符通配符导致误匹配
+func 文本_转义Like(值 string) string {
+	局_替换器 := strings.NewReplacer("\\", "\\\\", "%", "\\%", "_", "\\_")
+	return 局_替换器.Replace(值)
 }
 
 type 结构_批量维护全部用户缓存 struct {
@@ -171,16 +178,16 @@ func (C *AppUserFull) GetList(c *gin.Context) {
 		case 2:
 			局_DB.Where(表名_AppUser+".Uid = ?", 请求.Keywords)
 		case 3:
-			局_用户名数组 := utils.Z正则_取全部匹配子文本(请求.Keywords, "([A-Za-z0-9]+)")
+			局_用户名数组 := utils.Z正则_取全部匹配子文本(请求.Keywords, "([A-Za-z0-9_]+)")
 			if service.NewAppInfo(c, &db).App是否为卡号(请求.AppId) {
 				if len(局_用户名数组) == 1 {
-					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where db_Ka.Name like ? )", "%"+请求.Keywords+"%"))
+					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where db_Ka.Name like ? )", "%"+文本_转义Like(请求.Keywords)+"%"))
 				} else {
 					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_Ka where db_Ka.Name IN ? )", 局_用户名数组))
 				}
 			} else {
 				if len(局_用户名数组) == 1 {
-					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where db_User.User  LIKE ? )", "%"+请求.Keywords+"%"))
+					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where db_User.User  LIKE ? )", "%"+文本_转义Like(请求.Keywords)+"%"))
 				} else {
 					局_DB.Where(表名_AppUser+".Uid In ?", gorm.Expr("(Select Id from db_User where db_User.User IN ? )", 局_用户名数组))
 				}

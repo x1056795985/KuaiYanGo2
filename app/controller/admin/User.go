@@ -185,9 +185,9 @@ func (C *UserCtrl) GetUserList(c *gin.Context) {
 		case 1:
 			局_DB.Where("Id = ?", 请求.Keywords)
 		case 2:
-			局_文本数组 := utils.Z正则_取全部匹配子文本(请求.Keywords, "([A-Za-z0-9]+)")
+			局_文本数组 := utils.Z正则_取全部匹配子文本(请求.Keywords, "([A-Za-z0-9_]+)")
 			if len(局_文本数组) == 1 {
-				局_DB.Where("User  LIKE ?", "%"+请求.Keywords+"%")
+				局_DB.Where("User  LIKE ?", "%"+文本_转义Like(请求.Keywords)+"%")
 			} else {
 				局_DB.Where("User IN ? ", 局_文本数组)
 			}
