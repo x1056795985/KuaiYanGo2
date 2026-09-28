@@ -184,6 +184,7 @@ func (s *Setting) SaveAgentUserConfig(c *gin.Context) {
 		})
 		if err != nil {
 			response.FailWithMessage(请求[索引].Name+",保存失败:"+err.Error(), c)
+			return
 		}
 	}
 

@@ -313,13 +313,16 @@ func (C *User) SetBaseInfo(c *gin.Context) {
 		}
 		_, err = service.NewUser(c, &tx).Update(info.likeInfo.Uid, map[string]interface{}{"Phone": 请求.Value})
 
+	default:
+		response.FailWithMessage(c, "不支持的操作类型")
+		return
 	}
 	if err != nil {
 		response.FailWithMessage(c, err.Error())
 		return
 	}
 
-	response.OkWithMessage(c, "注销成功")
+	response.OkWithMessage(c, "保存成功")
 	return
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/wechatpay-apiv3/wechatpay-go/services/refunddomestic"
 	WXutils "github.com/wechatpay-apiv3/wechatpay-go/utils"
 	"log"
+	"math"
 	"net/http"
 	"server/app/logic/agent/L_setting"
 	"server/app/logic/common/rmbPay"
@@ -102,15 +103,14 @@ func (j 微信支付) D订单创建(c *gin.Context, 参数 *m.PayParams) (respon
 			SupportFapiao: core.Bool(false),
 			Amount: &native.Amount{
 				Currency: core.String("CNY"),
-				Total:    core.Int64(int64(int(参数.Rmb * 100))),
+				Total:    core.Int64(int64(math.Round(参数.Rmb * 100))),
 			},
 			Detail: &native.Detail{
-				CostPrice: core.Int64(608800),
 				GoodsDetail: []native.GoodsDetail{{
 					GoodsName:        core.String(参数.S商品名称),
 					MerchantGoodsId:  core.String(参数.PayOrder),
 					Quantity:         core.Int64(1),
-					UnitPrice:        core.Int64(int64(int(参数.Rmb * 100))),
+					UnitPrice:        core.Int64(int64(math.Round(参数.Rmb * 100))),
 					WechatpayGoodsId: core.String("1001"),
 				}},
 				InvoiceId: core.String(参数.PayOrder),
@@ -155,8 +155,8 @@ func (j 微信支付) D订单退款(c *gin.Context, 参数 *m.PayParams) (err er
 			FundsAccount: refunddomestic.REQFUNDSACCOUNT_AVAILABLE.Ptr(),
 			Amount: &refunddomestic.AmountReq{
 				Currency: core.String("CNY"),
-				Refund:   core.Int64(int64(int(参数.Rmb * 100))),
-				Total:    core.Int64(int64(int(参数.Rmb * 100))),
+				Refund:   core.Int64(int64(math.Round(参数.Rmb * 100))),
+				Total:    core.Int64(int64(math.Round(参数.Rmb * 100))),
 			},
 		},
 	)
@@ -228,6 +228,10 @@ func (j 微信支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (
 	if string(局_回调.GetStringBytes("out_trade_no")) == 参数.PayOrder && string(局_回调.GetStringBytes("trade_state")) == "SUCCESS" {
 		//这里是支付成功的回调
 		参数.PayOrder2 = string(局_回调.GetStringBytes("transaction_id"))
+		//记录实付金额(payer_total为用户实付金额,单位分,优惠抵扣时可能小于订单金额)
+		if 局_实付金额, err2 := strconv.ParseFloat(string(局_回调.GetStringBytes("amount", "payer_total")), 64); err2 == nil {
+			参数.ActualRmb = 局_实付金额 / 100
+		}
 		err = 参数.E额外信息.Set("买家openid", string(局_回调.GetStringBytes("payer", "openid")))
 	} else {
 		err = errors.New(string(局_回调.GetStringBytes("trade_state")))

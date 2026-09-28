@@ -177,6 +177,14 @@ func (j 支付宝当面付) D订单支付回调(c *gin.Context, 参数 *m.PayPar
 	//fmt.Printf("订单号:%s;状态:%s\n,%v", noti.OutTradeNo, noti.TradeStatus, noti)
 	if 参数.PayOrder == noti.OutTradeNo && noti.TradeStatus == "TRADE_SUCCESS" {
 		参数.PayOrder2 = noti.TradeNo
+		//记录实付金额(买家实付金额,优惠/红包抵扣时可能小于订单金额)
+		局_实付金额文本 := noti.BuyerPayAmount
+		if 局_实付金额文本 == "" {
+			局_实付金额文本 = noti.ReceiptAmount
+		}
+		if 局_实付金额, err2 := strconv.ParseFloat(局_实付金额文本, 64); err2 == nil {
+			参数.ActualRmb = 局_实付金额
+		}
 		err = 参数.E额外信息.Set("买家支付宝用户号", noti.BuyerId)
 		err = 参数.E额外信息.Set("买家支付宝账号", noti.BuyerLogonId)
 		err = 参数.E额外信息.Set("卖家支付宝用户号", noti.SellerId)

@@ -182,6 +182,7 @@ func (C *AgentUser) SetSort(c *gin.Context) {
 	row, err := S.Update(请求.Id, map[string]interface{}{"Sort": 请求.Sort})
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	response.OkWithMessage("操作成功,数量:"+strconv.Itoa(int(row)), c)
 	return

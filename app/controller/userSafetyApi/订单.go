@@ -359,7 +359,7 @@ func UserApi_余额购买充值卡(c *gin.Context) {
 
 	局_卡信息, err2 := ka.L_ka.Ka单卡创建(c, 局_卡类.Id, 局_ctx.Z在线信息.Uid, 局_ctx.Z在线信息.User, "用户"+局_ctx.Z在线信息.User+"自助通过Api购卡", "", 0)
 	if err2 != nil {
-		新余额, err = user.L_user.Id余额增减(c, 局_ctx.Z在线信息.Uid, 局_卡类.Money, true)
+		新余额, err = user.L_user.Id余额增减(c, 局_ctx.Z在线信息.Uid, 局_价格组成.付款金额, true)
 		if err != nil {
 			//用户余额购卡,减余额成功,制卡失败,请手动处理,本次错误原因
 			局_日志 := dbm.DB_LogUserMsg{

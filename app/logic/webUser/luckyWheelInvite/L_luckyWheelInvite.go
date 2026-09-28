@@ -87,10 +87,10 @@ func (j *luckyWheelInvite) T邀请注册成功后处理(c *gin.Context, AppId, �
 			return e
 		}
 
-		// 增加抽奖次数
+		// 增加抽奖次数(原子自增,防止覆盖并发扣减导致丢失更新)
 		_, e := service.NewLuckyWheelUser(c, tx).UpdateMap([]int{info.luckyWheelUser.Id}, map[string]interface{}{
-			"remainCount":      info.luckyWheelUser.RemainCount + info.LuckyWheelInfo.InviteGiveCount,
-			"totalInviteCount": info.luckyWheelUser.TotalInviteCount + info.LuckyWheelInfo.InviteGiveCount,
+			"remainCount":      gorm.Expr("remainCount + ?", info.LuckyWheelInfo.InviteGiveCount),
+			"totalInviteCount": gorm.Expr("totalInviteCount + ?", info.LuckyWheelInfo.InviteGiveCount),
 			"updateTime":       局_当前时间戳,
 		})
 		return e

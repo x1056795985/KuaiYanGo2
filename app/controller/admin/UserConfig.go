@@ -68,9 +68,7 @@ func (C *UserConfig) Info(c *gin.Context) {
 
 	var DB_UserConfig dbm.DB_UserConfig
 	db := *global.GVA_DB
-	service.NewUserConfig(c, &db).Q取值(请求.AppId, 请求.Uid, 请求.Name)
-
-	err := db.Model(dbm.DB_UserConfig{}).Where("AppId= ?", 请求.AppId).Where("Name= ?", 请求.Name).First(&DB_UserConfig).Error
+	err := db.Model(dbm.DB_UserConfig{}).Where("AppId= ?", 请求.AppId).Where("Uid= ?", 请求.Uid).Where("Name= ?", 请求.Name).First(&DB_UserConfig).Error
 	if err != nil {
 		response.FailWithMessage("获取公共变量失败,可能联合主键不存在", c)
 		return

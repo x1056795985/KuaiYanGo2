@@ -82,6 +82,9 @@ func (A *AgentOtherFunc) SetAppUserKey(c *gin.Context) {
 	}
 
 	局_信息 := "修改绑定信息 '" + 局_用户详情.Key + "'  ->  '" + 请求.Key + "'"
+	if 局_用户详情.AgentUid == 0 {
+		局_信息 += "(操作无归属用户,原归属代理Uid:0)"
+	}
 	log.L_log.Log_写代理操作日志(c.GetInt("Uid"), agentLevel.L_agentLevel.Q取Id代理级别(c, c.GetInt("Uid")), 请求.AppId, 局_AppUserId, 局_用户名, dbm.D代理功能_修改用户绑定, c.ClientIP(), 局_信息)
 	response.OkWithMessage("操作成功", c)
 }

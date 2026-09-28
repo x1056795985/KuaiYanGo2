@@ -109,7 +109,7 @@ func (j *checkTaskLog) T邀请注册成功后处理(c *gin.Context, AppId, 邀�
 			AppId:        AppId,
 			UserId:       邀请人,
 			CreatedAt:    time.Now().Unix(),
-			Number:       int64(info.CheckInInfo.InviteGivePoints),
+			Number:       int64(info.CheckInInfo.ShareGivePoints),
 			Msg:          "成功邀请好友" + utils.W文本_去除敏感信息(info.user.User),
 			NumberBefore: info.checkInUser.CheckInScore,
 			NumberAfter:  info.checkInUser.CheckInScore + info.CheckInInfo.ShareGivePoints,

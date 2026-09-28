@@ -2,8 +2,9 @@ package userSafetyApi
 
 import (
 	"fmt"
+	"sync/atomic"
+
 	"server/app/global"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 	controller "server/app/controller/userSafetyApi"
@@ -101,53 +102,69 @@ type 路由信息 struct {
 
 var J集_UserAPi路由_加密 加密路由信息
 
+// 加密路由快照 整体不可变, 更新时在局部构建全新快照后原子替换指针(Copy-On-Write),
+// 读写两侧均无锁, 且永远不会同时访问同一个map, 从根源上避免并发map读写崩溃
+type 加密路由快照 struct {
+	L路由md5  string //每次更新加密路由缓存, 都更新这个索引,每次读取路由,都检测索引是否和缓存相同,如果不同,更新索引
+	J加密路由 map[string]string
+}
+
 type 加密路由信息 struct {
-	L路由md5 string //每次更新加密路由缓存, 都更新这个索引,每次读取路由,都检测索引是否和缓存相同,如果不同,更新索引
-	J加密路由  map[string]string
-	D读写锁   sync.RWMutex
+	D快照 atomic.Pointer[加密路由快照]
+}
+
+// Q取快照 返回当前快照; 从未初始化过时返回空快照(只读, 不回写)
+func (j *加密路由信息) Q取快照() *加密路由快照 {
+	if 局_快照 := j.D快照.Load(); 局_快照 != nil {
+		return 局_快照
+	}
+	return &加密路由快照{}
+}
+
+// Q加密是否开启 加密路由表是否非空
+func (j *加密路由信息) Q加密是否开启() bool {
+	return len(j.Q取快照().J加密路由) > 0
 }
 
 func (j *加密路由信息) G更新md5APi名称(盐值 string) {
+	// 并发调用安全: 同盐值构建结果幂等, 后Store者胜出, 构建过程不触碰旧快照
+	局_新快照 := &加密路由快照{J加密路由: make(map[string]string, len(J集_UserAPi路由)+1)}
 	if 盐值 == "" {
-		j.J加密路由 = make(map[string]string, 0)
+		j.D快照.Store(局_新快照)
 		return
 	}
-	if !j.D读写锁.TryLock() {
-		return
-	}
-	defer j.D读写锁.Unlock()
 
-	j.J加密路由 = make(map[string]string, len(J集_UserAPi路由)+1)
 	局_临时文本 := utils2.Md5String("GetToken" + 盐值)
-	j.J加密路由[局_临时文本] = "GetToken"
-
-	fmt.Printf("API名称加密已更新:%s => %s\n", j.J加密路由[局_临时文本], 局_临时文本)
+	局_新快照.J加密路由[局_临时文本] = "GetToken"
+	fmt.Printf("API名称加密已更新:%s => %s\n", "GetToken", 局_临时文本)
 	局_路由md5原值 := ""
 	for 局_用户api := range J集_UserAPi路由 {
 		局_哈希后的值 := utils2.Md5String(局_用户api + 盐值)
-		j.J加密路由[局_哈希后的值] = 局_用户api
+		局_新快照.J加密路由[局_哈希后的值] = 局_用户api
 		fmt.Printf("API名称加密已更新:%s => %s\n", 局_用户api, 局_哈希后的值)
 		局_路由md5原值 = 局_路由md5原值 + 局_哈希后的值
 	}
 
-	j.L路由md5 = utils2.Md5String(局_路由md5原值)
-	global.H缓存.Set("J集_UserAPi加密路由md5", j.L路由md5, -1)
+	局_新快照.L路由md5 = utils2.Md5String(局_路由md5原值)
+	global.H缓存.Set("J集_UserAPi加密路由md5", 局_新快照.L路由md5, -1)
+	j.D快照.Store(局_新快照) //最后一步原子发布, 读者要么看到旧表要么看到新表
 }
 
 func (j *加密路由信息) Q取md5APi名称(md5值 string) (string, bool) {
 	if len(md5值) != 32 {
 		return "", false
 	}
-	局_用户api, ok := j.J加密路由[md5值]
+	局_快照 := j.Q取快照()
+	局_用户api, ok := 局_快照.J加密路由[md5值]
 	if ok {
 		return 局_用户api, ok
 	}
 
 	云_L路由md5, ok := global.H缓存.Get("J集_UserAPi加密路由md5")
-	if !ok || 云_L路由md5 != j.L路由md5 {
+	if !ok || 云_L路由md5 != 局_快照.L路由md5 {
 		j.G更新md5APi名称(setting.Q系统设置().Y用户API加密盐)
 	}
 
-	局_用户api, ok = j.J加密路由[md5值]
+	局_用户api, ok = j.Q取快照().J加密路由[md5值]
 	return 局_用户api, ok
 }

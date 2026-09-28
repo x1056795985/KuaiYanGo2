@@ -114,6 +114,9 @@ func (A *AgentBase) Login(c *gin.Context) {
 	}
 
 	go log.L_log.Log_写登录日志(局_请求.Username, 局_客户端IP, "代理平台登录", 局_代理级别)
+
+	局_用户.PassWord = ""      //置空,不下发到前端
+	局_用户.SuperPassWord = "" //置空,不下发到前端
 	response.OkWithDetailed(Agent登录响应{
 		UserInfo: 局_用户,
 		Token:    局_在线信息.Token,

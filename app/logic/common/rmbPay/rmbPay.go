@@ -517,7 +517,8 @@ func (j *rmbPay) D订单回调(c *gin.Context) (响应信息 string, 响应代�
 				"Status":         参数.Status,
 				"ProcessingType": 参数.ProcessingType,
 				"Extra":          参数.Extra,
-				"Rmb":            参数.Rmb, //小叮当可能改变实际支付金额
+				"Rmb":            参数.Rmb,       //小叮当可能改变实际支付金额
+				"ActualRmb":      参数.ActualRmb, //实付金额
 			}).Error
 		return err //提交事务自动解锁
 	})
@@ -648,11 +649,11 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 			var 卡类ID, AppUserUid int
 
 			if 卡类ID = 参数.E额外信息.Get("KaClassId").Int(); 卡类ID == 0 {
-				return errors.New("订单id:%s,扩展信息KaClassId不正确")
+				return errors.New(fmt.Sprintf("订单id:%s,扩展信息KaClassId不正确", 参数.PayOrder))
 			}
 
 			if AppUserUid = 参数.E额外信息.Get("AppUserUid").Int(); AppUserUid == 0 {
-				return errors.New("订单id:%s,扩展信息AppUserUid不正确")
+				return errors.New(fmt.Sprintf("订单id:%s,扩展信息AppUserUid不正确", 参数.PayOrder))
 			}
 
 			if err = ka.L_ka.K卡类直冲_事务(c, 卡类ID, AppUserUid); err != nil {
@@ -796,7 +797,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 		参数.Note = 参数.Note + err.Error()
 		err = db.Model(dbm.DB_LogRMBPayOrder{}).
 			Where("Id=?", 参数.Id).
-			Updates(map[string]interface{}{"Note": 参数.Note + err.Error()}).Error
+			Updates(map[string]interface{}{"Note": 参数.Note}).Error
 		if err != nil {
 			global.GVA_LOG.Println("更新数据库失败!", err)
 		}
@@ -905,6 +906,8 @@ func (j *rmbPay) 代理分成(c *gin.Context, 参数 *m.PayParams, AgentMoney fl
 					Note:  str,
 				})
 			}
+		} else {
+			参数.E额外信息.Set("分成计算失败", err3.Error()) // 记录分成计算错误
 		}
 		// 分成结束============== 记录分成情况, 后续退款对应扣除
 		参数.E额外信息.Set("分成详细", 代理分成数据)

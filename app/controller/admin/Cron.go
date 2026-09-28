@@ -56,6 +56,7 @@ func (C *Cron) Create(c *gin.Context) {
 
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	if 请求.Status == 1 {
 		_ = functions.S刷新数据库定时任务(true)
@@ -110,6 +111,7 @@ func (C *Cron) Update(c *gin.Context) {
 	err := S.Update(&tx, 请求)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	_ = functions.S刷新数据库定时任务(true)
 	response.OkWithMessage("操作成功", c)
@@ -131,6 +133,7 @@ func (C *Cron) Info(c *gin.Context) {
 	info, err := S.Info(&tx, 请求.Id)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	response.OkWithDetailed(info, "操作成功", c)
 	return
@@ -216,6 +219,7 @@ func (C *Cron) UpdateStatus(c *gin.Context) {
 	err = S.Update(&tx, CronInfo)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	_ = functions.S刷新数据库定时任务(true)
 	response.OkWithMessage("操作成功", c)
@@ -246,6 +250,7 @@ func (C *Cron) Z执行(c *gin.Context) {
 	通用任务执行函数2, err := functions.T通用任务执行函数2(time.Now().Unix(), CronInfo)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	response.OkWithMessage(通用任务执行函数2, c)
 	return

@@ -35,7 +35,9 @@ func (s *S_Blacklist) InfoItemKey(tx *gorm.DB, ItemKey string) ([]dbm.DB_Blackli
 
 	var value = []dbm.DB_Blacklist{}
 	err := tx.Model(dbm.DB_Blacklist{}).Where("ItemKey = ?", ItemKey).Find(&value).Error
-	global.H缓存.Set(黑名单_+ItemKey, value, time.Hour*720) //保存一个月
+	if err == nil {
+		global.H缓存.Set(黑名单_+ItemKey, value, time.Hour*720) //保存一个月
+	}
 	return value, err
 }
 func (s *S_Blacklist) Update(tx *gorm.DB, value dbm.DB_Blacklist) error {

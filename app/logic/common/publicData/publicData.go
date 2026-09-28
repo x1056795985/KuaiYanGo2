@@ -68,6 +68,10 @@ func (j *publicData) Z置值(c *gin.Context, Appid int, 变量名, 变量值 str
 		if err != nil {
 			return
 		}
+	} else {
+		//Type>4为未知类型,不能静默成功,显式报错
+		err = errors.New("未知的变量类型,无法置值")
+		return
 	}
 	return err
 }
@@ -90,7 +94,7 @@ func (j *publicData) Q取值2(c *gin.Context, Appid int, 变量名 string) (返�
 		err = errors.Join(err, errors.New("变量不存在"))
 		return
 	}
-	//队列类型的单独处理,加锁读取,避免队列数据被修改
+	//队列类型的单独处理,加锁读取,避免队列数据被修改 队列类型appid固定为1 全局,可跨应用读写
 	if 局_云变量数据.Type == 4 {
 		err = db.Transaction(func(tx *gorm.DB) error {
 			err = tx.Model(dbm.DB_PublicData{}).

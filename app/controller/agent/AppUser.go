@@ -51,7 +51,7 @@ func (C *AppUser) GetAppUserInfo(c *gin.Context) {
 		AppType int `json:"AppType"` //登录平台App名字
 	}
 	tx := *global.GVA_DB
-	err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Where("AgentUid = ?", c.GetInt("Uid")).Find(&DB_AppUser).Error
+	err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Where("AgentUid = ?", c.GetInt("Uid")).First(&DB_AppUser).Error
 	// 没查到数据
 
 	if err != nil {

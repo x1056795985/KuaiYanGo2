@@ -19,6 +19,13 @@ func (s *S_LogKa) Info(tx *gorm.DB, Id int) (dbm.DB_LogKa, error) {
 	return value, err
 }
 
+// InfoByUser Agent端按归属查询制卡日志详情（仅能查看自己的日志）
+func (j *S_LogKa) InfoByUser(tx *gorm.DB, Id int, User string) (dbm.DB_LogKa, error) {
+	var value dbm.DB_LogKa
+	err := tx.Model(dbm.DB_LogKa{}).Where("Id = ?", Id).Where("User = ?", User).First(&value).Error
+	return value, err
+}
+
 func (s *S_LogKa) GetList(tx *gorm.DB, 请求 request.List) (int64, []dbm.DB_LogKa, error) {
 	局_DB := tx.Model(dbm.DB_LogKa{})
 	if 请求.Order == 1 {

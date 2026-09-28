@@ -42,7 +42,7 @@ func UserApi_取注册送卡(c *gin.Context) {
 		response.FailMsg(c, constant.Status_操作失败, "已存在绑定信息,无法获取卡号")
 		return
 	}
-	_, err = service.NewKa(c, &db).Info(局_ctx.AppInfo.RegisterGiveKaClassId)
+	_, err = service.NewKaClass(c, &db).Info(局_ctx.AppInfo.RegisterGiveKaClassId)
 	if err != nil {
 		response.FailMsg(c, constant.Status_操作失败, "应用未设置赠送卡类,或卡类已删除")
 		return

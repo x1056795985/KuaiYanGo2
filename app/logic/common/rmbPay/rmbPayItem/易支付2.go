@@ -291,7 +291,7 @@ func (j 易支付2) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (�
 
 	// 处理金额转换
 	if 金额, err2 := strconv.ParseFloat(请求参数.Get("money"), 64); err2 == nil {
-		参数.Rmb = 金额
+		参数.ActualRmb = 金额 //记录实付金额(转账型通道,付款人可自定金额,可能与订单金额不一致)
 	} else {
 		err = errors.Join(errors.New("金额解析错误"), err2)
 	}

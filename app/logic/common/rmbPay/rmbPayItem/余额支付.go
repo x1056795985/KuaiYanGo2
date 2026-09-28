@@ -110,6 +110,9 @@ func (j 余额支付) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (
 		}
 	}()
 
+	//余额支付无第三方通道,实付金额即订单金额
+	参数.ActualRmb = 参数.Rmb
+
 	return
 }
 func (j 余额支付) D订单退款回调(c *gin.Context, 参数 *m.PayParams) (响应信息 string, 响应代码 int, err error) {

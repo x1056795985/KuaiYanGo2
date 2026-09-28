@@ -11,6 +11,7 @@ import (
 	"server/app/logic/common/ka"
 	"server/app/logic/common/log"
 	"server/app/logic/common/user"
+	"server/app/models/constant"
 	"server/app/models/dbm"
 	"server/app/models/old/response"
 	"server/app/service"
@@ -51,9 +52,9 @@ type DB_AgentUser_简化 struct {
 
 type 代理可制卡类授权 struct {
 	KaList          []ka.K可制卡类授权树形框结构 `json:"kaList"`
-	IdListAuthority []int                        `json:"idListAuthority"`
-	FunctionList    map[string]int               `json:"functionList"`
-	FunctionId      []int                        `json:"functionId"`
+	IdListAuthority []int             `json:"idListAuthority"`
+	FunctionList    map[string]int    `json:"functionList"`
+	FunctionId      []int             `json:"functionId"`
 }
 
 // Info 获取代理详情
@@ -67,7 +68,7 @@ func (C *AgentUserFull) Info(c *gin.Context) {
 
 	var DB_AgentUser DB_AgentUser2
 	db := *global.GVA_DB
-	err := db.Model(dbm.DB_User{}).Omit("PassWord", "SuperPassWord").Where("id = ?", 请求.Id).Find(&DB_AgentUser).Error
+	err := db.Model(dbm.DB_User{}).Omit("PassWord", "SuperPassWord").Where("id = ?", 请求.Id).First(&DB_AgentUser).Error
 	if err != nil {
 		response.FailWithMessage("查询用户详细信息失败", c)
 		return
@@ -164,7 +165,7 @@ func (C *AgentUserFull) New(c *gin.Context) {
 	}
 	db := *global.GVA_DB
 	局_下级代理分成 := service.NewUser(c, &db).Id取下级代理分成最高(请求.Id)
-	if 局_下级代理分成 > int(请求.AgentDiscount) {
+	if 局_下级代理分成 > 请求.AgentDiscount {
 		response.FailWithMessage("该代理的下级代理已设置分成百分比为"+strconv.Itoa(局_下级代理分成)+"%,故不能设置低于该值,请联系协商", c)
 		return
 	}
@@ -231,7 +232,7 @@ func (C *AgentUserFull) Save(c *gin.Context) {
 		return
 	}
 	局_下级代理分成 := service.NewUser(c, &db_2).Id取下级代理分成最高(请求.Id)
-	if 局_下级代理分成 > int(请求.AgentDiscount) {
+	if 局_下级代理分成 > 请求.AgentDiscount {
 		response.FailWithMessage("该代理的下级代理已设置分成百分比为"+strconv.Itoa(局_下级代理分成)+"%,故不能设置低于该值,请联系协商", c)
 		return
 	}
@@ -287,6 +288,13 @@ func (C *AgentUserFull) SetStatus(c *gin.Context) {
 	if 请求.Status == 2 {
 		db := *global.GVA_DB
 		err = db.Model(dbm.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 2).Error
+		//冻结后注销其全部在线令牌,防止被冻结代理用旧会话继续操作(对照User.go冻结即注销)
+		db_局 := *global.GVA_DB
+		局_user数组 := make([]string, 0, len(请求.Id))
+		for _, 值 := range 请求.Id {
+			局_user数组 = append(局_user数组, service.NewUser(c, &db_局).Id取User(值))
+		}
+		_ = service.NewLinksToken(c, &db_局).Set批量注销User数组(局_user数组, constant.Z注销_管理员手动注销)
 	} else {
 		db := *global.GVA_DB
 		err = db.Model(dbm.DB_User{}).Where("Id IN ? ", 请求.Id).Update("Status", 1).Error

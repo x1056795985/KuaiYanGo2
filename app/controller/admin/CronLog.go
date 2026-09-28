@@ -61,6 +61,7 @@ func (C *CronLog) Info(c *gin.Context) {
 	info, err := S.Info(&tx, 请求.Id)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	response.OkWithDetailed(info, "操作成功", c)
 	return

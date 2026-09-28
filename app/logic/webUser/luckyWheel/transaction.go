@@ -70,34 +70,34 @@ func L抽奖_执行(c *gin.Context, 数据库 *gorm.DB, appInfo dbm.DB_AppInfo, 
 			}
 		}
 
-		// 自动领取每日免费次数
-		局_来源 := 1 //默认每日免费
+		// 行锁重新查,以数据库最新值为准(防止与领取免费/拉新等并发写丢失更新)
+		if e := tx.Model(dbm.DB_LuckyWheelUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", info.luckyWheelUser.Id).First(&info.luckyWheelUser).Error; e != nil {
+			return e
+		}
+
+		// 行锁内判断自动领取每日免费次数
+		局_来源 := 2 //拉新奖励
+		局_免费领取 := 0
 		if info.luckyWheelUser.DailyFreeDate != 局_今日 {
 			// 跨天重置
 			info.luckyWheelUser.DailyFreeDate = 局_今日
 			info.luckyWheelUser.DailyFreeUsed = 0
 		}
-		if info.luckyWheelUser.DailyFreeUsed < info.luckyWheelInfo.DailyFreeCount && info.luckyWheelInfo.DailyFreeCount > 0 {
-			// 领取免费次数
-			info.luckyWheelUser.RemainCount += 1
+		if info.luckyWheelInfo.DailyFreeCount > 0 && info.luckyWheelUser.DailyFreeUsed < info.luckyWheelInfo.DailyFreeCount {
+			// 本次抽奖消耗每日免费次数
+			局_来源 = 1 //每日免费
+			局_免费领取 = 1
 			info.luckyWheelUser.DailyFreeUsed += 1
-		} else {
-			局_来源 = 2 //拉新奖励
 		}
 
-		// 行锁重新查
-		if e := tx.Model(dbm.DB_LuckyWheelUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", info.luckyWheelUser.Id).First(&info.luckyWheelUser).Error; e != nil {
-			return e
-		}
-
-		if info.luckyWheelUser.RemainCount <= 0 {
+		// 库中剩余次数+本次免费领取不足1次则无法抽奖
+		if info.luckyWheelUser.RemainCount+局_免费领取 <= 0 {
 			return errors.New("抽奖次数不足")
 		}
 
-		// 扣减次数
-		info.luckyWheelUser.RemainCount -= 1
+		// 扣减次数(免费领取与扣减相抵,仅扣库存次数;原子自增防并发丢失更新)
 		if _, e := service.NewLuckyWheelUser(c, tx).UpdateMap([]int{info.luckyWheelUser.Id}, map[string]interface{}{
-			"remainCount":   info.luckyWheelUser.RemainCount,
+			"remainCount":   gorm.Expr("remainCount + ?", 局_免费领取-1),
 			"dailyFreeDate": info.luckyWheelUser.DailyFreeDate,
 			"dailyFreeUsed": info.luckyWheelUser.DailyFreeUsed,
 			"updateTime":    time.Now().Unix(),
@@ -149,35 +149,42 @@ func L领取每日免费(c *gin.Context, 数据库 *gorm.DB, appInfo dbm.DB_AppI
 
 	局_今日 := time.Now().Format("20060102")
 
-	info.luckyWheelUser, _ = service.NewLuckyWheelUser(c, 数据库).Info(appInfo.AppId, 在线信息.Uid)
-	if info.luckyWheelUser.Id == 0 {
-		// 创建用户记录并领取
-		info.luckyWheelUser = dbm.DB_LuckyWheelUser{
-			AppId:         appInfo.AppId,
-			UserId:        在线信息.Uid,
-			CreateTime:    time.Now().Unix(),
-			UpdateTime:    time.Now().Unix(),
-			RemainCount:   info.luckyWheelInfo.DailyFreeCount,
-			DailyFreeDate: 局_今日,
-			DailyFreeUsed: info.luckyWheelInfo.DailyFreeCount,
+	err = 数据库.Transaction(func(tx *gorm.DB) error {
+		info.luckyWheelUser, _ = service.NewLuckyWheelUser(c, tx).Info(appInfo.AppId, 在线信息.Uid)
+		if info.luckyWheelUser.Id == 0 {
+			// 创建用户记录并领取(appId+userId唯一索引兜底,并发时仅一方成功)
+			info.luckyWheelUser = dbm.DB_LuckyWheelUser{
+				AppId:         appInfo.AppId,
+				UserId:        在线信息.Uid,
+				CreateTime:    time.Now().Unix(),
+				UpdateTime:    time.Now().Unix(),
+				RemainCount:   info.luckyWheelInfo.DailyFreeCount,
+				DailyFreeDate: 局_今日,
+				DailyFreeUsed: info.luckyWheelInfo.DailyFreeCount,
+			}
+			_, e := service.NewLuckyWheelUser(c, tx).Create(&info.luckyWheelUser)
+			return e
 		}
-		_, err = service.NewLuckyWheelUser(c, 数据库).Create(&info.luckyWheelUser)
-		return
-	}
 
-	// 跨天重置并领取
-	if info.luckyWheelUser.DailyFreeDate != 局_今日 {
-		局_今日剩余 := info.luckyWheelInfo.DailyFreeCount - 0
-		info.luckyWheelUser.RemainCount += 局_今日剩余
-		info.luckyWheelUser.DailyFreeDate = 局_今日
-		info.luckyWheelUser.DailyFreeUsed = info.luckyWheelInfo.DailyFreeCount
-		_, err = service.NewLuckyWheelUser(c, 数据库).UpdateMap([]int{info.luckyWheelUser.Id}, map[string]interface{}{
-			"remainCount":   info.luckyWheelUser.RemainCount,
-			"dailyFreeDate": info.luckyWheelUser.DailyFreeDate,
-			"dailyFreeUsed": info.luckyWheelUser.DailyFreeUsed,
+		// 行锁重新查,以数据库最新值为准(防止与抽奖事务并发导致丢失更新)
+		if e := tx.Model(dbm.DB_LuckyWheelUser{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Id = ?", info.luckyWheelUser.Id).First(&info.luckyWheelUser).Error; e != nil {
+			return e
+		}
+
+		// 今日已领取
+		if info.luckyWheelUser.DailyFreeDate == 局_今日 {
+			return nil
+		}
+
+		// 跨天重置并领取(remainCount原子自增,不覆盖并发扣减)
+		_, e := service.NewLuckyWheelUser(c, tx).UpdateMap([]int{info.luckyWheelUser.Id}, map[string]interface{}{
+			"remainCount":   gorm.Expr("remainCount + ?", info.luckyWheelInfo.DailyFreeCount),
+			"dailyFreeDate": 局_今日,
+			"dailyFreeUsed": info.luckyWheelInfo.DailyFreeCount,
 			"updateTime":    time.Now().Unix(),
 		})
-	}
+		return e
+	})
 	return
 }
 

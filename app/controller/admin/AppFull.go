@@ -80,6 +80,7 @@ func (a *App) GetList(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
+	Common.F钳制分页参数(&请求)
 
 	var DB_AppInfo_简化1 []DB_AppInfo_简化
 	var 总数 int64
@@ -127,7 +128,7 @@ func (a *App) GetInfo(c *gin.Context) {
 
 	var DB_AppInfo dbm.DB_AppInfo
 	db := *global.GVA_DB
-	err = db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", 请求.Id).Find(&DB_AppInfo).Error
+	err = db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", 请求.Id).First(&DB_AppInfo).Error
 
 	if err != nil {
 		response.FailWithMessage("查询APPID:"+strconv.Itoa(请求.Id)+"详细信息失败", c)

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"server/app/controller/Common"
 	"server/app/global"
 	"server/app/logic/common/agent"
 	"server/app/logic/common/agentLevel"
@@ -90,6 +91,7 @@ func (A *AgentInventoryOld) GetAgentInventoryList(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
+	Common.F钳制分页参数(&请求)
 	db := *global.GVA_DB
 	局_DB := db.Model(dbm.Db_Agent_库存卡包{}).
 		Where("(Uid = ? OR RegisterUserId = ? OR SourceUid=? )", c.GetInt("Uid"), c.GetInt("Uid"), c.GetInt("Uid"))

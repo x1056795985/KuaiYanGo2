@@ -193,6 +193,10 @@ func (j 虎皮椒) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响
 	if tradeOrderID == 参数.PayOrder && callbackData["status"] == "OD" {
 		//这里是支付成功的回调
 		参数.PayOrder2, _ = callbackData["transaction_id"]
+		//记录实付金额
+		if 局_实付金额, err2 := strconv.ParseFloat(callbackData["total_fee"], 64); err2 == nil {
+			参数.ActualRmb = 局_实付金额
+		}
 		err = 参数.E额外信息.Set("订单支付金额", callbackData["total_fee"])
 	} else {
 		err = errors.New(c.Request.RequestURI + "|" + string(data))

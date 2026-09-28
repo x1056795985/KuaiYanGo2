@@ -173,6 +173,7 @@ func (A *AgentMenu) Q取余额充值订单状态(c *gin.Context) {
 
 	if !ok || 局_订单详细信息.Uid != c.GetInt("Uid") {
 		response.FailWithMessage("不可查询其他人支付订单状态", c)
+		return
 	}
 	response.OkWithData(gin.H{"Status": 局_订单详细信息.Status}, c)
 	return

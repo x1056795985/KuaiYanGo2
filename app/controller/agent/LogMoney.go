@@ -29,7 +29,7 @@ func (C *AgentLogMoney) Info(c *gin.Context) {
 
 	var S = service.S_LogMoney{}
 	tx := *global.GVA_DB
-	info, err := S.Info(&tx, 请求.Id)
+	info, err := S.InfoByUser(&tx, 请求.Id, c.GetString("User"))
 	if err != nil {
 		response.FailWithMessage("获取失败,可能不存在", c)
 		return

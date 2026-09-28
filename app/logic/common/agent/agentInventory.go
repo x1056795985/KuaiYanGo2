@@ -184,7 +184,7 @@ func (j *agent) New代理购买(c *gin.Context, 归属Uid, KaClassId, NumMax int
 	}
 	// 分成结束==============
 
-	return 库存卡包, err
+	return 库存卡包, nil //这个直接返回购买成功,代理分成失败的不用管和本接口无关
 }
 
 // K库存发送 库存卡包发送给下级代理

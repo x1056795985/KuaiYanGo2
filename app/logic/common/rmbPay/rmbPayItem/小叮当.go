@@ -177,11 +177,9 @@ func (j 小叮当) D订单支付回调(c *gin.Context, 参数 *m.PayParams) (响
 	}
 
 	if 参数.PayOrder == c.PostForm("order_no") && c.PostForm("result") == "success" {
-		if c.PostForm("money") != c.PostForm("realmoney") {
-			真实金额, err2 := strconv.ParseFloat(c.PostForm("realmoney"), 64)
-			if err2 == nil {
-				参数.Rmb = 真实金额
-			}
+		//记录实付金额(转账型通道,实付金额可能与订单金额不一致)
+		if 局_实付金额, err2 := strconv.ParseFloat(c.PostForm("realmoney"), 64); err2 == nil {
+			参数.ActualRmb = 局_实付金额
 		}
 		参数.PayOrder2 = c.PostForm("xddpay_order")
 	} else {

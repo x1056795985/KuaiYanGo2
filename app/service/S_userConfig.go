@@ -131,8 +131,9 @@ func (s *UserConfig) P批量置值(DB_PublicData []dbm.DB_UserConfig) error {
 
 // 批量置值(按Appid, Uid数组, Name)
 func (s *UserConfig) P批量置值2(Appid int, map_id_user map[int]string, Name string, Value string) error {
-	局_uids := make([]int, len(map_id_user))
-	for k, _ := range map_id_user {
+	//make(0,len) 零长度+容量,不能用make(len)+append,否则前面混入N个0,删除分支会误删Uid=0的配置
+	局_uids := make([]int, 0, len(map_id_user))
+	for k := range map_id_user {
 		局_uids = append(局_uids, k)
 	}
 
@@ -141,7 +142,8 @@ func (s *UserConfig) P批量置值2(Appid int, map_id_user map[int]string, Name 
 	}
 
 	var 局_数据 []dbm.DB_UserConfig
-	局_数据 = make([]dbm.DB_UserConfig, len(map_id_user))
+	局_数据 = make([]dbm.DB_UserConfig, 0, len(map_id_user))
+
 	for k, v := range map_id_user {
 		局_数据 = append(局_数据, dbm.DB_UserConfig{
 			AppId:      Appid,

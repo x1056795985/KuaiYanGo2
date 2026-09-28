@@ -3,6 +3,7 @@ package controller
 import (
 	. "EFunc/utils"
 	"github.com/gin-gonic/gin"
+	"server/app/controller/Common"
 	"server/app/global"
 	"server/app/logic/admin/L_chart"
 	"server/app/logic/common/agent"
@@ -144,6 +145,7 @@ func (A *AgentKa) GetKaList(c *gin.Context) {
 		response.FailWithMessage("提交参数错误:"+err.Error(), c)
 		return
 	}
+	Common.F钳制分页参数(&请求)
 
 	局_临时通用, _ := c.Get("局_在线信息")
 	局_在线信息 := 局_临时通用.(dbm.DB_LinksToken)
@@ -334,6 +336,14 @@ func (A *AgentKa) K库存制卡(c *gin.Context) {
 	var 请求 Agent库存制卡请求
 	if err := c.ShouldBindJSON(&请求); err != nil {
 		response.FailWithMessage("参数错误:"+err.Error(), c)
+		return
+	}
+	if 请求.Number <= 0 {
+		response.FailWithMessage("生成数量必须大于0", c)
+		return
+	}
+	if 请求.Number > 5000 {
+		response.FailWithMessage("生成数量每批最大5000", c)
 		return
 	}
 

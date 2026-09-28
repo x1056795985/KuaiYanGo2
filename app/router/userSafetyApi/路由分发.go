@@ -11,7 +11,7 @@ import (
 
 // 解密Api名称 将md5加密的Api名称还原为明文
 func 解密Api名称(c *gin.Context, Api string) (string, bool) {
-	if len(J集_UserAPi路由_加密.J加密路由) == 0 {
+	if !J集_UserAPi路由_加密.Q加密是否开启() {
 		return Api, true
 	}
 	局_Api, ok := J集_UserAPi路由_加密.Q取md5APi名称(Api)

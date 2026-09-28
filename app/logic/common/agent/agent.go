@@ -80,6 +80,19 @@ func (j *agent) Id功能权限检测(c *gin.Context, 代理ID, 权限代号 int)
 
 func (j *agent) S删除代理(c *gin.Context, UID []int) error {
 	db := *global.GVA_DB
+
+	//删除前校验:代理名下有库存卡包或卡号时禁止删除,防止资产凭空蒸发,必须先处理
+	var 局_库存包数量 int64
+	db.Model(dbm.Db_Agent_库存卡包{}).Where("Uid IN ? ", UID).Count(&局_库存包数量)
+	if 局_库存包数量 > 0 {
+		return errors.New("该代理名下还有库存卡包,请先删除库存后,再删除代理")
+	}
+	var 局_卡号数量 int64
+	db.Model(dbm.DB_Ka{}).Where("RegisterId IN ? ", UID).Count(&局_卡号数量)
+	if 局_卡号数量 > 0 {
+		return errors.New("该代理名下还有卡号,请先删除卡号后,再删除代理")
+	}
+
 	err := db.Transaction(func(tx *gorm.DB) error {
 		//代理用户删除
 		影响行数 := tx.Model(dbm.DB_User{}).Where("Id IN ? ", UID).Delete(dbm.DB_User{}).RowsAffected
@@ -231,8 +244,13 @@ func (j *agent) 迭代删除下级代理不允许卡类ID(c *gin.Context, 代理
 
 func (j *agent) S删除代理不允许使用的卡类(c *gin.Context, 代理ID []int, 允许使用卡类 []int) error {
 	db := *global.GVA_DB
-	err := db.Where("Uid IN ? ", 代理ID).Where("Kid NOT IN ? ", 允许使用卡类).Delete(&dbm.Db_Agent_卡类授权{}).Error
-	return err
+	if len(允许使用卡类) == 0 { //如果没有那就是删除全部
+		err := db.Where("Uid IN ? ", 代理ID).Delete(&dbm.Db_Agent_卡类授权{}).Error
+		return err
+	} else {
+		err := db.Where("Uid IN ? ", 代理ID).Where("Kid NOT IN ? ", 允许使用卡类).Delete(&dbm.Db_Agent_卡类授权{}).Error
+		return err
+	}
 }
 
 func (j *agent) Q取下级代理数组(c *gin.Context, 上级ID []int) []int {

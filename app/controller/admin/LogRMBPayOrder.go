@@ -236,13 +236,14 @@ func (C *LogRMBPayOrderCtrl) New(c *gin.Context) {
 	}
 	if 请求.RMB > 1000000000 || 请求.RMB < -1000000000 {
 		response.FailWithMessage("增减金额不能超过10亿(11位)", c)
+		return
 	}
 
 	var 新订单 dbm.DB_LogRMBPayOrder
 	新订单.Id = 0
 	新订单.Uid = 局_Uid
 	新订单.User = 请求.User
-	新订单.Status = 2
+	新订单.Status = constant.D订单状态_等待支付
 	新订单.Time = time.Now().Unix()
 	新订单.Ip = c.ClientIP()
 	新订单.Type = "管理员手动充值"
@@ -346,6 +347,7 @@ func (C *LogRMBPayOrderCtrl) MakeUp(c *gin.Context) {
 			备注 = 请求.Note + "|" + 备注
 		}
 		log.L_log.Log_写余额日志(订单.User, c.ClientIP(), 备注, 订单.Rmb)
+		global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 订单.Id).Update("Status", constant.D订单状态_成功)
 
 	case constant.D订单类型_购卡直冲:
 		// 购卡直冲: 调用支付成功后处理逻辑

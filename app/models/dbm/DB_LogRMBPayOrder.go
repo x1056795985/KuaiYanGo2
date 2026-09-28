@@ -13,6 +13,7 @@ type DB_LogRMBPayOrder struct {
 	ProcessingType int     `json:"ProcessingType" gorm:"column:ProcessingType;size:20;comment:处理类型"`
 	Extra          string  `json:"Extra" gorm:"column:Extra;size:1910;comment:额外信息"`
 	Rmb            float64 `json:"Rmb" gorm:"column:Rmb;type:decimal(10,2);default:0;comment:充值金额"`
+	ActualRmb      float64 `json:"ActualRmb" gorm:"column:ActualRmb;type:decimal(10,2);default:0;comment:实付金额"`
 	CouponUserId   int     `json:"CouponUserId" gorm:"column:CouponUserId;default:0;index;comment:使用的用户优惠券ID"`
 	CouponDiscount float64 `json:"CouponDiscount" gorm:"column:CouponDiscount;type:decimal(10,2);default:0;comment:优惠金额"`
 	Time           int64   `json:"Time" gorm:"column:Time;index;comment:时间"`

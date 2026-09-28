@@ -279,7 +279,7 @@ func (k *KuaiYan) Login(c *gin.Context) {
 	global.Q快验.Q取用户余额(&global.X系统信息.Y余额)
 	局_基础信息 := ""
 	global.Q快验.Q取用户基础信息(&局_基础信息)
-	局_基础信息json, _ := fastjson.Parse(响应信息)
+	局_基础信息json, _ := fastjson.Parse(局_基础信息)
 
 	global.X系统信息.Y用户类型 = string(局_json.GetStringBytes("UserClassName"))
 	global.X系统信息.J积分 = 局_json.GetFloat64("VipNumber")

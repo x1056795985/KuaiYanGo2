@@ -43,6 +43,7 @@ func (C *Blacklist) Create(c *gin.Context) {
 	err := S.Create(&tx, dbm.DB_Blacklist{AppId: 请求.AppId, ItemKey: 请求.ItemKey, Note: 请求.Note})
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	response.Ok(c)
 }
@@ -88,6 +89,7 @@ func (C *Blacklist) Update(c *gin.Context) {
 	err := S.Update(&tx, 请求)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 
 	response.OkWithMessage("操作成功", c)
@@ -109,6 +111,7 @@ func (C *Blacklist) Info(c *gin.Context) {
 	info, err := S.Info(&tx, 请求.Id)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
 	response.OkWithDetailed(info, "操作成功", c)
 	return

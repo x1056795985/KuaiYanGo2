@@ -133,7 +133,7 @@ func (C *UserCtrl) GetUserInfo(c *gin.Context) {
 
 	var DB_user DB_User2
 	db := *global.GVA_DB
-	err := db.Model(dbm.DB_User{}).Omit("PassWord", "SuperPassWord").Where("id = ?", 请求.Id).Find(&DB_user).Error
+	err := db.Model(dbm.DB_User{}).Omit("PassWord", "SuperPassWord").Where("id = ?", 请求.Id).First(&DB_user).Error
 	if err != nil {
 		response.FailWithMessage("查询用户详细信息失败", c)
 		return

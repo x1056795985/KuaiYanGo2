@@ -19,6 +19,13 @@ func (s *S_LogAgentInventory) Info(tx *gorm.DB, Id int) (dbm.Db_Agent_库存日�
 	return value, err
 }
 
+// InfoByUser Agent端按归属查询库存日志详情（与列表一致，按User1 OR User2过滤）
+func (j *S_LogAgentInventory) InfoByUser(tx *gorm.DB, Id int, User string) (dbm.Db_Agent_库存日志, error) {
+	var value dbm.Db_Agent_库存日志
+	err := tx.Model(dbm.Db_Agent_库存日志{}).Where("Id = ?", Id).Where("(User1 = ? OR User2 = ?)", User, User).First(&value).Error
+	return value, err
+}
+
 func (s *S_LogAgentInventory) GetList(tx *gorm.DB, 请求 request.List) (int64, []dbm.Db_Agent_库存日志, error) {
 	局_DB := tx.Model(dbm.Db_Agent_库存日志{})
 	if 请求.Order == 1 {

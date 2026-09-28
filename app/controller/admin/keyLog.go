@@ -55,6 +55,7 @@ func (C *LogKey) Info(c *gin.Context) {
 	info, err := service.NewLogKey(c, &tx).Info(请求.Id)
 	if err != nil {
 		response.FailWithMessage(c, err.Error())
+		return
 	}
 	response.OkWithDetailed(c, info, "操作成功")
 	return

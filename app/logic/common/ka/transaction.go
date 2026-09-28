@@ -28,7 +28,7 @@ func B卡号_保存管理员编辑(c *gin.Context, 数据库 *gorm.DB, 卡号 db
 			return 局_错误
 		}
 		if service.NewAppInfo(c, tx).App是否为卡号(旧卡号.AppId) {
-			局_错误 = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(旧卡号.AppId)).Where("Id = ?", 旧卡号.Id).Update("Status", 卡号.Status).Error
+			局_错误 = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(旧卡号.AppId)).Where("Uid = ?", 旧卡号.Id).Update("Status", 卡号.Status).Error
 		}
 		return 局_错误
 	})

@@ -77,7 +77,7 @@ func (C *AppUserFull) Info(c *gin.Context) {
 		AppType int `json:"appType"`
 	}
 	db := *global.GVA_DB
-	err := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).Find(&DB_AppUser).Error
+	err := db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(请求.AppId)).Omit("app_type").Where("id = ?", 请求.Id).First(&DB_AppUser).Error
 	if err != nil {
 		response.FailWithMessage("查询软件用户详细信息失败", c)
 		return

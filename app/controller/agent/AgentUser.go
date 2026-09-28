@@ -175,7 +175,6 @@ func (C *AgentUser) GetKaSalesStatistics(c *gin.Context) {
 				局_快速文本对象.WriteString("  [使用时间]:" + S时间_时间戳到时间(info.DB_Ka[i].UseTime))
 				局_快速文本对象.WriteString("  [卡类名称]:" + info.卡类id名称map[info.DB_Ka[i].KaClassId])
 				局_快速文本对象.WriteString("  [状态]:" + S三元(info.DB_Ka[i].Status == 1, "正常", "冻结"))
-				局_快速文本对象.WriteString("  [管理备注]:" + info.DB_Ka[i].AdminNote)
 				局_快速文本对象.WriteString("  [代理备注]:" + info.DB_Ka[i].AgentNote)
 				局_计数++
 			}

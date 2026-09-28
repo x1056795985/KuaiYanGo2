@@ -18,7 +18,7 @@ var L_log log
 
 const Log用户消息类型_其他 = 1
 const Log用户消息类型_bug提交 = 2
-const Log用户消息类型_投诉建议 = 4
+const Log用户消息类型_投诉建议 = 3
 const Log用户消息类型_系统执行错误 = 4
 
 const Log风控类型_Api异常调用 = 1
@@ -140,7 +140,7 @@ func (j *log) S输出日志(c *gin.Context, logData interface{}) (err error) {
 			if v.Time == 0 {
 				v.Time = time.Now().Unix()
 			}
-			err3 = tx.Model(dbm.DB_LogUserMsg{}).Create(&v).Error
+			err3 = tx.Model(dbm.DB_LogRiskControl{}).Create(&v).Error
 		case []dbm.DB_LogRiskControl: //风控日志
 			for i := range v {
 				if v[i].Time == 0 {
@@ -366,6 +366,6 @@ func (j *log) Log_写代理操作日志(AgentUid, AgentType, AppId, AppUserid in
 func (j *log) Y用户消息_取未读数量(User string) int64 {
 	var Count int64
 	db := *global.GVA_DB
-	_ = db.Model(dbm.DB_LogUserMsg{}).Where("IsRead = ?", false).Count(&Count)
+	_ = db.Model(dbm.DB_LogUserMsg{}).Where("IsRead = ?", false).Where("User = ?", User).Count(&Count)
 	return Count
 }

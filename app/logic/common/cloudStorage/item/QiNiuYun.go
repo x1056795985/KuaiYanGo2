@@ -123,7 +123,7 @@ func (j *Q七牛云) Q取文件上传授权(c *gin.Context, 要上传的路径 s
 	case "cn-east-2":
 		局_上传地址 = "https://upload-cn-east-2.qiniup.com"
 	case "z1":
-		局_上传地址 = "https:///upload-z1.qiniup.com"
+		局_上传地址 = "https://upload-z1.qiniup.com"
 	case "z2":
 		局_上传地址 = "https://upload-z2.qiniup.com"
 	case "na0":

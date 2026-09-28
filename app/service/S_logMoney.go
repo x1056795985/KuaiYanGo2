@@ -19,6 +19,13 @@ func (s *S_LogMoney) Info(tx *gorm.DB, Id int) (dbm.DB_LogMoney, error) {
 	return value, err
 }
 
+// InfoByUser Agent端按归属查询余额日志详情（仅能查看自己的日志）
+func (j *S_LogMoney) InfoByUser(tx *gorm.DB, Id int, User string) (dbm.DB_LogMoney, error) {
+	var value dbm.DB_LogMoney
+	err := tx.Model(dbm.DB_LogMoney{}).Where("Id = ?", Id).Where("User = ?", User).First(&value).Error
+	return value, err
+}
+
 func (s *S_LogMoney) GetList(tx *gorm.DB, 请求 request.List, RegisterTime []string) (int64, []dbm.DB_LogMoney, error) {
 	局_DB := tx.Model(dbm.DB_LogMoney{})
 	if 请求.Order == 1 {

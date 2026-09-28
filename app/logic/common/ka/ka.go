@@ -314,7 +314,7 @@ func (j *ka) K卡号充值_事务(c *gin.Context, 来源AppId int, 卡号, 充�
 		if err != nil {
 			return errors.New("用户不存在")
 		}
-		if info.ka用户详情.Status == 2 {
+		if info.user用户详情.Status == 2 {
 			return errors.New("用户已冻结,无法充值")
 		}
 		info.app用户详情, err = service.NewAppUser(c, &db, info.卡号详情.AppId).InfoUid(info.user用户详情.Id)

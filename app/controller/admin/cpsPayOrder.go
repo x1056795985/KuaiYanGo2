@@ -64,6 +64,7 @@ func (C *CpsPayOrder) SerNote(c *gin.Context) {
 	})
 	if err != nil {
 		response.FailWithMessage(c, err.Error())
+		return
 	}
 	response.OkWithMessage(c, "操作成功")
 	return
@@ -80,6 +81,7 @@ func (C *CpsPayOrder) Info(c *gin.Context) {
 	info, err := service.NewCpsPayOrder(c, &tx).Info(请求.Id)
 	if err != nil {
 		response.FailWithMessage(c, err.Error())
+		return
 	}
 	response.OkWithDetailed(c, info, "操作成功")
 	return

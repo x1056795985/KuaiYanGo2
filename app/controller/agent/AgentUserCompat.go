@@ -238,7 +238,12 @@ func (C *AgentUser) Save代理信息(c *gin.Context) {
 		return
 	}
 
-	局_上级代理分成 := agent.L_agent.ID取分成百分比(c, 请求.UPAgentId)
+	if 请求.AgentDiscount < 0 {
+		response.FailWithMessage("分成不能小于0", c)
+		return
+	}
+	//必须用库里查出的真实上级校验,请求.UPAgentId是客户端可控的,传高分成代理Id可绕过上限校验,导致下级分成超过真实上级,分成计算倒扣余额
+	局_上级代理分成 := agent.L_agent.ID取分成百分比(c, 局_用户详情.UPAgentId)
 	if 局_上级代理分成 < 请求.AgentDiscount {
 		response.FailWithMessage("分成百分比最高"+strconv.Itoa(局_上级代理分成)+"%", c)
 		return
@@ -314,6 +319,11 @@ func (C *AgentUser) GetAgentKaClassAuthority(c *gin.Context) {
 		Id int `json:"id"`
 	}
 	if !C.ToJSON(c, &请求) {
+		return
+	}
+
+	if agent.L_agent.Q取上级代理的子级代理级别(c, c.GetInt("Uid"), 请求.Id) <= 0 {
+		response.FailWithMessage("只能查询自己的子级代理详细信息", c)
 		return
 	}
 
