@@ -177,6 +177,7 @@ func (j *appInfo) App修改信息(c *gin.Context, AppInfo dbm.DB_AppInfo) error 
 		"CryptoType":            AppInfo.CryptoType,
 		"CryptoKeyAes":          AppInfo.CryptoKeyAes,
 		"CryptoKeyPrivate":      AppInfo.CryptoKeyPrivate,
+		"CryptoKeyPublic":       AppInfo.CryptoKeyPublic,
 		"ExceedMaxOnlineOut":    AppInfo.ExceedMaxOnlineOut,
 		"Captcha":               AppInfo.Captcha,
 		"ApiHook":               AppInfo.ApiHook,
