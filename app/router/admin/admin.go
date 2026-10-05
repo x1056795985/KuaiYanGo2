@@ -324,6 +324,19 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		}
 	}
 
+	// ========== 网关转发管理 ==========
+	局_Gateway := controller.NewGatewayController()
+	{
+		adminRouter.POST("gateway/getList", 局_Gateway.GetList)
+		adminRouter.POST("gateway/new", 局_Gateway.New)
+		adminRouter.POST("gateway/getInfo", 局_Gateway.Info)
+		adminRouter.POST("gateway/saveInfo", 局_Gateway.SaveInfo)
+		adminRouter.POST("gateway/test", 局_Gateway.Test)
+		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
+			adminRouter.POST("gateway/delete", 局_Gateway.Delete)
+		}
+	}
+
 	// ========== 系统设置 ==========
 	局_SetSystem := controller.NewSetSystemFullController()
 	{

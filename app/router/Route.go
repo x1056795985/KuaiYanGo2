@@ -19,6 +19,7 @@ import (
 	"server/app/router/agent"
 	"server/app/router/middleware"
 	userSafetyApi2 "server/app/router/userSafetyApi"
+	"server/app/router/wangGuan"
 	webApi2 "server/app/router/webApi2"
 	"server/app/router/webSocket"
 	"server/app/router/webUser"
@@ -100,6 +101,9 @@ func RouterInit(routerGroup *gin.RouterGroup) *gin.RouterGroup {
 
 	局_WebSocket路由 := webSocket.AllRouter{}
 	局_WebSocket路由.InitWebSocketRouter(局_路由分组)
+
+	局_网关路由 := wangGuan.AllRouter{}
+	局_网关路由.InitWangGuanRouter(局_路由分组)
 
 	return routerGroup
 }

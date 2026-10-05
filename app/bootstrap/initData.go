@@ -44,6 +44,8 @@ func InitDbTables(c *gin.Context) {
 		dbm.DB_AppInfo{},
 		dbm.DB_UserClass{},
 
+		dbm.DB_Gateway{},
+
 		dbm.DB_KaClass{},
 		dbm.DB_Ka{},
 

@@ -6,9 +6,9 @@
         <entry key="0">
           <value>
             <TabSessionState>
+              <option name="projectPath" value="E:\yun\project\TY通用后台管理系统\server2" />
               <option name="provider" value="codex" />
-              <option name="sessionId" value="01a07948-b5f5-7d10-99c3-e81c05de8868" />
-              <option name="cwd" value="$PROJECT_DIR$" />
+              <option name="cwd" value="E:\yun\project\TY通用后台管理系统\server2" />
               <option name="model" value="gpt-5.5" />
               <option name="permissionMode" value="bypassPermissions" />
             </TabSessionState>
