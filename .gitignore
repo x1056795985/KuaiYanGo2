@@ -1,0 +1,6 @@
+# 构建产物（大二进制文件不入库）
+*.bin
+云函数/
+other/
+config.json
+app/web/dist/
