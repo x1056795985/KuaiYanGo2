@@ -57,6 +57,7 @@ type 结构_网关缓存项 struct {
 
 type 结构_Token缓存项 struct {
 	信息    dbm.DB_LinksToken
+	软件AppId int            //真实软件应用AppId(软件令牌=LoginAppid;Web用户中心令牌=AppIdEx,拼分表/查应用/签JWT统一用它)
 	用户信息  dbm.DB_AppUser //软件用户信息(签JWT用),游客/不存在时为零值
 	应用类型  int            //1/2账密型 3/4卡号型(签JWT用)
 	账号或卡号 string         //账密型=账号,卡号型=卡号(签JWT用)
@@ -181,15 +182,22 @@ func (j *网关) Q鉴权Token(token string) (结构_Token缓存项, error) {
 		return 局_空, errors.New("该令牌不允许使用网关")
 	}
 
+	//软件身份AppId:软件令牌=LoginAppid;Web用户中心令牌(10)是虚拟应用无软件用户表,
+	//真实应用AppId在AppIdEx(登录时写入),必须用它拼分表/查应用,否则会查询不存在的db_AppUser_10
+	局_软件AppId := 局_在线信息.LoginAppid
+	if 局_软件AppId == constant.APPID_Web用户中心 {
+		局_软件AppId = 局_在线信息.AppIdEx
+	}
+
 	//软件用户信息按应用分表 db_AppUser_{AppId},游客/未注册时为零值不影响签发
 	var 局_用户信息 dbm.DB_AppUser
-	_ = db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_在线信息.LoginAppid)).
+	_ = db.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(局_软件AppId)).
 		Where("Uid = ?", 局_在线信息.Uid).First(&局_用户信息).Error
 
 	//应用类型与账号/卡号/余额(账密型才有余额)
-	局_缓存项 := 结构_Token缓存项{信息: 局_在线信息, 用户信息: 局_用户信息, 到期: time.Now().Unix() + 常量_Token缓存秒}
+	局_缓存项 := 结构_Token缓存项{信息: 局_在线信息, 软件AppId: 局_软件AppId, 用户信息: 局_用户信息, 到期: time.Now().Unix() + 常量_Token缓存秒}
 	var 局_应用信息 dbm.DB_AppInfo
-	if 局_错误 := db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", 局_在线信息.LoginAppid).First(&局_应用信息).Error; 局_错误 == nil {
+	if 局_错误 := db.Model(dbm.DB_AppInfo{}).Where("AppId = ?", 局_软件AppId).First(&局_应用信息).Error; 局_错误 == nil {
 		局_缓存项.应用类型 = 局_应用信息.AppType
 		局_缓存项.账号或卡号 = 局_在线信息.User
 		if 局_应用信息.AppType == 1 || 局_应用信息.AppType == 2 { //账密型:余额在 db_User.Rmb
@@ -223,7 +231,7 @@ func (j *网关) Q签发JWT(网关配置 dbm.DB_Gateway, 鉴权信息 结构_Tok
 
 	局_声明 := jwt.MapClaims{
 		"uid":         在线信息.Uid,
-		"appId":       在线信息.LoginAppid,
+		"appId":       鉴权信息.软件AppId, //真实软件应用AppId(Web用户中心令牌≠LoginAppid)
 		"tokenId":     在线信息.Id,
 		"user":        鉴权信息.账号或卡号,     //账密型=账号,卡号型=卡号
 		"key":         用户信息.Key,       //绑定信息
