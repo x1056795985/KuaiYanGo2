@@ -66,7 +66,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 	//获取该应用是否已开启了cps 可能会有多个符合时间的配置信息 只获取第一个
 	数组_AppPromotionConfigs, err2 := service.NewAppPromotionConfig(c, tx).Infos(
 		map[string]interface{}{
-			"appId":         参数.E额外信息.Get("AppId").Int(),
+			"appId":         参数.AppId,
 			"promotionType": 1,
 		})
 	if err2 != nil && err2.Error() != "record not found" {
@@ -91,7 +91,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 	}
 
 	//查询是否拥有邀请人   如果已设置过,需要删除,因为有唯一索引
-	info.上级, info.上上级, err = service.NewCpsInvitingRelation(c, tx).Q取归属邀请人(参数.E额外信息.Get("AppId").Int(), 参数.Uid)
+	info.上级, info.上上级, err = service.NewCpsInvitingRelation(c, tx).Q取归属邀请人(参数.AppId, 参数.Uid)
 	if err != nil || info.上级.Id == 0 {
 		return
 	}
@@ -106,8 +106,8 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 		return
 	}
 	//判断邀请人的级别
-	info.有效邀请数量 = cpsUser.L_cpsUser.Q取有效邀请数量(c, 参数.E额外信息.Get("AppId").Int(), info.上级.InviterId)
-	info.cpsUser, err = service.NewCpsUser(c, tx).Info(参数.E额外信息.Get("AppId").Int(), info.上级.InviterId)
+	info.有效邀请数量 = cpsUser.L_cpsUser.Q取有效邀请数量(c, 参数.AppId, info.上级.InviterId)
+	info.cpsUser, err = service.NewCpsUser(c, tx).Info(参数.AppId, info.上级.InviterId)
 	if err != nil {
 		global.GVA_LOG.Println("订单:"+参数.PayOrder+",佣金发放失败,获取cpsUser"+strconv.Itoa(info.上级.InviterId)+"信息失败", err)
 		return
@@ -121,7 +121,7 @@ func (j *cpsPayOrder) C处理佣金发放_线程安全(c *gin.Context, 参数 *m
 	//基础信息
 	info.cpsPayOrder.PayOrder = 参数.PayOrder
 	info.cpsPayOrder.Time = time.Now().Unix()
-	info.cpsPayOrder.AppId = 参数.E额外信息.Get("AppId").Int()
+	info.cpsPayOrder.AppId = 参数.AppId
 	info.cpsPayOrder.Uid = 参数.Uid
 	info.cpsPayOrder.Rmb = info.卡类.Money //不能用订单的实付金额,而是用订单的卡类金额,因为代理有代理调价功能,可能导致实付金额和卡类金额不一致
 	//邀请人信息

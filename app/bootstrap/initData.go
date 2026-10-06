@@ -176,23 +176,23 @@ func InitDbTableData(c *gin.Context) {
 	if 局_例子记录.DbLogrmbpayorder < 局_例子版本 {
 		global.GVA_DB.Model(dbm.DB_LogRMBPayOrder{}).Count(&局_数量)
 		if 局_数量 == 0 {
-			订单创建, _ := rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "支付宝PC", "演示数据", "127.0.0.1", 0, "")
+			订单创建, _ := rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 10001, 0.01, "支付宝PC", "演示数据", "127.0.0.1", 0, "")
 			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_成功)
 
-			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
+			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 10001, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
 			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_成功)
 
-			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "管理员手动充值", "演示数据", "127.0.0.1", 0, "")
+			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 10001, 0.01, "管理员手动充值", "演示数据", "127.0.0.1", 0, "")
 			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_成功)
-			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
+			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 10001, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
 			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_等待支付)
-			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "支付宝PC", "演示数据", "127.0.0.1", 0, "")
+			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 10001, 0.01, "支付宝PC", "演示数据", "127.0.0.1", 0, "")
 			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_退款成功)
 			go log.L_log.Log_写余额日志("test0001", "127.0.0.1", "管理员操作退款,余额充值订单:"+订单创建.PayOrder+",扣除用户已充值余额"+"|新余额≈"+utils.Float64到文本(0.01, 2), utils.Float64取负值(订单创建.Rmb))
 
 			log.L_log.Log_写余额日志("test0001", "127.0.0.1", "看你长得帅,收费", -0.05)
 
-			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
+			订单创建, _ = rmbPay.L_rmbPay.Order订单创建(c, 1, 1, 10001, 0.01, "微信支付", "演示数据", "127.0.0.1", 0, "")
 			service.NewRmbPayService(&db).Order更新订单状态(订单创建.PayOrder, constant.D订单状态_退款失败)
 		}
 		局_例子记录.DbLogrmbpayorder = 局_例子版本

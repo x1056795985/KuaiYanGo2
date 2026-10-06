@@ -70,7 +70,7 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 	if 参数.CouponUserId > 0 {
 		defer func() {
 			if err != nil {
-				appId := 参数.E额外信息.Get("AppId").Int()
+				appId := 参数.AppId
 				if appId > 0 {
 					_ = webUserCouponLogic.L_webUserCoupon.S释放锁定(c, appId, 参数.Uid, 参数.CouponUserId, 参数.PayOrder, "支付订单创建失败")
 				}
@@ -122,7 +122,7 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 	tx := *global.GVA_DB
 	var 局_通道数据 m.Request
 
-	参数.S商品名称 = service.NewAppInfo(c, &tx).AppId取应用名称(参数.E额外信息.Get("AppId").Int()) + j.Q取提示信息(&参数)
+	参数.S商品名称 = service.NewAppInfo(c, &tx).AppId取应用名称(参数.AppId) + j.Q取提示信息(&参数)
 
 	if 参数.ReceivedUid > 0 && agent.L_agent.Id功能权限检测(c, 参数.ReceivedUid, dbm.D代理功能_代收款) {
 		var 局代理Info dbm.DB_User
@@ -173,7 +173,7 @@ func (j *rmbPay) D订单创建(c *gin.Context, 参数 m.PayParams) (req m.Reques
 		return
 	}
 	if 参数.CouponUserId > 0 {
-		appId := 参数.E额外信息.Get("AppId").Int()
+		appId := 参数.AppId
 		if appId <= 0 {
 			err = errors.New("优惠券订单缺少AppId")
 			return
@@ -221,6 +221,9 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 	参数.Z支付配置s = setting.Q在线支付配置()
 	参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 	参数.E额外信息, _ = gjson.LoadJson(参数.Extra)
+	if 参数.AppId == 0 {
+		参数.AppId = 参数.E额外信息.Get("AppId").Int() //兼容旧订单,旧订单来源AppId存于额外信息
+	}
 	if 参数.Z支付配置s.J禁止退款 {
 		err = errors.New("已禁止退款,请手动前往服务器数据库,修改配置信息文件 禁止退款:true")
 		return
@@ -295,13 +298,13 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 				})
 			}
 
-			err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+参数.E额外信息.Get("AppId").String()).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Uid = ?", 参数.E额外信息.Get("AppUserUid").Int()).First(&info.软件用户详情).Error
+			err = tx.Model(dbm.DB_AppUser{}).Table("db_AppUser_"+strconv.Itoa(参数.AppId)).Clauses(clause.Locking{Strength: "UPDATE"}).Where("Uid = ?", 参数.E额外信息.Get("AppUserUid").Int()).First(&info.软件用户详情).Error
 			if err != nil {
-				return errors.New("应用:" + 参数.E额外信息.Get("AppId").String() + "软件用户id" + 参数.E额外信息.Get("AppUserUid").String() + "已不存在")
+				return errors.New("应用:" + strconv.Itoa(参数.AppId) + "软件用户id" + 参数.E额外信息.Get("AppUserUid").String() + "已不存在")
 			}
 			info.软件用户详情.VipTime -= info.卡类详情.VipTime
 			info.软件用户详情.VipNumber -= info.卡类详情.VipNumber
-			_, err = service.NewAppUser(c, tx, 参数.E额外信息.Get("AppId").Int()).UpdateUid(info.软件用户详情.Uid, map[string]interface{}{
+			_, err = service.NewAppUser(c, tx, 参数.AppId).UpdateUid(info.软件用户详情.Uid, map[string]interface{}{
 				"VipTime":   info.软件用户详情.VipTime,
 				"VipNumber": info.软件用户详情.VipNumber,
 			})
@@ -309,10 +312,10 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 				return err
 			}
 			if info.卡类详情.VipTime != 0 {
-				局_is计点 := service.NewAppInfo(c, &db).App是否为计点(参数.E额外信息.Get("AppId").Int())
+				局_is计点 := service.NewAppInfo(c, &db).App是否为计点(参数.AppId)
 				info.LogVipNumber = append(info.LogVipNumber, dbm.DB_LogVipNumber{
 					User:  参数.User,
-					AppId: 参数.E额外信息.Get("AppId").Int(),
+					AppId: 参数.AppId,
 					Type:  S三元(局_is计点, constant.Log_type_点数, constant.Log_type_时间),
 					Time:  time.Now().Unix(),
 					Ip:    c.ClientIP(),
@@ -323,7 +326,7 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 			if info.卡类详情.VipNumber != 0 {
 				info.LogVipNumber = append(info.LogVipNumber, dbm.DB_LogVipNumber{
 					User:  参数.User,
-					AppId: 参数.E额外信息.Get("AppId").Int(),
+					AppId: 参数.AppId,
 					Type:  constant.Log_type_积分,
 					Time:  time.Now().Unix(),
 					Ip:    c.ClientIP(),
@@ -701,7 +704,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 				return errors.Join(err, errors.New(fmt.Sprintf("卡类:%d取详情失败", 参数.E额外信息.Get("KaClassId").Int())))
 			}
 			if info.app详情, err = service.NewAppInfo(c, tx).Info(info.卡类详情.AppId); err != nil {
-				return errors.Join(err, errors.New(fmt.Sprintf("AppId:%d取详情失败", 参数.E额外信息.Get("AppId").Int())))
+				return errors.Join(err, errors.New(fmt.Sprintf("AppId:%d取详情失败", 参数.AppId)))
 			}
 
 			info.卡号详情, err = ka.L_ka.Ka单卡创建(c, info.卡类详情.Id, -1, "系统自动", "支付购卡订单ID:"+参数.PayOrder, "", 0)
@@ -773,7 +776,7 @@ func (j *rmbPay) Z支付成功_后处理(c *gin.Context, 参数 *m.PayParams) (e
 			})
 		}
 		if 参数.ProcessingType == constant.D订单类型_购卡直冲 && 参数.CouponUserId > 0 {
-			appId := 参数.E额外信息.Get("AppId").Int()
+			appId := 参数.AppId
 			if appId <= 0 {
 				return errors.New("优惠券订单缺少AppId")
 			}
@@ -983,7 +986,7 @@ func (j *rmbPay) Pay_指定Uid待支付金额(c *gin.Context, Uid int) (金额 f
 }
 
 // Order订单创建 创建支付订单(多表操作: 读取Ka/User表获取用户名, 创建订单)
-func (j *rmbPay) Order订单创建(c *gin.Context, Uid, Uid类型 int, Rmb float64, 支付类型, 订单备注, Ip string, 处理类型 int, 额外信息 string) (dbm.DB_LogRMBPayOrder, error) {
+func (j *rmbPay) Order订单创建(c *gin.Context, Uid, Uid类型, AppId int, Rmb float64, 支付类型, 订单备注, Ip string, 处理类型 int, 额外信息 string) (dbm.DB_LogRMBPayOrder, error) {
 	var 新订单 dbm.DB_LogRMBPayOrder
 	新订单.Id = 0
 	新订单.Uid = Uid
@@ -1001,6 +1004,7 @@ func (j *rmbPay) Order订单创建(c *gin.Context, Uid, Uid类型 int, Rmb float
 	新订单.Type = 支付类型
 	新订单.ProcessingType = 处理类型
 	新订单.Extra = 额外信息
+	新订单.AppId = AppId //订单来源AppId,所有订单创建时必填
 	新订单.Rmb = Rmb
 	新订单.Note = 订单备注
 	新订单.PayOrder = service.NewRmbPayService(&db).Get获取新订单号()

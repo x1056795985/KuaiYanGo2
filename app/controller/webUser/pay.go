@@ -182,8 +182,9 @@ func (C *Pay) PayKaUsa(c *gin.Context) {
 	参数.Type = 请求.PayType
 	参数.ReceivedUid = info.appUser.AgentUid
 	参数.ProcessingType = constant.D订单类型_购卡直冲
+	参数.IsWebUser = true //网页用户中心创建的订单
 	参数.E额外信息 = gjson.New("{}")
-	err = 参数.E额外信息.Set("AppId", info.appInfo.AppId)
+	参数.AppId = info.appInfo.AppId //实际用户登陆的应用appid
 	err = 参数.E额外信息.Set("KaClassId", info.KaClass.Id)
 	err = 参数.E额外信息.Set("KaClassName", info.KaClass.Name)
 	err = 参数.E额外信息.Set("AppUserUid", info.appUser.Uid)

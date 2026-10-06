@@ -145,7 +145,7 @@ func (A *AgentMenu) Y余额充值(c *gin.Context) {
 	参数.Rmb = 请求.C充值金额
 	参数.ProcessingType = constant.D订单类型_余额充值
 	参数.E额外信息 = gjson.New("{}")
-	_ = 参数.E额外信息.Set("AppId", constant.APPID_代理平台)
+	参数.AppId = constant.APPID_代理平台
 
 	响应数据, err := rmbPay.L_rmbPay.D订单创建(c, 参数)
 

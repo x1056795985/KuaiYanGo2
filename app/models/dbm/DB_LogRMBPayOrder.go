@@ -20,6 +20,8 @@ type DB_LogRMBPayOrder struct {
 	Ip             string  `json:"Ip" gorm:"column:Ip;size:191;comment:ip地址"`
 	Note           string  `json:"Note" gorm:"column:Note;size:5000;comment:信息"`
 	ReceivedUid    int     `json:"ReceivedUid" gorm:"column:ReceivedUid;default:0;index;comment:代收款代理Uid"`
+	AppId          int     `json:"AppId" gorm:"column:AppId;default:0;index;comment:来源AppId"`
+	IsWebUser      bool    `json:"IsWebUser" gorm:"column:IsWebUser;default:0;comment:是否web用户"`
 }
 
 func (DB_LogRMBPayOrder) TableName() string {

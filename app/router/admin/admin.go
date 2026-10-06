@@ -391,7 +391,6 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("logRMBPayOrder/getList", 局_LogRMBPayOrder.GetList)
 		adminRouter.POST("logRMBPayOrder/getInfo", 局_LogRMBPayOrder.Info)
-		adminRouter.POST("logRMBPayOrder/new", 局_LogRMBPayOrder.New)
 		adminRouter.POST("logRMBPayOrder/setPayOrderNote", 局_LogRMBPayOrder.SetNote)
 		adminRouter.POST("logRMBPayOrder/makeUp", 局_LogRMBPayOrder.MakeUp)
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {

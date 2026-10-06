@@ -36,6 +36,7 @@ type 请求_LogRMBPayOrderGetList struct {
 	Size         int      `json:"size"`
 	Type         int      `json:"type"`
 	Status       int      `json:"status"`
+	AppId        int      `json:"appId"`
 	Keywords     string   `json:"keywords"`
 	Order        int      `json:"order"`
 	RegisterTime []string `json:"registerTime"`
@@ -46,12 +47,6 @@ type 请求_LogRMBPayOrderDelete struct {
 	Id       []int  `json:"id"`
 	Type     int    `json:"type"`
 	Keywords string `json:"keywords"`
-}
-
-type 请求_LogRMBPayOrderNew struct {
-	User string  `json:"user"`
-	RMB  float64 `json:"rMB"`
-	Note string  `json:"note"`
 }
 
 type 请求_LogRMBPayOrderOut struct {
@@ -133,6 +128,9 @@ func (C *LogRMBPayOrderCtrl) GetList(c *gin.Context) {
 	}
 	if 请求.Status > 0 {
 		局_DB = 局_DB.Where("db_Log_RMBPayOrder.Status  = ? ", 请求.Status)
+	}
+	if 请求.AppId > 0 {
+		局_DB = 局_DB.Where("db_Log_RMBPayOrder.AppId = ? ", 请求.AppId)
 	}
 
 	var DB_LogRMBPayOrder []dbm.DB_LogRMBPayOrder
@@ -220,55 +218,6 @@ func (C *LogRMBPayOrderCtrl) Delete(c *gin.Context) {
 		return
 	}
 	response.OkWithMessage("删除成功,数量"+strconv.FormatInt(影响行数, 10), c)
-}
-
-// New 手动充值
-func (C *LogRMBPayOrderCtrl) New(c *gin.Context) {
-	var 请求 请求_LogRMBPayOrderNew
-	if !C.ToJSON(c, &请求) {
-		return
-	}
-	db := *global.GVA_DB
-	局_Uid := service.NewUser(c, &db).User用户名取id(请求.User)
-	if 请求.User == "" || 局_Uid == 0 {
-		response.FailWithMessage("用户不存在", c)
-		return
-	}
-	if 请求.RMB > 1000000000 || 请求.RMB < -1000000000 {
-		response.FailWithMessage("增减金额不能超过10亿(11位)", c)
-		return
-	}
-
-	var 新订单 dbm.DB_LogRMBPayOrder
-	新订单.Id = 0
-	新订单.Uid = 局_Uid
-	新订单.User = 请求.User
-	新订单.Status = constant.D订单状态_等待支付
-	新订单.Time = time.Now().Unix()
-	新订单.Ip = c.ClientIP()
-	新订单.Type = "管理员手动充值"
-	新订单.Rmb = 请求.RMB
-	新订单.Note = 请求.Note
-	新订单.PayOrder = service.NewRmbPayService(&db).Get获取新订单号()
-	新订单.UidType = 1
-
-	err := db.Model(dbm.DB_LogRMBPayOrder{}).Create(&新订单).Error
-	if err != nil {
-		response.FailWithMessage("订单创建失败", c)
-		return
-	}
-	var 新余额 float64
-	if 新余额, err = user.L_user.Id余额增减(c, 新订单.Uid, 新订单.Rmb, true); err != nil {
-		response.FailWithMessage("订单创建成功充值用户失败", c)
-		return
-	}
-	log.L_log.Log_写余额日志(新订单.User, c.ClientIP(), fmt.Sprintf("管理员手动创建支付订单:%s|新余额≈%.2f", 新订单.PayOrder, 新余额), 新订单.Rmb)
-
-	if !service.NewRmbPayService(&db).Order更新订单状态(新订单.PayOrder, constant.D订单状态_成功) {
-		response.FailWithMessage("用户充值成功订单状态更新失败", c)
-		return
-	}
-	response.OkWithMessage("成功,为保证规范该接口后续将删除,后续请到用户列表,勾选->更多->on批量增减余额", c)
 }
 
 // Out 退款

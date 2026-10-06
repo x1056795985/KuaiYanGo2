@@ -121,7 +121,7 @@ func UserApi_订单_购卡直冲(c *gin.Context) {
 	参数.ReceivedUid = 局_AppUser.AgentUid
 	参数.ProcessingType = constant.D订单类型_购卡直冲
 	参数.E额外信息 = gjson.New("{}")
-	_ = 参数.E额外信息.Set("AppId", 局_ctx.Z在线信息.LoginAppid)
+	参数.AppId = 局_ctx.Z在线信息.LoginAppid
 	_ = 参数.E额外信息.Set("KaClassId", 局_卡类信息.Id)
 	_ = 参数.E额外信息.Set("KaClassName", 局_卡类信息.Name)
 	_ = 参数.E额外信息.Set("AppUserUid", 局_AppUser.Uid)
@@ -189,7 +189,7 @@ func UserApi_订单_支付购卡(c *gin.Context) {
 	参数.Rmb = 局_卡类信息.Money
 	参数.ProcessingType = constant.D订单类型_支付购卡
 	参数.E额外信息 = gjson.New("{}")
-	_ = 参数.E额外信息.Set("AppId", 局_ctx.AppInfo.AppId)
+	参数.AppId = 局_ctx.AppInfo.AppId
 	_ = 参数.E额外信息.Set("KaClassId", 局_卡类信息.Id)
 	_ = 参数.E额外信息.Set("KaClassName", 局_卡类信息.Name)
 	_ = 参数.E额外信息.Set("在线信息AgentUid", 局_ctx.Z在线信息.AgentUid)
