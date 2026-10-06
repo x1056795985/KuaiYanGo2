@@ -22,32 +22,32 @@ import (
 	"github.com/dgrijalva/jwt-go" //nolint
 	"github.com/gin-gonic/gin"
 	"server/app/global"
+	"server/app/models/constant"
 	"server/app/models/dbm"
 )
 
-//JWT 有效期秒数
+// JWT 有效期秒数
 const 常量_JWT有效期 = 60
 
-//Token 信息缓存秒数
+// Token 信息缓存秒数
 const 常量_Token缓存秒 = 30
 
-//无效 Token 负缓存秒数(防暴力枚举打库)
+// 无效 Token 负缓存秒数(防暴力枚举打库)
 const 常量_负缓存秒 = 10
 
-
-//集_网关缓存 网关配置+专属传输层缓存,key=网关Id
+// 集_网关缓存 网关配置+专属传输层缓存,key=网关Id
 var 集_网关缓存 atomic.Value // map[int]结构_网关缓存项
 
-//集_缓存加载锁 防止并发重复加载网关表
+// 集_缓存加载锁 防止并发重复加载网关表
 var 集_缓存加载锁 sync.Mutex
 
-//集_Token缓存 有效Token信息缓存,key=Token原文
+// 集_Token缓存 有效Token信息缓存,key=Token原文
 var 集_Token缓存 sync.Map
 
-//集_Token负缓存 无效Token缓存,key=Token原文
+// 集_Token负缓存 无效Token缓存,key=Token原文
 var 集_Token负缓存 sync.Map
 
-//集_JWT缓存 已签发JWT复用缓存,key=网关Id|tokenId|ip
+// 集_JWT缓存 已签发JWT复用缓存,key=网关Id|tokenId|ip
 var 集_JWT缓存 sync.Map
 
 type 结构_网关缓存项 struct {
@@ -56,17 +56,17 @@ type 结构_网关缓存项 struct {
 }
 
 type 结构_Token缓存项 struct {
-	信息     dbm.DB_LinksToken
-	用户信息  dbm.DB_AppUser  //软件用户信息(签JWT用),游客/不存在时为零值
-	应用类型  int             //1/2账密型 3/4卡号型(签JWT用)
-	账号或卡号 string          //账密型=账号,卡号型=卡号(签JWT用)
-	余额     float64         //账密型才有值(签JWT用)
-	到期     int64
+	信息    dbm.DB_LinksToken
+	用户信息  dbm.DB_AppUser //软件用户信息(签JWT用),游客/不存在时为零值
+	应用类型  int            //1/2账密型 3/4卡号型(签JWT用)
+	账号或卡号 string         //账密型=账号,卡号型=卡号(签JWT用)
+	余额    float64        //账密型才有值(签JWT用)
+	到期    int64
 }
 
 type 结构_JWT缓存项 struct {
-	值   string
-	到期  int64
+	值  string
+	到期 int64
 	密钥 string //签发时用的Secret,与当前配置不符则重签(密钥轮换自动失效)
 }
 
@@ -146,7 +146,8 @@ func (j *网关) Q取缓存项(id int) (结构_网关缓存项, bool) {
 }
 
 // Q鉴权Token 校验客户端Token,返回在线信息与软件用户信息。无效/注销/非软件应用Token返回错误
-// LoginAppid>=10000 才放行(软件应用),管理员(1)/代理(2)/WebApi(3)/Web用户(10)/WS(11)一律拒绝
+// LoginAppid>=10000 才放行(软件应用);Web用户中心(10)同样放行(2026-10-06:手机端经H5用户中心登录,其令牌即此类型,Uid与软件令牌同源);
+// 管理员(1)/代理(2)/WebApi(3)/WS(11)一律拒绝
 func (j *网关) Q鉴权Token(token string) (结构_Token缓存项, error) {
 	var 局_空 结构_Token缓存项
 	if len(token) < 8 {
@@ -175,7 +176,7 @@ func (j *网关) Q鉴权Token(token string) (结构_Token缓存项, error) {
 		集_Token负缓存.Store(token, time.Now().Unix()+常量_负缓存秒)
 		return 局_空, errors.New("token无效或已注销")
 	}
-	if 局_在线信息.LoginAppid < 10000 {
+	if 局_在线信息.LoginAppid < 10000 && 局_在线信息.LoginAppid != constant.APPID_Web用户中心 {
 		集_Token负缓存.Store(token, time.Now().Unix()+常量_负缓存秒)
 		return 局_空, errors.New("该令牌不允许使用网关")
 	}
@@ -224,7 +225,7 @@ func (j *网关) Q签发JWT(网关配置 dbm.DB_Gateway, 鉴权信息 结构_Tok
 		"uid":         在线信息.Uid,
 		"appId":       在线信息.LoginAppid,
 		"tokenId":     在线信息.Id,
-		"user":        鉴权信息.账号或卡号,  //账密型=账号,卡号型=卡号
+		"user":        鉴权信息.账号或卡号,     //账密型=账号,卡号型=卡号
 		"key":         用户信息.Key,       //绑定信息
 		"vipTime":     用户信息.VipTime,   //到期时间或剩余点数
 		"vipNumber":   用户信息.VipNumber, //积分单独备用
@@ -296,7 +297,7 @@ func (j *网关) Q执行转发(c *gin.Context, 网关配置 dbm.DB_Gateway, jwt�
 			局_头.Set("x-wg-ip", ip)
 			//hop-by-hop头由ReverseProxy自动剥离(Upgrade/Connection对WS请求自动保留)
 		},
-		Transport:    j.Q取传输层(网关配置.Id),
+		Transport:     j.Q取传输层(网关配置.Id),
 		FlushInterval: -1, //立即flush,WS/SSE/流式必需
 		ModifyResponse: func(resp *http.Response) error {
 			//Location改写:业务返回3xx时把内网地址替换回/wangGuan,防泄露
@@ -347,4 +348,3 @@ func (j *网关) Q生成密钥() (string, error) {
 	}
 	return hex.EncodeToString(局_字节), nil
 }
-

@@ -221,9 +221,6 @@ func (j *rmbPay) D订单退款(c *gin.Context, 参数 m.PayParams, 追回资产 
 	参数.Z支付配置s = setting.Q在线支付配置()
 	参数.Z支付配置, _ = json.Marshal(&参数.Z支付配置s)
 	参数.E额外信息, _ = gjson.LoadJson(参数.Extra)
-	if 参数.AppId == 0 {
-		参数.AppId = 参数.E额外信息.Get("AppId").Int() //兼容旧订单,旧订单来源AppId存于额外信息
-	}
 	if 参数.Z支付配置s.J禁止退款 {
 		err = errors.New("已禁止退款,请手动前往服务器数据库,修改配置信息文件 禁止退款:true")
 		return

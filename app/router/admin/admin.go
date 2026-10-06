@@ -398,6 +398,15 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 			adminRouter.POST("logRMBPayOrder/out", 局_LogRMBPayOrder.Out)
 		}
 	}
+	//充值订单图表统计
+	{
+		adminRouter.POST("logRMBPayOrder/chartSummary", 局_chart.Q取充值订单仪表台汇总)
+		adminRouter.POST("logRMBPayOrder/chartAppMonthRmb", 局_chart.Q取充值订单分应用月收入统计)
+		adminRouter.POST("logRMBPayOrder/chartAppWeekDay", 局_chart.Q取充值订单分应用近7天统计)
+		adminRouter.POST("logRMBPayOrder/chartUserRank", 局_chart.Q取充值订单用户充值排行榜)
+		adminRouter.POST("logRMBPayOrder/chartPayType", 局_chart.Q取充值订单支付方式统计)
+		adminRouter.POST("logRMBPayOrder/chartRmbRange", 局_chart.Q取充值订单金额区间分布)
+	}
 
 	局_Withdraw := controller.NewWithdrawController()
 	{

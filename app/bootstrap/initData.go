@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"EFunc/utils"
 	"fmt"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"server/app/global"
 	"server/app/logic/common/appInfo"
 	"server/app/logic/common/appUser"
@@ -13,7 +14,6 @@ import (
 	"server/app/logic/common/rmbPay"
 	"server/app/logic/common/setting"
 	"server/app/logic/common/user"
-	"server/app/models/common"
 	"server/app/models/constant"
 	"server/app/models/dbm"
 
@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 // InitDbTables 初始化数据库表
@@ -314,7 +313,7 @@ func InitDbTableData(c *gin.Context) {
 		global.GVA_LOG.Println("兼容执行修改旧卡的卡号时间,执行数量:" + strconv.Itoa(int(global.GVA_DB.Exec(局_sql).RowsAffected)))
 		局_例子记录.KaUseTime = 局_例子版本
 	}
-
+	数据库兼容旧版本(c)
 	err := setting.Z例子写出记录(&局_例子记录)
 	if err != nil {
 		return
@@ -549,102 +548,21 @@ func 插入公共Js例子(c *gin.Context) {
 
 // 数据库兼容旧版本 数据库兼容旧版本升级
 func 数据库兼容旧版本(c *gin.Context) {
-	db := *global.GVA_DB
-	var 局_待处理订单Id数组 []dbm.DB_LogRMBPayOrder
-	_ = db.Model(dbm.DB_LogRMBPayOrder{}).Where("UidType is NULL ").Find(&局_待处理订单Id数组).Error
-	for _, 局_订单 := range 局_待处理订单Id数组 {
-		err := db.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 局_订单.Id).Updates(map[string]interface{}{
-			"UidType":        1,
-			"User":           service.NewUser(c, &db).Id取User(局_订单.Uid),
-			"ProcessingType": 0,
-			"Extra":          "",
-		}).Error
-		if err != nil {
-			global.GVA_LOG.Println("支付支付订单,兼容旧版本处理失败ID:" + strconv.Itoa(局_订单.Uid))
-		}
-	}
-
-	// 把支付方式 微信PC修改成 微信支付
-	_ = db.Model(dbm.DB_LogRMBPayOrder{}).Where("Type = ? ", "微信PC").Update("Type", "微信支付").Error
-
-	// 把appUser 积分 字段类型 修改成 双精度小数型
-	局_已有AppID := service.NewAppInfo(c, &db).App取map列表String(true)
-	for 值 := range 局_已有AppID {
-		columnType := ""
-		err := db.Raw("SELECT data_type FROM information_schema.columns WHERE table_name = 'db_AppUser_" + 值 + "' AND column_name = 'VipNumber'").Scan(&columnType).Error
-		if columnType != "" && columnType != "decimal" {
-			err = db.Exec("ALTER TABLE db_AppUser_" + 值 + " MODIFY COLUMN VipNumber DECIMAL(10,2)").Error
-			if err != nil {
-				fmt.Println("兼容就版本,失败修改字段类型为 DECIMAL(10, 2)", err.Error())
+	db := global.Get局db()
+	// 兼容 余额充值订单,旧订单来源AppId存于额外信息,统一回填到AppId字段
+	var 局_AppId为0订单 []dbm.DB_LogRMBPayOrder
+	if err := db.Model(dbm.DB_LogRMBPayOrder{}).Where("AppId = ?", 0).Find(&局_AppId为0订单).Error; err == nil && len(局_AppId为0订单) > 0 {
+		for _, 局_订单 := range 局_AppId为0订单 {
+			局_AppId := gjson.New(局_订单.Extra).Get("AppId").Int()
+			if 局_AppId <= 0 {
+				continue //额外信息里也没有来源AppId,无法回填
 			}
-		}
-	}
-
-	// 把任务信息数据库 生成信息和消费信息,字段修改长度为5000
-	columnType := ""
-	err := db.Raw("SELECT COLUMN_TYPE FROM information_schema.columns WHERE table_name = 'db_TaskPoolData' AND column_name = 'SubmitData'").Scan(&columnType).Error
-	if columnType != "" && columnType != "varchar(8000)" {
-		err = db.Exec("ALTER TABLE db_TaskPoolData MODIFY COLUMN ReturnData varchar(8000)").Error
-		err = db.Exec("ALTER TABLE db_TaskPoolData MODIFY COLUMN SubmitData varchar(8000)").Error
-		if err != nil {
-			fmt.Println("兼容就版本,失败修改字段类型为 varchar(8000)", err.Error())
-		}
-	}
-
-	// 将配置信息改放到数据库,将旧的数据写入数据库
-	var 局_总数 int64
-	_ = db.Model(dbm.DB_Setting{}).Count(&局_总数).Error
-	if 局_总数 == 0 && global.GVA_Viper.IsSet("系统设置.系统开关") {
-		var Test = common.Test{
-			DbAgentLevel:     global.GVA_Viper.GetInt("test.db_agent_level"),
-			DbAppinfo:        global.GVA_Viper.GetInt("test.db_appinfo"),
-			DbLogmoney:       global.GVA_Viper.GetInt("test.db_logmoney"),
-			DbLogrmbpayorder: global.GVA_Viper.GetInt("test.db_logrmbpayorder"),
-			DbLogusermsg:     global.GVA_Viper.GetInt("test.db_logusermsg"),
-			DbLogvipnumber:   global.GVA_Viper.GetInt("test.db_logvipnumber"),
-			DbPublicdata:     global.GVA_Viper.GetInt("test.db_publicdata"),
-			DbUser:           global.GVA_Viper.GetInt("test.db_user"),
-			Taskpool:         global.GVA_Viper.GetInt("test.taskpool_类型"),
-			User:             global.GVA_Viper.GetInt("test.user"),
-		}
-		_ = setting.Z例子写出记录(&Test)
-	}
-
-	// appUser 缺少归属代理id
-	局_所有应用信息, err := service.NewAppInfo(c, &db).Infos(map[string]interface{}{})
-	for _, v := range 局_所有应用信息 {
-		var 局_字段 []string
-		局_sql := fmt.Sprintf("SELECT column_name FROM information_schema.columns WHERE table_name = 'db_AppUser_%d' AND column_name IN ('AgentUid','Id')", v.AppId)
-		err = db.Raw(局_sql).Scan(&局_字段).Error
-		if len(局_字段) == 1 {
-			局_sql = fmt.Sprintf("ALTER TABLE `db_AppUser_%d` ADD COLUMN `AgentUid` BIGINT(20) NULL DEFAULT 0 COMMENT '归属代理Uid' AFTER `RegisterTime`", v.AppId)
-			err = db.Exec(局_sql).Error
-			if err != nil {
-				fmt.Println("兼容就版本,软件用户表添加AgentUid", err.Error())
+			if err = db.Model(dbm.DB_LogRMBPayOrder{}).Where("Id = ?", 局_订单.Id).Update("AppId", 局_AppId).Error; err != nil {
+				global.GVA_LOG.Println("兼容支付订单回填来源AppId失败,订单ID:" + strconv.Itoa(局_订单.Id) + "," + err.Error())
+				continue
 			}
+			//global.GVA_LOG.Println("兼容支付订单回填来源AppId,订单ID:" + strconv.Itoa(局_订单.Id) + ",AppId:" + strconv.Itoa(局_AppId))
 		}
 	}
 
-	// 唯一积分表
-	局_所有应用信息, err = service.NewAppInfo(c, &db).Infos(map[string]interface{}{})
-	for _, v := range 局_所有应用信息 {
-		migrator := db.Migrator()
-		tableName := dbm.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(v.AppId)
-		if migrator.HasTable(tableName) {
-			continue
-		}
-		if err = db.Set("gorm:table_options", "ENGINE=InnoDB").
-			Table(dbm.DB_UniqueNumLog{}.TableName() + "_" + strconv.Itoa(v.AppId)).
-			AutoMigrate(&dbm.DB_UniqueNumLog{}); err != nil {
-			fmt.Println("积分记录表创建失败: ", err.Error())
-		}
-	}
-
-	// 用户消息新增 AppID字段
-	_ = db.Model(dbm.DB_LogUserMsg{}).Where("AppId = ?", 0).Count(&局_总数).Error
-	if 局_总数 > 0 {
-		db.Exec("UPDATE db_log_usermsg  AS a SET  AppId=(SELECT AppId FROM db_app_info WHERE AppName =a.App)")
-		err = db.Model(dbm.DB_LogUserMsg{}).Where("AppId = ?", 0).Update("AppId", gorm.Expr("App")).Error
-		err = db.Model(dbm.DB_LogUserMsg{}).Where("AppId IS NULL").Delete(&dbm.DB_LogUserMsg{}).Error
-	}
 }

@@ -83,3 +83,71 @@ func (C *Echart) G高德取天气(c *gin.Context) {
 	}
 
 }
+
+// ============ 充值订单图表统计 ============
+
+// Q取充值订单仪表台汇总 充值订单顶部汇总卡片
+func (C *Echart) Q取充值订单仪表台汇总(c *gin.Context) {
+	data, err := L_chart.Q取充值订单仪表台汇总()
+	if err != nil {
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(data, "成功", c)
+}
+
+// Q取充值订单分应用月收入统计 分应用本月收入与上月对比
+func (C *Echart) Q取充值订单分应用月收入统计(c *gin.Context) {
+	data, err := L_chart.Q取充值订单分应用月收入统计()
+	if err != nil {
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(data, "成功", c)
+}
+
+// Q取充值订单分应用近7天统计 分应用近7天每天成功订单金额
+func (C *Echart) Q取充值订单分应用近7天统计(c *gin.Context) {
+	data, err := L_chart.Q取充值订单分应用近7天统计()
+	if err != nil {
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(data, "成功", c)
+}
+
+// Q取充值订单用户充值排行榜 用户充值日/周/月排行榜TOP10
+func (C *Echart) Q取充值订单用户充值排行榜(c *gin.Context) {
+	var 请求 struct {
+		Type int `json:"type"`
+	}
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	data, err := L_chart.Q取充值订单用户充值排行榜(请求.Type)
+	if err != nil {
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(data, "成功", c)
+}
+
+// Q取充值订单支付方式统计 近30天支付方式金额占比
+func (C *Echart) Q取充值订单支付方式统计(c *gin.Context) {
+	data, err := L_chart.Q取充值订单支付方式统计()
+	if err != nil {
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(data, "成功", c)
+}
+
+// Q取充值订单金额区间分布 近30天充值金额区间分布
+func (C *Echart) Q取充值订单金额区间分布(c *gin.Context) {
+	data, err := L_chart.Q取充值订单金额区间分布()
+	if err != nil {
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(data, "成功", c)
+}
