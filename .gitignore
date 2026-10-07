@@ -1,6 +1,11 @@
 # 构建产物（大二进制文件不入库）
 *.bin
-云函数/
-other/
+云函数/**
+著作权材料/**
+other/**
+scripts/**
 config.json
-app/web/dist/
+# app/web 下仅保留 .go 源码，其余（前端构建产物、静态资源等）不入库
+app/web/**
+!app/web/**/
+!app/web/**/*.go
