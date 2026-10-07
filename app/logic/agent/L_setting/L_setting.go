@@ -45,6 +45,7 @@ func Q取代理在线支付信息(c *gin.Context, 局_uid int) (data m.Z在线�
 	err = func取值并解析("虎皮椒", &data.Z在线支付_虎皮椒)
 	err = func取值并解析("易支付", &data.Z在线支付_易支付)
 	err = func取值并解析("易支付2", &data.Z在线支付_易支付2)
+	data.Q排序缺省值补全()
 	return
 }
 

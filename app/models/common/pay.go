@@ -47,6 +47,7 @@ type Z在线支付_支付宝PC struct {
 	Z支付宝公钥      string `mapstructure:"支付宝公钥" json:"支付宝公钥" `
 	Z支付宝同步回调url string `mapstructure:"支付宝同步回调url" json:"支付宝同步回调url" `
 	Z支付宝单次最大金额  int    `mapstructure:"支付宝单次最大金额" json:"支付宝单次最大金额" `
+	Z支付宝排序       int    `mapstructure:"支付宝排序" json:"支付宝排序" `
 }
 
 type Z在线支付_支付宝当面付 struct {
@@ -58,6 +59,7 @@ type Z在线支付_支付宝当面付 struct {
 	Z支付宝当面付公钥      string `mapstructure:"支付宝当面付公钥" json:"支付宝当面付公钥" `
 	Z支付宝当面付同步回调url string `mapstructure:"支付宝当面付同步回调url" json:"支付宝当面付同步回调url" `
 	Z支付宝当面付单次最大金额  int    `mapstructure:"支付宝当面付单次最大金额" json:"支付宝当面付单次最大金额" `
+	Z支付宝当面付排序       int    `mapstructure:"支付宝当面付排序" json:"支付宝当面付排序" `
 }
 type Z在线支付_支付宝H5 struct {
 	Z支付宝H5开关      bool   `mapstructure:"支付宝H5开关" json:"支付宝H5开关"`
@@ -68,6 +70,7 @@ type Z在线支付_支付宝H5 struct {
 	Z支付宝H5公钥      string `mapstructure:"支付宝H5公钥" json:"支付宝H5公钥" `
 	Z支付宝H5同步回调url string `mapstructure:"支付宝H5同步回调url" json:"支付宝H5同步回调url"`
 	Z支付宝H5单次最大金额  int    `mapstructure:"支付宝H5单次最大金额" json:"支付宝H5单次最大金额" `
+	Z支付宝H5排序       int    `mapstructure:"支付宝H5排序" json:"支付宝H5排序" `
 }
 type Z在线支付_微信支付 struct {
 	W微信支付开关      bool   `mapstructure:"微信支付开关" json:"微信支付开关" `
@@ -82,6 +85,7 @@ type Z在线支付_微信支付 struct {
 	// 微信支付公钥验签(用于验证微信支付身份)
 	W微信支付公钥   string `mapstructure:"微信支付公钥" json:"微信支付公钥"`
 	W微信支付公钥ID string `mapstructure:"微信支付公钥ID" json:"微信支付公钥ID"`
+	W微信支付排序    int    `mapstructure:"微信支付排序" json:"微信支付排序" `
 }
 type Z在线支付_小叮当 struct {
 	X小叮当支付开关   bool   `mapstructure:"小叮当支付开关" json:"小叮当支付开关"`
@@ -90,6 +94,7 @@ type Z在线支付_小叮当 struct {
 	X小叮当接口密钥   string `mapstructure:"小叮当接口密钥" json:"小叮当接口密钥" `
 	X小叮当支付类型   int    `mapstructure:"小叮当支付类型" json:"小叮当支付类型" `
 	X小叮当单次最大金额 int    `mapstructure:"小叮当单次最大金额" json:"小叮当单次最大金额" `
+	X小叮当支付排序   int    `mapstructure:"小叮当支付排序" json:"小叮当支付排序" `
 }
 
 type Z在线支付_虎皮椒 struct {
@@ -101,6 +106,7 @@ type Z在线支付_虎皮椒 struct {
 	H虎皮椒同步回调url   string `mapstructure:"虎皮椒同步回调url" json:"虎皮椒同步回调url"`
 	H虎皮椒单次最大金额    int    `mapstructure:"虎皮椒单次最大金额" json:"虎皮椒单次最大金额" `
 	H虎皮椒支付网关      string `mapstructure:"虎皮椒支付网关" json:"虎皮椒支付网关" `
+	H虎皮椒支付排序      int    `mapstructure:"虎皮椒支付排序" json:"虎皮椒支付排序" `
 }
 type Z在线支付_易支付 struct {
 	Y易支付开关      bool   `mapstructure:"易支付开关" json:"易支付开关" `
@@ -112,6 +118,7 @@ type Z在线支付_易支付 struct {
 	Y易支付最大金额    int    `mapstructure:"易支付最大金额" json:"易支付最大金额" `
 	Y易支付同步回调url string `mapstructure:"易支付同步回调url" json:"易支付同步回调url" `
 	Y易支付设备类型    string `mapstructure:"易支付设备类型" json:"易支付设备类型" `
+	Y易支付排序      int    `mapstructure:"易支付排序" json:"易支付排序" `
 }
 
 type Z在线支付_易支付2 struct {
@@ -124,8 +131,33 @@ type Z在线支付_易支付2 struct {
 	Y易支付2最大金额    int    `mapstructure:"易支付2最大金额" json:"易支付2最大金额" `
 	Y易支付2同步回调url string `mapstructure:"易支付2同步回调url" json:"易支付2同步回调url" `
 	Y易支付2设备类型    string `mapstructure:"易支付2设备类型" json:"易支付2设备类型" `
+	Y易支付2排序      int    `mapstructure:"易支付2排序" json:"易支付2排序" `
 }
 type Z在线支付_余额支付 struct {
 	Y余额支付开关   bool   `mapstructure:"余额支付开关" json:"余额支付开关"`
 	Y余额支付显示名称 string `mapstructure:"余额支付显示名称" json:"余额支付显示名称" `
+	Y余额支付排序    int    `mapstructure:"余额支付排序" json:"余额支付排序" `
+}
+
+// Q排序缺省值补全 排序值小于等于0的支付方式按默认顺序补全,防止旧配置没有排序值导致排序混乱
+func (j *Z在线支付) Q排序缺省值补全() {
+	局_默认排序列表 := []struct {
+		值   *int
+		缺省 int
+	}{
+		{&j.Z支付宝排序, 1},
+		{&j.Z支付宝当面付排序, 2},
+		{&j.Z支付宝H5排序, 3},
+		{&j.W微信支付排序, 4},
+		{&j.X小叮当支付排序, 5},
+		{&j.H虎皮椒支付排序, 6},
+		{&j.Y易支付排序, 7},
+		{&j.Y易支付2排序, 8},
+		{&j.Y余额支付排序, 9},
+	}
+	for _, v := range 局_默认排序列表 {
+		if *v.值 <= 0 {
+			*v.值 = v.缺省
+		}
+	}
 }

@@ -30,6 +30,12 @@ func (C *Pay) GetPayStatus(c *gin.Context) {
 	response.OkWithData(c, 局map)
 	return
 }
+
+// GetPayList 取支付方式列表,按后台配置的排序值升序返回
+func (C *Pay) GetPayList(c *gin.Context) {
+	response.OkWithData(c, rmbPay.L_rmbPay.Pay_取支付通道基本信息())
+	return
+}
 func (C *Pay) GetPayKaList(c *gin.Context) {
 	var info = struct {
 		ka       dbm.DB_Ka

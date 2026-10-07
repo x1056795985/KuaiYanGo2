@@ -22,6 +22,7 @@ import (
 	"server/app/models/dbm"
 	"server/app/service"
 	"server/app/utils/Qqwry"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -943,6 +944,7 @@ type 支付通道基本信息 struct {
 	Alias  string `json:"Alias"`  //显示名称
 	Status bool   `json:"Status"` //开关
 	RMB    int    `json:"RMB"`    //最大金额
+	Sort   int    `json:"Sort"`   //排序值
 }
 
 func (j *rmbPay) Pay_取支付通道基本信息() []支付通道基本信息 {
@@ -951,16 +953,20 @@ func (j *rmbPay) Pay_取支付通道基本信息() []支付通道基本信息 {
 		return []支付通道基本信息{}
 	}
 	支付通道列表 := []支付通道基本信息{
-		{Id: 1, Name: "支付宝PC", Alias: 支付配置.Z支付宝显示名称, Status: 支付配置.Z支付宝开关, RMB: 支付配置.Z支付宝单次最大金额},
-		{Id: 2, Name: "支付宝当面付", Alias: 支付配置.Z支付宝当面付显示名称, Status: 支付配置.Z支付宝当面付开关, RMB: 支付配置.Z支付宝单次最大金额},
-		{Id: 3, Name: "支付宝H5", Alias: 支付配置.Z支付宝H5显示名称, Status: 支付配置.Z支付宝H5开关, RMB: 支付配置.Z支付宝单次最大金额},
-		{Id: 4, Name: "微信支付", Alias: 支付配置.W微信支付显示名称, Status: 支付配置.W微信支付开关, RMB: 支付配置.W微信支付单次最大金额},
-		{Id: 5, Name: "小叮当", Alias: 支付配置.X小叮当支付显示名称, Status: 支付配置.X小叮当支付开关, RMB: 支付配置.X小叮当单次最大金额},
-		{Id: 6, Name: "虎皮椒", Alias: 支付配置.H虎皮椒支付显示名称, Status: 支付配置.H虎皮椒支付开关, RMB: 支付配置.H虎皮椒单次最大金额},
-		{Id: 7, Name: "易支付", Alias: 支付配置.Y易支付显示名称, Status: 支付配置.Y易支付开关, RMB: 支付配置.Y易支付最大金额},
-		{Id: 8, Name: "易支付2", Alias: 支付配置.Y易支付2显示名称, Status: 支付配置.Y易支付2开关, RMB: 支付配置.Y易支付2最大金额},
-		{Id: 9, Name: "余额支付", Alias: 支付配置.Y余额支付显示名称, Status: 支付配置.Y余额支付开关, RMB: 99999999},
+		{Id: 1, Name: "支付宝PC", Alias: 支付配置.Z支付宝显示名称, Status: 支付配置.Z支付宝开关, RMB: 支付配置.Z支付宝单次最大金额, Sort: 支付配置.Z支付宝排序},
+		{Id: 2, Name: "支付宝当面付", Alias: 支付配置.Z支付宝当面付显示名称, Status: 支付配置.Z支付宝当面付开关, RMB: 支付配置.Z支付宝当面付单次最大金额, Sort: 支付配置.Z支付宝当面付排序},
+		{Id: 3, Name: "支付宝H5", Alias: 支付配置.Z支付宝H5显示名称, Status: 支付配置.Z支付宝H5开关, RMB: 支付配置.Z支付宝H5单次最大金额, Sort: 支付配置.Z支付宝H5排序},
+		{Id: 4, Name: "微信支付", Alias: 支付配置.W微信支付显示名称, Status: 支付配置.W微信支付开关, RMB: 支付配置.W微信支付单次最大金额, Sort: 支付配置.W微信支付排序},
+		{Id: 5, Name: "小叮当", Alias: 支付配置.X小叮当支付显示名称, Status: 支付配置.X小叮当支付开关, RMB: 支付配置.X小叮当单次最大金额, Sort: 支付配置.X小叮当支付排序},
+		{Id: 6, Name: "虎皮椒", Alias: 支付配置.H虎皮椒支付显示名称, Status: 支付配置.H虎皮椒支付开关, RMB: 支付配置.H虎皮椒单次最大金额, Sort: 支付配置.H虎皮椒支付排序},
+		{Id: 7, Name: "易支付", Alias: 支付配置.Y易支付显示名称, Status: 支付配置.Y易支付开关, RMB: 支付配置.Y易支付最大金额, Sort: 支付配置.Y易支付排序},
+		{Id: 8, Name: "易支付2", Alias: 支付配置.Y易支付2显示名称, Status: 支付配置.Y易支付2开关, RMB: 支付配置.Y易支付2最大金额, Sort: 支付配置.Y易支付2排序},
+		{Id: 9, Name: "余额支付", Alias: 支付配置.Y余额支付显示名称, Status: 支付配置.Y余额支付开关, RMB: 99999999, Sort: 支付配置.Y余额支付排序},
 	}
+	//按配置的排序值升序,值相同保持默认顺序
+	sort.SliceStable(支付通道列表, func(i, k int) bool {
+		return 支付通道列表[i].Sort < 支付通道列表[k].Sort
+	})
 	return 支付通道列表
 }
 
