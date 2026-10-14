@@ -118,7 +118,6 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.GET("user/getAdminInfo", 局_User.GetAdminInfo)
 		adminRouter.POST("user/outLogin", 局_User.OutLogin)
-		adminRouter.POST("user/adminNewPassword", 局_User.AdminNewPassword)
 		adminRouter.POST("user/getUserList", 局_User.GetUserList)
 		adminRouter.POST("user/getUserInfo", 局_User.GetUserInfo)
 		adminRouter.POST("user/saveUser", 局_User.SaveUser)
@@ -126,6 +125,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("user/setUserStatus", 局_User.SetUserStatus)
 		adminRouter.POST("user/setBatchAddRMB", 局_User.BatchAddRMB)
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
+			adminRouter.POST("user/adminNewPassword", 局_User.AdminNewPassword)
 			adminRouter.POST("user/deleteUser", 局_User.DeleteUser)
 		}
 	}
