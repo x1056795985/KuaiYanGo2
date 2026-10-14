@@ -635,7 +635,6 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("kuaiYan/getCaptcha", 局_KuaiYan.GetCaptcha)
 		adminRouter.POST("kuaiYan/getUserInfo", 局_KuaiYan.GetUserInfo)
 		adminRouter.POST("kuaiYan/getSmsCaptcha", 局_KuaiYan.GetSmsCaptcha)
-		adminRouter.POST("kuaiYan/setPassword", 局_KuaiYan.SetPassword)
 		adminRouter.POST("kuaiYan/register", 局_KuaiYan.Register)
 		adminRouter.POST("kuaiYan/login", 局_KuaiYan.Login)
 		adminRouter.POST("kuaiYan/getIsBuyKaList", 局_KuaiYan.GetIsBuyKaList)
@@ -643,6 +642,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("kuaiYan/getPayStatus", 局_KuaiYan.GetPayStatus)
 		adminRouter.POST("kuaiYan/updater", 局_KuaiYan.Updater)
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
+			adminRouter.POST("kuaiYan/setPassword", 局_KuaiYan.SetPassword)
 			adminRouter.POST("kuaiYan/outLogin", 局_KuaiYan.OutLogin)
 			adminRouter.POST("kuaiYan/getPayPC", 局_KuaiYan.GetPayPC)
 			adminRouter.POST("kuaiYan/payMoneyToKa", 局_KuaiYan.PayMoneyToKa)
