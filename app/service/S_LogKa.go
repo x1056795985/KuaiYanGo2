@@ -77,14 +77,14 @@ func (s *S_LogKa) BatchDelete(tx *gorm.DB, Id []int, Type int, Keywords string) 
 		影响行数 = d.Where("Id IN ?", Id).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 2:
 		影响行数 = d.Where("User = ?", Keywords).Delete(dbm.DB_LogKa{}).RowsAffected
-	case 3:
-		影响行数 = d.Where("1=1").Delete(dbm.DB_LogKa{}).RowsAffected
-	case 4:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(dbm.DB_LogKa{}).RowsAffected
-	case 5:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(dbm.DB_LogKa{}).RowsAffected
-	case 6:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(dbm.DB_LogKa{}).RowsAffected
+	case 3: //清空 使用TRUNCATE瞬间完成,避免大表DELETE卡死
+		return 日志_整表TRUNCATE清空(tx, dbm.DB_LogKa{})
+	case 4: //删除7天前 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_LogKa{}, "Time < ?", time.Now().Unix()-604800)
+	case 5: //删除30天前 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_LogKa{}, "Time < ?", time.Now().Unix()-2592000)
+	case 6: //删除90天前 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_LogKa{}, "Time < ?", time.Now().Unix()-7776000)
 	case 7:
 		if len(Keywords) == 0 {
 			return 0, errors.New("关键字不能为空")
@@ -154,14 +154,14 @@ func (s *S_LogKa) BatchDeleteByUser(tx *gorm.DB, Id []int, Type int, Keywords st
 		影响行数 = d.Where("Id IN ?", Id).Delete(dbm.DB_LogKa{}).RowsAffected
 	case 2:
 		影响行数 = d.Where("User = ?", Keywords).Delete(dbm.DB_LogKa{}).RowsAffected
-	case 3:
-		影响行数 = d.Where("1=1").Delete(dbm.DB_LogKa{}).RowsAffected
-	case 4:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-604800).Delete(dbm.DB_LogKa{}).RowsAffected
-	case 5:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-2592000).Delete(dbm.DB_LogKa{}).RowsAffected
-	case 6:
-		影响行数 = d.Where("Time < ?", time.Now().Unix()-7776000).Delete(dbm.DB_LogKa{}).RowsAffected
+	case 3: //清空该用户 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_LogKa{}, "User = ?", User)
+	case 4: //删除7天前 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_LogKa{}, "User = ? AND Time < ?", User, time.Now().Unix()-604800)
+	case 5: //删除30天前 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_LogKa{}, "User = ? AND Time < ?", User, time.Now().Unix()-2592000)
+	case 6: //删除90天前 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_LogKa{}, "User = ? AND Time < ?", User, time.Now().Unix()-7776000)
 	case 7:
 		if len(Keywords) == 0 {
 			return 0, errors.New("关键字不能为空")

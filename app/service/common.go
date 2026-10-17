@@ -116,6 +116,55 @@ func batchUpdateIN(db *gorm.DB, model interface{}, tableName string, field strin
 	return total, nil
 }
 
+// 日志_取表名 从日志模型获取数据库表名
+func 日志_取表名(db *gorm.DB, model interface{}) (string, error) {
+	if t, ok := model.(interface{ TableName() string }); ok {
+		return t.TableName(), nil
+	}
+	stmt := &gorm.Statement{DB: db}
+	if err := stmt.Parse(model); err != nil {
+		return "", err
+	}
+	return stmt.Schema.Table, nil
+}
+
+// 日志_整表TRUNCATE清空 整表清空改用TRUNCATE TABLE瞬间完成,避免大表DELETE逐行删除长时间锁表卡死
+// 注意:TRUNCATE是DDL操作会隐式提交且不可回滚,仅适用于日志类整表清空场景
+func 日志_整表TRUNCATE清空(db *gorm.DB, model interface{}) (影响行数 int64, err error) {
+	局_表名, err := 日志_取表名(db, model)
+	if err != nil {
+		return 0, err
+	}
+	//先统计当前行数用于返回(TRUNCATE本身无法返回影响行数)
+	db.Model(model).Count(&影响行数)
+	err = db.Exec("TRUNCATE TABLE `" + 局_表名 + "`").Error
+	if err != nil {
+		return 0, err
+	}
+	return 影响行数, nil
+}
+
+// 日志_分批条件删除 按条件分批删除(每次LIMIT固定条数循环执行,每批独立提交),避免单条DELETE删除海量数据长时间锁表卡死
+func 日志_分批条件删除(db *gorm.DB, model interface{}, 条件 string, 参数 ...interface{}) (影响行数 int64, err error) {
+	局_表名, err := 日志_取表名(db, model)
+	if err != nil {
+		return 0, err
+	}
+	局_SQL := "DELETE FROM `" + 局_表名 + "` WHERE " + 条件 + " LIMIT ?"
+	for {
+		局_tx := db.Exec(局_SQL, append(参数, batchSize)...)
+		if 局_tx.Error != nil {
+			return 影响行数, 局_tx.Error
+		}
+		影响行数 += 局_tx.RowsAffected
+		//本批删除数量小于批次大小,说明已经删完
+		if 局_tx.RowsAffected < int64(batchSize) {
+			break
+		}
+	}
+	return 影响行数, nil
+}
+
 // 使用泛型定义基础服务
 type BaseService[T any] struct {
 	db *gorm.DB

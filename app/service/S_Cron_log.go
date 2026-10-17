@@ -103,14 +103,14 @@ func (s *S_CronLog) DeleteType(tx *gorm.DB, Type int, KeyWord string) (影响行
 	switch Type {
 	default:
 		return 0, errors.New("类型错误")
-	case 1: //删除全部
-		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("1=1").Delete("")
-	case 2: //删7天前
-		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("RunTime <  ?", time.Now().Unix()-604800).Delete("")
-	case 3: //删除30天前
-		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("RunTime <  ?", time.Now().Unix()-2592000).Delete("")
-	case 4: //删除90天前
-		tx2 = tx.Model(dbm.DB_Cron_log{}).Where("RunTime <  ?", time.Now().Unix()-7776000).Delete("")
+	case 1: //删除全部 使用TRUNCATE瞬间完成,避免大表DELETE卡死
+		return 日志_整表TRUNCATE清空(tx, dbm.DB_Cron_log{})
+	case 2: //删7天前 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_Cron_log{}, "RunTime < ?", time.Now().Unix()-604800)
+	case 3: //删除30天前 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_Cron_log{}, "RunTime < ?", time.Now().Unix()-2592000)
+	case 4: //删除90天前 分批删除避免长时间锁表
+		return 日志_分批条件删除(tx, dbm.DB_Cron_log{}, "RunTime < ?", time.Now().Unix()-7776000)
 	case 5: //删除关键字
 		if len(KeyWord) == 0 {
 			return 0, errors.New("关键字不能为空")
