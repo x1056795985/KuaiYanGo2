@@ -349,6 +349,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 		adminRouter.POST("setSystem/getInfoCloudStorage", 局_SetSystem.GetInfo云存储设置)
 		adminRouter.POST("setSystem/getUserMsgConfig", 局_SetSystem.Get用户消息配置)
 		adminRouter.POST("setSystem/getInfoAiConfig", 局_SetSystem.GetInfoAiConfig)
+		adminRouter.POST("setSystem/getInfoRealName", 局_SetSystem.GetInfoRealName设置)
 		adminRouter.POST("setSystem/saveInfoSMS", 局_SetSystem.Save短信平台设置)
 		adminRouter.POST("setSystem/testSendSMS", 局_SetSystem.F发送短信平台测试)
 		adminRouter.POST("setSystem/saveInfoCaptcha2", 局_SetSystem.Save行为验证码平台设置)
@@ -358,6 +359,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 			adminRouter.POST("setSystem/saveInfoPay", 局_SetSystem.SaveInfo在线支付)
 			adminRouter.POST("setSystem/saveUserMsgConfig", 局_SetSystem.Save用户消息配置)
 			adminRouter.POST("setSystem/saveInfoAiConfig", 局_SetSystem.SaveInfoAiConfig)
+			adminRouter.POST("setSystem/saveInfoRealName", 局_SetSystem.SaveInfoRealName设置)
 		}
 	}
 

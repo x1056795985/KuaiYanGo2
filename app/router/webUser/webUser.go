@@ -50,6 +50,7 @@ func (r *AllRouter) InitWebUserRouter(router *gin.RouterGroup) {
 		根路由.POST("user/newUserInfo", 局_user.NewUserInfo)
 		根路由.POST("user/getPwSendSms", 局_user.GetPwSendSms)
 		根路由.POST("user/getInfo", 局_user.GetInfo)
+		根路由.POST("user/realNameAttestation", 局_user.RealNameAttestation)
 		根路由.POST("user/smsCodeSetPassWord", 局_user.SmsCodeSetPassWord)
 		根路由.POST("user/logout", 局_user.Logout)
 		根路由.POST("user/setBaseInfo", 局_user.SetBaseInfo)

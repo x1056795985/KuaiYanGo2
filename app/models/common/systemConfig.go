@@ -105,3 +105,15 @@ type XAIConfig struct {
 	Model        string `json:"model" mapstructure:"model"`
 	SystemPrompt string `json:"systemPrompt" mapstructure:"systemPrompt"`
 }
+
+// 实名认证接口配置
+type D实名认证配置 struct {
+	D当前选择 int          `mapstructure:"当前选择" json:"当前选择" ` // 实名认证平台: 0=未开启 1=腾讯云身份二要素核验
+	TX云实名  TX云实名认证配置 `mapstructure:"TX云实名" json:"TX云实名" `
+}
+
+// Id:1 腾讯云身份二要素核验(姓名+身份证号) https://cloud.tencent.com/document/api/1007/33188
+type TX云实名认证配置 struct {
+	SECRET_ID  string `mapstructure:"SECRET_ID" json:"SECRET_ID" `
+	SECRET_KEY string `mapstructure:"SECRET_KEY" json:"SECRET_KEY" `
+}

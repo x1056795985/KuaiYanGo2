@@ -9,6 +9,10 @@ type DB_AppInfoWebUser struct {
 	CaptchaSendSms int    `json:"captchaSendSms"  gorm:"column:captchaSendSms;default:1;comment:发短信是否要验证码"` // 1需要 2不需要
 	WebUserDomain  string `json:"webUserDomain"  gorm:"column:webUserDomain;default:'';comment:用户中心域名"`     // 网页用户中心地址
 	AgentOnlyOrder int    `json:"agentOnlyOrder"  gorm:"column:agentOnlyOrder;default:2;comment:限代理用户充值"`   //1需要 2不需要
+	//实名认证(仅账号模式应用有效),状态取值见 constant包 S实名状态_ 常量
+	RealNameStatus int `json:"realNameStatus" gorm:"column:realNameStatus;default:0;comment:实名认证(0不启用,1非强制启用,2强制启用预留)"`
+	//实名奖励,实名认证成功后直充该卡类,0不赠送
+	RealNameGiftKaClassId int `json:"realNameGiftKaClassId" gorm:"column:realNameGiftKaClassId;default:0;comment:实名奖励卡类id,0不赠送"`
 }
 
 func (DB_AppInfoWebUser) TableName() string {

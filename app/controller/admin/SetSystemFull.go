@@ -184,3 +184,22 @@ func (C *SetSystemFull) SaveInfoAiConfig(c *gin.Context) {
 	}
 	response.OkWithMessage("保存成功", c)
 }
+
+// GetInfoRealName设置 获取实名认证接口配置
+func (C *SetSystemFull) GetInfoRealName设置(c *gin.Context) {
+	response.OkWithDetailed(setting.Q实名认证配置(), "获取成功", c)
+}
+
+// SaveInfoRealName设置 保存实名认证接口配置
+func (C *SetSystemFull) SaveInfoRealName设置(c *gin.Context) {
+	var 请求 m.D实名认证配置
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	err := setting.Z实名认证配置(&请求)
+	if err != nil {
+		response.FailWithMessage("保存失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("保存成功", c)
+}

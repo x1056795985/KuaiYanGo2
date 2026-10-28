@@ -4,11 +4,15 @@ import (
 	. "EFunc/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"server/app/controller/Common"
 	"server/app/controller/Common/response"
 	"server/app/global"
 	"server/app/logic/common/captcha"
+	"server/app/logic/common/ka"
 	"server/app/logic/common/log"
+	"server/app/logic/common/realname"
+	"server/app/logic/common/setting"
 	"server/app/logic/common/user"
 	"server/app/models/constant"
 	"server/app/models/dbm"
@@ -79,10 +83,10 @@ func (C *User) NewUserInfo(c *gin.Context) {
 func (C *User) GetPwSendSms(c *gin.Context) {
 	//{"appId":10001,"user":"aaaaaa","phoneCaptchaValue":"","phoneCaptchaId":"","newPassword":"ssssss","captchaId":"sC2rCHYoPgUVyXXjJW","captchaValue":"69|123,133|116,165|115,259|119"}
 	var 请求 struct {
-		AppId         int    `json:"appId" zh:"应用id"`
-		User          string `json:"user" binding:"required,min=6,max=190" zh:"用户名"`
-		CaptchaId     string `json:"captchaId" zh:"验证码id"`
-		CaptchaValue  string `json:"captchaValue" zh:"验证码值"`
+		AppId        int    `json:"appId" zh:"应用id"`
+		User         string `json:"user" binding:"required,min=6,max=190" zh:"用户名"`
+		CaptchaId    string `json:"captchaId" zh:"验证码id"`
+		CaptchaValue string `json:"captchaValue" zh:"验证码值"`
 	}
 	//解析失败
 	if !C.ToJSON(c, &请求) {
@@ -171,6 +175,13 @@ func (C *User) GetInfo(c *gin.Context) {
 		return
 	}
 
+	//实名功能总开关(系统设置-实名接口配置) + 应用级开关(应用编辑-网页用户中心-实名认证)同时开启才可用
+	局_网页用户中心配置, 局_网页配置err := service.NewAppInfoWebUser(c, &tx).Info(info.appInfo.AppId)
+	//实名奖励卡类名称,有值时用户中心未实名入口显示"奖"徽章
+	局_实名奖励卡名 := ""
+	if 局_网页配置err == nil && 局_网页用户中心配置.RealNameStatus != constant.S实名状态_不启用 && 局_网页用户中心配置.RealNameGiftKaClassId > 0 {
+		局_实名奖励卡名 = S实名_取奖励卡名(c, &tx, 局_网页用户中心配置.RealNameGiftKaClassId)
+	}
 	response.OkWithData(c, gin.H{
 		"user":                info.user.User,
 		"phone":               info.user.Phone,
@@ -178,6 +189,8 @@ func (C *User) GetInfo(c *gin.Context) {
 		"email":               info.user.Email,
 		"upAgentId":           info.user.UPAgentId,
 		"realNameAttestation": info.user.RealNameAttestation,
+		"realNameEnabled":     setting.Q实名认证配置().D当前选择 != realname.S实名平台_未开启 && 局_网页配置err == nil && 局_网页用户中心配置.RealNameStatus != constant.S实名状态_不启用,
+		"realNameGiftKaName":  局_实名奖励卡名,
 		"loginIp":             info.user.LoginIp,
 		"loginTime":           info.user.LoginTime,
 		"registerIp":          info.user.RegisterIp,
@@ -185,6 +198,116 @@ func (C *User) GetInfo(c *gin.Context) {
 	})
 
 	return
+}
+
+// RealNameAttestation 用户实名认证,核验通过把"姓名|平台唯一标识"写入用户表,身份证号不落库
+func (C *User) RealNameAttestation(c *gin.Context) {
+	var 请求 struct {
+		Name   string `json:"name" binding:"required,max=20" zh:"姓名"`
+		IdCard string `json:"idCard" binding:"required,max=18" zh:"身份证号"`
+	}
+	//解析失败
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	var info = struct {
+		appInfo  dbm.DB_AppInfo
+		likeInfo dbm.DB_LinksToken
+	}{}
+	Y用户数据信息还原(c, &info.likeInfo, &info.appInfo)
+	if !Y限账号模式应用(c, &info.appInfo) {
+		return
+	}
+
+	tx := *global.GVA_DB
+	局_网页用户中心配置, err := service.NewAppInfoWebUser(c, &tx).Info(info.appInfo.AppId)
+	if err != nil || 局_网页用户中心配置.RealNameStatus == constant.S实名状态_不启用 {
+		response.FailWithMessage(c, "应用未启用实名")
+		return
+	}
+
+	//频率限制:同一用户60秒内只能认证一次,防止反复调用消耗平台核验费用
+	if err = global.H缓存.Add(fmt.Sprintf("RealNameAttestation_%d", info.likeInfo.Uid), 1, time.Minute); err != nil {
+		response.FailWithMessage(c, "操作过于频繁,请一分钟后再试")
+		return
+	}
+
+	局_userService := service.NewUser(c, &tx)
+	局_user, err := 局_userService.Info(info.likeInfo.Uid)
+	if err != nil {
+		response.FailWithMessage(c, "用户不存在")
+		return
+	}
+	if 局_user.UPAgentId > 0 {
+		response.FailWithMessage(c, "代理账号,不可操作")
+		return
+	}
+	if 局_user.RealNameAttestation != "" {
+		response.FailWithMessage(c, "您已完成实名认证,无需重复认证")
+		return
+	}
+
+	局_唯一Id, err := realname.S实名_认证(请求.Name, 请求.IdCard)
+	if err != nil {
+		response.FailWithMessage(c, err.Error())
+		return
+	}
+	if _, err = 局_userService.Update(局_user.Id, map[string]interface{}{"RealNameAttestation": strings.TrimSpace(请求.Name) + "|" + 局_唯一Id}); err != nil {
+		response.FailWithMessage(c, "实名信息保存失败:"+err.Error())
+		return
+	}
+
+	//实名奖励:参考归属代理送卡,按应用配置的卡类直充,先落实名状态再发奖励,奖励失败不影响实名成功
+	局_提示 := "实名认证成功"
+	局_奖励卡名 := ""
+	if 局_网页用户中心配置.RealNameGiftKaClassId > 0 {
+		局_奖励卡名 = S实名_取奖励卡名(c, &tx, 局_网页用户中心配置.RealNameGiftKaClassId)
+		if 局_奖励err := S实名_发奖励(c, 局_网页用户中心配置.RealNameGiftKaClassId, 局_user.Id); 局_奖励err != nil {
+			//发放失败不返回卡名,前端只做普通成功提示
+			局_奖励卡名 = ""
+			go log.L_log.Log_写用户消息(log.Log用户消息类型_系统执行错误, constant.APPID_Web用户中心, 局_user.User, strconv.Itoa(constant.APPID_Web用户中心), "", fmt.Sprintf("实名认证成功但实名奖励发放失败,卡类id:%d,Uid:%d,%v", 局_网页用户中心配置.RealNameGiftKaClassId, 局_user.Id, 局_奖励err), c.ClientIP())
+			局_提示 = "实名认证成功,实名奖励发放失败,请联系管理员处理"
+		} else {
+			局_提示 = "实名认证成功,实名奖励已到账"
+		}
+	}
+	response.OkWithDetailed(c, gin.H{"giftKaName": 局_奖励卡名}, 局_提示)
+	return
+}
+
+// S实名_取奖励卡名 查询实名奖励卡类名称,卡类不存在返回空
+func S实名_取奖励卡名(c *gin.Context, tx *gorm.DB, 卡类id int) string {
+	局_卡类, err := service.NewKaClass(c, tx).Info(卡类id)
+	if err != nil {
+		return ""
+	}
+	return 局_卡类.Name
+}
+
+// S实名_发奖励 实名奖励发放,调用卡类直充事务并落充值日志,参考cps发放被邀奖励卡实现
+func S实名_发奖励(c *gin.Context, 卡类id int, Uid int) (err error) {
+	if err = ka.L_ka.K卡类直冲_事务(c, 卡类id, Uid); err != nil {
+		return err
+	}
+	var 局_日志余额 []dbm.DB_LogMoney
+	var 局_日志积分 []dbm.DB_LogVipNumber
+	if 局_临时数据, ok := c.Get("logMoney"); ok {
+		局_日志余额 = append(局_日志余额, 局_临时数据.(dbm.DB_LogMoney))
+		局_日志余额[len(局_日志余额)-1].Note = "实名奖励,卡类id:" + strconv.Itoa(卡类id) + 局_日志余额[len(局_日志余额)-1].Note
+		delete(c.Keys, "logMoney")
+	}
+	if 局_临时数据, ok := c.Get("logVipNumber"); ok {
+		局_日志积分 = append(局_日志积分, 局_临时数据.(dbm.DB_LogVipNumber))
+		局_日志积分[len(局_日志积分)-1].Note = "实名奖励,卡类id:" + strconv.Itoa(卡类id) + 局_日志积分[len(局_日志积分)-1].Note
+		delete(c.Keys, "logVipNumber")
+	}
+	if err = log.L_log.S输出日志(c, 局_日志余额); err != nil {
+		global.GVA_LOG.Println("输出日志失败!", err)
+	}
+	if err = log.L_log.S输出日志(c, 局_日志积分); err != nil {
+		global.GVA_LOG.Println("输出日志失败!", err)
+	}
+	return nil
 }
 
 func (C *User) SmsCodeSetPassWord(c *gin.Context) {
