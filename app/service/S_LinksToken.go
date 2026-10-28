@@ -292,6 +292,12 @@ func (s *LinksToken) NewWebApiToken(OutTIme int, Key, Tab string) (dbm.DB_LinksT
 	return DB_links_user, err
 }
 
+// Set绑定权限 修改WebApi令牌绑定的接口权限,只允许操作WebApi令牌
+func (s *LinksToken) Set绑定权限(Id int, Key string) error {
+	err := s.db.Model(dbm.DB_LinksToken{}).Where("Id = ? AND LoginAppid = ?", Id, constant.APPID_WebApi).Update("Key", Key).Error
+	return err
+}
+
 // Set自动注销超时时间 设置自动注销超时时间
 func (s *LinksToken) Set自动注销超时时间(OutTIme int, id []int) error {
 	err := s.db.Model(dbm.DB_LinksToken{}).Where("id IN ?", id).Updates(map[string]interface{}{"OutTime": OutTIme}).Error

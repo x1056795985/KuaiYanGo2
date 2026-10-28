@@ -46,6 +46,11 @@ type 请求_LinkUserNewWebApiToken struct {
 	dbm.DB_LinksToken
 }
 
+type 请求_LinkUserSetWebApiTokenKey struct {
+	Id  int    `json:"id"`
+	Key string `json:"key"`
+}
+
 type 请求_LinkUserSetTokenOutTime struct {
 	Id      []int `json:"id"`
 	OutTime int   `json:"outTime"`
@@ -141,6 +146,29 @@ func (C *LinkUserCtrl) NewWebApiToken(c *gin.Context) {
 		return
 	}
 	response.OkWithData(在线信息, c)
+}
+
+// SetWebApiTokenKey 修改WebApi令牌绑定的接口权限
+func (C *LinkUserCtrl) SetWebApiTokenKey(c *gin.Context) {
+	var 请求 请求_LinkUserSetWebApiTokenKey
+	if !C.ToJSON(c, &请求) {
+		return
+	}
+	if 请求.Id == 0 {
+		response.FailWithMessage("Id不能为0", c)
+		return
+	}
+	if len(请求.Key) > 191 {
+		response.FailWithMessage("权限太多了,数据库字段存不下,减少一些吧", c)
+		return
+	}
+	db := *global.GVA_DB
+	err := service.NewLinksToken(c, &db).Set绑定权限(请求.Id, 请求.Key)
+	if err != nil {
+		response.FailWithMessage("修改失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("修改成功", c)
 }
 
 // SetTokenOutTime 修改令牌自动注销时间

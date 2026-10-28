@@ -134,6 +134,7 @@ func (r *AllRouter) InitAdminRouter(router *gin.RouterGroup) {
 	{
 		adminRouter.POST("user/getLinkUserList", 局_LinkUser.GetList)
 		adminRouter.POST("user/newWebApiToken", 局_LinkUser.NewWebApiToken)
+		adminRouter.POST("user/setWebApiTokenKey", 局_LinkUser.SetWebApiTokenKey)
 		adminRouter.POST("user/setTokenOutTime", 局_LinkUser.SetTokenOutTime)
 		if !(global.GVA_Viper.GetInt("系统模式") == 1) {
 			adminRouter.POST("user/logout", 局_LinkUser.Logout)
