@@ -19,11 +19,13 @@ import (
 func F服务_运行(路由 http.Handler) {
 	局_端口 := fmt.Sprintf(":%d", global.GVA_CONFIG.Port)
 	global.GVA_Gin = &http.Server{
-		Addr:           局_端口,
-		Handler:        路由,
-		ReadTimeout:    20 * time.Second,
-		WriteTimeout:   20 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+		Addr:    局_端口,
+		Handler: 路由,
+		//ReadTimeout/WriteTimeout不设总时限:网关反代长请求(TimeoutSec可达300s+)/WS/SSE会被掐断
+		ReadHeaderTimeout: 20 * time.Second, //只限请求头读取,防慢速攻击
+		WriteTimeout:      0,
+		IdleTimeout:       600 * time.Second, //keep-alive空闲连接超时
+		MaxHeaderBytes:    1 << 20,
 	}
 
 	服务_打印启动信息(局_端口)
