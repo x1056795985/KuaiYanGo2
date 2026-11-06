@@ -62,7 +62,7 @@ func (A *AgentBase) Login(c *gin.Context) {
 	if 局_是否校验验证码 {
 		if !captcha.VerifyClick(局_请求.CaptchaId, 局_请求.Captcha, true) {
 			response.FailWithMessage("验证码错误", c)
-			go log.L_log.Log_写登录日志(局_请求.Username, 局_客户端IP, "验证码错误:"+局_请求.Captcha, 3)
+			// 验证码错误不写登录日志:验证码本身已拦截,点击器反复触发会刷爆日志表
 			return
 		}
 	}
