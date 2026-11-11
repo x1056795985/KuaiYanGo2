@@ -802,8 +802,8 @@ func (C *AppUserFull) SetBatchAllUserData(c *gin.Context) {
 		}
 		局_是否有修改 = true
 	case 3:
-		if 请求.MaxOnlineValue < 0 {
-			response.FailWithMessage("最大同时在线数量指定值不能小于0", c)
+		if 请求.MaxOnlineValue <= 0 {
+			response.FailWithMessage("最大同时在线数量指定值必须大于0", c)
 			return
 		}
 		局_是否有修改 = true

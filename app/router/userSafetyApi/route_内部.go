@@ -49,6 +49,7 @@ var J集_UserAPi路由 = map[string]路由信息{
 	"GetAppUserNote":         {"取软件用户备注", controller.UserApi_取软件用户备注, true},
 	"LogOut":                 {"用户登录注销", controller.UserApi_用户登录注销, true},
 	"RemoteLogOut":           {"用户登录远程注销", controller.UserApi_用户登录远程注销, true},
+	"GetOnlineList":          {"取在线列表", controller.UserApi_取在线列表, true},
 	"HeartBeat":              {"心跳", controller.UserApi_心跳, true},
 	"OldPassWordSetPassWord": {"密码找回或修改_旧密码", controller.UserApi_密码找回或修改_验证旧密码, true},
 	"SetPassWord":            {"密码找回或修改_超级密码", controller.UserApi_密码找回或修改_超级密码, true},
@@ -105,8 +106,8 @@ var J集_UserAPi路由_加密 加密路由信息
 // 加密路由快照 整体不可变, 更新时在局部构建全新快照后原子替换指针(Copy-On-Write),
 // 读写两侧均无锁, 且永远不会同时访问同一个map, 从根源上避免并发map读写崩溃
 type 加密路由快照 struct {
-	L路由md5  string //每次更新加密路由缓存, 都更新这个索引,每次读取路由,都检测索引是否和缓存相同,如果不同,更新索引
-	J加密路由 map[string]string
+	L路由md5 string //每次更新加密路由缓存, 都更新这个索引,每次读取路由,都检测索引是否和缓存相同,如果不同,更新索引
+	J加密路由  map[string]string
 }
 
 type 加密路由信息 struct {

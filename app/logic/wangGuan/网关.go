@@ -329,6 +329,14 @@ func (j *网关) Q执行转发(c *gin.Context, 网关配置 dbm.DB_Gateway, jwt�
 		},
 	}
 
+	defer func() {
+		//ReverseProxy向客户端回写失败(客户端中途断开,WS/SSE长连接常见)时会panic(http.ErrAbortHandler)中止,
+		//该哨兵值net/http本会静默吞掉,这里同样静默处理,避免监控和统一恐慌恢复把它误报成全局错误;其他恐慌继续上抛
+		if 局_恢复值 := recover(); 局_恢复值 != nil && 局_恢复值 != http.ErrAbortHandler {
+			panic(局_恢复值)
+		}
+	}()
+
 	局_代理.ServeHTTP(c.Writer, c.Request)
 }
 

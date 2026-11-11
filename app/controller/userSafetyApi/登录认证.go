@@ -350,6 +350,11 @@ func UserApi_用户登录(c *gin.Context) {
 		}
 	}
 
+	//MaxOnline最小按1处理,防止后台编辑成0或点数扣减到0时,登录踢人逻辑对空切片取[:1]导致panic
+	if 局_AppUser.MaxOnline < 1 {
+		局_AppUser.MaxOnline = 1
+	}
+
 	var 局_要踢掉的数量 = 0
 	if len(局_在线Id列表) >= 局_AppUser.MaxOnline {
 		if 局_ctx.AppInfo.ExceedMaxOnlineOut == 1 {
@@ -560,5 +565,44 @@ func UserApi_用户登录远程注销(c *gin.Context) {
 	} else {
 		response.Ok(c)
 	}
+	return
+}
+
+// UserApi_取在线列表 取本账号uid同登录appid的所有在线列表
+func UserApi_取在线列表(c *gin.Context) {
+	局_ctx := 取上下文(c)
+	if !检测用户登录在线正常(&局_ctx.Z在线信息) {
+		response.Fail(c, constant.Status_未登录)
+		return
+	}
+	//{"Api":"GetOnlineList","OnlineStatus":0}
+	局_状态过滤 := 局_ctx.Q请求明文.Get("OnlineStatus").Int() //0全部(含近期已注销,默认) 1仅在线 2仅已注销 不能叫Status,和公共成功代码参数冲突
+	局_where := map[string]interface{}{
+		"Uid":        局_ctx.Z在线信息.Uid,
+		"LoginAppid": 局_ctx.AppInfo.AppId,
+	}
+	if 局_状态过滤 == 1 || 局_状态过滤 == 2 {
+		局_where["Status"] = 局_状态过滤
+	}
+	db := *global.GVA_DB
+	局_在线列表, err := service.NewLinksToken(c, &db).InfosId排序(局_where)
+	if err != nil {
+		response.FailMsg(c, constant.Status_SQl错误, "读取在线列表失败:"+err.Error())
+		return
+	}
+	局_列表 := make([]gin.H, 0, len(局_在线列表))
+	for _, v := range 局_在线列表 {
+		局_列表 = append(局_列表, gin.H{
+			"Id":         v.Id,         //在线id
+			"Status":     v.Status,     //状态 1在线 2已注销
+			"Key":        v.Key,        //绑定信息
+			"Ip":         v.Ip,         //在线ip
+			"LoginTime":  v.LoginTime,  //登录时间
+			"LastTime":   v.LastTime,   //最后活动时间
+			"LogoutCode": v.LogoutCode, //注销原因代号 0心跳超时 1超过同时在线 2管理员手动 3用户操作 4用户远程 5用户改密
+			"AppVer":     v.AppVer,     //软件版本
+		})
+	}
+	response.OkData(c, 局_列表)
 	return
 }
